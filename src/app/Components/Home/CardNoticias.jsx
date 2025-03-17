@@ -1,4 +1,5 @@
 "use client";
+
 import React from 'react';
 
 const CardNoticias = ({ item, index }) => {
@@ -7,23 +8,26 @@ const CardNoticias = ({ item, index }) => {
             className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full"
             style={{ gridArea: `card-${index + 1}` }}
         >
-            <div className="relative p-6">
+            <div className="relative p-4">
                 <div className={`
-                    w-full overflow-hidden
-                    ${item.size === "normal" ? "h-[140px]" : item.size === "alto" ? "h-[540px]" : "h-[280px]"}
-                    ${item.size === "ancho" ? "w-full" : ""}
+                    w-full overflow-hidden rounded-lg
+                    ${item.size === "normal" ? "h-[180px]" : item.size === "alto" ? "h-[500px]" : "h-[220px]"}
                 `}>
                     {item.imageUrl.length > 1 ? (
-                        <div className={`flex ${item.size === "alto" ? "flex-col" : "flex-row"} h-full`}>
+                        <div className={`flex ${item.size === "alto" ? "flex-col" : "flex-row"} h-full w-full gap-8`}>
                             {item.imageUrl.map((url, imgIndex) => (
-                                <div key={imgIndex} className={`flex items-center justify-center ${item.size === "ancho" ? "w-1/2" : ""} ${item.size === "ancho" ? "mx-2" : ""} ${item.size === "alto" ? "my-2" : ""}`}>
+                                <div 
+                                    key={imgIndex} 
+                                    className={`
+                                        flex items-center justify-center overflow-hidden
+                                        ${item.size === "ancho" ? "w-1/2" : "w-full"} 
+                                        ${item.size === "alto" ? "h-4/5" : "h-full"}
+                                    `}
+                                >
                                     <img
                                         src={url}
-                                        className="max-w-full max-h-full"
-                                        style={{
-                                            width: item.size === "normal" ? "300px" : "auto",
-                                            height: item.size === "normal" ? "280px" : "auto"
-                                        }}
+                                        alt={`${item.title} image ${imgIndex + 1}`}
+                                        className="object-cover w-full h-full"
                                         onError={(e) => {
                                             e.target.src = "https://via.placeholder.com/400x200";
                                         }}
@@ -32,14 +36,11 @@ const CardNoticias = ({ item, index }) => {
                             ))}
                         </div>
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-full h-full">
                             <img
                                 src={item.imageUrl[0]}
-                                className="max-w-full max-h-full"
-                                style={{
-                                    width: item.size === "normal" ? "340px" : "auto",
-                                    height: item.size === "normal" ? "300px" : "auto"
-                                }}
+                                alt={item.title}
+                                className="object-cover w-full h-full"
                                 onError={(e) => {
                                     e.target.src = "https://via.placeholder.com/400x200";
                                 }}
@@ -47,12 +48,12 @@ const CardNoticias = ({ item, index }) => {
                         </div>
                     )}
                 </div>
-                <div className="absolute top-2 right-2 bg-gradient-to-l from-[#C40180] to-[#590248] text-white px-3 py-1 text-xs rounded-lg shadow-md">
+                <div className="absolute top-6 right-6 bg-gradient-to-l from-[#C40180] to-[#590248] text-white px-3 py-1 text-xs rounded-lg shadow-md">
                     {item.date}
                 </div>
             </div>
             <div className="p-6 flex-grow flex flex-col">
-                <h3 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 min-h-[2rem]">{item.title}</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 min-h-[3rem]">{item.title}</h3>
                 <p className="text-gray-600 mb-4 line-clamp-3 flex-grow">{item.description}</p>
                 <button className="text-[#590248] font-medium text-end hover:text-gray-400 transition-colors duration-300 mt-auto">
                     Leer más →

@@ -15,7 +15,7 @@ export default function CarruselPresents() {
       buttonText: "Conoce Más",
     },
     {
-      imageSrc: "/assets/noticias/normal2.png",
+      imageSrc: "/assets/noticias/normal3.png",
       title: "Jornada Medico-Odontologica organizada por la alcaldia del Municipio Rafaelurdaneta",
       buttonText: "Descubre",
     },
@@ -40,16 +40,16 @@ export default function CarruselPresents() {
 
   return (
     <div className="container mx-auto px-4 flex flex-col items-center mt-10">
-      <div className={`flex flex-row items-center w-full h-130 transition-opacity duration-1000 ${fade ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`flex flex-row items-center w-full h-[500px] transition-opacity duration-1000 ${fade ? 'opacity-100' : 'opacity-0'}`}>
         {/* Imagen */}
-        <div className="w-3/5 p-4 h-full">
-          <div className="rounded-lg overflow-hidden shadow-lg h-full">
+        <div className="w-3/4 p-4 h-full">
+          <div className="overflow-hidden h-full relative">
             <Image
               src={slides[currentSlide].imageSrc}
               alt={slides[currentSlide].title}
-              width={300}
-              height={200}
-              className="w-full h-full object-cover"
+              layout="fill"
+              objectFit="contain"
+              className="w-full h-full"
             />
           </div>
         </div>
