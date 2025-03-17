@@ -1,6 +1,9 @@
 import AppBar from "./AppBar";
 import Presents from "./Presents";
-import Section from "./section";
+import Cards from "./Cards";
+import Sponser from "./Sponser";
+import Noticias from "./Noticias";
+import Footer from "./Footer";
 
 export default function Home() {
   return (
@@ -10,8 +13,13 @@ export default function Home() {
       </header>
       <main>
         <Presents />
-        <Section />
+        <Cards />
+        <Sponser />
+        <Noticias />
       </main>
+      <footer>
+        <Footer />
+      </footer>
     </div>
   );
 }

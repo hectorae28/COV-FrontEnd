@@ -1,5 +1,5 @@
 import Image from "next/image";
-import CarruselPresents from "../Components/Presents/CarruselPresents";
+import CarruselPresents from "../Components/Home/CarruselPresents";
 
 export default function Presents() {
     return (
