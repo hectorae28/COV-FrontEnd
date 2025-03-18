@@ -6,8 +6,10 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 export default function CarruselPresents() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [fade, setFade] = useState(true);
+  const [transition, setTransition] = useState(true);
+  const [direction, setDirection] = useState("right");
   const timerRef = useRef(null);
+  const slidesContainerRef = useRef(null);
 
   // Cards
   const slides = [
@@ -34,12 +36,10 @@ export default function CarruselPresents() {
     }
 
     timerRef.current = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setCurrentSlide((prevSlide) => (prevSlide + 1) % slides.length);
-        setFade(true);
-      }, 1000);
-    }, 3000);
+      setDirection("right");
+      setTransition(true);
+      setCurrentSlide((prevSlide) => (prevSlide + 1) % slides.length);
+    }, 5000);
   };
 
   useEffect(() => {
@@ -53,58 +53,74 @@ export default function CarruselPresents() {
   }, []);
 
   const goToSlide = (index) => {
-    setFade(false);
-    setTimeout(() => {
-      setCurrentSlide(index);
-      setFade(true);
-
-      startAutoSlideTimer();
-    }, 1000);
+    setDirection(index > currentSlide ? "right" : "left");
+    setTransition(true);
+    setCurrentSlide(index);
+    startAutoSlideTimer();
   };
 
   const goToPrevSlide = () => {
+    setDirection("left");
+    setTransition(true);
     const newIndex = currentSlide === 0 ? slides.length - 1 : currentSlide - 1;
-    goToSlide(newIndex);
+    setCurrentSlide(newIndex);
+    startAutoSlideTimer();
   };
 
   const goToNextSlide = () => {
+    setDirection("right");
+    setTransition(true);
     const newIndex = (currentSlide + 1) % slides.length;
-    goToSlide(newIndex);
+    setCurrentSlide(newIndex);
+    startAutoSlideTimer();
   };
 
   return (
     <div className="container mx-auto flex flex-col items-center mt-10 relative group">
-      <div className={`flex flex-row items-center w-full h-[560px] px-12 transition-opacity duration-1000 ${fade ? 'opacity-100' : 'opacity-0'}`}>
-        {/* Imagen */}
-        <div className="w-3/4 p-4 h-full">
-          <div className="overflow-hidden h-full relative">
-            <Image
-              src={slides[currentSlide].imageSrc}
-              alt={slides[currentSlide].title}
-              layout="fill"
-              objectFit="contain"
-              className="w-full h-full"
-            />
-          </div>
-        </div>
+      <div className="w-full h-[560px] overflow-hidden relative">
+        <div 
+          ref={slidesContainerRef}
+          className={`flex transition-transform duration-500 ease-in-out h-full`}
+          style={{ 
+            width: `${slides.length * 100}%`, 
+            transform: `translateX(-${currentSlide * (100 / slides.length)}%)` 
+          }}
+        >
+          {slides.map((slide, index) => (
+            <div key={index} className="flex flex-row items-center w-full h-full px-12">
+              {/* Imagen */}
+              <div className="w-3/4 p-4 h-full">
+                <div className="overflow-hidden h-full relative">
+                  <Image
+                    src={slide.imageSrc}
+                    alt={slide.title}
+                    layout="fill"
+                    objectFit="contain"
+                    className="w-full h-full"
+                  />
+                </div>
+              </div>
 
-        {/* Título y botón */}
-        <div className="w-2/5 p-4 text-white flex flex-col justify-center">
-          <h2 className="text-3xl font-bold mb-12">
-            {slides[currentSlide].title}
-          </h2>
-          <div className="px-8">
-            <div className="bg-gradient-to-br from-blue-400 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[14px] py-2 px-8 rounded-full inline-block cursor-pointer transition-all duration-200">
-              {slides[currentSlide].buttonText}
+              {/* Título y botón */}
+              <div className="w-2/5 p-4 text-white flex flex-col justify-center">
+                <h2 className="text-3xl font-bold mb-12">
+                  {slide.title}
+                </h2>
+                <div className="px-8">
+                  <div className="bg-gradient-to-br from-blue-400 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[14px] py-2 px-8 rounded-full inline-block cursor-pointer transition-all duration-200">
+                    {slide.buttonText}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
 
       {/* Botones de navegación */}
       <button 
         onClick={goToPrevSlide} 
-        className="absolute -left-16 top-2/5 transform -translate-y-1/2  text-white/60 hover:text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100"
+        className="absolute left-0 top-2/5 transform -translate-y-1/2 text-white/60 hover:text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
         aria-label="Previous slide"
       >
         <FaChevronLeft size={24} />
@@ -112,7 +128,7 @@ export default function CarruselPresents() {
       
       <button 
         onClick={goToNextSlide} 
-        className="absolute -right-16 top-2/5 transform -translate-y-1/2 text-white/60 hover:text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100"
+        className="absolute right-0 top-2/5 transform -translate-y-1/2 text-white/60 hover:text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
         aria-label="Next slide"
       >
         <FaChevronRight size={24} />

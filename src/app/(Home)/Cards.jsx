@@ -19,7 +19,7 @@ const StepCard = ({ icon: Icon, number, title, description, index }) => (
             scale: 1.06,
             transition: { duration: 0.2 }
         }}
-        className="relative p-6 bg-white rounded-2xl hover:shadow-lg shadow-[#590248]/30 transition-all duration-300 border border-[#BFC8D0] cursor-pointer"
+        className="relative p-6 bg-white rounded-2xl hover:shadow-lg shadow-[#590248]/60 transition-all duration-300 border border-[#BFC8D0] cursor-pointer"
     >
         <div className="absolute -top-6 -left-6 w-12 h-12 text-[20px] bg-gradient-to-br from-[#C40180] to-[#590248] rounded-full flex items-center justify-center text-white font-bold shadow-md italic">
             {number}

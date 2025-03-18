@@ -35,7 +35,7 @@ export default function AppBar() {
   return (
     <header className="bg-[#41023B] w-full z-50">
       <div className="py-4 flex items-center justify-between px-4 w-full">
-        {/* Logo  */}
+        {/* Logo */}
         <div className="flex items-center ml-12 mt-8 cursor-pointer">
           <Image src="/assets/logo.png" alt="logos" width={260} height={60} />
         </div>
@@ -56,18 +56,20 @@ export default function AppBar() {
               </span>
               {item.submenu && (
                 <div 
-                  className={`absolute left-1/2 transform -translate-x-1/2 mt-4 bg-white shadow-lg rounded-lg py-3 z-50 min-w-48 w-max transition-all origin-top duration-300 ease-in-out ${
-                    openMenu === index ? 'opacity-100 scale-y-100 visible' : 'opacity-0 scale-y-0 invisible h-0'
+                  className={`absolute left-1/2 transform -translate-x-1/2 mt-4 bg-gray-100 shadow-lg rounded-lg py-3 z-50 min-w-48 overflow-hidden transition-all duration-300 ease-in-out ${
+                    openMenu === index ? 'opacity-100 max-h-[500px]' : 'opacity-0 max-h-0'
                   }`}
                 >
-                  {item.submenu.map((subItem, subIndex) => (
-                    <div
-                      key={subIndex}
-                      className="px-4 py-2 text-black hover:text-black hover:bg-gradient-to-br from-blue-400 to-blue-600 cursor-pointer whitespace-nowrap transition-colors duration-200"
-                    >
-                      {subItem}
-                    </div>
-                  ))}
+                  <div className="space-y-2">
+                    {item.submenu.map((subItem, subIndex) => (
+                      <div
+                        key={subIndex}
+                        className="px-4 py-2 text-black hover:text-black hover:bg-gradient-to-br from-blue-400 to-blue-600 cursor-pointer whitespace-nowrap transition-colors duration-10"
+                      >
+                        {subItem}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

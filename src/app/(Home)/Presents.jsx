@@ -1,7 +1,12 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 import CarruselPresents from "../Components/Home/CarruselPresents";
 
 export default function Presents() {
+    const [showWhatsappText, setShowWhatsappText] = useState(false);
+
     return (
         <div className="rounded-b-4xl bg-gradient-to-t from-[#D7008A] to-[#41023B] flex flex-col justify-center relative">
             {/* Instagram */}
@@ -20,19 +25,32 @@ export default function Presents() {
             {/* Carrusel */}
             <CarruselPresents />
 
-            {/* WhatsApp */}
-            <div className="fixed bottom-8 right-8 cursor-pointer hover:opacity-90 transition-opacity rounded-full p-2 bg-gradient-to-t from-[#D7008A] to-[#41023B] shadow-md shadow-white">
-                <div className="block">
+            {/* WhatsApp mejorado */}
+            <div 
+                className="fixed bottom-8 right-8 flex items-center cursor-pointer hover:opacity-90 transition-all duration-300 z-50"
+                onMouseEnter={() => setShowWhatsappText(true)}
+                onMouseLeave={() => setShowWhatsappText(false)}
+            >
+                {/* Texto del WhatsApp */}
+                <div 
+                    className={`bg-white text-[#590248] font-medium rounded-full mr-4 py-2 px-4 shadow-md transition-all duration-300 flex items-center ${
+                        showWhatsappText ? 'opacity-100 visible' : 'opacity-0 invisible'
+                    }`}
+                    style={{ transitionProperty: 'opacity, visibility' }}
+                >
+                    <span className="whitespace-nowrap">Contáctanos</span>
+                </div>
+                
+                {/* Icono WhatsApp */}
+                <div className="bg-gradient-to-br from-[#C40180] to-[#590248] rounded-full p-3 shadow-md border-2 border-white">
                     <Image
                         src="/assets/icons/whatsapp.png"
                         alt="WhatsApp"
-                        width={48}
-                        height={48}
-                        className="rounded-full"
+                        width={32}
+                        height={32}
                     />
                 </div>
             </div>
-
         </div>
     );
 }
