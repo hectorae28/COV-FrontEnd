@@ -59,7 +59,7 @@ export default function CarruselPresents() {
       setFade(true);
 
       startAutoSlideTimer();
-    }, 3000);
+    }, 1000);
   };
 
   const goToPrevSlide = () => {
@@ -74,7 +74,7 @@ export default function CarruselPresents() {
 
   return (
     <div className="container mx-auto flex flex-col items-center mt-10 relative group">
-      <div className={`flex flex-row items-center w-full h-[500px] px-12 transition-opacity duration-1000 ${fade ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`flex flex-row items-center w-full h-[560px] px-12 transition-opacity duration-1000 ${fade ? 'opacity-100' : 'opacity-0'}`}>
         {/* Imagen */}
         <div className="w-3/4 p-4 h-full">
           <div className="overflow-hidden h-full relative">
@@ -104,7 +104,7 @@ export default function CarruselPresents() {
       {/* Botones de navegación */}
       <button 
         onClick={goToPrevSlide} 
-        className="absolute -left-12 top-2/5 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 rounded-full p-3 text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100"
+        className="absolute -left-16 top-2/5 transform -translate-y-1/2  text-white/60 hover:text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100"
         aria-label="Previous slide"
       >
         <FaChevronLeft size={24} />
@@ -112,7 +112,7 @@ export default function CarruselPresents() {
       
       <button 
         onClick={goToNextSlide} 
-        className="absolute -right-12 top-2/5 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 rounded-full p-3 text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100"
+        className="absolute -right-16 top-2/5 transform -translate-y-1/2 text-white/60 hover:text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100"
         aria-label="Next slide"
       >
         <FaChevronRight size={24} />

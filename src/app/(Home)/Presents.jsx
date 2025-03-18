@@ -21,16 +21,18 @@ export default function Presents() {
             <CarruselPresents />
 
             {/* WhatsApp */}
-            <div className="fixed bottom-8 right-8 cursor-pointer hover:opacity-90 transition-opacity">
+            <div className="fixed bottom-8 right-8 cursor-pointer hover:opacity-90 transition-opacity rounded-full p-2 bg-gradient-to-t from-[#D7008A] to-[#41023B] shadow-md shadow-white">
                 <div className="block">
                     <Image
                         src="/assets/icons/whatsapp.png"
                         alt="WhatsApp"
                         width={48}
                         height={48}
+                        className="rounded-full"
                     />
                 </div>
             </div>
+
         </div>
     );
 }

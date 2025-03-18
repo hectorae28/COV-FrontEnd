@@ -34,13 +34,14 @@ const StepCard = ({ icon: Icon, number, title, description, index }) => (
             </div>
         </div>
 
-        <p className="text-[#646566] font-semibold text-[14px] text-center">
+        <div className="text-[#646566] font-semibold text-[14px] text-center">
             {description}
-        </p>
+        </div>
 
         <div className="absolute bottom-[-1] left-1/2 w-25/26 h-1 bg-gradient-to-r from-[#C40180] via-white to-[#590248] rounded-b-xl transform -translate-x-1/2" />
     </motion.div>
 );
+
 
 export default function StepsSection() {
     const steps = [

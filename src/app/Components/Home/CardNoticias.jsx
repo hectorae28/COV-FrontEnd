@@ -57,7 +57,7 @@ const CardNoticias = ({ item, index }) => {
                 {/* Título y descripción */}
                 <h3 className="text-xl mt-2 font-bold text-gray-800 mb-2 line-clamp-2 min-h-[3rem]">{item.title}</h3>
                 <p className="text-gray-600 mb-4 line-clamp-3 flex-grow">{item.description}</p>
-                <button className="text-[#590248]/60 font-medium text-end hover:text-[#590248] transition-colors duration-300 mt-auto cursor-pointer">
+                <button className="text-[#590248]/60 font-semibold text-end hover:text-[#590248] transition-colors duration-300 mt-auto cursor-pointer">
                     Leer más →
                 </button>
             </div>
