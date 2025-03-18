@@ -5,7 +5,7 @@ import React from 'react';
 const CardNoticias = ({ item, index }) => {
     return (
         <div
-            className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full"
+            className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1 hover:shadow-[#590248]/30 flex flex-col h-full"
             style={{ gridArea: `card-${index + 1}` }}
         >
             <div className="relative p-4">
@@ -16,8 +16,8 @@ const CardNoticias = ({ item, index }) => {
                     {item.imageUrl.length > 1 ? (
                         <div className={`flex ${item.size === "alto" ? "flex-col" : "flex-row"} h-full w-full gap-8`}>
                             {item.imageUrl.map((url, imgIndex) => (
-                                <div 
-                                    key={imgIndex} 
+                                <div
+                                    key={imgIndex}
                                     className={`
                                         flex items-center justify-center overflow-hidden
                                         ${item.size === "ancho" ? "w-1/2" : "w-full"} 
@@ -48,14 +48,16 @@ const CardNoticias = ({ item, index }) => {
                         </div>
                     )}
                 </div>
-                <div className="absolute top-6 right-6 bg-gradient-to-l from-[#C40180] to-[#590248] text-white px-3 py-1 text-xs rounded-lg shadow-md">
+            </div>
+            <div className={`p-6 flex-grow flex flex-col relative ${item.size === "alto" ? "mt-2" : ""}`}>
+                {/* Fecha */}
+                <div className="absolute mr-4 mb-2 top-[-2] right-0 bg-gradient-to-l from-[#C40180] to-[#590248] text-white px-3 py-1 text-xs rounded-lg shadow-md">
                     {item.date}
                 </div>
-            </div>
-            <div className="p-6 flex-grow flex flex-col">
-                <h3 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 min-h-[3rem]">{item.title}</h3>
+                {/* Título y descripción */}
+                <h3 className="text-xl mt-2 font-bold text-gray-800 mb-2 line-clamp-2 min-h-[3rem]">{item.title}</h3>
                 <p className="text-gray-600 mb-4 line-clamp-3 flex-grow">{item.description}</p>
-                <button className="text-[#590248] font-medium text-end hover:text-gray-400 transition-colors duration-300 mt-auto">
+                <button className="text-[#590248]/60 font-medium text-end hover:text-[#590248] transition-colors duration-300 mt-auto cursor-pointer">
                     Leer más →
                 </button>
             </div>

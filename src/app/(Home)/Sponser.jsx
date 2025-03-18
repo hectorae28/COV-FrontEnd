@@ -1,133 +1,230 @@
 "use client";
 
 import Image from 'next/image';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const aliados = [
-    { id: 1, logo: '/assets/sponsor/1.png' },
-    { id: 2, logo: '/assets/sponsor/2.png' },
-    { id: 3, logo: '/assets/sponsor/3.png' },
-    { id: 4, logo: '/assets/sponsor/4.png' },
-    { id: 5, logo: '/assets/sponsor/5.png' },
-    { id: 6, logo: '/assets/sponsor/6.png' },
-    { id: 7, logo: '/assets/sponsor/7.png' },
-    { id: 8, logo: '/assets/sponsor/8.png' },
-    { id: 9, logo: '/assets/sponsor/9.png' },
-    { id: 10, logo: '/assets/sponsor/10.png' },
-    { id: 11, logo: '/assets/sponsor/11.png' },
-    { id: 12, logo: '/assets/sponsor/12.png' },
-    { id: 13, logo: '/assets/sponsor/13.png' },
+    { id: 1, logo: '/assets/sponsor/1.png', name: 'Sponsor 1' },
+    { id: 2, logo: '/assets/sponsor/2.png', name: 'Sponsor 2' },
+    { id: 3, logo: '/assets/sponsor/3.png', name: 'Sponsor 3' },
+    { id: 4, logo: '/assets/sponsor/4.png', name: 'Sponsor 4' },
+    { id: 5, logo: '/assets/sponsor/5.png', name: 'Sponsor 5' },
+    { id: 6, logo: '/assets/sponsor/6.png', name: 'Sponsor 6' },
+    { id: 7, logo: '/assets/sponsor/7.png', name: 'Sponsor 7' },
+    { id: 8, logo: '/assets/sponsor/8.png', name: 'Sponsor 8' },
+    { id: 9, logo: '/assets/sponsor/9.png', name: 'Sponsor 9' },
+    { id: 10, logo: '/assets/sponsor/10.png', name: 'Sponsor 10' },
+    { id: 11, logo: '/assets/sponsor/11.png', name: 'Sponsor 11' },
+    { id: 12, logo: '/assets/sponsor/12.png', name: 'Sponsor 12' },
+    { id: 13, logo: '/assets/sponsor/13.png', name: 'Sponsor 13' },
 ];
 
 const Sponsor = () => {
-    const [activeIndex, setActiveIndex] = useState(4);
+    const [activeIndex, setActiveIndex] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
-    const [logoPositions, setLogoPositions] = useState([]);
+    const [isAutoplay, setIsAutoplay] = useState(true);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStartX, setDragStartX] = useState(0);
+    const wheelRef = useRef(null);
+    const autoplayTimerRef = useRef(null);
+
+    const calculatePositions = () => {
+        const radius = 500;
+        const angleStep = (2 * Math.PI) / aliados.length;
+
+        return aliados.map((aliado, index) => {
+            let relativeIndex = index - activeIndex;
+
+            if (relativeIndex > aliados.length / 2) relativeIndex -= aliados.length;
+            if (relativeIndex < -aliados.length / 2) relativeIndex += aliados.length;
+
+            const angle = relativeIndex * angleStep;
+
+            const x = Math.sin(angle) * radius;
+            const z = Math.cos(angle) * radius - radius;
+
+            const normalizedZ = (z + radius) / (2 * radius);
+            const scale = 0.5 + normalizedZ * 0.5;
+
+            const opacity = index === activeIndex ? 1.0 : 0.5 + normalizedZ * 0.3;
+
+            return {
+                ...aliado,
+                x,
+                z,
+                scale,
+                opacity,
+                angle,
+                isActive: index === activeIndex,
+            };
+        });
+    };
 
     useEffect(() => {
-        const initialPositions = getOrderedAliados();
-        setLogoPositions(initialPositions);
-        setTimeout(() => setIsLoaded(true), 100);
+        setIsLoaded(true);
     }, []);
 
     useEffect(() => {
-        if (isLoaded) {
-            setLogoPositions(getOrderedAliados());
-        }
-    }, [activeIndex, isLoaded]);
+        if (!isLoaded || !isAutoplay) return;
 
-    useEffect(() => {
-        if (!isLoaded) return;
-        
-        const interval = setInterval(() => {
+        autoplayTimerRef.current = setInterval(() => {
             setActiveIndex((prevIndex) => (prevIndex + 1) % aliados.length);
         }, 3000);
-        
-        return () => clearInterval(interval);
-    }, [isLoaded]);
 
-    const getOrderedAliados = () => {
-        const result = [];
-        const totalVisible = 7;
-        const halfVisible = Math.floor(totalVisible / 2);
-        
-        for (let i = -halfVisible; i <= halfVisible; i++) {
-            const index = (activeIndex + i + aliados.length) % aliados.length;
-            result.push({
-                ...aliados[index],
-                position: i
-            });
-        }
-        
-        return result;
-    };
-    
+        return () => {
+            if (autoplayTimerRef.current) {
+                clearInterval(autoplayTimerRef.current);
+            }
+        };
+    }, [isLoaded, isAutoplay, aliados.length]);
+
     const handleClickLogo = (index) => {
         setActiveIndex(index);
+        setIsAutoplay(false);
+        setTimeout(() => setIsAutoplay(true), 5000);
     };
 
-    const curvedTitleStyle = {
-        fontStyle: 'italic',
-        transform: 'perspective(500px) rotateX(10deg)',
-        textShadow: '0 4px 5px rgba(0,0,0,0.1)',
-        paddingBottom: '10px',
-        display: 'inline-block'
+    const handleMouseDown = (e) => {
+        setIsDragging(true);
+        setDragStartX(e.clientX);
+        setIsAutoplay(false);
     };
+
+    const handleTouchStart = (e) => {
+        setIsDragging(true);
+        setDragStartX(e.touches[0].clientX);
+        setIsAutoplay(false);
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+
+        const dragDistance = e.clientX - dragStartX;
+        if (Math.abs(dragDistance) > 50) {
+            const direction = dragDistance > 0 ? -1 : 1;
+            setActiveIndex((prevIndex) => {
+                const newIndex = (prevIndex + direction + aliados.length) % aliados.length;
+                return newIndex;
+            });
+            setDragStartX(e.clientX);
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (!isDragging) return;
+
+        const dragDistance = e.touches[0].clientX - dragStartX;
+        if (Math.abs(dragDistance) > 30) {
+            const direction = dragDistance > 0 ? -1 : 1;
+            setActiveIndex((prevIndex) => {
+                const newIndex = (prevIndex + direction + aliados.length) % aliados.length;
+                return newIndex;
+            });
+            setDragStartX(e.touches[0].clientX);
+        }
+    };
+
+    const handleDragEnd = () => {
+        setIsDragging(false);
+        setTimeout(() => setIsAutoplay(true), 3000);
+    };
+
+    const handleChevronClick = (direction) => {
+        setActiveIndex((prevIndex) => {
+            const newIndex = (prevIndex + direction + aliados.length) % aliados.length;
+            return newIndex;
+        });
+        setIsAutoplay(false);
+        setTimeout(() => setIsAutoplay(true), 5000);
+    };
+
+    const logoPositions = calculatePositions();
 
     return (
-        <section className="overflow-hidden mt-10">
-            <div className="container mx-auto px-8">
+        <section className="overflow-hidden">
+            <div className="container mx-auto">
                 <div className="text-center">
-                    <h2 
-                        className="text-[48px] font-extrabold text-center bg-gradient-to-br from-[#01c2fd] to-[#016FFB] text-transparent bg-clip-text italic inline-block"
-                        style={curvedTitleStyle}
-                    >
+                    <h2 className="text-[48px] font-extrabold text-center bg-gradient-to-br from-blue-400 to-blue-600 text-transparent bg-clip-text italic">
                         Nuestros Aliados
                     </h2>
                 </div>
-                
-                <div className="relative h-48 mt-40">
-                    <div className="absolute w-full flex justify-center items-center">
-                        {logoPositions.map((aliado) => {
-                            const isCenter = aliado.position === 0;
-                            const distance = Math.abs(aliado.position);
-                            const scale = isCenter ? 1 : 1 - (distance * 0.15);
-                            const opacity = isCenter ? 1 : 1 - (distance * 0.3);
-                            const translateX = aliado.position * 220;
 
-                            const containerWidth = isCenter ? 240 : 180;
-                            const containerHeight = isCenter ? 180 : 100;
+                <div className="relative flex justify-center items-center h-76 perspective-3000 cursor-grab group">
+                    <button
+                        className="absolute left-0 z-10 p-2 bg-white rounded-full shadow-lg cursor-pointer hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleChevronClick(-1)}
+                        aria-label="Previous Sponsor"
+                    >
+                        <ChevronLeft className="w-6 h-6 text-gray-700" />
+                    </button>
 
-                            const imageWidth = isCenter ? 180 : 100;
-                            const imageHeight = isCenter ? 120 : 60;
-                            
-                            return (
-                                <div
-                                    key={aliado.id}
-                                    className={`absolute bg-white p-4 rounded-lg shadow-sm transition-all duration-500 ease-in-out flex items-center justify-center cursor-pointer overflow-hidden
-                                        ${isCenter ? 'shadow-lg z-10' : 'z-0'}`}
-                                    style={{
-                                        transform: `translateX(${translateX}px) scale(${scale})`,
-                                        opacity,
-                                        width: `${containerWidth}px`,
-                                        height: `${containerHeight}px`,
-                                    }}
-                                    onClick={() => handleClickLogo(aliados.findIndex(a => a.id === aliado.id))}
-                                >
-                                    <div className="flex items-center justify-center w-full h-full">
-                                        <Image
-                                            src={aliado.logo}
-                                            alt={`Logo de ${aliado.name}`}
-                                            width={imageWidth}
-                                            height={imageHeight}
-                                            className="object-contain max-w-full max-h-full"
-                                            priority={isCenter}
-                                        />
+                    <div
+                        className="relative w-full h-full"
+                        ref={wheelRef}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleDragEnd}
+                        onMouseLeave={handleDragEnd}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleDragEnd}
+                    >
+                        <div className="absolute inset-0 flex justify-center items-center">
+                            {logoPositions.map((aliado) => {
+                                const zIndex = Math.round(aliado.z + 1000);
+
+                                return (
+                                    <div
+                                        key={aliado.id}
+                                        className={`absolute bg-white rounded-xl shadow-lg transition-all duration-500 ease-in-out flex items-center justify-center cursor-pointer
+                                            ${aliado.isActive ? 'ring-1 ring-[#BFC8D0] shadow-xl' : ''}`}
+                                        style={{
+                                            transform: `translateX(${aliado.x}px) translateZ(${aliado.z}px) scale(${aliado.scale})`,
+                                            opacity: aliado.opacity,
+                                            width: `${aliado.isActive ? 320 : 180}px`,
+                                            height: `${aliado.isActive ? 240 : 160}px`,
+                                            zIndex,
+                                        }}
+                                        onClick={() => handleClickLogo(aliados.findIndex(a => a.id === aliado.id))}
+                                    >
+                                        <div className="w-full h-full flex items-center justify-center">
+                                            <Image
+                                                src={aliado.logo}
+                                                alt={`Logo de ${aliado.name}`}
+                                                width={aliado.isActive ? 180 : 100}
+                                                height={aliado.isActive ? 160 : 80}
+                                                className="object-contain max-w-full max-h-full transition-all duration-500"
+                                                priority={aliado.isActive}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
+
+                    <button
+                        className="absolute right-0 z-10 p-2 bg-white rounded-full shadow-lg cursor-pointer hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleChevronClick(1)}
+                        aria-label="Next Sponsor"
+                    >
+                        <ChevronRight className="w-6 h-6 text-gray-700" />
+                    </button>
+                </div>
+
+                {/* Indicadores de navegación */}
+                <div className="flex justify-center gap-2 mb-16">
+                    {aliados.map((_, index) => (
+                        <button
+                            key={index}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer hover:scale-110 ${
+                                index === activeIndex ? 'bg-gradient-to-br from-blue-400 to-blue-600 w-6' : 'bg-gray-200'
+                            }`}
+                            onClick={() => handleClickLogo(index)}
+                            aria-label={`Ver sponsor ${index + 1}`}
+                        />
+                    ))}
                 </div>
             </div>
         </section>

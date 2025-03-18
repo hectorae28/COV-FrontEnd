@@ -19,26 +19,30 @@ const Footer = () => {
                     </div>
 
                     {/* Columna 2 */}
-                    <div className="flex flex-col justify-center items-center">
-                        <h3 className="text-lg font-bold">Teléfonos:</h3>
-                        <p className="mt-2">
-                            Finanzas: (0212) 793-5687<br />
-                            Presidencia: (0212) 781-2267
-                        </p>
+                    <div className="flex flex-col items-center px-38">
+                        <div className="self-start">
+                            <h3 className="text-lg font-bold">Teléfonos:</h3>
+                            <p className="mt-2">
+                                Finanzas: (0212) 793-5687<br />
+                                Presidencia: (0212) 781-2267
+                            </p>
+                        </div>
                     </div>
 
                     {/* Columna 3 */}
                     <div className="flex justify-end items-center">
-                        <span className="mr-5 cursor-pointer hover:text-gray-400">
-                            <img src="/assets/icons/twitter.png" alt="X" className="w-5 h-5" />
+                        <span className="mr-5 cursor-pointer group">
+                            <div className="w-5 h-5 transition-opacity group-hover:opacity-60">
+                                <img src="/assets/icons/twitter.png" alt="X" className="w-full h-full" />
+                            </div>
                         </span>
-                        <span className="mr-5 cursor-pointer hover:text-gray-400">
+                        <span className="mr-5 cursor-pointer hover:text-gray-400 transition-colors">
                             <FaFacebook size={26} />
                         </span>
-                        <span className="mr-5 cursor-pointer hover:text-gray-400">
+                        <span className="mr-5 cursor-pointer hover:text-gray-400 transition-colors">
                             <FaInstagram size={28} />
                         </span>
-                        <span className="cursor-pointer hover:text-gray-400">
+                        <span className="cursor-pointer hover:text-gray-400 transition-colors">
                             <FaYoutube size={30} />
                         </span>
                     </div>

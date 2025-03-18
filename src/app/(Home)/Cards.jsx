@@ -14,12 +14,12 @@ const StepCard = ({ icon: Icon, number, title, description, index }) => (
                 delay: index * 0.1
             }
         }}
-        viewport={{ amount: 0.3 }}
+        viewport={{ once: true, amount: 0.3 }}
         whileHover={{
             scale: 1.06,
             transition: { duration: 0.2 }
         }}
-        className="relative p-6 bg-white rounded-2xl hover:shadow-lg transition-all duration-300 border border-[#BFC8D0]"
+        className="relative p-6 bg-white rounded-2xl hover:shadow-lg shadow-[#590248]/30 transition-all duration-300 border border-[#BFC8D0] cursor-pointer"
     >
         <div className="absolute -top-6 -left-6 w-12 h-12 text-[20px] bg-gradient-to-br from-[#C40180] to-[#590248] rounded-full flex items-center justify-center text-white font-bold shadow-md italic">
             {number}
@@ -38,9 +38,9 @@ const StepCard = ({ icon: Icon, number, title, description, index }) => (
             {description}
         </p>
 
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#C40180] via-white to-[#590248] rounded-b-xl" />
+        <div className="absolute bottom-[-1] left-1/2 w-25/26 h-1 bg-gradient-to-r from-[#C40180] via-white to-[#590248] rounded-b-xl transform -translate-x-1/2" />
     </motion.div>
-)
+);
 
 export default function StepsSection() {
     const steps = [
@@ -103,7 +103,7 @@ export default function StepsSection() {
         <section className="pt-16">
             <div className="text-center">
                 <h2
-                    className="text-[48px] font-extrabold text-center bg-gradient-to-br from-[#01c2fd] to-[#016FFB] text-transparent bg-clip-text italic inline-block"
+                    className="text-[48px] font-extrabold text-center bg-gradient-to-br from-blue-400 to-blue-600 text-transparent bg-clip-text italic inline-block"
                     style={curvedTitleStyle}
                 >
                     Titulo

@@ -8,7 +8,7 @@ export default function AppBar() {
       <div className="py-4 flex items-center justify-between px-4 w-full">
 
         {/* Logo  */}
-        <div className="flex items-center ml-12 mt-8">
+        <div className="flex items-center ml-12 mt-8 cursor-pointer">
           <Image
             src="/assets/logo.png"
             alt="logos"
@@ -22,7 +22,7 @@ export default function AppBar() {
           {["Inicio", "Sobre COV", "Nueva Ley", "Especialistas", "Eventos", "Trámites", "Contáctenos"].map((item, index) => (
             <span
               key={index}
-              className="text-white font-bold text-[16px] cursor-default hover:text-gray-400 transition-colors duration-200"
+              className="text-white/70 font-bold text-[16px] cursor-pointer hover:text-white transition-colors duration-200"
             >
               {item}
             </span>
@@ -32,7 +32,7 @@ export default function AppBar() {
         {/* Botón Trámites */}
         <div className="flex items-center px-12 mt-8">
           <div
-            className="bg-gradient-to-l from-[#0184FB] to-[#01A6FD] hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[18px] py-2 px-8 rounded-full cursor-default transition-all duration-200"
+            className="bg-gradient-to-br from-blue-400 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[18px] py-2 px-8 rounded-full cursor-pointer transition-all duration-200"
           >
             Trámites Online
           </div>

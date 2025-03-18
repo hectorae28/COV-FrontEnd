@@ -135,7 +135,7 @@ const Noticias = () => {
         <section>
             <div className="text-center">
                 <h2 
-                    className="text-[48px] font-extrabold text-center bg-gradient-to-br from-[#01c2fd] to-[#016FFB] text-transparent bg-clip-text italic inline-block"
+                    className="text-[48px] font-extrabold text-center bg-gradient-to-br from-blue-400 to-blue-600 text-transparent bg-clip-text italic inline-block"
                     style={curvedTitleStyle}
                 >
                     Noticias
