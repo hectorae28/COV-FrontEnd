@@ -1,151 +1,143 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { motion, AnimatePresence } from "framer-motion";
+
+const slides = [
+  {
+    id: 1,
+    image: "/assets/noticias/ancho.png",
+    title: "Bienvenidos al Colegio de Odontólogos",
+    description: "Comprometidos con la excelencia en la salud bucal"
+  },
+  {
+    id: 2,
+    image: "/assets/noticias/ancho2.png",
+    title: "Próximos Eventos",
+    description: "Mantente actualizado con nuestros cursos y certificaciones"
+  },
+  {
+    id: 3,
+    image: "/assets/noticias/ancho3.png",
+    title: "Nueva Ley de Odontología",
+    description: "Conoce los cambios importantes para tu práctica profesional"
+  }
+];
 
 export default function CarruselPresents() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [transition, setTransition] = useState(true);
-  const [direction, setDirection] = useState("right");
-  const timerRef = useRef(null);
-  const slidesContainerRef = useRef(null);
-
-  // Cards
-  const slides = [
-    {
-      imageSrc: "/assets/image.png",
-      title: "Colegio de odontologos de guarico eligio nueva directiva",
-      buttonText: "Conoce Más",
-    },
-    {
-      imageSrc: "/assets/noticias/normal3.png",
-      title: "Jornada Medico-Odontologica organizada por la alcaldia del Municipio Rafael Urdaneta",
-      buttonText: "Descubre",
-    },
-    {
-      imageSrc: "/assets/noticias/normal5.png",
-      title: "Póliza AMP de Oceánica de Seguros para todo el Gremio Odontológico",
-      buttonText: "Explora",
-    },
-  ];
-
-  const startAutoSlideTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-
-    timerRef.current = setInterval(() => {
-      setDirection("right");
-      setTransition(true);
-      setCurrentSlide((prevSlide) => (prevSlide + 1) % slides.length);
-    }, 5000);
-  };
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
-    startAutoSlideTimer();
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  const goToSlide = (index) => {
-    setDirection(index > currentSlide ? "right" : "left");
-    setTransition(true);
-    setCurrentSlide(index);
-    startAutoSlideTimer();
+  const handleMouseEnter = () => {
+    setIsHovering(true);
   };
 
-  const goToPrevSlide = () => {
-    setDirection("left");
-    setTransition(true);
-    const newIndex = currentSlide === 0 ? slides.length - 1 : currentSlide - 1;
-    setCurrentSlide(newIndex);
-    startAutoSlideTimer();
-  };
-
-  const goToNextSlide = () => {
-    setDirection("right");
-    setTransition(true);
-    const newIndex = (currentSlide + 1) % slides.length;
-    setCurrentSlide(newIndex);
-    startAutoSlideTimer();
+  const handleMouseLeave = () => {
+    setIsHovering(false);
   };
 
   return (
-    <div className="container mx-auto flex flex-col items-center mt-10 relative group">
-      <div className="w-full h-[560px] overflow-hidden relative">
-        <div 
-          ref={slidesContainerRef}
-          className={`flex transition-transform duration-500 ease-in-out h-full`}
-          style={{ 
-            width: `${slides.length * 100}%`, 
-            transform: `translateX(-${currentSlide * (100 / slides.length)}%)` 
-          }}
+    <div 
+      className="relative w-full h-[800px] overflow-hidden"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Slides */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentSlide}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+          className="absolute inset-0"
         >
-          {slides.map((slide, index) => (
-            <div key={index} className="flex flex-row items-center w-full h-full px-12">
-              {/* Imagen */}
-              <div className="w-3/4 p-4 h-full">
-                <div className="overflow-hidden h-full relative">
-                  <Image
-                    src={slide.imageSrc}
-                    alt={slide.title}
-                    layout="fill"
-                    objectFit="contain"
-                    className="w-full h-full"
-                  />
-                </div>
-              </div>
-
-              {/* Título y botón */}
-              <div className="w-2/5 p-4 text-white flex flex-col justify-center">
-                <h2 className="text-3xl font-bold mb-12">
-                  {slide.title}
-                </h2>
-                <div className="px-8">
-                  <div className="bg-gradient-to-br from-blue-400 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[14px] py-2 px-8 rounded-full inline-block cursor-pointer transition-all duration-200">
-                    {slide.buttonText}
-                  </div>
-                </div>
-              </div>
+          <div className="relative w-full h-full">
+            <div className="absolute inset-0">
+              <Image
+                src={slides[currentSlide].image}
+                alt={slides[currentSlide].title}
+                fill
+                unoptimized
+                style={{ 
+                  objectFit: 'cover', 
+                  objectPosition: 'center',
+                  width: '100%',
+                  height: '100%'
+                }}
+                priority
+                quality={100}
+              />
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+            
+            {/* Contenido del slide */}
+            <motion.div 
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.1 }}
+              className="absolute bottom-0 left-0 right-0 p-10 text-white"
+            >
+              <h2 className="text-3xl md:text-[48px] font-bold px-4 md:px-20">{slides[currentSlide].title}</h2>
+              <p className="text-xl md:text-[28px] px-4 md:px-20">{slides[currentSlide].description}</p>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="mt-4 md:mt-8 bg-gradient-to-br from-[#D7008A] to-[#41023B] text-white font-bold py-2 px-8 rounded-full hover:shadow-lg transition-all duration-100 ml-4 md:ml-28"
+              >
+                Más información
+              </motion.button>
+            </motion.div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
 
-      {/* Botones de navegación */}
-      <button 
-        onClick={goToPrevSlide} 
-        className="absolute left-0 top-2/5 transform -translate-y-1/2 text-white/60 hover:text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
-        aria-label="Previous slide"
-      >
-        <FaChevronLeft size={24} />
-      </button>
-      
-      <button 
-        onClick={goToNextSlide} 
-        className="absolute right-0 top-2/5 transform -translate-y-1/2 text-white/60 hover:text-white cursor-pointer transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
-        aria-label="Next slide"
-      >
-        <FaChevronRight size={24} />
-      </button>
-
-      {/* Indicadores de navegación */}
-      <div className="flex justify-center gap-2 mt-8 mb-12">
+      {/* Indicadores */}
+      <div className="absolute bottom-6 right-4 md:right-12 flex space-x-2">
         {slides.map((_, index) => (
           <button
             key={index}
-            className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer hover:scale-110 ${
-              index === currentSlide ? 'bg-gradient-to-br from-blue-400 to-blue-600 w-6' : 'bg-gray-200'
+            onClick={() => setCurrentSlide(index)}
+            className={`w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
+              currentSlide === index ? 'bg-white w-8' : 'bg-white/30'
             }`}
-            onClick={() => goToSlide(index)}
-            aria-label={`Ver diapositiva ${index + 1}`}
           />
         ))}
+      </div>
+
+      {/* Desplazamiento */}
+      <div className={`transition-opacity duration-300 ${isHovering ? 'opacity-100' : 'opacity-0'}`}>
+
+        {/* Botón Izquierdo */}
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white p-3 transition-all duration-100 cursor-pointer"
+          aria-label="Previous slide"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Botón Derecho */}
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white p-3 transition-all duration-100 cursor-pointer"
+          aria-label="Next slide"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </div>
   );
