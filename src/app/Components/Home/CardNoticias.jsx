@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ChevronRight } from 'lucide-react';
 
-const CardNoticias = ({ item, index }) => {
+const CardNoticias = ({ item, index, screenSize = 'lg' }) => {
     const cardVariants = {
         hover: {
             scale: 1.03,
@@ -27,7 +27,19 @@ const CardNoticias = ({ item, index }) => {
         }
     };
 
-    const isFeatured = index === 0 || item.size === 'ancho';
+    // Si es el primer ítem o si tiene tamaño ancho y no estamos en móvil
+    const isFeatured = index === 0 || (item.size === 'ancho' && screenSize !== 'sm');
+    
+    // Ajustar altura de imagen según tamaño de pantalla y tipo de card
+    const getImageHeight = () => {
+        if (screenSize === 'sm') {
+            return item.size === 'alto' ? '250px' : '180px';
+        } else if (screenSize === 'md') {
+            return item.size === 'alto' ? '300px' : '200px';
+        } else {
+            return item.size === 'alto' ? '350px' : '200px';
+        }
+    };
     
     return (
         <motion.div 
@@ -59,13 +71,13 @@ const CardNoticias = ({ item, index }) => {
                             ))}
                         </div>
                     ) : item.imageUrl.length > 1 ? (
-                        <div className="grid grid-cols-2 gap-1">
+                        <div className={`grid ${screenSize === 'sm' ? 'grid-cols-1' : 'grid-cols-2'} gap-1`}>
                             {item.imageUrl.map((url, imgIndex) => (
                                 <div
                                     key={imgIndex}
                                     className="relative overflow-hidden"
                                     style={{
-                                        height: item.size === 'alto' ? '100%' : '150px'
+                                        height: screenSize === 'sm' ? '120px' : getImageHeight()
                                     }}
                                 >
                                     <img
@@ -83,7 +95,7 @@ const CardNoticias = ({ item, index }) => {
                         <div
                             className="relative overflow-hidden"
                             style={{
-                                height: item.size === 'alto' ? '100%' : '150px'
+                                height: getImageHeight()
                             }}
                         >
                             <img
@@ -99,42 +111,59 @@ const CardNoticias = ({ item, index }) => {
                 </div>
             </div>
 
-            <div className="p-4 relative">
-                {/* Date badge - on the right side above the title */}
-                <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center space-x-2 shadow-md">
-                    <Calendar className="w-3 h-3 text-[#C40180]" />
-                    <span className="text-xs font-medium text-gray-800">{item.date}</span>
-                    <span className="mx-1 text-gray-400">|</span>
-                    <Clock className="w-3 h-3 text-[#C40180]" />
-                    <span className="text-xs font-medium text-gray-800">{item.time}</span>
-                </div>
+            <div className="p-3 sm:p-4 relative">
+    {/* Date badge - Siempre alineado a la derecha */}
+    <div
+        className={`
+            absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full flex items-center space-x-1 sm:space-x-2 
+            shadow-sm sm:shadow-md text-xs sm:text-sm w-max max-w-full
+        `}
+    >
+        <Calendar className="w-3 h-3 text-[#C40180]" />
+        <span className="font-medium text-gray-800">{item.date}</span>
+        <span className="mx-1 text-gray-400">|</span>
+        <Clock className="w-3 h-3 text-[#C40180]" />
+        <span className="font-medium text-gray-800">{item.time}</span>
+    </div>
 
-                {/* Título y descripción */}
-                <h3 className={`font-bold text-gray-800 mb-2 mt-8 ${isFeatured ? 'text-xl md:text-2xl' : 'text-lg'} line-clamp-2`}>
-                    {item.title}
-                </h3>
+    {/* Título y descripción */}
+    <h3
+        className={`
+            font-bold text-gray-800 mb-2 mt-8 
+            ${
+                isFeatured
+                    ? `text-lg sm:text-xl ${screenSize === 'lg' ? 'md:text-2xl' : ''}`
+                    : 'text-base sm:text-lg'
+            } 
+            line-clamp-2
+        `}
+    >
+        {item.title}
+    </h3>
 
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {item.description}
-                </p>
-                
-                <motion.div 
-                    className="flex items-center justify-end text-[#C40180] font-medium text-sm"
-                    variants={arrowVariants}
-                >
-                    Leer más <ChevronRight className="w-4 h-4 ml-1" />
-                </motion.div>
-            </div>
+    <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">
+        {item.description}
+    </p>
+
+    <motion.div
+        className="flex items-center justify-end text-[#C40180] font-medium text-xs sm:text-sm"
+        variants={arrowVariants}
+    >
+        Leer más <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
+    </motion.div>
+</div>
             
             {/* Colorful gradient line at the bottom of the card */}
-            <div className="absolute bottom-0 left-0 h-2 w-full bg-gradient-to-r from-[#C40180] to-[#590248] z-10"></div>
+            <div className="absolute bottom-0 left-0 h-1 sm:h-2 w-full bg-gradient-to-r from-[#C40180] to-[#590248] z-10"></div>
             
-            {/* Animated hover line */}
-            <motion.div 
-                className="absolute bottom-2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C40180] to-transparent"
-                variants={lineVariants}
-                initial="initial"
-            />
+            {/* Animated hover line - solo visible en dispositivos que no son táctiles */}
+            <div className="hidden sm:block">
+                <motion.div 
+                    className="absolute bottom-2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C40180] to-transparent"
+                    variants={lineVariants}
+                    initial="initial"
+                />
+            </div>
         </motion.div>
     );
 };
