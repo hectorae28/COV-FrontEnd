@@ -1,4 +1,8 @@
+"use client";
+
 import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import CardNoticias from '../Components/Home/CardNoticias';
 
 const Noticias = () => {
@@ -48,18 +52,32 @@ const Noticias = () => {
             time: "12:30pm",
             title: "PROYECTO DE ACTUALIZACIÓN DE LEY ORGÁNICA DE LA ODONTOLOGÍA",
             description: "Artículo 1. Objeto de la Ley. La presente Ley tiene por objeto establecer las bases...",
-            imageUrl: ["/assets/noticias/alto.png", "/assets/noticias/alto.png"],
+            imageUrl: ["/assets/noticias/alto.png"],
             size: "alto"
         },
     ];
 
-    const curvedTitleStyle = {
-        fontStyle: 'italic',
-        transform: 'perspective(500px) rotateX(10deg)',
-        textShadow: '0 4px 5px rgba(0,0,0,0.1)',
-        paddingBottom: '10px',
-        display: 'inline-block'
+    const parseDateAndTime = (dateStr, timeStr) => {
+        const [day, month, year] = dateStr.split('/');
+        let hours = parseInt(timeStr.slice(0, -2));
+        const isPM = timeStr.toLowerCase().includes('pm');
+        
+        if (isPM && hours !== 12) {
+            hours += 12;
+        } else if (!isPM && hours === 12) {
+            hours = 0;
+        }
+        
+        return new Date(`${year}-${month}-${day}T${hours.toString().padStart(2, '0')}:${timeStr.slice(3, 5)}:00`);
     };
+
+    const sortedNewsItems = useMemo(() => {
+        return [...newsItems].sort((a, b) => {
+            const dateA = parseDateAndTime(a.date, a.time);
+            const dateB = parseDateAndTime(b.date, b.time);
+            return dateB - dateA;
+        });
+    }, [newsItems]);
 
     const generateGridLayout = (items) => {
         const grid = Array(6).fill().map(() => Array(3).fill(null));
@@ -128,33 +146,93 @@ const Noticias = () => {
     };
 
     const gridLayout = useMemo(() => {
-        return generateGridLayout(newsItems);
-    }, [newsItems]);
+        return generateGridLayout(sortedNewsItems);
+    }, [sortedNewsItems]);
+
+    const fadeInUpVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: (custom) => ({
+            opacity: 1,
+            y: 0,
+            transition: {
+                delay: custom * 0.1,
+                duration: 0.5
+            }
+        })
+    };
 
     return (
-        <section>
-            <div className="text-center">
-                <h2 
-                    className="text-[48px] font-extrabold text-center bg-gradient-to-br from-blue-400 to-blue-600 text-transparent bg-clip-text italic inline-block"
-                    style={curvedTitleStyle}
-                >
-                    Noticias
-                </h2>
-            </div>
-            <div className="container mx-auto mt-16">
-                <div
-                    className="grid"
+        <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                    <motion.span 
+                        className="text-sm font-medium text-[#C40180] uppercase tracking-wider"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                    >
+                        Mantente Informado
+                    </motion.span>
+                    
+                    <motion.h2
+                        className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        viewport={{ once: true }}
+                    >
+                        Noticias y Actualizaciones
+                    </motion.h2>
+                    
+                    <motion.p 
+                        className="mt-6 max-w-2xl mx-auto text-gray-600"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        viewport={{ once: true }}
+                    >
+                        Descubre las últimas noticias, eventos y actualizaciones importantes para la comunidad odontológica venezolana.
+                    </motion.p>
+                </div>
+
+                <div 
+                    className="grid gap-6"
                     style={{
                         gridTemplateAreas: gridLayout.areas,
                         gridTemplateColumns: gridLayout.columns,
-                        gridTemplateRows: gridLayout.rows,
-                        gap: "40px"
+                        gridTemplateRows: gridLayout.rows
                     }}
                 >
-                    {newsItems.map((item, index) => (
-                        <CardNoticias key={index} item={item} index={index} />
+                    {sortedNewsItems.map((item, index) => (
+                        <motion.div
+                            key={index}
+                            custom={index}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.1 }}
+                            variants={fadeInUpVariants}
+                            style={{ 
+                                gridArea: `card-${index + 1}`,
+                                height: '100%'
+                            }}
+                        >
+                            <CardNoticias item={item} index={index} />
+                        </motion.div>
                     ))}
                 </div>
+
+                <motion.div 
+                    className="text-center"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    viewport={{ once: true }}
+                >
+                    <button className="px-8 py-3 cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white font-medium rounded-full hover:shadow-lg transition-all duration-300 flex items-center mx-auto">
+                        Ver Todas las Noticias
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                    </button>
+                </motion.div>
             </div>
         </section>
     );

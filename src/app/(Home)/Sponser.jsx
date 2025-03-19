@@ -1,8 +1,9 @@
 "use client";
 
-import Image from 'next/image';
-import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 
 const aliados = [
     { id: 1, logo: '/assets/sponsor/1.png', name: 'Sponsor 1' },
@@ -144,10 +145,27 @@ const Sponsor = () => {
     return (
         <section className="overflow-hidden">
             <div className="container mx-auto">
-                <div className="text-center">
-                    <h2 className="text-[48px] font-extrabold text-center bg-gradient-to-br from-blue-400 to-blue-600 text-transparent bg-clip-text italic">
+                <div className="text-center mt-18">
+                    <motion.h2
+                        className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        viewport={{ once: true }}
+                    >
                         Nuestros Aliados
-                    </h2>
+                    </motion.h2>
+
+                    <motion.p
+                        className="mt-6 max-w-2xl mx-auto text-gray-600"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        viewport={{ once: true }}
+                    >
+                        Contamos con el respaldo de las marcas más reconocidas de la industria dental,
+                        quienes comparten nuestro compromiso con la excelencia profesional y la salud bucal.
+                    </motion.p>
                 </div>
 
                 <div className="relative flex justify-center items-center h-76 perspective-3000 cursor-grab group">
@@ -211,20 +229,6 @@ const Sponsor = () => {
                     >
                         <ChevronRight className="w-6 h-6 text-gray-700" />
                     </button>
-                </div>
-
-                {/* Indicadores de navegación */}
-                <div className="flex justify-center gap-2 mb-16">
-                    {aliados.map((_, index) => (
-                        <button
-                            key={index}
-                            className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer hover:scale-110 ${
-                                index === activeIndex ? 'bg-gradient-to-br from-blue-400 to-blue-600 w-6' : 'bg-gray-200'
-                            }`}
-                            onClick={() => handleClickLogo(index)}
-                            aria-label={`Ver sponsor ${index + 1}`}
-                        />
-                    ))}
                 </div>
             </div>
         </section>

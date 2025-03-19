@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaChevronDown } from "react-icons/fa";
 
 const menuItems = [
@@ -30,36 +30,53 @@ const menuItems = [
 ];
 
 export default function AppBar() {
+  const [paddingY, setPaddingY] = useState(24);
   const [openMenu, setOpenMenu] = useState(null);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const menuRefs = useRef([]);
 
   useEffect(() => {
+    if (!menuRefs.current) {
+      menuRefs.current = [];
+    }
+
     const handleScroll = () => {
-      if (window.scrollY > 0) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      const maxScroll = 100;
+      const scrollY = window.scrollY;
+
+      const newPaddingY = Math.max(
+        12, 24 - (scrollY / maxScroll) * 12
+      );
+
+      setPaddingY(newPaddingY);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleBridgeHover = (index) => {
+    setOpenMenu(index);
+  };
+
   return (
     <header
-      className={`bg-gradient-to-t from-[#D7008A] to-[#41023B] w-full z-50 fixed top-0 left-0 transition-all duration-300 ${
-        isScrolled ? "py-3 shadow-lg" : "py-6"
-      }`}
+      className="bg-gradient-to-t from-[#D7008A] to-[#41023B] w-full z-1100 fixed top-0 left-0 transition-all duration-300 shadow-lg"
+      style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
     >
       <div className="flex items-center justify-between px-4 w-full">
         {/* Logo */}
         <div className="flex items-center ml-12 cursor-pointer">
-          <Image src="/assets/logo.png" alt="logos" width={isScrolled ? 200 : 260} height={isScrolled ? 40 : 60} />
+          <Image 
+            src="/assets/logo.png" 
+            alt="logos" 
+            width={paddingY > 18 ? 260 : 200}
+            height={paddingY > 18 ? 60 : 40} 
+            className="transition-all duration-300"
+          />
         </div>
 
         {/* Títulos */}
-        <nav className="flex-grow flex items-center justify-center space-x-14">
+        <nav className="flex-grow flex items-center justify-center space-x-14 relative">
           {menuItems.map((item, index) => (
             <div
               key={index}
@@ -68,28 +85,38 @@ export default function AppBar() {
               onMouseLeave={() => setOpenMenu(null)}
             >
               <span
-                className="text-white font-bold text-[16px] cursor-pointer flex items-center gap-2 transition-all duration-300 hover:border-b-2 hover:border-white pb-1"
+                className="text-white font-bold text-[16px] cursor-pointer flex items-center gap-2 transition-all duration-300"
               >
                 {item.title} 
                 {item.submenu && <FaChevronDown className={`w-3 h-3 transition-transform duration-500 ${openMenu === index ? 'rotate-180' : ''}`} />}
               </span>
-              {item.submenu && (
-                <div 
-                  className={`absolute left-1/2 transform -translate-x-1/2 mt-4 bg-[#7c235d] shadow-lg rounded-lg py-3 z-50 min-w-48 overflow-hidden transition-all duration-300 ease-in-out ${
-                    openMenu === index ? 'opacity-100 max-h-[500px]' : 'opacity-0 max-h-0'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    {item.submenu.map((subItem, subIndex) => (
-                      <div
-                        key={subIndex}
-                        className="px-4 py-2 text-white hover:text-black hover:bg-gray-200 cursor-pointer whitespace-nowrap transition-colors duration-10"
-                      >
-                        {subItem}
-                      </div>
-                    ))}
+              {item.submenu && openMenu === index && (
+                <>
+                  {/* Puente imaginario */}
+                  <div
+                    className="absolute top-0 left-0 w-full h-16 bg-transparent z-1110"
+                    onMouseEnter={() => handleBridgeHover(index)}
+                  ></div>
+
+                  {/* Menú desplegable */}
+                  <div 
+                    ref={(el) => (menuRefs.current[index] = el)}
+                    className="absolute left-1/2 transform -translate-x-1/2 mt-2 bg-[#7c235d] shadow-lg rounded-lg py-3 z-1110 min-w-48 overflow-hidden transition-all duration-300 ease-in-out"
+                    onMouseEnter={() => setOpenMenu(index)}
+                    onMouseLeave={() => setOpenMenu(null)}
+                  >
+                    <div className="space-y-2 px-2">
+                      {item.submenu.map((subItem, subIndex) => (
+                        <div
+                          key={subIndex}
+                          className="px-8 py-3 text-white hover:text-black hover:bg-gray-200 hover:rounded-xl cursor-pointer whitespace-nowrap transition-colors duration-10"
+                        >
+                          {subItem}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
           ))}

@@ -45,8 +45,8 @@ export default function CarruselPresents() {
   };
 
   return (
-    <div 
-      className="relative w-full h-[800px] overflow-hidden"
+    <div
+      className="relative w-full h-[740px] overflow-hidden mt-20"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -67,8 +67,8 @@ export default function CarruselPresents() {
                 alt={slides[currentSlide].title}
                 fill
                 unoptimized
-                style={{ 
-                  objectFit: 'cover', 
+                style={{
+                  objectFit: 'cover',
                   objectPosition: 'center',
                   width: '100%',
                   height: '100%'
@@ -78,9 +78,9 @@ export default function CarruselPresents() {
               />
             </div>
             <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-            
+
             {/* Contenido del slide */}
-            <motion.div 
+            <motion.div
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.1 }}
@@ -88,11 +88,11 @@ export default function CarruselPresents() {
             >
               <h2 className="text-3xl md:text-[48px] font-bold px-4 md:px-20">{slides[currentSlide].title}</h2>
               <p className="text-xl md:text-[28px] px-4 md:px-20">{slides[currentSlide].description}</p>
-              
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="mt-4 md:mt-8 bg-gradient-to-br from-[#D7008A] to-[#41023B] text-white font-bold py-2 px-8 rounded-full hover:shadow-lg transition-all duration-100 ml-4 md:ml-28"
+                className="mt-4 md:mt-8 bg-gradient-to-br from-[#D7008A] to-[#41023B] text-white font-bold py-2 px-8 rounded-full hover:shadow-lg transition-all duration-100 ml-4 md:ml-28 cursor-pointer"
               >
                 Más información
               </motion.button>
