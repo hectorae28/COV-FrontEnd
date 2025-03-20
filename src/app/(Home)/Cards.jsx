@@ -1,151 +1,92 @@
 "use client";
 
-import { motion } from 'framer-motion';
-import { User, SearchCheck, FileCheck, ChevronRight, ArrowRight } from 'lucide-react';
+import { LibraryBooks, LibraryAddCheck, VerifiedUser, AssignmentInd } from "@mui/icons-material";
+import { useState } from "react";
 
-const StepCard = ({ icon: Icon, number, title, description, index }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.5,
-                delay: index * 0.1
-            }
-        }}
-        viewport={{ once: true, amount: 0.3 }}
-        whileHover={{
-            scale: 1.03,
-            transition: { duration: 0.2 }
-        }}
-        className="relative py-10 px-6 sm:px-8 md:px-12 bg-white rounded-xl shadow-md hover:shadow-xl shadow-[#590248]/30 transition-all duration-300 border-t-4 border-[#C40180] border-b-2 border-[#C40180] overflow-hidden group"
+export default function Cards() {
+  return (
+    <div className="grid grid-cols-2 gap-6 mb-20">
+      <SolicitudCard 
+        title="Solicitud Multiple" 
+        icon={<LibraryBooks sx={{ fontSize: 50, color: "#FFFFFF" }} />}
+        animationDirection="top-left"
+      />
+      
+      <SolicitudCard 
+        title="Solicitar Solvencia" 
+        icon={<LibraryAddCheck sx={{ fontSize: 50, color: "#FFFFFF" }} />}
+        animationDirection="top-right"
+      />
+      
+      <SolicitudCard 
+        title="Solicitar Constancia" 
+        icon={<VerifiedUser sx={{ fontSize: 50, color: "#FFFFFF" }} />}
+        animationDirection="bottom-left"
+      />
+      
+      <SolicitudCard 
+        title="Solicitar Carnet" 
+        icon={<AssignmentInd sx={{ fontSize: 50, color: "#FFFFFF" }} />}
+        animationDirection="bottom-right"
+      />
+    </div>
+  );
+}
+
+function SolicitudCard({ title, icon, animationDirection }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const titleParts = title.split(" ");
+  
+  // Define transform and shadow based on animation direction
+  const getHoverStyles = () => {
+    if (!isHovered) return {};
+    
+    let transform = "scale(1.05) ";
+    let shadowClass = "shadow-xl";
+    
+    switch (animationDirection) {
+      case "top-left":
+        transform += "translate(-7px, -7px)";
+        break;
+      case "top-right":
+        transform += "translate(7px, -7px)";
+        break;
+      case "bottom-left":
+        transform += "translate(-7px, 7px)";
+        break;
+      case "bottom-right":
+        transform += "translate(7px, 7px)";
+        break;
+      default:
+        transform += "translate(0, 0)";
+    }
+    
+    return {
+      transform,
+      boxShadow: isHovered ? 
+        "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" : 
+        "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+    };
+  };
+  
+  return (
+    <div 
+      className="bg-[#f2f2f2ff] rounded-2xl shadow-md shadow-gray-400 border border-[#a6a6a6ff] flex justify-center items-center cursor-pointer w-[320px] h-52 transition-all duration-300 ease-in-out"
+      style={getHoverStyles()}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-        <div className="absolute text-[20px] top-4 left-4 w-10 h-10 bg-gradient-to-br from-[#C40180] to-[#590248] rounded-full flex items-center justify-center text-white font-bold shadow-md">
-            {number}
-        </div>
-
-        <div className="mb-6 mt-4 flex justify-center items-center">
-            <h3 className="text-xl font-bold text-[#590248] text-center mr-8">
-                {title}
-            </h3>
-            <div className="w-18 h-14 bg-gradient-to-br from-[#C40180] to-[#590248] rounded-lg flex items-center justify-center transform rotate-10 shadow-lg">
-                <Icon className="w-10 h-10 text-white" />
-            </div>
-        </div>
-
-        <div className="text-[#646566] text-sm pl-2 min-h-[100px] font-semibold text-center">
-            {description}
-        </div>
-
-        {/* Botón "Ver más" siempre visible y alineado a la derecha */}
-        <motion.div
-            className="flex items-center justify-end cursor-pointer text-[#C40180] font-medium text-sm mt-4"
-            whileHover={{ x: 5 }}
-        >
-            Ver más <ChevronRight className="w-4 h-4 ml-1 inline" />
-        </motion.div>
-
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C40180] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-    </motion.div>
-);
-
-export default function StepsSection() {
-    const steps = [
-        {
-            icon: User,
-            title: "Sistema Solicitudes",
-            description: (
-                <>
-                    <br />
-                    Inscripción de Odontólogos <br /> (Nuevos Colegiados)
-                </>
-            )
-        },
-        {
-            icon: SearchCheck,
-            title: "Sistema Buscador",
-            description: (
-                <>
-                    <br />
-                    Buscar colegiados agremiado por CI y N°COV (Sólo Odontólogos)
-                </>
-            )
-        },
-        {
-            icon: FileCheck,
-            title: "Verificar Documentos",
-            description: (
-                <>
-                    <br />
-                    Verificación de documentos digitales del COV
-                </>
-            )
-        }
-    ];
-
-    return (
-        <section className="py-10 bg-gradient-to-b from-white to-gray-50">
-            <div className="text-center mb-12">
-                <motion.span
-                    className="text-sm font-medium text-[#C40180] uppercase tracking-wider"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                >
-                    Servicios Digitales
-                </motion.span>
-
-                <motion.h2
-                    className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text px-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    viewport={{ once: true }}
-                >
-                    Tu Carrera Profesional Comienza Aquí
-                </motion.h2>
-
-                <motion.p
-                    className="mt-6 sm:mt-8 md:mt-10 max-w-2xl mx-auto text-gray-600 px-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    viewport={{ once: true }}
-                >
-                    Forma parte del Colegio de Odontólogos de Venezuela y accede a todos nuestros
-                    servicios digitales diseñados para impulsar tu desarrollo profesional.
-                </motion.p>
-            </div>
-
-            <div className="max-w-6xl mx-auto px-10 sm:px-20 md:px-30 lg:px-22">
-                {/* Responsive grid - 3 columns on lg+, 1 column on smaller screens */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
-                    {steps.map((step, index) => (
-                        <StepCard
-                            key={index}
-                            icon={step.icon}
-                            number={index + 1}
-                            title={step.title}
-                            description={step.description}
-                            index={index}
-                        />
-                    ))}
-                </div>
-            </div>
-
-            <motion.div
-                className="text-center mt-12"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                viewport={{ once: true }}
-            >
-                <button className="px-6 py-3 sm:px-8 cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white font-medium rounded-full hover:shadow-lg transition-all duration-300 flex items-center mx-auto">
-                    Ingresa Ahora
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                </button>
-            </motion.div>
-        </section>
-    );
+      <div className="flex flex-col mr-8">
+        {titleParts.length > 1 ? (
+          <>
+            <h2 className="text-2xl font-extrabold text-black italic text-center">{titleParts[0]}</h2>
+            <h2 className="text-2xl font-extrabold text-black italic text-center">{titleParts.slice(1).join(" ")}</h2>
+          </>
+        ) : null}
+      </div>
+      <div className={`bg-gradient-to-t from-[#D7008A] to-[#41023B] rounded-lg h-20 w-26 flex items-center justify-center shadow-md rotate-[10deg] transition-transform duration-300 ${isHovered ? 'scale-110' : ''}`}>
+        {icon}
+      </div>
+    </div>
+  );
 }
