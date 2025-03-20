@@ -19,7 +19,7 @@ const StepCard = ({ icon: Icon, number, title, description, index }) => (
             scale: 1.03,
             transition: { duration: 0.2 }
         }}
-        className="relative py-10 px-6 sm:px-8 md:px-12 bg-white rounded-xl hover:shadow-xl shadow-[#590248]/20 transition-all duration-300 border-t-4 border-[#C40180] border-b border-[#C40180] overflow-hidden group"
+        className="relative py-10 px-6 sm:px-8 md:px-12 bg-white rounded-xl shadow-md hover:shadow-xl shadow-[#590248]/30 transition-all duration-300 border-t-4 border-[#C40180] border-b-2 border-[#C40180] overflow-hidden group"
     >
         <div className="absolute text-[20px] top-4 left-4 w-10 h-10 bg-gradient-to-br from-[#C40180] to-[#590248] rounded-full flex items-center justify-center text-white font-bold shadow-md">
             {number}
@@ -29,7 +29,7 @@ const StepCard = ({ icon: Icon, number, title, description, index }) => (
             <h3 className="text-xl font-bold text-[#590248] text-center mr-8">
                 {title}
             </h3>
-            <div className="w-16 h-14 bg-gradient-to-br from-[#C40180] to-[#590248] rounded-lg flex items-center justify-center transform rotate-10 shadow-lg">
+            <div className="w-18 h-14 bg-gradient-to-br from-[#C40180] to-[#590248] rounded-lg flex items-center justify-center transform rotate-10 shadow-lg">
                 <Icon className="w-10 h-10 text-white" />
             </div>
         </div>
@@ -118,7 +118,7 @@ export default function StepsSection() {
                 </motion.p>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-20 lg:px-22">
+            <div className="max-w-6xl mx-auto px-10 sm:px-20 md:px-30 lg:px-22">
                 {/* Responsive grid - 3 columns on lg+, 1 column on smaller screens */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
                     {steps.map((step, index) => (

@@ -120,33 +120,34 @@ export default function AppBar() {
                     {item.submenu && <FaChevronDown className={`w-2 h-2 lg:w-2.5 lg:h-2.5 xl:w-3 xl:h-3 transition-transform duration-500 ${openMenu === index ? 'rotate-180' : ''}`} />}
                   </span>
                   {item.submenu && openMenu === index && (
-                    <>
-                      {/* Puente imaginario */}
-                      <div
-                        className="absolute top-0 left-0 w-full h-16 bg-transparent z-50"
-                        onMouseEnter={() => handleBridgeHover(index)}
-                      ></div>
+  <>
+    {/* Puente imaginario */}
+    <div
+      className="absolute top-0 left-0 w-full h-16 bg-transparent z-50"
+      onMouseEnter={() => handleBridgeHover(index)}
+    ></div>
 
-                      {/* Menú desplegable */}
-                      <div 
-                        ref={(el) => (menuRefs.current[index] = el)}
-                        className="absolute left-1/2 transform -translate-x-1/2 mt-2 bg-[#7c235d] shadow-lg rounded-lg py-3 z-50 min-w-48 overflow-hidden transition-all duration-300 ease-in-out"
-                        onMouseEnter={() => setOpenMenu(index)}
-                        onMouseLeave={() => setOpenMenu(null)}
-                      >
-                        <div className="space-y-2 px-2">
-                          {item.submenu.map((subItem, subIndex) => (
-                            <div
-                              key={subIndex}
-                              className="px-4 lg:px-6 xl:px-8 py-2 lg:py-3 text-white hover:text-black hover:bg-gray-200 hover:rounded-xl cursor-pointer whitespace-nowrap transition-colors duration-10 text-[12px] lg:text-[13px] xl:text-[14px]"
-                            >
-                              {subItem}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
+    {/* Menú desplegable */}
+    <div
+      ref={(el) => (menuRefs.current[index] = el)}
+      className="absolute left-1/2 transform -translate-x-1/2 mt-2 bg-[#7c235d] shadow-lg rounded-lg py-3 z-50 min-w-48 overflow-hidden transition-all duration-300 ease-in-out opacity-0 pointer-events-none"
+      style={{ opacity: openMenu === index ? 1 : 0, transform: openMenu === index ? 'translateY(0)' : 'translateY(-10px)', pointerEvents: openMenu === index ? 'auto' : 'none' }}
+      onMouseEnter={() => setOpenMenu(index)}
+      onMouseLeave={() => setOpenMenu(null)}
+    >
+      <div className="space-y-2 px-2">
+        {item.submenu.map((subItem, subIndex) => (
+          <div
+            key={subIndex}
+            className="px-4 lg:px-6 xl:px-8 py-2 lg:py-3 text-white hover:text-black hover:bg-gray-200 rounded-xl cursor-pointer whitespace-nowrap transition-colors duration-10 text-[12px] lg:text-[13px] xl:text-[14px]"
+          >
+            {subItem}
+          </div>
+        ))}
+      </div>
+    </div>
+  </>
+)}
                 </div>
               ))}
             </div>
