@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
 import Image from 'next/image';
 import { useState } from 'react';
 import { Description, EventNote, School, Forum, Inbox } from '@mui/icons-material';
 
-export default function AppBar() {
+export default function AppBar({ solvencyInfo }) {
   const [selectedItem, setSelectedItem] = useState('Solicitudes');
 
   return (
-    <div className="bg-gradient-to-t from-[#D7008A] to-[#41023B] h-full">
+    <div className="h-full w-full">
       {/* Logo */}
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <Image
           src="/assets/logo.png"
           alt="Colegio de Odontólogos de Venezuela"
@@ -59,9 +59,21 @@ export default function AppBar() {
           active={selectedItem === 'Bandeja'}
           onClick={() => setSelectedItem('Bandeja')}
         />
+        <Divider />
+
+        {/* Ítem de Solvencia (solo visible en md, sm y móviles) */}
+        <div className="my-4 w-5/6 mx-auto px-4 py-3 bg-white/5 rounded-lg md:block md:hidden lg:hidden">
+  <div className="flex items-center">
+    <div className="flex flex-col">
+      <span className="text-md text-gray-300 mb-2">Estado:</span>
+      <span className="text-[16px] font-semibold text-white">
+        <span className="text-green-400">Solvente</span> hasta: {solvencyInfo}
+      </span>
+    </div>
+  </div>
+</div>
       </nav>
     </div>
-    
   );
 }
 
@@ -80,7 +92,7 @@ function SidebarItem({ icon, text, active, onClick }) {
       }`}
     >
       <span className="mr-3">{icon}</span>
-      <span>{text}</span>
+      <span className="whitespace-nowrap">{text}</span>
     </a>
   );
 }
