@@ -165,7 +165,7 @@ export default function Chat() {
                     className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
                   />
                 </div>
-                <h3 className={`font-medium text-white text-sm sm:text-base ${isMinimized ? '' : 'mr-4'}`}>Mensajes</h3>
+                <h3 className={`font-medium text-white text-sm sm:text-base mr-2 ${isMinimized ? '' : 'mr-4'}`}>Mensajes</h3>
               </div>
 
               {/* Botones en la cabecera mejorados */}
