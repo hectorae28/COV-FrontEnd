@@ -9,7 +9,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata = {
-  title: "COLEGIADOS - Colegio de Odontólogos de Venezuela",
+  title: "INICIO DE SESION - COV",
 };
 
 export default function RootLayout({ children }) {
