@@ -38,7 +38,7 @@ const StepCard = ({ icon: Icon, number, title, description, index }) => (
             {description}
         </div>
 
-        {/* Botón "Ver más" siempre visible y alineado a la derecha */}
+        {/* Botón Ver más */}
         <motion.div
             className="flex items-center justify-end cursor-pointer text-[#C40180] font-medium text-sm mt-4"
             whileHover={{ x: 5 }}

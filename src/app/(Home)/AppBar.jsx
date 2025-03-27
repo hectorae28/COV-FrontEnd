@@ -1,47 +1,76 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { FaChevronDown, FaBars, FaTimes } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
 const menuItems = [
-  { title: "Inicio", link: "#" },
+  { title: "Inicio", route: "/" },
   { 
     title: "Sobre COV", 
-    submenu: ["Historia", "Galeria de Presidentes", "Junta Directiva", "Comisiones", "Leyes y Reglamentos", "Descargar Logo"] 
+    submenu: [
+      { title: "Historia", route: "/Historia" },
+      { title: "Galeria de Presidentes", route: "/GaleriaPresidentes" },
+      { title: "Junta Directiva", route: "/JuntaDirectiva" },
+      { title: "Comisiones", route: "/Comisiones" },
+      { title: "Leyes y Reglamentos", route: "/LeyesReglamentos" },
+      { title: "Descargar Logo", route: "/DescargarLogo" }
+    ] 
   },
   { 
     title: "Nueva Ley", 
-    link: "#" 
+    route: "/NuevaLey" 
   },
   { 
     title: "Especialistas", 
-    submenu: ["Armonizacion Orofacial", "Cirugia Bucal", "Cirugia Bucomaxilofacial", "Endodoncia", "Ortodoncia"] 
+    submenu: [
+      { title: "Armonizacion Orofacial", route: "/Especialistas/ArmonizacionOrofacial" },
+      { title: "Cirugia Bucal", route: "/Especialistas/CirugiaBucal" },
+      { title: "Cirugia Bucomaxilofacial", route: "/Especialistas/CirugiaBucomaxilofacial" },
+      { title: "Endodoncia", route: "/Especialistas/Endodoncia" },
+      { title: "Ortodoncia", route: "/Especialistas/Ortodoncia" }
+    ] 
   },
   { 
     title: "Eventos", 
-    submenu: ["Eventos COV", "Juegos Nacionales", "Certificados"] 
+    submenu: [
+      { title: "Eventos COV", route: "/Eventos/EventosCOV" },
+      { title: "Juegos Nacionales", route: "/Eventos/JuegosNacionales" },
+      { title: "Certificados", route: "/Eventos/Certificados" }
+    ] 
   },
   { 
     title: "Trámites", 
-    submenu: ["Tarifas", "Carnet", "Odontologos", "Higienistas Dentales", "Tecnicos Dentales", "Especialidades", "Cuentas Bancarias", "Paypal", "Verificar Documentos", "Aval para Cursos", "Tutoriales"] 
+    submenu: [
+      { title: "Tarifas", route: "/Tramites/Tarifas" },
+      { title: "Carnet", route: "/Tramites/Carnet" },
+      { title: "Odontologos", route: "/Tramites/Odontologos" },
+      { title: "Higienistas Dentales", route: "/Tramites/HigienistaDental" },
+      { title: "Tecnicos Dentales", route: "/Tramites/TecnicosDentales" },
+      { title: "Especialidades", route: "/Tramites/Especialidades" },
+      { title: "Cuentas Bancarias", route: "/Tramites/CuentasBancarias" },
+      { title: "Paypal", route: "/Tramites/Paypal" },
+      { title: "Verificar Documentos", route: "/Tramites/VerificarDocumentos" },
+      { title: "Aval para Cursos", route: "/Tramites/AvalCursos" },
+      { title: "Tutoriales", route: "/Tramites/Tutoriales" }
+    ] 
   },
-  { title: "Contáctenos", link: "#" }
+  { title: "Contáctenos", route: "/Contactenos" }
 ];
 
 export default function AppBar() {
+  const router = useRouter();
   const [paddingY, setPaddingY] = useState(24);
   const [openMenu, setOpenMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSubmenuOpen, setMobileSubmenuOpen] = useState(null);
+  const [showWhatsappText, setShowWhatsappText] = useState(false);
   const menuRefs = useRef([]);
   const mobileMenuRef = useRef(null);
 
   useEffect(() => {
-    if (!menuRefs.current) {
-      menuRefs.current = [];
-    }
-
     const handleScroll = () => {
       const maxScroll = 100;
       const scrollY = window.scrollY;
@@ -72,6 +101,15 @@ export default function AppBar() {
     };
   }, [mobileMenuOpen]);
 
+  const navigateTo = (route) => {
+    if (route) {
+      router.push(route);
+      setMobileMenuOpen(false);
+      setOpenMenu(null);
+      setMobileSubmenuOpen(null);
+    }
+  };
+
   const handleBridgeHover = (index) => {
     setOpenMenu(index);
   };
@@ -85,6 +123,10 @@ export default function AppBar() {
     setMobileSubmenuOpen(mobileSubmenuOpen === index ? null : index);
   };
 
+  const handleWhatsAppClick = () => {
+    window.open("https://wa.me/+584149165829", "_blank");
+  };
+
   return (
     <>
       <header
@@ -93,7 +135,7 @@ export default function AppBar() {
       >
         <div className="container mx-auto flex items-center justify-between px-4">
           {/* Logo */}
-          <div className="flex items-center cursor-pointer">
+          <div onClick={() => navigateTo("/")} className="flex items-center cursor-pointer">
             <Image 
               src="/assets/logo.png" 
               alt="logos" 
@@ -113,41 +155,53 @@ export default function AppBar() {
                   onMouseEnter={() => setOpenMenu(index)}
                   onMouseLeave={() => setOpenMenu(null)}
                 >
-                  <span
-                    className="text-white font-bold text-[12px] lg:text-[13px] xl:text-[15px] 2xl:text-[16px] cursor-pointer flex items-center gap-1 lg:gap-2 transition-all duration-300 whitespace-nowrap"
-                  >
-                    {item.title} 
-                    {item.submenu && <FaChevronDown className={`w-2 h-2 lg:w-2.5 lg:h-2.5 xl:w-3 xl:h-3 transition-transform duration-500 ${openMenu === index ? 'rotate-180' : ''}`} />}
-                  </span>
-                  {item.submenu && openMenu === index && (
-  <>
-    {/* Puente imaginario */}
-    <div
-      className="absolute top-0 left-0 w-full h-16 bg-transparent z-50"
-      onMouseEnter={() => handleBridgeHover(index)}
-    ></div>
+                  {item.route ? (
+                    <span 
+                      onClick={() => navigateTo(item.route)}
+                      className="text-white font-bold text-[12px] lg:text-[13px] xl:text-[15px] 2xl:text-[16px] cursor-pointer flex items-center gap-1 lg:gap-2 transition-all duration-300 whitespace-nowrap"
+                    >
+                      {item.title}
+                      {item.submenu && <FaChevronDown className={`w-2 h-2 lg:w-2.5 lg:h-2.5 xl:w-3 xl:h-3 transition-transform duration-500 ${openMenu === index ? 'rotate-180' : ''}`} />}
+                    </span>
+                  ) : (
+                    <span className="text-white font-bold text-[12px] lg:text-[13px] xl:text-[15px] 2xl:text-[16px] cursor-pointer flex items-center gap-1 lg:gap-2 transition-all duration-300 whitespace-nowrap">
+                      {item.title}
+                      {item.submenu && <FaChevronDown className={`w-2 h-2 lg:w-2.5 lg:h-2.5 xl:w-3 xl:h-3 transition-transform duration-500 ${openMenu === index ? 'rotate-180' : ''}`} />}
+                    </span>
+                  )}
 
-    {/* Menú desplegable */}
-    <div
-      ref={(el) => (menuRefs.current[index] = el)}
-      className="absolute left-1/2 transform -translate-x-1/2 mt-2 bg-[#7c235d] shadow-lg rounded-lg py-3 z-50 min-w-48 overflow-hidden transition-all duration-300 ease-in-out opacity-0 pointer-events-none"
-      style={{ opacity: openMenu === index ? 1 : 0, transform: openMenu === index ? 'translateY(0)' : 'translateY(-10px)', pointerEvents: openMenu === index ? 'auto' : 'none' }}
-      onMouseEnter={() => setOpenMenu(index)}
-      onMouseLeave={() => setOpenMenu(null)}
-    >
-      <div className="space-y-2 px-2">
-        {item.submenu.map((subItem, subIndex) => (
-          <div
-            key={subIndex}
-            className="px-4 lg:px-6 xl:px-8 py-2 lg:py-3 text-white hover:text-black hover:bg-gray-200 rounded-xl cursor-pointer whitespace-nowrap transition-colors duration-10 text-[12px] lg:text-[13px] xl:text-[14px]"
-          >
-            {subItem}
-          </div>
-        ))}
-      </div>
-    </div>
-  </>
-)}
+                  {item.submenu && openMenu === index && (
+                    <>
+                      <div
+                        className="absolute top-0 left-0 w-full h-16 bg-transparent z-50"
+                        onMouseEnter={() => handleBridgeHover(index)}
+                      ></div>
+
+                      <div
+                        ref={(el) => (menuRefs.current[index] = el)}
+                        className="absolute left-1/2 transform -translate-x-1/2 mt-2 bg-[#7c235d] shadow-lg rounded-lg py-3 z-50 min-w-48 overflow-hidden transition-all duration-300 ease-in-out opacity-0 pointer-events-none"
+                        style={{ 
+                          opacity: openMenu === index ? 1 : 0, 
+                          transform: openMenu === index ? 'translateY(0)' : 'translateY(-10px)', 
+                          pointerEvents: openMenu === index ? 'auto' : 'none' 
+                        }}
+                        onMouseEnter={() => setOpenMenu(index)}
+                        onMouseLeave={() => setOpenMenu(null)}
+                      >
+                        <div className="space-y-2 px-2">
+                          {item.submenu.map((subItem, subIndex) => (
+                            <div 
+                              key={subIndex} 
+                              onClick={() => navigateTo(subItem.route)}
+                              className="px-4 lg:px-6 xl:px-8 py-2 lg:py-3 text-white hover:text-black hover:bg-gray-200 rounded-xl cursor-pointer whitespace-nowrap transition-colors duration-100 text-[12px] lg:text-[13px] xl:text-[14px]"
+                            >
+                              {subItem.title}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -155,9 +209,12 @@ export default function AppBar() {
 
           {/* Right side controls */}
           <div className="flex items-center space-x-2 md:space-x-4">
-            {/* Botón Trámites - Tablet */}
+            {/* Botón Colegiados - Tablet */}
             <div className="hidden md:block lg:hidden">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[14px] py-2 px-4 rounded-full cursor-pointer transition-all duration-200 whitespace-nowrap">
+              <div 
+                onClick={() => navigateTo("/colegiados")}
+                className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[14px] py-2 px-4 rounded-full cursor-pointer transition-all duration-200 whitespace-nowrap"
+              >
                 Colegiados
               </div>
             </div>
@@ -175,9 +232,12 @@ export default function AppBar() {
               )}
             </button>
 
-            {/* Botón Colegiados */}
+            {/* Botón Colegiados - Desktop */}
             <div className="hidden lg:flex items-center">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[12px] lg:text-[14px] xl:text-[16px] 2xl:text-[18px] py-1.5 lg:py-2 px-3 lg:px-4 xl:px-6 2xl:px-8 rounded-full cursor-pointer transition-all duration-200 whitespace-nowrap">
+              <div 
+                onClick={() => navigateTo("/colegiados")}
+                className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[12px] lg:text-[14px] xl:text-[16px] 2xl:text-[18px] py-1.5 lg:py-2 px-3 lg:px-4 xl:px-6 2xl:px-8 rounded-full cursor-pointer transition-all duration-200 whitespace-nowrap"
+              >
                 Colegiados
               </div>
             </div>
@@ -193,24 +253,43 @@ export default function AppBar() {
             <div className="px-4 py-2">
               {menuItems.map((item, index) => (
                 <div key={index} className="py-2 border-b border-[#D7008A]/30 last:border-b-0">
-                  <div 
-                    className="flex justify-between items-center text-white font-bold py-2"
-                    onClick={() => item.submenu ? toggleMobileSubmenu(index) : null}
-                  >
-                    <span>{item.title}</span>
-                    {item.submenu && (
-                      <FaChevronDown className={`w-3 h-3 transition-transform duration-300 ${mobileSubmenuOpen === index ? 'rotate-180' : ''}`} />
-                    )}
-                  </div>
+                  {item.route ? (
+                    <div 
+                      onClick={() => navigateTo(item.route)}
+                      className="flex justify-between items-center text-white font-bold py-2"
+                    >
+                      <span>{item.title}</span>
+                      {item.submenu && (
+                        <FaChevronDown 
+                          className={`w-3 h-3 transition-transform duration-300 ${mobileSubmenuOpen === index ? 'rotate-180' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMobileSubmenu(index);
+                          }}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <div 
+                      className="flex justify-between items-center text-white font-bold py-2"
+                      onClick={() => item.submenu ? toggleMobileSubmenu(index) : null}
+                    >
+                      <span>{item.title}</span>
+                      {item.submenu && (
+                        <FaChevronDown className={`w-3 h-3 transition-transform duration-300 ${mobileSubmenuOpen === index ? 'rotate-180' : ''}`} />
+                      )}
+                    </div>
+                  )}
                   
                   {item.submenu && mobileSubmenuOpen === index && (
                     <div className="pl-4 py-2 space-y-2">
                       {item.submenu.map((subItem, subIndex) => (
-                        <div
+                        <div 
                           key={subIndex}
+                          onClick={() => navigateTo(subItem.route)}
                           className="py-2 text-white hover:text-gray-200 cursor-pointer"
                         >
-                          {subItem}
+                          {subItem.title}
                         </div>
                       ))}
                     </div>
@@ -220,22 +299,93 @@ export default function AppBar() {
               
               {/* Mobile Colegiados */}
               <div className="py-4 flex justify-center md:hidden">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[16px] py-2 px-6 rounded-full cursor-pointer transition-all duration-200">
+                <div 
+                  onClick={() => navigateTo("/colegiados")}
+                  className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[16px] py-2 px-6 rounded-full cursor-pointer transition-all duration-200"
+                >
                   Colegiados
                 </div>
               </div>
             </div>
           </div>
         )}
-      </header>
 
-      {/* Fondo Oscuro */}
-      {mobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/80 z-40 lg:hidden"
-          aria-hidden="true"
-        ></div>
-      )}
+        {/* WhatsApp Button - Desktop */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 260,
+            damping: 20,
+            delay: 1.5
+          }}
+          className="hidden lg:flex fixed bottom-8 right-8 items-center cursor-pointer hover:opacity-100 transition-all duration-300 z-50"
+          onMouseEnter={() => setShowWhatsappText(true)}
+          onMouseLeave={() => setShowWhatsappText(false)}
+        >
+          <AnimatePresence>
+            {showWhatsappText && (
+              <motion.div
+                initial={{ opacity: 0, x: 20, scale: 0.8 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 20, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white text-black font-medium rounded-full mr-4 py-2 px-6 shadow-lg flex items-center"
+              >
+                <span className="whitespace-nowrap text-sm">¿Necesitas ayuda?</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div 
+            onClick={handleWhatsAppClick}
+            className="bg-gradient-to-br from-[#0dbf43ff] to-[#008068ff] rounded-full p-3 shadow-lg"
+          >
+            <Image
+              src="/assets/icons/whatsapp.png"
+              alt="WhatsApp"
+              width={32}
+              height={32}
+              className="w-8 h-8 transition-transform duration-300 hover:rotate-12"
+            />
+          </div>
+        </motion.div>
+
+        {/* WhatsApp Button - Mobile */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 260,
+            damping: 20,
+            delay: 1.5
+          }}
+          className="lg:hidden fixed bottom-6 right-6 flex items-center cursor-pointer hover:opacity-100 transition-all duration-300 z-50"
+        >
+          <div 
+            onClick={handleWhatsAppClick}
+            className="bg-gradient-to-br from-[#0dbf43ff] to-[#008068ff] rounded-full p-2.5 shadow-lg"
+          >
+            <Image
+              src="/assets/icons/whatsapp.png"
+              alt="WhatsApp"
+              width={28}
+              height={28}
+              className="w-7 h-7 transition-transform duration-300 hover:rotate-12"
+            />
+          </div>
+        </motion.div>
+
+        {/* Fondo Oscuro */}
+        {mobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+            aria-hidden="true"
+          ></div>
+        )}
+      </header>
     </>
   );
 }
