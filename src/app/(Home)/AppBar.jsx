@@ -129,6 +129,13 @@ export default function AppBar() {
 
   return (
     <>
+      {/* Fondo Oscuro */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+          aria-hidden="true"
+        ></div>
+      )}
       <header
         className="bg-gradient-to-t from-[#D7008A] to-[#41023B] w-full z-1100 fixed top-0 left-0 transition-all duration-300 shadow-lg"
         style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
@@ -378,13 +385,6 @@ export default function AppBar() {
           </div>
         </motion.div>
 
-        {/* Fondo Oscuro */}
-        {mobileMenuOpen && (
-          <div 
-            className="fixed inset-0 bg-black/80 z-40 lg:hidden"
-            aria-hidden="true"
-          ></div>
-        )}
       </header>
     </>
   );

@@ -182,7 +182,7 @@ const ReflectionCard = ({ title, content, index }) => {
 
             {/* Title and Action */}
             <div className="flex-1 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+              <h3 className="sm:text-md sm:w-2/3 lg:text-lg font-bold text-gray-800 ">{title}</h3>
               <motion.div
                 className="flex items-center text-xs text-[#C40180] cursor-pointer"
                 onClick={() => setIsExpanded(!isExpanded)}
@@ -210,7 +210,7 @@ const ReflectionCard = ({ title, content, index }) => {
                 transition={{ duration: 0.3 }}
                 className="mt-3 overflow-hidden w-full"
               >
-                <div className="pt-3 border-t border-gray-300 text-gray-700 text-sm break-words">{content}</div>
+                <div className="pt-3 border-t border-gray-300 text-gray-700 text-sm break-words p-4">{content}</div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -222,7 +222,7 @@ const ReflectionCard = ({ title, content, index }) => {
 
 export default function Historia() {
   return (
-    <div className="flex flex-col mt-20">
+    <div className="flex flex-col mt-12 lg:mt-20">
       <main className="container mx-auto px-4 py-20 flex-grow">
         {/* Page Title */}
         <motion.div
