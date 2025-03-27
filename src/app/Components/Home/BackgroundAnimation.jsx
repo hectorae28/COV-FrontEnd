@@ -11,8 +11,8 @@ const FloatingParticles = () => {
       height: Math.random() * 6 + 2,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
-      duration: Math.random() * 5 + 5, // Más rápido
-      delay: Math.random() * 4,        // Menos retraso
+      duration: Math.random() * 5 + 5, 
+      delay: Math.random() * 4,        
     }));
     setParticles(newParticles);
   }, []);
@@ -62,8 +62,8 @@ const GradientBlobs = () => {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: Math.random() * 300 + 100,
-        xSpeed: Math.random() * 1 - 0.8, // Más rápido
-        ySpeed: Math.random() * 1 - 0.8, // Más rápido
+        xSpeed: Math.random() * 1 - 0.8,
+        ySpeed: Math.random() * 1 - 0.8,
         hue: Math.random() * 30 + 320,
       });
     }

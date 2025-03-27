@@ -1,11 +1,11 @@
-import LoginScre from "./LoginScreen";
+import LoginScreen from "./LoginScreen";
 
 export default function Home() {
 
   return (
     <div>
       <main>
-        <LoginScre />
+        <LoginScreen />
       </main>
     </div>
   );
