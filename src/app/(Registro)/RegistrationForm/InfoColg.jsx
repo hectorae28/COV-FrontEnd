@@ -21,7 +21,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
     >
       {/* Graduate Institute */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700 flex items-center">
+        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Instituto donde se Graduó
         </label>
         <input 
@@ -37,7 +37,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
 
       {/* University */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700 flex items-center">
+        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Universidad que Expidió el Título
         </label>
         <input 
@@ -54,7 +54,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
       {/* Registration Number */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Número de Registro Principal
           </label>
           <input 
@@ -68,7 +68,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
           />
         </div>
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Fecha de Registro Principal
           </label>
           <div className="relative">
@@ -88,7 +88,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
       {/* M.P.P.S Registration */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Número de Registro M.P.P.S
           </label>
           <input 
@@ -102,7 +102,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
           />
         </div>
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Fecha de Registro M.P.P.S
           </label>
           <div className="relative">
@@ -121,7 +121,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
 
       {/* Title Issuance Date */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+        <label className="block mb-2 text-sm font-medium text-[#41023B]">
           Fecha de Emisión del Título
         </label>
         <div className="relative">

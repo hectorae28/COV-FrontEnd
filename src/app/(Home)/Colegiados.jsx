@@ -75,7 +75,7 @@ export default function Colegiados({ onClose, isClosing }) {
           {currentView === 'login' && (
             <LoginForm 
               onForgotPassword={() => setCurrentView('forgot-password')} 
-              onRegister={() => router.push('/RegistrationForm')} 
+              onRegister={() => router.replace('/RegistrationForm')} 
             />
           )}
           

@@ -15,7 +15,7 @@ export default function InfoLaboral({ formData, onInputChange }) {
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">Nombre de Institución</label>
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">Nombre de Institución</label>
           <input 
             type="text"
             name="institutionName"
@@ -26,7 +26,7 @@ export default function InfoLaboral({ formData, onInputChange }) {
           />
         </div>
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">Dirección de Institución</label>
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">Dirección de Institución</label>
           <input 
             type="text"
             name="institutionAddress"
@@ -40,7 +40,7 @@ export default function InfoLaboral({ formData, onInputChange }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">Teléfono de Institución</label>
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">Teléfono de Institución</label>
           <input 
             type="text"
             name="institutionPhone"
@@ -51,7 +51,7 @@ export default function InfoLaboral({ formData, onInputChange }) {
           />
         </div>
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">Nombre de Clínica Privada</label>
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">Nombre de Clínica Privada</label>
           <input 
             type="text"
             name="clinicName"
@@ -65,7 +65,7 @@ export default function InfoLaboral({ formData, onInputChange }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">Dirección de Clínica</label>
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">Dirección de Clínica</label>
           <input 
             type="text"
             name="clinicAddress"
@@ -76,7 +76,7 @@ export default function InfoLaboral({ formData, onInputChange }) {
           />
         </div>
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">Teléfono de Clínica</label>
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">Teléfono de Clínica</label>
           <input 
             type="text"
             name="clinicPhone"

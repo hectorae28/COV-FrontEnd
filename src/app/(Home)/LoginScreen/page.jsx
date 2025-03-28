@@ -3,10 +3,10 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import PanelAdmin from "./PanelAdmin"
-import Colegiados from "./Colegiados"
-import BackgroundAnimation from "../Components/Home/BackgroundAnimation"
-import InfoSection from "../Components/Home/InfoSection"
+import PanelAdmin from "../PanelAdmin"
+import Colegiados from "../Colegiados"
+import BackgroundAnimation from "../../Components/Home/BackgroundAnimation"
+import InfoSection from "../../Components/Home/InfoSection"
 
 export default function LoginScreen() {
   const [showLogin, setShowLogin] = useState(false)

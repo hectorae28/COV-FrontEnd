@@ -8,7 +8,8 @@ export default function Navbar() {
     const router = useRouter();
 
     const navItems = [
-        { href: '/', label: 'Inicio' },
+        //Home
+        { href: '/LoginScreen', label: 'Inicio' },
         
         //Registro
         { href: '/RegistrationForm', label: 'Registro' },

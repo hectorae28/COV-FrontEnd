@@ -25,7 +25,7 @@ export default function InfoContacto({ formData, onInputChange }) {
     >
       {/* Email */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+        <label className="block mb-2 text-sm font-medium text-[#41023B]">
           Correo Electrónico
         </label>
         <div className="relative">
@@ -46,7 +46,7 @@ export default function InfoContacto({ formData, onInputChange }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Mobile Phone */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Número de Teléfono Móvil
           </label>
           <div className="relative">
@@ -66,7 +66,7 @@ export default function InfoContacto({ formData, onInputChange }) {
 
         {/* Home Phone */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Teléfono de Habitación
           </label>
           <div className="relative">
@@ -87,7 +87,7 @@ export default function InfoContacto({ formData, onInputChange }) {
 
       {/* Home Address */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+        <label className="block mb-2 text-sm font-medium text-[#41023B]">
           Dirección de Habitación
         </label>
         <div className="relative">
@@ -108,7 +108,7 @@ export default function InfoContacto({ formData, onInputChange }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* State */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Estado
           </label>
           <div className="relative">
@@ -137,7 +137,7 @@ export default function InfoContacto({ formData, onInputChange }) {
 
         {/* City */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Ciudad
           </label>
           <input 

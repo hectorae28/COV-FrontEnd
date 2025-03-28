@@ -46,7 +46,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Nationality */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Nacionalidad
           </label>
           <div className="relative">
@@ -72,7 +72,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
 
         {/* Identity Card */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Número de Identificación
           </label>
           <input 
@@ -90,7 +90,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* First Name */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Nombre(s)
           </label>
           <input 
@@ -106,7 +106,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
 
         {/* Last Name */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Apellido(s)
           </label>
           <input 
@@ -124,7 +124,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Birth Place */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Lugar de Nacimiento
           </label>
           <input 
@@ -140,7 +140,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
 
         {/* Birth Date */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Fecha de Nacimiento
           </label>
           <div className="relative">
@@ -158,7 +158,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
 
         {/* Age (Read-only) */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Edad
           </label>
           <input 
@@ -168,14 +168,14 @@ export default function InfoPersonal({ formData, onInputChange }) {
             readOnly
             className="w-full px-4 py-3 border border-gray-200 rounded-xl 
             bg-gray-100 cursor-not-allowed"
-            placeholder="Calculada automáticamente"
+            placeholder="Mayor de 18 años de edad"
           />
         </div>
       </div>
 
       {/* Marital Status */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+        <label className="block mb-2 text-sm font-medium text-[#41023B]">
           Estado Civil
         </label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
