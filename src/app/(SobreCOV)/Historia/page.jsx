@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronRight } from "lucide-react"
-import { LineaTSection } from "../../Components/SobreCOV/LineaTSection"
+import { LineaTSection } from "../../Components/SobreCOV/LineaTHist"
 import { ReflexionSection } from "../../Components/SobreCOV/ReflexionSection"
 
 const TimelineCard = ({ date, title, description, icon: Icon, color, fullDescription, isLast }) => {
