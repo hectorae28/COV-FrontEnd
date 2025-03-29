@@ -122,43 +122,45 @@ export default function RegistrationForm() {
   const CurrentIcon = steps[currentStep - 1]?.icon
 
   return (
-    <div className="relative w-full min-h-screen bg-[#F9F9F9] overflow-hidden mx-auto my-auto">
+    <div className="relative w-full min-h-screen overflow-hidden mx-auto my-auto">
       {/* Header navigation - Improved responsiveness */}
       <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="absolute top-4 right-0 left-0 z-20 px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0"
-      >
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          className="px-4 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2"
-        >
-          <span>Página Principal</span>
-        </motion.button>
+  initial={{ y: -20, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  transition={{ duration: 0.5 }}
+  className="absolute top-4 right-0 left-0 z-20 px-4 sm:px-6 flex justify-between items-center"
+>
+  {/* Botón Página Principal */}
+  <motion.button
+    whileHover={{ scale: 1.03 }}
+    whileTap={{ scale: 0.97 }}
+    className="w-auto px-3 py-1 sm:px-4 sm:py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-xs sm:text-sm text-white rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-1 sm:gap-2"
+  >
+    <span>Página Principal</span>
+  </motion.button>
 
-        <div className="flex items-center gap-6">
-          <Link
-            href="/LoginScreen"
-            className="text-sm md:text-base text-gray-400 transition-colors duration-100 flex items-center group"
-          >
-            <span className="relative font-medium">
-              ¿Ya tienes una cuenta?
-              <span className="text-white hover:text-[#D7008A] text-xl ml-2 font-semibold group-hover:underline">
-                Iniciar sesión
-              </span>
-            </span>
-          </Link>
-        </div>
-      </motion.div>
+  {/* Enlace Iniciar Sesión */}
+  <div className="flex items-center">
+    <Link
+      href="/LoginScreen"
+      className="text-xs sm:text-sm text-gray-400 transition-colors duration-100 flex items-center group"
+    >
+      <span className="relative font-medium">
+        ¿Ya tienes una cuenta?
+        <span className="text-white hover:text-[#D7008A] text-sm sm:text-base ml-1 sm:ml-2 font-semibold group-hover:underline">
+          Iniciar sesión
+        </span>
+      </span>
+    </Link>
+  </div>
+</motion.div>
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-7xl">
+      <div className="relative z-10 flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-22">
+        <div className="w-full max-w-full">
           {/* Responsive Row Layout */}
-          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-22">
             {/* Logo and Title Column */}
-            <div className="w-full lg:w-4/12 flex flex-col items-center justify-center text-center">
+            <div className="w-full lg:w-4/12 flex flex-col items-center justify-center text-center mt-6">
               <motion.div
                 initial={{ y: -30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -190,7 +192,7 @@ export default function RegistrationForm() {
             </div>
 
             {/* Form Column - Wider on larger screens */}
-            <div className="w-full lg:w-10/12">
+            <div className="w-full lg:w-8/12 lg:mt-8">
               <div className="relative">
                 {!isComplete && (
                   <div className="mb-8">
@@ -217,13 +219,12 @@ export default function RegistrationForm() {
                           >
                             <div className="relative">
                               <motion.div
-                                className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                                  isCompleted
+                                className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isCompleted
                                     ? "bg-[#D7008A] border-transparent"
                                     : isCurrent
                                       ? "bg-white border-[#D7008A]"
                                       : "bg-white border-gray-400"
-                                }`}
+                                  }`}
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                               >
@@ -235,9 +236,8 @@ export default function RegistrationForm() {
                               </motion.div>
                             </div>
                             <span
-                              className={`mt-2 text-sm font-medium ${
-                                isCompleted ? "text-white" : isCurrent ? "text-[#D7008A]" : "text-gray-300"
-                              } hidden sm:block`}
+                              className={`mt-2 text-sm font-medium ${isCompleted ? "text-white" : isCurrent ? "text-[#D7008A]" : "text-gray-300"
+                                } hidden sm:block`}
                             >
                               {step.title}
                             </span>
@@ -333,8 +333,8 @@ export default function RegistrationForm() {
                             type="button"
                             onClick={prevStep}
                             className="flex items-center px-5 py-2.5 bg-white text-[#41023B] border border-gray-700
-                            rounded-xl text-base font-medium shadow-sm hover:shadow-md hover:bg-[#41023B] hover:text-white
-                            transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
+                  rounded-xl text-base font-medium shadow-sm hover:shadow-md hover:bg-[#41023B] hover:text-white
+                  transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
@@ -350,8 +350,8 @@ export default function RegistrationForm() {
                             type="button"
                             onClick={nextStep}
                             className="flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
-                            rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90
-                            transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
+                  rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90
+                  transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
@@ -363,8 +363,8 @@ export default function RegistrationForm() {
                             type="submit"
                             onClick={() => setIsIntentionalSubmit(true)}
                             className={`flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
-                            rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90
-                            transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50`}
+                  rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90
+                  transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50`}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
@@ -404,6 +404,8 @@ export default function RegistrationForm() {
               </div>
             </div>
           </div>
+
+
         </div>
       </div>
       <BackgroundAnimation />

@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
 
 export default function InfoColegiado({ formData, onInputChange }) {
+  const [showTitleDateWarning, setShowTitleDateWarning] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     onInputChange({ [name]: value });
@@ -78,7 +81,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
               value={formData.mainRegistrationDate}
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-              focus:outline-none focus:ring-2 focus:ring-[#D7008A] 
+              focus:outline-none focus:ring-2 focus:ring-[#D7008A]
               text-gray-700"
             />
           </div>
@@ -112,7 +115,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
               value={formData.mppsRegistrationDate}
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-              focus:outline-none focus:ring-2 focus:ring-[#D7008A] 
+              focus:outline-none focus:ring-2 focus:ring-[#D7008A]
               text-gray-700"
             />
           </div>
@@ -120,7 +123,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
       </div>
 
       {/* Title Issuance Date */}
-      <div>
+      <div className="relative">
         <label className="block mb-2 text-sm font-medium text-[#41023B]">
           Fecha de Emisión del Título
         </label>
@@ -130,25 +133,29 @@ export default function InfoColegiado({ formData, onInputChange }) {
             name="titleIssuanceDate"
             value={formData.titleIssuanceDate}
             onChange={handleChange}
+            onFocus={() => setShowTitleDateWarning(true)}
+            onBlur={() => setShowTitleDateWarning(false)}
             className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-            focus:outline-none focus:ring-2 focus:ring-[#D7008A] 
+            focus:outline-none focus:ring-2 focus:ring-[#D7008A]
             text-gray-700"
           />
         </div>
-      </div>
-
-      {/* Attention Notice */}
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-6">
-        <div className="flex items-center">
-          <AlertTriangle className="text-yellow-500 mr-3" size={24} />
-          <h3 className="text-lg font-semibold text-yellow-800">
-            ¡Atención Colegiado!
-          </h3>
-        </div>
-        <p className="mt-2 text-yellow-700 text-sm">
-          La fecha de emisión del título es importante y aparecerá en documentos oficiales. 
-          Verifique que la información proporcionada sea precisa y coincida con sus documentos originales.
-        </p>
+        
+        {/* Warning message that appears when date field is focused */}
+        {showTitleDateWarning && (
+          <div className="absolute z-10 mt-2 w-full sm:w-80 md:w-96 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r shadow-md">
+            <div className="flex items-center">
+              <AlertTriangle className="text-yellow-500 mr-2 flex-shrink-0" size={20} />
+              <h3 className="text-sm font-semibold text-yellow-800">
+                ¡Atención Colegiado!
+              </h3>
+            </div>
+            <p className="mt-1 text-yellow-700 text-xs">
+              La fecha de emisión del título es importante y aparecerá en documentos oficiales.
+              Verifique que la información proporcionada sea precisa.
+            </p>
+          </div>
+        )}
       </div>
     </motion.div>
   );
