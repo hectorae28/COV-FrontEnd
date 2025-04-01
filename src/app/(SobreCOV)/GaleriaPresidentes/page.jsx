@@ -1,468 +1,466 @@
-"use client";
-import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import LineaTPresi from "../../Components/SobreCOV/LineaTPresi";
+"use client"
+import { useState, useEffect, useRef } from "react"
+import { ChevronLeft, ChevronRight, Calendar, Play, Pause } from "lucide-react"
+import LineaTPresi from "../../Components/SobreCOV/LineaTPresi"
+import { motion, AnimatePresence } from "framer-motion"
 
-// Gradient colors for visual variety
-const GRADIENT_COLORS = [
-  "from-[#C40180] to-[#590248]",
-  "from-purple-600 to-blue-500",
-  "from-pink-500 to-orange-400",
-  "from-teal-400 to-emerald-500",
-  "from-blue-400 to-cyan-600",
-  "from-yellow-400 to-red-600"
-];
+const LineaTiempo = () => {
+  const presidentes = LineaTPresi.map((presidente, index) => ({
+    id: index + 1,
+    nombre: presidente.title,
+    periodo: presidente.year,
+    logros: presidente.description,
+    foto: presidente.image,
+  }))
 
-// Image placeholder icon
-const ImageOffIcon = ({ color = "#000000" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="48"
-    height="48"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="opacity-60"
-  >
-    <line x1="2" y1="2" x2="22" y2="22" />
-    <path d="M10.41 10.41a2 2 0 1 1-2.83-2.83" />
-    <line x1="13.5" y1="13.5" x2="6" y2="21" />
-    <line x1="18" y1="12" x2="21" y2="15" />
-    <path d="M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59" />
-    <path d="M21 15V5a2 2 0 0 0-2-2H9" />
-  </svg>
-);
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [direction, setDirection] = useState(null)
+  const [hoveredIndex, setHoveredIndex] = useState(null)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const gridRef = useRef(null)
+  const [isMobile, setIsMobile] = useState(false)
 
-const Modal = ({ item, cardColor, onClose }) => {
-  return (
-    <motion.div
-      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-    >
-      <motion.div
-        className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative"
-        initial={{ scale: 0.9, y: 50 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 50 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        <div className={`p-6 sm:p-8`}>
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1">
-              <div className="h-64 md:h-96 w-full bg-gray-100 rounded-lg overflow-hidden">
-                {item.image ? (
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageOffIcon />
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="flex-1">
-              <div className={`inline-block px-4 py-2 rounded-lg text-white bg-gradient-to-br ${cardColor} mb-4`}>
-                <h2 className="text-xl font-bold">{item.title}</h2>
-                <p className="text-sm">Período: {item.year}</p>
-              </div>
-              
-              {item.description && (
-                <div className="prose max-w-none">
-                  <p className="text-gray-700">{item.description}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
-
-const TimelineItem = React.memo(({ item, index, isActive, isLastItem, itemsPerRow, onItemClick }) => {
-  const itemRef = useRef(null);
-  const isInView = useInView(itemRef, { once: false, amount: 0.3 });
-  const [isHovered, setIsHovered] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(0);
-
+  // Check if device is mobile
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    // Initial check
+    checkIfMobile()
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile)
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', checkIfMobile)
+    }
+  }, [])
 
-  // Get gradient color based on index
-  const cardColor = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
+  // Auto-play functionality with 2-second interval (only on desktop)
+  useEffect(() => {
+    let timer
+    let progressTimer
 
-  // Calculate shadow color for active items
-  const getShadowColor = useCallback(() => {
-    if (!isActive) return "";
-
-    const colorMap = {
-      purple: "102, 126, 234",
-      pink: "236, 72, 153",
-      teal: "45, 212, 191",
-      blue: "59, 130, 246"
-    };
-
-    let colorValue = "196, 1, 128";
-
-    for (const [key, value] of Object.entries(colorMap)) {
-      if (cardColor.includes(key)) {
-        colorValue = value;
-        break;
-      }
+    if (isAutoPlaying && !isMobile) {
+      // Reset progress
+      setProgress(0)
+      
+      // Progress animation - update more frequently for smoother animation
+      progressTimer = setInterval(() => {
+        setProgress(prev => Math.min(prev + 2.5, 100)) // Increased increment for 2-second cycle
+      }, 50)
+      
+      // Slide change timer - reduced to 2 seconds
+      timer = setTimeout(() => {
+        handleNext()
+      }, 2000)
     }
 
-    return `0 0 0 6px rgba(${colorValue}, 0.2)`;
-  }, [isActive, cardColor]);
+    return () => {
+      clearTimeout(timer)
+      clearInterval(progressTimer)
+    }
+  }, [isAutoPlaying, currentIndex, isMobile])
 
-  // Common animation and style classes
-  const isActiveOrHovered = isActive || isHovered;
-  const hoverEffectClasses = isActiveOrHovered ? "shadow-2xl translate-y-[-5px] sm:translate-y-[-10px]" : "";
+  // Disable auto-play on mobile
+  useEffect(() => {
+    if (isMobile && isAutoPlaying) {
+      setIsAutoPlaying(false)
+    }
+  }, [isMobile, isAutoPlaying])
 
-  // Determine if this item should show an arrow (only on larger screens)
-  const showArrow = windowWidth >= 768 && index % itemsPerRow !== itemsPerRow - 1 && index !== itemsPerRow - 1;
+  // Scroll to ensure current president is visible in the grid
+  useEffect(() => {
+    if (gridRef.current) {
+      const grid = gridRef.current;
+      const activeElement = grid.querySelector(`[data-index="${currentIndex}"]`);
+      
+      if (activeElement) {
+        // Calculate the position to scroll to
+        const elementRect = activeElement.getBoundingClientRect();
+        const gridRect = grid.getBoundingClientRect();
+        
+        // Only scroll if the element is not fully visible
+        if (elementRect.bottom > gridRect.bottom || elementRect.top < gridRect.top) {
+          activeElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+          });
+        }
+      }
+    }
+  }, [currentIndex]);
+
+  const handleNext = () => {
+    if (!isAnimating) {
+      setDirection("next")
+      setIsAnimating(true)
+      setProgress(0)
+      setTimeout(() => {
+        setCurrentIndex((currentIndex + 1) % presidentes.length)
+        setIsAnimating(false)
+      }, 300)
+    }
+  }
+
+  const handlePrev = () => {
+    if (!isAnimating) {
+      setDirection("prev")
+      setIsAnimating(true)
+      setProgress(0)
+      setTimeout(() => {
+        setCurrentIndex((currentIndex - 1 + presidentes.length) % presidentes.length)
+        setIsAnimating(false)
+      }, 300)
+    }
+  }
+
+  const handleSelectPresident = (index) => {
+    if (index !== currentIndex && !isAnimating) {
+      setDirection(index > currentIndex ? "next" : "prev")
+      setIsAnimating(true)
+      setProgress(0)
+      setTimeout(() => {
+        setCurrentIndex(index)
+        setIsAnimating(false)
+      }, 300)
+    }
+  }
+
+  const toggleAutoPlay = () => {
+    setIsAutoPlaying(!isAutoPlaying)
+  }
+
+  const selected = presidentes[currentIndex]
+  
+  // Extract start and end years for timeline
+  const startYear = presidentes[0].periodo.split("-")[0]
+  const endYear = presidentes[presidentes.length - 1].periodo.split("-")[1] || "Actual"
 
   return (
-    <motion.div
-      ref={itemRef}
-      className={`relative pt-16 transition-all duration-100 ${isActive ? "scale-105 z-30" : "z-20"}`}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } : { opacity: 0, y: 50 }}
-    >
-      {/* Timeline node/dot */}
-      <motion.div
-        className={`absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border-4 border-white z-30 shadow-lg bg-gradient-to-br ${cardColor}`}
-        style={{ boxShadow: getShadowColor() }}
-        animate={{
-          scale: isActive ? [1, 1.2, 1] : 1,
-          transition: { duration: 0.5, repeat: isActive ? Number.POSITIVE_INFINITY : 0, repeatType: "loop" }
-        }}
-      />
-
-      {/* Simple arrow connector to next item (only within the same row) */}
-      {showArrow && isActive && (
-        <motion.div
-          className="absolute top-0 left-[calc(50%+16px)] h-2 z-20"
-          style={{ width: "calc(100% - 16px)" }}
-          initial={{ width: 0 }}
-          animate={{ width: "calc(100% - 16px)" }}
-          transition={{ duration: 0.2 }} // Faster animation
-        >
-          <div className={`h-full w-full flex items-center`}>
-            <div className={`h-0.5 w-full bg-gradient-to-r ${cardColor}`}></div>
-            <div
-              className={`w-0 h-0 border-t-4 border-b-4 border-l-6 border-r-0 border-t-transparent border-b-transparent border-l-[#C40180]`}
-              style={{ marginLeft: "-1px" }}
-            ></div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Card with president info */}
-      <motion.div
-        className={`relative overflow-hidden bg-white rounded-xl border-0 shadow-lg transition-all duration-300 ease-out h-full ${hoverEffectClasses} cursor-pointer`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        whileHover={{
-          y: -10,
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)"
-        }}
-        onClick={() => onItemClick(item, cardColor)}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <motion.h1 
+        className="mt-28 text-3xl md:text-4xl font-bold text-center mb-8 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
       >
-        {/* Decorative background */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-br ${cardColor} opacity-5 transition-all duration-300 ease-out ${isActiveOrHovered ? 'opacity-20 scale-110' : 'scale-100'}`}
-        />
-
-        {/* Image container - now full width and height */}
-        <div className="relative h-48 w-full bg-gray-100">
-          {item.image ? (
-            <motion.img
-              src={item.image}
-              alt={item.title}
-              className="w-full h-full object-cover"
-              initial={{ scale: 1 }}
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <ImageOffIcon />
-            </div>
-          )}
-        </div>
-
-        {/* Text content */}
-        <div className="relative p-3 sm:p-4 flex flex-col h-full">
-          <div className="flex items-start">
-            <div
-              className={`flex items-center justify-center mb-2 sm:mb-3 p-2 rounded-lg text-white bg-gradient-to-br ${cardColor} shadow-md transition-all duration-300 ease-out ${isActiveOrHovered ? "scale-110 rotate-2" : "rotate-0"}`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+        Galería de Presidentes
+      </motion.h1>
+      
+      {/* Main Content Section with Card Design - Height controlled */}
+      <motion.div 
+        className="relative overflow-hidden bg-white rounded-2xl border border-gray-200 shadow-xl max-h-[calc(100vh-200px)] sm:max-h-[calc(100vh-220px)] md:max-h-[calc(100vh-250px)] lg:max-h-[calc(100vh-300px)]"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.4 }}
+      >
+        {/* Subtle pattern background */}
+        <div className="absolute inset-0 bg-[url('/subtle-pattern.png')] opacity-5 pointer-events-none" />
+        
+        <div className="flex flex-col lg:flex-row h-full">
+          {/* Left Side - President Image and Basic Info */}
+          <div className="lg:w-2/5 p-4 sm:p-6 md:p-8 flex items-center justify-center bg-gray-50 relative overflow-hidden">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 left-8 w-32 h-32 bg-[#590248]/45 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 right-[-18] w-40 h-40 bg-[#590248]/45 rounded-full translate-x-1/3 translate-y-1/3"></div>
+            
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{
+                  opacity: 0,
+                  x: direction === "next" ? 100 : -100,
+                }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                }}
+                exit={{
+                  opacity: 0,
+                  x: direction === "next" ? -100 : 100,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                }}
+                className="flex flex-col items-center justify-center z-10 my-auto"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <div className="ml-3 sm:ml-4 flex-1">
-              <h3 className="text-lg sm:text-xl font-bold text-black">Período: {item.year}</h3>
-              <div
-                className={`h-0.5 w-0 bg-gradient-to-r ${cardColor} mt-1 transition-all duration-300 ease-out ${isActiveOrHovered ? "w-full" : ""}`}
-              ></div>
-            </div>
+                {/* Improved image container without corner lines */}
+                <div className="relative group mb-4 sm:mb-6 w-full max-w-[200px] sm:max-w-xs mx-auto">
+                  {/* Elegant shadow and glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#C40180] to-[#590248] blur-xl rounded-full transform scale-90 opacity-70"></div>
+                  
+                  {/* Image with improved frame */}
+                  <div className="relative z-10 rounded-xl overflow-hidden shadow-lg">
+                    <div className="p-1 bg-gradient-to-br from-[#C40180] to-[#590248] rounded-xl">
+                      <div className="bg-white p-2 rounded-lg">
+                        <img
+                          src={selected.foto || "/placeholder.svg"}
+                          alt={selected.nombre}
+                          className="w-full aspect-square object-cover rounded-md transform group-hover:scale-105 transition-all duration-700 ease-out"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Decorative accent */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent rounded-b-lg"></div>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  {/* Period with icon */}
+                  <div className="flex items-center justify-center gap-4 text-[#590248] mb-2 sm:mb-4">
+                    <div className="flex items-center justify-center p-1.5 rounded-md text-white bg-gradient-to-br from-[#C40180] to-[#590248] shadow-sm">
+                      <Calendar size={16} />
+                    </div>
+                    <p className="text-sm sm:text-base font-medium">{selected.periodo}</p>
+                  </div>
+                  
+                  {/* Name with animated underline */}
+                  <div className="relative">
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">{selected.nombre}</h2>
+                    <motion.div
+                      className="h-0.5 bg-gradient-to-r from-[#C40180] to-[#590248] mt-1 mx-auto"
+                      initial={{ width: 0 }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 0.8, delay: 0.5 }}
+                    ></motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
-
-          <div className="flex-1">
-            <h4 className="text-sm sm:text-base font-medium text-center text-gray-800">{item.title}</h4>
-            {item.description && <p className="mt-1 text-gray-600 text-xs line-clamp-2">{item.description}</p>}
+          
+          {/* Right Side - Timeline Navigation */}
+          <div className="lg:w-3/5 p-4 sm:p-6 md:p-8 flex flex-col rounded-b-xl lg:rounded-bl-none lg:rounded-r-xl">
+            {/* Timeline Navigation */}
+            <div className="h-full flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h4 className="text-xs sm:text-sm font-semibold text-gray-700 flex items-center">
+                  <span className="inline-block w-2 h-2 bg-[#C40180] rounded-full mr-2"></span>
+                  Línea de Tiempo Presidencial
+                </h4>
+                
+                {/* Improved auto-play button - only visible on desktop */}
+                {!isMobile && (
+                  <motion.button
+                    onClick={toggleAutoPlay}
+                    className={`flex items-center gap-2 text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-300 shadow-sm ${
+                      isAutoPlaying 
+                        ? "bg-gradient-to-r from-[#590248] to-[#590248] text-white" 
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isAutoPlaying ? (
+                      <>
+                        <Pause size={14} className="animate-pulse" />
+                        <span>Detener</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play size={14} />
+                        <span>Auto-reproducir</span>
+                      </>
+                    )}
+                  </motion.button>
+                )}
+              </div>
+              
+              {/* Improved Timeline Indicator with increased height */}
+              <div className="relative h-6 sm:h-8 bg-gray-100 rounded-full w-full mb-4 sm:mb-6 overflow-hidden shadow-inner">
+                {/* Progress bar for auto-play */}
+                {isAutoPlaying && !isMobile && (
+                  <motion.div
+                    className="absolute top-0 left-0 h-full bg-gray-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                )}
+                
+                {/* Position indicator - improved with gradient */}
+                <div
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#C40180] to-[#590248] rounded-full"
+                  style={{
+                    width: `${(currentIndex / (presidentes.length - 1)) * 100}%`,
+                    transition: "width 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                />
+                
+                {/* Timeline dots - improved visibility and size */}
+                {presidentes.map((_, index) => {
+                  const isCurrent = index === currentIndex
+                  const isPast = index < currentIndex
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleSelectPresident(index)}
+                      className={`
+                        absolute top-1/2 transform -translate-y-1/2 rounded-full transition-all duration-300
+                        ${isCurrent ? "w-5 h-5 bg-white border-2 border-[#C40180] shadow-lg z-10" : "w-3 h-3"}
+                        ${isPast ? "bg-[#C40180]" : "bg-gray-200 hover:bg-gray-400"}
+                        hover:scale-110
+                      `}
+                      style={{ left: `${(index / (presidentes.length - 1)) * 100}%` }}
+                      aria-label={`Ver presidente ${index + 1}`}
+                    />
+                  )
+                })}
+              </div>
+              
+              {/* Year Timeline */}
+              <div className="flex justify-between text-[10px] sm:text-xs text-gray-500 w-full mb-4 sm:mb-6">
+                <span className="font-medium bg-white px-2 py-1 rounded-md shadow-sm border border-gray-100">{startYear}</span>
+                <span className="font-medium bg-white px-2 py-1 rounded-md shadow-sm border border-gray-100">{endYear}</span>
+              </div>
+              
+              {/* President Grid Selection with Scrolling - Fixed scaling issue */}
+              <div 
+                ref={gridRef}
+                className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6 overflow-y-auto custom-scrollbar pr-2"
+                style={{ maxHeight: "150px", paddingTop: "10px", paddingBottom: "10px" }}
+              >
+                {presidentes.map((presidente, index) => {
+                  const isCurrent = index === currentIndex
+                  const isHovered = hoveredIndex === index
+                  
+                  return (
+                    <motion.div
+                      key={presidente.id}
+                      data-index={index}
+                      onClick={() => handleSelectPresident(index)}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                      className="relative cursor-pointer"
+                      animate={{
+                        scale: isCurrent ? 1.05 : 1,
+                        y: isCurrent ? -2 : 0, // Reduced the y-offset to prevent cutting off
+                      }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                      }}
+                    >
+                      {/* Background effect */}
+                      <div
+                        className={`
+                          absolute inset-0
+                          opacity-0 rounded-lg
+                          transition-all duration-300 ease-out
+                          ${isCurrent || isHovered ? "opacity-100" : ""}
+                        `}
+                      />
+                      <div className="flex flex-col items-center p-2">
+                        {/* Image container with improved styling */}
+                        <div
+                          className={`
+                            relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full overflow-hidden mb-1 sm:mb-2 transition-all duration-300
+                            ${isCurrent ? `ring-2 sm:ring-3 ring-[#590248] shadow-lg` : "ring-1 ring-gray-200"}
+                            ${isHovered && !isCurrent ? "ring-2 ring-[#590248]" : ""}
+                          `}
+                        >
+                          <img
+                            src={presidente.foto || "/placeholder.svg"}
+                            alt={presidente.nombre}
+                            className={`
+                              w-full h-full object-cover transition-transform duration-500
+                              ${isHovered ? "scale-110" : "scale-100"}
+                            `}
+                          />
+                        </div>
+                        {/* Period text */}
+                        <p
+                          className={`
+                            text-center text-[10px] sm:text-xs transition-all duration-300 max-w-[60px] truncate
+                            ${isCurrent ? "text-[#590248] font-medium" : "text-gray-500"}
+                                                        ${isHovered && !isCurrent ? "text-[#590248]" : ""}
+                          `}
+                        >
+                          {presidente.periodo.split("-")[0]}
+                        </p>
+                        {/* Animated underline */}
+                        <div
+                          className={`
+                            h-0.5 bg-[#590248] mt-0.5 sm:mt-1 transition-all duration-300 ease-out
+                            ${isCurrent || isHovered ? "w-full" : "w-0"}
+                          `}
+                        ></div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+              
+              {/* Navigation Arrows and Counter */}
+              <div className="flex items-center justify-center gap-2 sm:gap-4 mt-auto">
+                <motion.button
+                  onClick={handlePrev}
+                  className="p-2 sm:p-3 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#590248] shadow-sm"
+                  aria-label="Presidente anterior"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ChevronLeft size={16} className="sm:hidden" />
+                  <ChevronLeft size={20} className="hidden sm:block" />
+                </motion.button>
+                
+                <div className="flex flex-col items-center">
+                  <div className="text-[10px] sm:text-xs bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full font-medium shadow-sm">
+                    {currentIndex + 1} de {presidentes.length}
+                  </div>
+                  {!isMobile && isAutoPlaying && (
+                    <div className="text-[8px] sm:text-[10px] text-gray-500 mt-1">
+                      Cambiando cada 2 segundos
+                    </div>
+                  )}
+                </div>
+                
+                <motion.button
+                  onClick={handleNext}
+                  className="p-2 sm:p-3 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#590248]/50 shadow-sm"
+                  aria-label="Siguiente presidente"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ChevronRight size={16} className="sm:hidden" />
+                  <ChevronRight size={20} className="hidden sm:block" />
+                </motion.button>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
-    </motion.div>
-  );
-});
-
-TimelineItem.displayName = "TimelineItem";
-
-export default function Timeline() {
-  const timelineRef = useRef(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedColor, setSelectedColor] = useState("");
-
-  // Sort timeline items by year (oldest to newest)
-  const sortedItems = useMemo(() => [...LineaTPresi].sort((a, b) => a.year - b.year), []);
-
-  // Scroll animation setup
-  const { scrollYProgress } = useScroll({
-    offset: ["start start", "end end"]
-  });
-
-  // Transform scroll progress to horizontal progress bar
-  const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
-
-  // Update active item based on scroll position
-  useEffect(() => {
-    const handleScrollProgress = (value) => {
-      const adjustedValue = value * 1;
-      const newActiveIndex = Math.min(Math.floor(adjustedValue * sortedItems.length), sortedItems.length - 1);
-
-      if (newActiveIndex !== activeIndex && newActiveIndex >= 0) {
-        setActiveIndex(newActiveIndex);
-      }
-    };
-
-    const unsubscribe = scrollYProgress.onChange(handleScrollProgress);
-    return () => unsubscribe();
-  }, [scrollYProgress, sortedItems.length, activeIndex]);
-
-  // Current active item for header display
-  const activeItem = useMemo(() => (activeIndex >= 0 ? sortedItems[activeIndex] : null), [activeIndex, sortedItems]);
-
-  // Responsive grid layout
-  const getItemsPerRow = () => {
-    if (typeof window === "undefined") return 5;
-
-    const width = window.innerWidth;
-    if (width >= 1280) return 5;
-    if (width >= 1024) return 4;
-    if (width >= 768) return 3;
-    return 2;
-  };
-
-  const itemsPerRow = getItemsPerRow();
-
-  const handleItemClick = (item, color) => {
-    setSelectedItem(item);
-    setSelectedColor(color);
-  };
-
-  const closeModal = () => {
-    setSelectedItem(null);
-    setSelectedColor("");
-  };
-
-  return (
-    <main
-      ref={timelineRef}
-      className="min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-800 py-16 relative overflow-hidden"
-    >
-      {/* Fixed header with progress bar */}
-      <div className="fixed top-16 left-0 w-full backdrop-blur-lg py-4 z-50">
-        <div className="max-w-7xl mx-auto px-4 mt-12">
-          <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text mb-2">
-            Galeria de Presidentes
-          </h1>
-
-          {/* Simple chronological indicator */}
-          <div className="flex items-center justify-center mt-2 mb-2">
-            <div className="flex items-center">
-
-            </div>
-          </div>
-
-          {/* Current president indicator */}
-          {activeItem && (
-            <motion.div
-              className="text-center mt-2 font-medium text-white"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              key={activeItem.year}
-              transition={{ duration: 0.3 }}
-            >
-              <span className="bg-gradient-to-r from-[#C40180] to-[#590248] px-3 py-0.5 rounded-full inline-block text-sm">
-                {activeItem.title} • {activeItem.year}
-              </span>
-            </motion.div>
-          )}
-
-          {/* Progress bar */}
-          <div className="relative mt-4">
-            <div className="absolute left-0 top-1/2 h-1 bg-gray-200 w-full -mt-px z-0"></div>
-            <motion.div
-              className="absolute left-0 top-1/2 h-1 bg-gradient-to-r from-[#C40180] to-[#590248] -mt-px z-10"
-              style={{ scaleX, transformOrigin: "left", width: "100%" }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Timeline grid */}
-      <div className="max-w-full mx-auto px-4 mt-70 md:px-18 md:mb-40">
-        <div className="relative">
-          <div className="space-y-20 escalera-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 relative z-20">
-            {sortedItems.map((item, index) => {
-              const columnIndex = index % itemsPerRow;
-
-              return (
-                <div
-                  key={`${item.year}-${item.title}`}
-                  className="escalera-item"
-                  style={{ transform: `translateY(${columnIndex * 70}px)` }}
-                >
-                  <TimelineItem
-                    item={item}
-                    index={index}
-                    isActive={index === activeIndex}
-                    isLastItem={index === sortedItems.length - 1}
-                    itemsPerRow={itemsPerRow}
-                    onItemClick={handleItemClick}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Vertical timeline arrows between rows - only on larger screens */}
-          {window.innerWidth >= 768 && 
-            Array.from({ length: Math.ceil(sortedItems.length / itemsPerRow) - 1 }).map((_, rowIndex) => {
-              const lastColumnIndex = Math.min(itemsPerRow - 1, sortedItems.length - rowIndex * itemsPerRow - 1);
-              const firstColumnIndex = 0;
-              const isRowActive = Math.floor(activeIndex / itemsPerRow) === rowIndex;
-
-              return (
-                <div
-                  key={`row-connector-${rowIndex}`}
-                  className="absolute z-10"
-                  style={{
-                    top: `${70 * lastColumnIndex + 195 + rowIndex * 316}px`,
-                    left: `${100 / (itemsPerRow * 2) + (100 / itemsPerRow) * lastColumnIndex}%`,
-                    height: `${120 - 70 * lastColumnIndex + 70 * firstColumnIndex}px`,
-                    width: "2px"
-                  }}
-                >
-                  {isRowActive && (
-                    <motion.div
-                      className="h-full w-full"
-                      initial={{ height: 0 }}
-                      animate={{ height: "100%" }}
-                      transition={{ duration: 0.1 }}
-                    >
-                      <div className="h-full w-full bg-gradient-to-b from-[#C40180] to-[#590248]"></div>
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 rotate-90">
-                        <div className="w-0 h-0 border-t-4 border-b-4 border-l-6 border-r-0 border-t-transparent border-b-transparent border-l-[#590248]"></div>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              );
-            })}
-        </div>
-      </div>
-
-      {/* Modal for selected item */}
-      <AnimatePresence>
-        {selectedItem && (
-          <Modal 
-            item={selectedItem} 
-            cardColor={selectedColor} 
-            onClose={closeModal} 
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 -z-10 opacity-20">
-        <svg width="400" height="400" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#C40180" />
-              <stop offset="100%" stopColor="#590248" />
-            </linearGradient>
-          </defs>
-          <circle cx="50" cy="50" r="40" fill="none" stroke="url(#grad)" strokeWidth="1" />
-          <circle cx="50" cy="50" r="30" fill="none" stroke="url(#grad)" strokeWidth="0.5" />
-          <circle cx="50" cy="50" r="20" fill="none" stroke="url(#grad)" strokeWidth="0.25" />
-        </svg>
-      </div>
-      <div className="absolute bottom-0 left-0 -z-10 opacity-20">
-        <svg width="300" height="300" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#C40180" />
-              <stop offset="100%" stopColor="#590248" />
-            </linearGradient>
-          </defs>
-          <path d="M10,30 Q50,5 90,30 T90,70 Q50,95 10,70 T10,30" fill="none" stroke="url(#grad2)" strokeWidth="0.5" />
-        </svg>
-      </div>
-    </main>
-  );
+      
+      {/* Add custom scrollbar styles */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+          height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #590248;
+          border-radius: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #590248;
+        }
+      `}</style>
+    </div>
+  )
 }
+
+export default LineaTiempo
+
+

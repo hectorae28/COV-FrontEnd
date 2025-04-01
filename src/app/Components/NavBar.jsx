@@ -1,11 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
     const pathname = usePathname();
-    const router = useRouter();
 
     const navItems = [
         { href: '/', label: 'Inicio' },
@@ -14,7 +13,6 @@ export default function Navbar() {
         { href: '/Historia', label: 'Historia' },
         { href: '/GaleriaPresidentes', label: 'Galeria de Presidentes' },
         { href: '/JuntaDirectiva', label: 'Junta Directiva' },
-        { href: '/Comisiones', label: 'Comisiones' },
         { href: '/LeyesReglamentos', label: 'Leyes y Reglamentosoria' },
         { href: '/DescargarLogo', label: 'Descargar Logo' },
     ];

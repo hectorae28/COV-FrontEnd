@@ -1,38 +1,27 @@
 'use client';
+import { useEffect, useState } from 'react';
+import LogoDownloadModal from '../../Components/SobreCOV/LogoDownloadModal';
 
-import { useRouter } from 'next/navigation';
-import AppBar from '../../(Home)/AppBar';
-import Footer from '../../(Home)/Footer';
+export default function DescargarLogo() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Show modal automatically when this page is directly accessed
+  useEffect(() => {
+    setIsModalOpen(true);
+  }, []);
 
-export default function SobreCOV() {
-  const router = useRouter();
-
+  // If modal is closed, this empty page will be shown
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50">
-        <AppBar />
-      </header>
+    <div className="min-h-screen bg-gradient-to-b from-white to-purple-50 pt-28">
+      {/* Empty container - the page exists just to support the route */}
+      <div className="container mx-auto px-4">
+        <h1 className="text-3xl font-bold text-[#41023B] text-center">
+          Descargar Logo COV
+        </h1>
+      </div>
       
-      <main className="container mx-auto mt-28 mb-20 flex-grow">
-        <h1 className="text-3xl font-bold">Descargar logo</h1>
-        
-        <section className="bg-red-300 p-6 rounded-lg shadow-md">
-          <p className="mb-4">
-            Información sobre la organización, misión, visión y objetivos del Colegio de Odontólogos de Venezuela.
-          </p>
-          
-          <button 
-            onClick={() => router.push('/')}
-            className="bg-primary text-black px-4 py-2 rounded mt-20"
-          >
-            Volver al inicio
-          </button>
-        </section>
-      </main>
-      
-      <footer>
-        <Footer />
-      </footer>
+      {/* Modal */}
+      {isModalOpen && <LogoDownloadModal onClose={() => setIsModalOpen(false)} />}
     </div>
   );
 }
