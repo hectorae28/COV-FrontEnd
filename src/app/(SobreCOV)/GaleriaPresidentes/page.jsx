@@ -22,6 +22,32 @@ const LineaTiempo = () => {
   const gridRef = useRef(null)
   const [isMobile, setIsMobile] = useState(false)
 
+  const [maxHeight, setMaxHeight] = useState("150px");
+
+useEffect(() => {
+  const handleResize = () => {
+    if (window.innerWidth >= 768 && window.innerWidth < 1024) {
+      // Pantallas md
+      setMaxHeight("340px");
+    } else if (window.innerWidth >= 1024 && window.innerWidth < 1280) {
+      // Pantallas lg
+      setMaxHeight("340px");
+    } else {
+      // Otros tamaños
+      setMaxHeight("150px");
+    }
+  };
+
+  // Establecer altura inicial
+  handleResize();
+
+  // Ajustar altura al cambiar el tamaño de la ventana
+  window.addEventListener("resize", handleResize);
+
+  // Limpiar el listener al desmontar el componente
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+
   // Check if device is mobile
   useEffect(() => {
     const checkIfMobile = () => {
@@ -145,7 +171,7 @@ const LineaTiempo = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <motion.h1 
-        className="mt-28 text-3xl md:text-4xl font-bold text-center mb-8 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
+        className="mt-22 md:mt-28 text-3xl md:text-4xl font-bold text-center mb-8 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -325,7 +351,7 @@ const LineaTiempo = () => {
               <div 
                 ref={gridRef}
                 className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6 overflow-y-auto custom-scrollbar pr-2"
-                style={{ maxHeight: "150px", paddingTop: "10px", paddingBottom: "10px" }}
+                style={{ maxHeight: "190px", paddingTop: "10px", paddingBottom: "10px" }}
               >
                 {presidentes.map((presidente, index) => {
                   const isCurrent = index === currentIndex
