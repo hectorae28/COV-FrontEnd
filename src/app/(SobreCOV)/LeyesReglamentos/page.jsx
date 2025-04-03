@@ -101,9 +101,25 @@ const DocumentCard = ({ document, isSelected, onClick }) => {
 const PDFViewer = ({ pdfPath, title }) => {
   const [isLoading, setIsLoading] = useState(true)
   const iframeRef = useRef(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detectar si es dispositivo móvil
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    // Comprobar al cargar y cuando cambia el tamaño de la ventana
+    checkIfMobile()
+    window.addEventListener("resize", checkIfMobile)
+    
+    return () => {
+      window.removeEventListener("resize", checkIfMobile)
+    }
+  }, [])
 
   useEffect(() => {
-    if (iframeRef.current) {
+    if (iframeRef.current && !isMobile) {
       setIsLoading(true)
       
       const handleLoad = () => {
@@ -118,8 +134,52 @@ const PDFViewer = ({ pdfPath, title }) => {
         }
       }
     }
-  }, [pdfPath])
+  }, [pdfPath, isMobile])
 
+  // Versión móvil - Botones de descarga y abrir
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-full w-full">
+        <div className="flex justify-between items-center mb-4 p-3 bg-gradient-to-t from-[#C40180] to-[#590248] rounded-lg">
+          <h3 className="text-lg font-bold text-white">{title}</h3>
+        </div>
+        
+        <div className="flex-grow flex flex-col items-center justify-center bg-gray-100 rounded-lg p-8">
+          <div className="text-center mb-6">
+            <p className="text-gray-700 mb-2">Ver o descargar el documento</p>
+            <p className="text-sm text-gray-600">Acceda al documento desde su dispositivo</p>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-4 w-full max-w-xs">
+            <motion.a
+              href={pdfPath}
+              download
+              className="flex items-center justify-center px-6 py-3 rounded-lg bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Download className="w-5 h-5 mr-2" />
+              <span className="font-medium">Descargar</span>
+            </motion.a>
+            
+            <motion.a
+              href={pdfPath}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center px-6 py-3 rounded-lg border-2 border-[#C40180] text-[#C40180] shadow-md"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <ExternalLink className="w-5 h-5 mr-2" />
+              <span className="font-medium">Abrir</span>
+            </motion.a>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Versión desktop - Visor de PDF
   return (
     <div className="flex flex-col h-full w-full">
       <div className="flex justify-between items-center mb-4 p-3 bg-gradient-to-t from-[#C40180] to-[#590248] rounded-lg">
@@ -152,7 +212,10 @@ const PDFViewer = ({ pdfPath, title }) => {
       <div className="relative flex-grow bg-gray-200 rounded-lg overflow-hidden">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C40180]"></div>
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C40180]"></div>
+              <p className="mt-3 text-sm text-gray-600">Cargando documento...</p>
+            </div>
           </div>
         )}
         <iframe
@@ -260,7 +323,7 @@ export default function LeyesyReglamentos() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1 }}
-          className="relative flex flex-col md:flex-row gap-8 min-h-[600px]"
+          className="relative flex flex-col md:flex-row gap-8 min-h-full"
         >
           {/* Document Options - Left Column (hidden on mobile) */}
           <motion.section
@@ -288,7 +351,7 @@ export default function LeyesyReglamentos() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="md:w-2/3 h-[70vh]"
+            className="md:w-2/3 h-[30vh] md:h-[70vh]"
           >
             <PDFViewer 
               pdfPath={selectedDocument.pdfPath} 

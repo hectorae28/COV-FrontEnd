@@ -24,13 +24,7 @@ const menuItems = [
   },
   {
     title: "Especialistas",
-    submenu: [
-      { title: "Armonizacion Orofacial", route: "/Especialistas/ArmonizacionOrofacial" },
-      { title: "Cirugia Bucal", route: "/Especialistas/CirugiaBucal" },
-      { title: "Cirugia Bucomaxilofacial", route: "/Especialistas/CirugiaBucomaxilofacial" },
-      { title: "Endodoncia", route: "/Especialistas/Endodoncia" },
-      { title: "Ortodoncia", route: "/Especialistas/Ortodoncia" }
-    ]
+    route: "/Especialistas"
   },
   {
     title: "Eventos",
@@ -56,7 +50,8 @@ const menuItems = [
       { title: "Tutoriales", route: "/Tramites/Tutoriales" }
     ]
   },
-  { title: "Contáctenos", route: "/Contactenos" }
+  { title: "Contáctenos", route: "/Contactenos" },
+  { title: "Revista", route: "/Revista" }
 ];
 
 export default function AppBar() {

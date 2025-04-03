@@ -19,8 +19,8 @@ const StepCard = ({ icon: Icon, number, title, description, index }) => (
             scale: 1.03,
             transition: { duration: 0.2 }
         }}
-        className="relative py-10 px-6 sm:px-8 md:px-12 bg-white rounded-xl shadow-md hover:shadow-xl shadow-[#590248]/30 transition-all duration-300 border-t-4 border-[#C40180] border-b-2 border-[#C40180] overflow-hidden group"
-    >
+        className="relative py-10 px-6 sm:px-8 md:px-12 bg-white rounded-xl shadow-md hover:shadow-xl shadow-[#590248]/30 transition-all duration-300 border-t-4 border-b-2 border-[#C40180] overflow-hidden group"
+        >
         <div className="absolute text-[20px] top-4 left-4 w-10 h-10 bg-gradient-to-br from-[#C40180] to-[#590248] rounded-full flex items-center justify-center text-white font-bold shadow-md">
             {number}
         </div>
