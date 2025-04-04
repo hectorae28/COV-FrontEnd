@@ -220,7 +220,7 @@ const Noticias = () => {
     };
 
     return (
-        <section className="py-8 bg-gradient-to-b from-gray-50 to-white">
+        <section className="py-8">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-8 sm:mb-10 md:mb-12">
                     <motion.span 

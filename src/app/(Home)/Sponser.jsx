@@ -29,81 +29,28 @@ const Sponsor = () => {
     const [isAutoplay, setIsAutoplay] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStartX, setDragStartX] = useState(0);
-    const [windowWidth, setWindowWidth] = useState(0);
-    const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
     const wheelRef = useRef(null);
     const autoplayTimerRef = useRef(null);
 
-    // Determinar el radio según el tamaño de la pantalla
-    const getRadius = () => {
-        if (windowWidth < 640) return 180;
-        if (windowWidth < 768) return 240;
-        if (windowWidth < 1024) return 350;
-        return 450; // xl y mayores
-    };
-
-    // Determinar los tamaños de las imágenes según el tamaño de la pantalla
-    const getImageSizes = (isActive) => {
-        if (windowWidth < 640) {
-            return {
-                width: isActive ? 200 : 100,
-                height: isActive ? 200 : 120,
-                imgWidth: isActive ? 140 : 60,
-                imgHeight: isActive ? 120 : 50
-            };
-        }
-        if (windowWidth < 768) {
-            return {
-                width: isActive ? 200 : 120,
-                height: isActive ? 160 : 100,
-                imgWidth: isActive ? 120 : 70,
-                imgHeight: isActive ? 100 : 60
-            };
-        }
-        if (windowWidth < 1024) {
-            return {
-                width: isActive ? 260 : 150,
-                height: isActive ? 200 : 130,
-                imgWidth: isActive ? 150 : 90,
-                imgHeight: isActive ? 130 : 70
-            };
-        }
-        return {
-            width: isActive ? 320 : 180,
-            height: isActive ? 240 : 160,
-            imgWidth: isActive ? 180 : 100,
-            imgHeight: isActive ? 160 : 80
-        };
-    };
-
     const calculatePositions = () => {
-        const radius = getRadius();
+        const radius = 500;
         const angleStep = (2 * Math.PI) / aliados.length;
-
-        // Calcular cuántos elementos mostrar a cada lado en función del tamaño de pantalla
-        const visibleItems = windowWidth < 640 ? 2 : (windowWidth < 1024 ? 3 : 4);
 
         return aliados.map((aliado, index) => {
             let relativeIndex = index - activeIndex;
 
-            // Normalizar el índice para tener el camino más corto alrededor del círculo
             if (relativeIndex > aliados.length / 2) relativeIndex -= aliados.length;
             if (relativeIndex < -aliados.length / 2) relativeIndex += aliados.length;
 
-            // Limitar la visibilidad a un rango específico
-            const isVisible = Math.abs(relativeIndex) <= visibleItems;
-            
             const angle = relativeIndex * angleStep;
 
-            // Ajustar la posición X según el tamaño de la pantalla
             const x = Math.sin(angle) * radius;
             const z = Math.cos(angle) * radius - radius;
 
             const normalizedZ = (z + radius) / (2 * radius);
             const scale = 0.5 + normalizedZ * 0.5;
 
-            // Ajustar la opacidad para elementos visibles/no visibles
-            const opacity = !isVisible ? 0 : (index === activeIndex ? 1.0 : 0.5 + normalizedZ * 0.3);
+            const opacity = index === activeIndex ? 1.0 : 0.5 + normalizedZ * 0.3;
 
             return {
                 ...aliado,
@@ -113,23 +60,9 @@ const Sponsor = () => {
                 opacity,
                 angle,
                 isActive: index === activeIndex,
-                isVisible
             };
         });
     };
-
-    // Actualizar el tamaño de la ventana
-    useEffect(() => {
-        const handleResize = () => {
-            const width = window.innerWidth;
-            setWindowWidth(width);
-            setIsMobileOrTablet(width < 1024);
-        };
-        handleResize();
-        
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
 
     useEffect(() => {
         setIsLoaded(true);
@@ -171,18 +104,13 @@ const Sponsor = () => {
         if (!isDragging) return;
 
         const dragDistance = e.clientX - dragStartX;
-        const threshold = windowWidth < 640 ? 40 : 60;
-        
-        if (Math.abs(dragDistance) > threshold) {
+        if (Math.abs(dragDistance) > 50) {
             const direction = dragDistance > 0 ? -1 : 1;
             setActiveIndex((prevIndex) => {
                 const newIndex = (prevIndex + direction + aliados.length) % aliados.length;
                 return newIndex;
             });
-
             setDragStartX(e.clientX);
-            setIsDragging(false);
-            setTimeout(() => setIsDragging(true), 100);
         }
     };
 
@@ -190,20 +118,13 @@ const Sponsor = () => {
         if (!isDragging) return;
 
         const dragDistance = e.touches[0].clientX - dragStartX;
-        const threshold = windowWidth < 640 ? 30 : 40;
-        
-        if (Math.abs(dragDistance) > threshold) {
+        if (Math.abs(dragDistance) > 30) {
             const direction = dragDistance > 0 ? -1 : 1;
-            
             setActiveIndex((prevIndex) => {
                 const newIndex = (prevIndex + direction + aliados.length) % aliados.length;
                 return newIndex;
             });
-            
             setDragStartX(e.touches[0].clientX);
-
-            setIsDragging(false);
-            setTimeout(() => setIsDragging(true), 200);
         }
     };
 
@@ -225,10 +146,10 @@ const Sponsor = () => {
 
     return (
         <section className="overflow-hidden">
-            <div className="container mx-auto px-4 sm:px-6 md:px-8">
-                <div className="text-center mt-8 sm:mt-12 md:mt-16">
+            <div className="container mx-auto">
+                <div className="text-center mt-18">
                     <motion.h2
-                        className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
+                        className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
@@ -238,7 +159,7 @@ const Sponsor = () => {
                     </motion.h2>
 
                     <motion.p
-                        className="mt-4 sm:mt-6 max-w-2xl mx-auto text-gray-600 text-sm sm:text-base"
+                        className="mt-6 max-w-2xl mx-auto text-gray-600"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
@@ -249,30 +170,17 @@ const Sponsor = () => {
                     </motion.p>
                 </div>
 
-                <div className="relative flex justify-center items-center h-64 sm:h-72 md:h-76 lg:h-80 perspective-3000 cursor-grab group my-8 sm:my-12">
-                    {/* Botones de navegación solo en desktop (lg y superior) */}
-                    {!isMobileOrTablet && (
-                        <>
-                            <button
-                                className="absolute left-4 z-10 p-2 bg-white rounded-full shadow-lg cursor-pointer hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleChevronClick(-1)}
-                                aria-label="Previous Sponsor"
-                            >
-                                <ChevronLeft className="w-6 h-6 text-gray-700" />
-                            </button>
-
-                            <button
-                                className="absolute right-4 z-10 p-2 bg-white rounded-full shadow-lg cursor-pointer hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleChevronClick(1)}
-                                aria-label="Next Sponsor"
-                            >
-                                <ChevronRight className="w-6 h-6 text-gray-700" />
-                            </button>
-                        </>
-                    )}
+                <div className="relative flex justify-center items-center h-76 perspective-3000 cursor-grab group">
+                    <button
+                        className="absolute left-0 z-10 p-2 bg-white rounded-full shadow-lg cursor-pointer hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleChevronClick(-1)}
+                        aria-label="Previous Sponsor"
+                    >
+                        <ChevronLeft className="w-6 h-6 text-gray-700" />
+                    </button>
 
                     <div
-                        className="relative w-full h-full flex justify-center items-center"
+                        className="relative w-full h-full"
                         ref={wheelRef}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
@@ -284,10 +192,7 @@ const Sponsor = () => {
                     >
                         <div className="absolute inset-0 flex justify-center items-center">
                             {logoPositions.map((aliado) => {
-                                if (!aliado.isVisible) return null;
-                                
                                 const zIndex = Math.round(aliado.z + 1000);
-                                const sizes = getImageSizes(aliado.isActive);
 
                                 return (
                                     <div
@@ -297,8 +202,8 @@ const Sponsor = () => {
                                         style={{
                                             transform: `translateX(${aliado.x}px) translateZ(${aliado.z}px) scale(${aliado.scale})`,
                                             opacity: aliado.opacity,
-                                            width: `${sizes.width}px`,
-                                            height: `${sizes.height}px`,
+                                            width: `${aliado.isActive ? 320 : 180}px`,
+                                            height: `${aliado.isActive ? 240 : 160}px`,
                                             zIndex,
                                         }}
                                         onClick={() => handleClickLogo(aliados.findIndex(a => a.id === aliado.id))}
@@ -307,8 +212,8 @@ const Sponsor = () => {
                                             <Image
                                                 src={aliado.logo}
                                                 alt={`Logo de ${aliado.name}`}
-                                                width={sizes.imgWidth}
-                                                height={sizes.imgHeight}
+                                                width={aliado.isActive ? 180 : 100}
+                                                height={aliado.isActive ? 160 : 80}
                                                 className="object-contain max-w-full max-h-full transition-all duration-500"
                                                 priority={aliado.isActive}
                                             />
@@ -318,6 +223,14 @@ const Sponsor = () => {
                             })}
                         </div>
                     </div>
+
+                    <button
+                        className="absolute right-0 z-10 p-2 bg-white rounded-full shadow-lg cursor-pointer hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleChevronClick(1)}
+                        aria-label="Next Sponsor"
+                    >
+                        <ChevronRight className="w-6 h-6 text-gray-700" />
+                    </button>
                 </div>
             </div>
         </section>

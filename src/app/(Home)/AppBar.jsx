@@ -31,25 +31,10 @@ const menuItems = [
     submenu: [
       { title: "Eventos COV", route: "/Eventos/EventosCOV" },
       { title: "Juegos Nacionales", route: "/Eventos/JuegosNacionales" },
-      { title: "Certificados", route: "/Eventos/Certificados" }
+      // { title: "Certificados", route: "/Eventos/Certificados" }
     ]
   },
-  {
-    title: "Trámites",
-    submenu: [
-      { title: "Tarifas", route: "/Tramites/Tarifas" },
-      { title: "Carnet", route: "/Tramites/Carnet" },
-      { title: "Odontologos", route: "/Tramites/Odontologos" },
-      { title: "Higienistas Dentales", route: "/Tramites/HigienistaDental" },
-      { title: "Tecnicos Dentales", route: "/Tramites/TecnicosDentales" },
-      { title: "Especialidades", route: "/Tramites/Especialidades" },
-      { title: "Cuentas Bancarias", route: "/Tramites/CuentasBancarias" },
-      { title: "Paypal", route: "/Tramites/Paypal" },
-      { title: "Verificar Documentos", route: "/Tramites/VerificarDocumentos" },
-      { title: "Aval para Cursos", route: "/Tramites/AvalCursos" },
-      { title: "Tutoriales", route: "/Tramites/Tutoriales" }
-    ]
-  },
+  { title: "Trámites", route: "/Tramites" },
   { title: "Contáctenos", route: "/Contactenos" },
   { title: "Revista", route: "/Revista" }
 ];

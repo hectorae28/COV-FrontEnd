@@ -62,7 +62,9 @@ const DocumentCard = ({ document, isSelected, onClick }) => {
       className={`
         relative overflow-hidden rounded-lg border-0 shadow-md
         transition-all duration-300 ease-out cursor-pointer
-        ${isSelected ? "shadow-lg ring-2 ring-[#C40180]" : ""}
+        ${isSelected 
+          ? "shadow-lg ring-2 ring-[#C40180] bg-gradient-to-tr from-[#C40180]/10 to-[#C40180]/5" 
+          : "bg-gradient-to-tr from-white to-gray-100"}
       `}
       whileHover={{
         y: -5,
@@ -70,14 +72,14 @@ const DocumentCard = ({ document, isSelected, onClick }) => {
       }}
       onClick={onClick}
     >
-      <div className="relative p-4 bg-gradient-to-tr from-white to-gray-100">
+      <div className="relative p-4">
         <div className="flex items-start">
           {/* Icon */}
           <div className="mr-4">
             <motion.div
               className={`
                 flex items-center justify-center p-2 rounded-lg text-white
-                bg-gradient-to-br ${document.color} shadow-md
+                bg-gradient-to-br ${isSelected ? "from-[#C40180] to-[#C40180]" : document.color} shadow-md
                 transition-all duration-500 ease-out
                 w-10 h-10
               `}
@@ -89,14 +91,22 @@ const DocumentCard = ({ document, isSelected, onClick }) => {
           
           {/* Content */}
           <div className="flex-1">
-            <h3 className="text-md font-bold text-gray-800 mb-1">{document.title}</h3>
+            <h3 className={`text-md font-bold mb-1 ${isSelected ? "text-[#C40180]" : "text-gray-800"}`}>
+              {document.title}
+            </h3>
             <p className="text-gray-600 text-xs">{document.description}</p>
           </div>
         </div>
+        
+        {/* Active indicator */}
+        {isSelected && (
+          <div className="absolute top-0 left-0 w-1 h-full bg-[#C40180]"></div>
+        )}
       </div>
     </motion.div>
   )
 }
+
 
 const PDFViewer = ({ pdfPath, title }) => {
   const [isLoading, setIsLoading] = useState(true)

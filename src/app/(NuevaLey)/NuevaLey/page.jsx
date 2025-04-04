@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useRef, useEffect } from "react";
 import { ExternalLink, Mail, Download, MessageCircle } from "lucide-react";
 
@@ -27,19 +26,16 @@ const PDFViewer = ({ pdfPath, title, className, lastUpdated }) => {
   useEffect(() => {
     if (iframeRef.current && !isMobile) {
       setIsLoading(true);
-
       // Función para manejar el evento load
       const handleLoad = () => {
         setIsLoading(false);
         console.log("PDF cargado correctamente.");
       };
-
       // Función para manejar errores en la carga
       const handleError = () => {
         setIsLoading(false);
         console.error("Error al cargar el PDF.");
       };
-
       // Verificar si el iframe ya está cargado
       if (iframeRef.current.contentDocument?.readyState === "complete") {
         setIsLoading(false);
@@ -48,7 +44,6 @@ const PDFViewer = ({ pdfPath, title, className, lastUpdated }) => {
         iframeRef.current.addEventListener("load", handleLoad);
         iframeRef.current.addEventListener("error", handleError);
       }
-
       // Limpiar listeners al desmontar el componente
       return () => {
         if (iframeRef.current) {
@@ -123,7 +118,6 @@ const PDFViewer = ({ pdfPath, title, className, lastUpdated }) => {
           </a>
         </div>
       </div>
-
       {/* Spinner de carga */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 backdrop-blur-sm z-10">
@@ -133,7 +127,6 @@ const PDFViewer = ({ pdfPath, title, className, lastUpdated }) => {
           </div>
         </div>
       )}
-
       {/* Contenido del PDF */}
       <iframe
         ref={iframeRef}
@@ -142,7 +135,6 @@ const PDFViewer = ({ pdfPath, title, className, lastUpdated }) => {
         title={title}
         style={{ minHeight: "100%" }}
       />
-
       {/* Fecha de última actualización */}
       {lastUpdated && (
         <div className="absolute bottom-0 right-0 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-tl-md text-xs text-gray-700">
@@ -156,7 +148,6 @@ const PDFViewer = ({ pdfPath, title, className, lastUpdated }) => {
 // Componente de botón moderno para acciones
 const ActionButton = ({ icon, label, href, className }) => {
   const Icon = icon;
-
   return (
     <a
       href={href}
@@ -206,21 +197,13 @@ export default function NuevaLey() {
                 lastUpdated="5/12/2022"
               />
             </div>
-
-            {/* Botones de acción */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto">
+            {/* Botones de acción - Centrado */}
+            <div className="flex justify-center mt-auto">
               <ActionButton
                 icon={Mail}
                 label="Contactar por Email"
                 href="mailto:nuevaleydeodontologia@elcov.org"
-                className="bg-white border-2 border-[#C40180] text-[#C40180] hover:bg-[#fcf2f8] shadow-md hover:shadow-lg"
-              />
-
-              <ActionButton
-                icon={MessageCircle}
-                label="Foro de Discusión"
-                href="/foro"
-                className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white hover:opacity-90 shadow-md hover:shadow-lg"
+                className="bg-white border-2 border-[#C40180] text-[#C40180] hover:bg-[#fcf2f8] shadow-md hover:shadow-lg w-full max-w-xs"
               />
             </div>
           </section>

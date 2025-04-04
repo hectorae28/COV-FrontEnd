@@ -12,8 +12,8 @@ export default function Home() {
       <main>
         <Presents />
         <Cards />
-        <Sponser />
         <Noticias />
+        <Sponser />
       </main>
     </div>
   );

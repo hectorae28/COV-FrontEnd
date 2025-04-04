@@ -85,7 +85,7 @@ export default function StepsSection() {
     ];
 
     return (
-        <section className="py-10 bg-gradient-to-b from-white to-gray-50">
+        <section className="py-10">
             <div className="text-center mb-12">
                 <motion.span
                     className="text-sm font-medium text-[#C40180] uppercase tracking-wider"
