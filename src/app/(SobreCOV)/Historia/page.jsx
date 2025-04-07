@@ -1,13 +1,44 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { ChevronRight } from "lucide-react"
-import { LineaTSection } from "../../Components/SobreCOV/LineaTHist"
-import { ReflexionSection } from "../../Components/SobreCOV/ReflexionSection"
+import { use, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronRight } from "lucide-react";
+import { getGradientColor } from "../../Components/SobreCOV/LineaTHist";
+import { ReflexionSection } from "../../Components/SobreCOV/ReflexionSection";
+import { fetchHistoria } from "../../../api/endpoints/landingPage";
+import {
+  Clock,
+  Award,
+  BookOpen,
+  Users,
+  GlobeIcon,
+  MedalIcon,
+} from "lucide-react";
 
-const TimelineCard = ({ date, title, description, icon: Icon, color, fullDescription, isLast }) => {
-  const [isExpanded, setIsExpanded] = useState(false)
+const iconMap = {
+  Clock,
+  Award,
+  BookOpen,
+  Users,
+  GlobeIcon,
+  MedalIcon,
+};
+
+const IconComponent = ({ name }) => {
+  const Icon = iconMap[name];
+  return Icon ? <Icon /> : null;
+};
+
+const TimelineCard = ({
+  fecha,
+  titulo,
+  subtitulo,
+  icono,
+  color,
+  contenido,
+  isLast,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <motion.div
@@ -45,7 +76,7 @@ const TimelineCard = ({ date, title, description, icon: Icon, color, fullDescrip
 
       {/* Right side: Card content */}
       <div className="flex-1">
-        {/* Prominent Date Display */}
+        {/* Prominent fecha Display */}
         <motion.div
           className="mb-2"
           initial={{ opacity: 0, y: -10 }}
@@ -59,7 +90,7 @@ const TimelineCard = ({ date, title, description, icon: Icon, color, fullDescrip
             text-xs tracking-wide
           `}
           >
-            {date}
+            {fecha}
           </span>
         </motion.div>
 
@@ -73,7 +104,8 @@ const TimelineCard = ({ date, title, description, icon: Icon, color, fullDescrip
             ${isExpanded ? "shadow-lg" : ""}
           `}
           whileHover={{
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            boxShadow:
+              "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
           }}
         >
           <div className="relative p-4 bg-gradient-to-tr from-white to-gray-100">
@@ -90,20 +122,23 @@ const TimelineCard = ({ date, title, description, icon: Icon, color, fullDescrip
                   `}
                   whileHover={{ scale: 1.1, rotate: 10 }}
                 >
-                  <Icon className="w-5 h-5" />
+                  <IconComponent className="w-5 h-5" name={icono} />
+                  {/* <Icon className="w-5 h-5" /> */}
                 </motion.div>
               </div>
 
               {/* Right column: Content */}
               <div className="flex-1">
-                {/* Title and Description */}
+                {/* titulo and Description */}
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800 mb-1">{title}</h3>
-                  <p className="text-gray-800 text-sm">{description}</p>
+                  <h3 className="text-lg font-bold text-gray-800 mb-1">
+                    {titulo}
+                  </h3>
+                  <p className="text-gray-800 text-sm">{subtitulo}</p>
                 </div>
 
                 {/* Expand/Collapse Button */}
-                {fullDescription && (
+                {contenido && (
                   <motion.div
                     className="flex items-center text-xs text-[#C40180] cursor-pointer mt-2"
                     onClick={() => setIsExpanded(!isExpanded)}
@@ -124,7 +159,7 @@ const TimelineCard = ({ date, title, description, icon: Icon, color, fullDescrip
 
             {/* Expanded Description - Now integrated within the card */}
             <AnimatePresence>
-              {isExpanded && fullDescription && (
+              {isExpanded && contenido && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -132,7 +167,9 @@ const TimelineCard = ({ date, title, description, icon: Icon, color, fullDescrip
                   transition={{ duration: 0.3 }}
                   className="mt-3 overflow-hidden"
                 >
-                  <div className="pt-3 border-t border-gray-300 text-gray-700 text-sm">{fullDescription}</div>
+                  <div className="pt-3 border-t border-gray-300 text-gray-700 text-sm">
+                    <p>{contenido}</p>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -140,11 +177,11 @@ const TimelineCard = ({ date, title, description, icon: Icon, color, fullDescrip
         </motion.div>
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
 const ReflectionCard = ({ title, content, index }) => {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <motion.div
@@ -161,7 +198,8 @@ const ReflectionCard = ({ title, content, index }) => {
           ${isExpanded ? "shadow-lg" : ""}
         `}
         whileHover={{
-          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+          boxShadow:
+            "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
         }}
       >
         <div className="relative p-4 bg-gradient-to-tr from-white to-gray-100">
@@ -182,7 +220,9 @@ const ReflectionCard = ({ title, content, index }) => {
 
             {/* Title and Action */}
             <div className="flex-1 flex justify-between items-center">
-              <h3 className="sm:text-md sm:w-2/3 lg:text-lg font-bold text-gray-800 ">{title}</h3>
+              <h3 className="sm:text-md sm:w-2/3 lg:text-lg font-bold text-gray-800 ">
+                {title}
+              </h3>
               <motion.div
                 className="flex items-center text-xs text-[#C40180] cursor-pointer"
                 onClick={() => setIsExpanded(!isExpanded)}
@@ -210,17 +250,27 @@ const ReflectionCard = ({ title, content, index }) => {
                 transition={{ duration: 0.3 }}
                 className="mt-3 overflow-hidden w-full"
               >
-                <div className="pt-3 border-t border-gray-300 text-gray-700 text-sm break-words p-4">{content}</div>
+                <div className="pt-3 border-t border-gray-300 text-gray-700 text-sm break-words p-4">
+                  {content}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </motion.div>
     </motion.div>
-  )
-}
+  );
+};
 
 export default function Historia() {
+  const [LineaTSection, setLineaTSection] = useState([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      const LineaTSection = await fetchHistoria();
+      setLineaTSection(LineaTSection.data);
+    };
+    fetchData();
+  }, []);
   return (
     <div className="flex flex-col mt-12 lg:mt-20">
       <main className="container mx-auto px-4 py-20 flex-grow">
@@ -245,7 +295,8 @@ export default function Historia() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Un recorrido por más de un siglo de evolución, lucha y transformación de la odontología venezolana.
+            Un recorrido por más de un siglo de evolución, lucha y
+            transformación de la odontología venezolana.
           </motion.p>
         </motion.div>
 
@@ -259,7 +310,12 @@ export default function Historia() {
           {/* Timeline Section */}
           <section className="space-y-12 pl-4 md:w-1/2">
             {LineaTSection.map((milestone, index) => (
-              <TimelineCard key={index} {...milestone} isLast={index === LineaTSection.length - 1} />
+              <TimelineCard
+                key={index}
+                {...milestone}
+                color={getGradientColor(index)}
+                isLast={index === LineaTSection.length - 1}
+              />
             ))}
           </section>
 
@@ -275,13 +331,22 @@ export default function Historia() {
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text">
                   {ReflexionSection[0].title}
                 </h2>
-                <p className="text-sm text-gray-800 mt-1">{ReflexionSection[0].subtitle}</p>
+                <p className="text-sm text-gray-800 mt-1">
+                  {ReflexionSection[0].subtitle}
+                </p>
               </div>
 
               <div className="space-y-6 overflow-x-visible">
-                {ReflexionSection[0].content.props.children[0].map((section, index) => (
-                  <ReflectionCard key={index} title={section.title} content={section.text} index={index} />
-                ))}
+                {ReflexionSection[0].content.props.children[0].map(
+                  (section, index) => (
+                    <ReflectionCard
+                      key={index}
+                      title={section.title}
+                      content={section.text}
+                      index={index}
+                    />
+                  )
+                )}
               </div>
 
               {/* Final Quote is now part of the content */}
@@ -293,5 +358,5 @@ export default function Historia() {
         </motion.div>
       </main>
     </div>
-  )
+  );
 }
