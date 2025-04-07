@@ -1,11 +1,21 @@
-'use client';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import { 
-  Award, Users, FileText, Briefcase, BookOpen, 
-  MessageSquare, Globe, Scale, Calculator, 
-  Calendar, Trophy 
-} from 'lucide-react';
+"use client";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import {
+  Award,
+  Users,
+  FileText,
+  Briefcase,
+  BookOpen,
+  MessageSquare,
+  Globe,
+  Scale,
+  Calculator,
+  Calendar,
+  Trophy,
+} from "lucide-react";
+import { fetchOrganizacion } from "../../../api/endpoints/landingPage";
+import { useEffect, useState } from "react";
 
 /**
  * Constants and configuration
@@ -28,8 +38,8 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
+    transition: { staggerChildren: 0.1 },
+  },
 };
 
 // Animation variants for individual items
@@ -41,97 +51,71 @@ const itemVariants = {
     transition: {
       type: "spring",
       damping: 12,
-      stiffness: 200
-    }
-  }
+      stiffness: 200,
+    },
+  },
 };
 
-/**
- * Helper functions
- */
-// Function to get gradient color based on index
 const getGradientColor = (index) => GRADIENTS[index % GRADIENTS.length];
+const primaryMembersIcons = [Award, Users];
+const secondaryMembersIcons = [
+  FileText,
+  Briefcase,
+  BookOpen,
+  Scale,
+  MessageSquare,
+  Globe,
+  Calculator,
+];
 
 export default function JuntaDirectiva() {
-  /**
-   * Data structures
-   */
-  // Primary board members (President and Vice President)
-  const primaryMembers = [
-    { 
-      name: 'Dr. Pablo Quintero Villamizar', 
-      role: 'PRESIDENTE', 
-      icon: Award,
-      color: GRADIENTS[0]
-    },
-    { 
-      name: 'Dr. Bladimir Mendoza Querales', 
-      role: 'VICEPRESIDENTE', 
-      icon: Users,
-      color: GRADIENTS[0]
-    }
-  ];
+  const [organizacion, setOrganizacion] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchOrganizacion();
+        setOrganizacion(data.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching presidentes:", error);
+      }
+    };
 
-  // Secondary board members
-  const secondaryMembers = [
-    { name: 'Dra. Reina Ochoa', role: 'SECRETARIA GENERAL', icon: FileText },
-    { name: 'Dra. Doyi Sikiu Hernandez', role: 'SECRETARIA DE ORGANIZACIÓN', icon: Briefcase },
-    { name: 'Dra. Mery Toro', role: 'SECRETARIA DE ACTAS', icon: BookOpen },
-    { name: 'Dra. Leidy Briceño', role: 'CONSULTORA JURÍDICA DEL COV', icon: Scale },
-    { name: 'Dr. Octavio Muñoz', role: 'SECRETARIO DE ASUNTOS GREMIALES', icon: MessageSquare },
-    { name: 'Dr. Andrés León', role: 'SECRETARIO DE RELACIONES PÚBLICAS', icon: Globe },
-    { name: 'Contadora del COV', role: 'CONTADORA DEL COV', icon: Calculator }
-  ];
-
-  // Events Commission members
-  const eventsCommissionMembers = [
-    { name: 'Dr. Pablo Quintero', role: 'PRESIDENTE DE LA COMISIÓN DE JORNADAS Y EVENTOS' },
-    { name: 'Dra. Desiree Aguado', role: 'VICEPRESIDENTE' },
-    { name: 'Dra. Vanessa Llavanera', role: 'SEC. GENERAL —SEC. DE ORGANIZACIÓN' },
-    { name: 'Dr. Octavio Muñoz', role: 'SECRETARIO DE FINANZAS' },
-    { name: 'Dra. Doyi Sikiu Hernández', role: 'SECRETARIA DE RELACIONES PÚBLICAS' },
-    { name: 'Dr. Luis Linares', role: 'SECRETARIO DE PROGRAMACIÓN' }
-  ];
-
-  // Sports Commission members
-  const sportsCommissionMembers = [
-    'Dr. Francisco Marín',
-    'Dr. Héctor Conde',
-    'Dr. Iván Alfonzo',
-    'Dr. Jaime Weber',
-    'Dr. Luis Rojas'
-  ];
-
-  /**
-   * Component rendering
-   */
+    loadData();
+  }, []);
+  if (isLoading) {
+    return <div className="text-center py-8">Cargando Junta Directiva...</div>;
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <main className="container mx-auto px-4 py-12 mt-22">
         {/* Animated Title */}
         <AnimatedTitle />
-        
+
         {/* Main Board Section */}
-        <BoardSection 
-          primaryMembers={primaryMembers} 
-          secondaryMembers={secondaryMembers} 
+        <BoardSection
+          primaryMembers={organizacion.primaryMembers}
+          secondaryMembers={organizacion.secondaryMembers}
         />
 
         {/* Events Commission Section */}
-        <CommissionSection 
+        <CommissionSection
           title="COMISIÓN DE JORNADAS Y EVENTOS DEL C.O.V."
           icon={<Calendar className="w-6 h-6" />}
           description="La Comisión Científica de Jornadas y Eventos es creada por la JUNTA DIRECTIVA NACIONAL DEL COV en el año 2008, como una alternativa a la demanda del gremio por poseer un programa de Educación Continua al alcance de todos los odontólogos del país."
-          members={eventsCommissionMembers}
+          members={organizacion.eventsCommissionMembers}
           displayRole={true}
           columns="grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
         />
 
         {/* Sports Commission Section */}
-        <CommissionSection 
+        <CommissionSection
           title="COMISIÓN DE DEPORTE"
           icon={<Trophy className="w-6 h-6" />}
-          members={sportsCommissionMembers.map(name => ({ name }))}
+          members={organizacion.sportsCommissionMembers.map((name) => ({
+            name,
+          }))}
           displayRole={false}
           columns="grid-cols-1 sm:grid-cols-3 md:grid-cols-5" // Changed to 1 column on mobile
           delay={0.2}
@@ -167,12 +151,12 @@ function AnimatedTitle() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.4 }}
       >
-        Conoce a los líderes que dirigen nuestra organización con compromiso y dedicación.
+        Conoce a los líderes que dirigen nuestra organización con compromiso y
+        dedicación.
       </motion.p>
     </motion.div>
   );
 }
-
 
 /**
  * Component for main board section with primary and secondary members
@@ -191,10 +175,10 @@ function BoardSection({ primaryMembers, secondaryMembers }) {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="relative">
-              <Image 
-                src="/assets/escudo.png" 
-                alt="Logo COV" 
-                width={160} 
+              <Image
+                src="/assets/escudo.png"
+                alt="Logo COV"
+                width={160}
                 height={200}
                 className="object-contain"
               />
@@ -209,7 +193,10 @@ function BoardSection({ primaryMembers, secondaryMembers }) {
             className="space-y-4"
           >
             {primaryMembers.map((member, index) => (
-              <PrimaryMemberCard key={index} member={member} />
+              <PrimaryMemberCard
+                key={index}
+                member={{ ...member, icon: primaryMembersIcons[index] }}
+              />
             ))}
           </motion.div>
         </div>
@@ -223,11 +210,14 @@ function BoardSection({ primaryMembers, secondaryMembers }) {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
               {secondaryMembers.map((member, index) => (
-                <SecondaryMemberCard 
-                  key={index} 
-                  member={member} 
-                  index={index} 
-                  isLastOdd={index === secondaryMembers.length - 1 && secondaryMembers.length % 2 !== 0}
+                <SecondaryMemberCard
+                  key={index}
+                  member={{ ...member, icon: secondaryMembersIcons[index] }}
+                  index={index}
+                  isLastOdd={
+                    index === secondaryMembers.length - 1 &&
+                    secondaryMembers.length % 2 !== 0
+                  }
                 />
               ))}
             </div>
@@ -250,13 +240,15 @@ function PrimaryMemberCard({ member }) {
     >
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border-0 group transition-all duration-300 relative">
         {/* Decorative background */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${member.color} opacity-5 group-hover:opacity-10 transition-all duration-300`} />
-        
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[0]} opacity-5 group-hover:opacity-10 transition-all duration-300`}
+        />
+
         <div className="p-4 relative">
           <div className="flex items-center mb-2">
             <div className="mr-4">
-              <div 
-                className={`flex items-center justify-center p-2 sm:p-3 rounded-lg text-white bg-gradient-to-br ${member.color} shadow-md w-10 h-10 sm:w-14 sm:h-14 group-hover:shadow-lg transition-all duration-300`}
+              <div
+                className={`flex items-center justify-center p-2 sm:p-3 rounded-lg text-white bg-gradient-to-br ${GRADIENTS[0]} shadow-md w-10 h-10 sm:w-14 sm:h-14 group-hover:shadow-lg transition-all duration-300`}
               >
                 <member.icon className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
@@ -266,7 +258,9 @@ function PrimaryMemberCard({ member }) {
                 {member.role}
               </h3>
               <p className="text-lg sm:text-xl text-gray-800">{member.name}</p>
-              <div className={`h-0.5 w-0 bg-gradient-to-r ${member.color} mt-2 transition-all duration-300 group-hover:w-full`}></div>
+              <div
+                className={`h-0.5 w-0 bg-gradient-to-r ${GRADIENTS[0]} mt-2 transition-all duration-300 group-hover:w-full`}
+              ></div>
             </div>
           </div>
         </div>
@@ -282,21 +276,27 @@ function SecondaryMemberCard({ member, index, isLastOdd }) {
   return (
     <motion.div
       variants={itemVariants}
-      whileHover={{ 
+      whileHover={{
         scale: 1.03,
-        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)"
+        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
       }}
       whileTap={{ scale: 0.97 }}
       className={isLastOdd ? "col-span-full flex justify-center" : ""}
     >
       <div className="bg-white rounded-lg shadow-md overflow-hidden h-full w-full transition-all duration-200 relative">
         {/* Decorative background */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${getGradientColor(index + 2)} opacity-5 transition-all duration-300`} />
-        
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${getGradientColor(
+            index + 2
+          )} opacity-5 transition-all duration-300`}
+        />
+
         <div className="p-4 flex items-center relative">
           <div className="mr-3">
-            <div 
-              className={`flex items-center justify-center p-2 rounded-lg text-white bg-gradient-to-br ${getGradientColor(index + 2)} shadow-sm w-10 h-10`}
+            <div
+              className={`flex items-center justify-center p-2 rounded-lg text-white bg-gradient-to-br ${getGradientColor(
+                index + 2
+              )} shadow-sm w-10 h-10`}
             >
               <member.icon className="w-5 h-5" />
             </div>
@@ -304,7 +304,11 @@ function SecondaryMemberCard({ member, index, isLastOdd }) {
           <div className="ml-2 flex-1">
             <h3 className="text-lg font-bold text-gray-800">{member.role}</h3>
             <p className="text-gray-700">{member.name}</p>
-            <div className={`h-0.5 w-0 bg-gradient-to-r ${getGradientColor(index + 2)} mt-2 transition-all duration-300 group-hover:w-full`}></div>
+            <div
+              className={`h-0.5 w-0 bg-gradient-to-r ${getGradientColor(
+                index + 2
+              )} mt-2 transition-all duration-300 group-hover:w-full`}
+            ></div>
           </div>
         </div>
       </div>
@@ -315,14 +319,14 @@ function SecondaryMemberCard({ member, index, isLastOdd }) {
 /**
  * Component for Commission sections (Events and Sports)
  */
-function CommissionSection({ 
-  title, 
-  icon, 
-  description, 
-  members, 
-  displayRole = true, 
+function CommissionSection({
+  title,
+  icon,
+  description,
+  members,
+  displayRole = true,
   columns = "grid-cols-3",
-  delay = 0
+  delay = 0,
 }) {
   return (
     <motion.div
@@ -346,14 +350,14 @@ function CommissionSection({
               <div className="h-0.5 w-full bg-gradient-to-r from-[#590248] to-transparent mt-2"></div>
             </div>
           </div>
-          
+
           {/* Description (if provided) */}
           {description && (
             <p className="text-gray-700 mb-8 max-w-full">{description}</p>
           )}
-          
+
           {/* Members grid */}
-          <motion.div 
+          <motion.div
             className={`grid ${columns} gap-4`}
             variants={containerVariants}
             initial="hidden"
@@ -364,18 +368,22 @@ function CommissionSection({
               <motion.div
                 key={index}
                 variants={itemVariants}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.03,
                   y: -5,
-                  boxShadow: "0 15px 30px -10px rgba(21, 128, 61, 0.2)"
+                  boxShadow: "0 15px 30px -10px rgba(21, 128, 61, 0.2)",
                 }}
               >
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden border-0 h-full transition-all duration-300 relative">
                   {/* Decorative background */}
                   <div className="absolute inset-0 bg-gradient-to-r from-[#C40180] to-[#590248] opacity-5 transition-all duration-300"></div>
-                  
+
                   <div className="p-4 relative text-center sm:text-left">
-                    {displayRole && <h3 className="text-sm font-bold text-gray-800">{member.role}</h3>}
+                    {displayRole && (
+                      <h3 className="text-sm font-bold text-gray-800">
+                        {member.role}
+                      </h3>
+                    )}
                     <p className="text-gray-700">{member.name}</p>
                   </div>
                 </div>
