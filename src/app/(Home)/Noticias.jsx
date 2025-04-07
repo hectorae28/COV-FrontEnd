@@ -1,57 +1,15 @@
-"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Calendar, Clock, ChevronRight } from 'lucide-react';
+import newsItems from '../Components/Home/NoticiasData';
 
-const NewsCarousel = () => {
+const Noticias = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [width, setWidth] = useState(0);
     const carouselRef = useRef(null);
     const [autoplay, setAutoplay] = useState(true);
     const autoplayRef = useRef(null);
     const [screenSize, setScreenSize] = useState('lg');
-    const newsItems = [
-        {
-            id: 1,
-            date: "14/05/2024",
-            time: "12:30pm",
-            title: "XLII Juegos Nacionales de Odontólogos TACHIRA 2024",
-            description: "Desde el domingo 28 de abril hasta el viernes 03 de mayo se celebraron los XLII Juegos Nacionales de Odontólogos con gran éxito y participación de profesionales de todo el país.",
-            imageUrl: "/assets/noticias/ancho.png",
-        },
-        {
-            id: 2,
-            date: "10/05/2024",
-            time: "09:45am",
-            title: "PROYECTO DE ACTUALIZACIÓN DE LEY ORGÁNICA DE LA ODONTOLOGÍA",
-            description: "Artículo 1. Objeto de la Ley. La presente Ley tiene por objeto establecer las bases normativas para el ejercicio profesional de la odontología en Venezuela, garantizando la calidad y ética en el servicio.",
-            imageUrl: "/assets/noticias/normal2.png",
-        },
-        {
-            id: 3,
-            date: "05/05/2024",
-            time: "03:15pm",
-            title: "NUEVO EPISODIO: Podcast Odontología Actual",
-            description: "No te pierdas el más reciente episodio de nuestro podcast donde expertos discuten las últimas tendencias en implantes dentales y tecnologías de vanguardia para procedimientos restaurativos.",
-            imageUrl: "/assets/noticias/ancho2.png",
-        },
-        {
-            id: 4,
-            date: "28/04/2024",
-            time: "11:00am",
-            title: "Revista Venezuela Odontológica: Nueva Edición",
-            description: "Ya está disponible la nueva edición de nuestra revista con investigaciones actualizadas, casos clínicos destacados y entrevistas exclusivas con líderes de la odontología nacional e internacional.",
-            imageUrl: "/assets/noticias/normal5.png",
-        },
-        {
-            id: 5,
-            date: "20/04/2024",
-            time: "02:00pm",
-            title: "Conferencia Internacional de Odontología Digital",
-            description: "Prepárate para la conferencia más importante del año donde se presentarán los avances en tecnología digital aplicada a la odontología moderna, con ponentes internacionales de primer nivel.",
-            imageUrl: "/assets/noticias/alto.png",
-        },
-    ];
 
     // Handle window resize and set carousel width and screen size
     useEffect(() => {
@@ -59,7 +17,7 @@ const NewsCarousel = () => {
             if (carouselRef.current) {
                 setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
             }
-            
+
             if (window.innerWidth < 640) {
                 setScreenSize('sm');
             } else if (window.innerWidth < 1024) {
@@ -70,7 +28,7 @@ const NewsCarousel = () => {
         };
         handleResize();
         window.addEventListener('resize', handleResize);
-        
+
         return () => {
             window.removeEventListener('resize', handleResize);
         };
@@ -82,15 +40,15 @@ const NewsCarousel = () => {
         if (autoplayRef.current) {
             clearInterval(autoplayRef.current);
         }
-        
+
         if (autoplay) {
             autoplayRef.current = setInterval(() => {
-                setCurrentIndex((prevIndex) => 
+                setCurrentIndex((prevIndex) =>
                     prevIndex === newsItems.length - 1 ? 0 : prevIndex + 1
                 );
             }, 5000); // Changed to 5 seconds
         }
-        
+
         return () => {
             if (autoplayRef.current) {
                 clearInterval(autoplayRef.current);
@@ -99,14 +57,14 @@ const NewsCarousel = () => {
     }, [autoplay, newsItems.length]);
 
     const nextSlide = () => {
-        setCurrentIndex((prevIndex) => 
+        setCurrentIndex((prevIndex) =>
             prevIndex === newsItems.length - 1 ? 0 : prevIndex + 1
         );
         resetAutoplayTimer();
     };
 
     const prevSlide = () => {
-        setCurrentIndex((prevIndex) => 
+        setCurrentIndex((prevIndex) =>
             prevIndex === 0 ? newsItems.length - 1 : prevIndex - 1
         );
         resetAutoplayTimer();
@@ -123,7 +81,7 @@ const NewsCarousel = () => {
             clearInterval(autoplayRef.current);
             if (autoplay) {
                 autoplayRef.current = setInterval(() => {
-                    setCurrentIndex((prevIndex) => 
+                    setCurrentIndex((prevIndex) =>
                         prevIndex === newsItems.length - 1 ? 0 : prevIndex + 1
                     );
                 }, 5000); // Changed to 5 seconds
@@ -139,7 +97,7 @@ const NewsCarousel = () => {
         <section className="py-8 bg-[#F9F9F9]">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-8 sm:mb-10">
-                    <motion.span 
+                    <motion.span
                         className="text-xs sm:text-sm font-medium text-[#C40180] uppercase tracking-wider"
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
@@ -147,7 +105,7 @@ const NewsCarousel = () => {
                     >
                         Mantente Informado
                     </motion.span>
-                    
+
                     <motion.h2
                         className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
                         initial={{ opacity: 0, y: 20 }}
@@ -157,8 +115,8 @@ const NewsCarousel = () => {
                     >
                         Noticias y Actualizaciones
                     </motion.h2>
-                    
-                    <motion.p 
+
+                    <motion.p
                         className="mt-4 sm:mt-6 max-w-2xl mx-auto text-gray-600 text-sm sm:text-base"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -182,7 +140,7 @@ const NewsCarousel = () => {
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </motion.button>
-                        
+
                         <motion.button
                             className=" cursor-pointer absolute right-[-100] top-1/2 -translate-y-1/2 translate-x-5 z-10 w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-lg hover:bg-gray-50 transition-all border border-gray-200"
                             whileHover={{ scale: 1.1, x: 18 }}
@@ -195,7 +153,7 @@ const NewsCarousel = () => {
                     </div>
 
                     {/* Carousel Content */}
-                    <div 
+                    <div
                         className="relative overflow-hidden rounded-xl bg-white shadow-xl border border-gray-100"
                         ref={carouselRef}
                         onMouseEnter={handleMouseEnter}
@@ -215,7 +173,7 @@ const NewsCarousel = () => {
                                     <div className={`flex flex-col md:flex-row w-full`}>
                                         {/* Image Section */}
                                         <div className="w-full md:w-1/2 h-64 md:h-96 relative overflow-hidden">
-                                            <img 
+                                            <img
                                                 src={newsItems[currentIndex].imageUrl}
                                                 alt={newsItems[currentIndex].title}
                                                 className="w-full h-full object-cover object-center"
@@ -223,11 +181,11 @@ const NewsCarousel = () => {
                                                     e.target.src = "https://via.placeholder.com/800x600?text=News+Image";
                                                 }}
                                             />
-                                            
+
                                             {/* Overlay Gradient */}
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                                         </div>
-                                        
+
                                         {/* Content Section */}
                                         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between">
                                             {/* Date & Time Badge - Moved outside the image */}
@@ -242,24 +200,24 @@ const NewsCarousel = () => {
                                                     <span className="font-medium text-gray-800">{newsItems[currentIndex].time}</span>
                                                 </div>
                                             </div>
-                                            
+
                                             <div>
                                                 <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-4">
                                                     {newsItems[currentIndex].title}
                                                 </h3>
-                                                
+
                                                 <p className="text-gray-600 text-sm md:text-base mb-6">
                                                     {newsItems[currentIndex].description}
                                                 </p>
                                             </div>
-                                            
+
                                             {/* Read More Button - Now aligned to the right */}
                                             <div className="mt-auto flex justify-end">
-                                                <motion.button 
+                                                <motion.button
                                                     className=" cursor-pointer flex items-center text-[#C40180] font-medium text-sm md:text-base group"
                                                     whileHover={{ x: 5 }}
                                                 >
-                                                    Leer más 
+                                                    Leer más
                                                     <ChevronRight className="w-4 h-4 ml-1 group-hover:ml-2 transition-all" />
                                                 </motion.button>
                                             </div>
@@ -268,13 +226,13 @@ const NewsCarousel = () => {
                                 </motion.div>
                             </AnimatePresence>
                         </div>
-                        
+
                         {/* Progress Bar - Updated to 5 seconds */}
-                        <motion.div 
+                        <motion.div
                             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#C40180] to-[#590248]"
                             initial={{ width: 0 }}
                             key={currentIndex} // Important: forces animation restart with each slide change
-                            animate={{ 
+                            animate={{
                                 width: "100%",
                                 transition: {
                                     duration: 5, // Changed to 5 seconds to match autoplay
@@ -296,7 +254,7 @@ const NewsCarousel = () => {
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </motion.button>
-                    
+
                     {/* Progress Indicator Dots */}
                     <div className="flex justify-center space-x-2">
                         {newsItems.map((_, index) => (
@@ -317,7 +275,7 @@ const NewsCarousel = () => {
                             />
                         ))}
                     </div>
-                    
+
                     <motion.button
                         className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-md hover:bg-gray-50 transition-all border border-gray-200"
                         whileHover={{ scale: 1.1 }}
@@ -339,13 +297,13 @@ const NewsCarousel = () => {
                             whileHover={{ scale: 1.05, opacity: 1 }}
                         >
                             <div className="w-20 h-12 relative">
-                                <img 
+                                <img
                                     src={item.imageUrl}
                                     alt={`Thumbnail ${index + 1}`}
                                     className="w-full h-full object-cover"
                                 />
                                 {currentIndex === index && (
-                                    <motion.div 
+                                    <motion.div
                                         className="absolute inset-0 bg-[#C40180]/20"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
@@ -357,14 +315,14 @@ const NewsCarousel = () => {
                 </div>
 
                 {/* View All Button */}
-                <motion.div 
+                <motion.div
                     className="text-center mt-8 sm:mt-10"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                     viewport={{ once: true }}
                 >
-                    <motion.button 
+                    <motion.button
                         className="px-6 sm:px-8 py-2 sm:py-3 cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white text-sm sm:text-base font-medium rounded-full hover:shadow-lg transition-all duration-300 flex items-center mx-auto"
                         whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(196, 1, 128, 0.3)" }}
                         whileTap={{ scale: 0.98 }}
@@ -378,4 +336,4 @@ const NewsCarousel = () => {
     );
 };
 
-export default NewsCarousel;
+export default Noticias;
