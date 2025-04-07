@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
           <AppBar />
         </header>
         <main>{children}</main>
-        <footer>
+        <footer className="bg-[#F9F9F9]">
           <Footer />
         </footer>
       </body>

@@ -1,15 +1,65 @@
 "use client";
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, ArrowRight, Calendar, Clock, ChevronRight } from 'lucide-react';
 
-import React, { useMemo, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
-import CardNoticias from '../Components/Home/CardNoticias';
-
-const Noticias = () => {
+const NewsCarousel = () => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [width, setWidth] = useState(0);
+    const carouselRef = useRef(null);
+    const [autoplay, setAutoplay] = useState(true);
+    const autoplayRef = useRef(null);
     const [screenSize, setScreenSize] = useState('lg');
-    
+    const newsItems = [
+        {
+            id: 1,
+            date: "14/05/2024",
+            time: "12:30pm",
+            title: "XLII Juegos Nacionales de Odontólogos TACHIRA 2024",
+            description: "Desde el domingo 28 de abril hasta el viernes 03 de mayo se celebraron los XLII Juegos Nacionales de Odontólogos con gran éxito y participación de profesionales de todo el país.",
+            imageUrl: "/assets/noticias/ancho.png",
+        },
+        {
+            id: 2,
+            date: "10/05/2024",
+            time: "09:45am",
+            title: "PROYECTO DE ACTUALIZACIÓN DE LEY ORGÁNICA DE LA ODONTOLOGÍA",
+            description: "Artículo 1. Objeto de la Ley. La presente Ley tiene por objeto establecer las bases normativas para el ejercicio profesional de la odontología en Venezuela, garantizando la calidad y ética en el servicio.",
+            imageUrl: "/assets/noticias/normal2.png",
+        },
+        {
+            id: 3,
+            date: "05/05/2024",
+            time: "03:15pm",
+            title: "NUEVO EPISODIO: Podcast Odontología Actual",
+            description: "No te pierdas el más reciente episodio de nuestro podcast donde expertos discuten las últimas tendencias en implantes dentales y tecnologías de vanguardia para procedimientos restaurativos.",
+            imageUrl: "/assets/noticias/ancho2.png",
+        },
+        {
+            id: 4,
+            date: "28/04/2024",
+            time: "11:00am",
+            title: "Revista Venezuela Odontológica: Nueva Edición",
+            description: "Ya está disponible la nueva edición de nuestra revista con investigaciones actualizadas, casos clínicos destacados y entrevistas exclusivas con líderes de la odontología nacional e internacional.",
+            imageUrl: "/assets/noticias/normal5.png",
+        },
+        {
+            id: 5,
+            date: "20/04/2024",
+            time: "02:00pm",
+            title: "Conferencia Internacional de Odontología Digital",
+            description: "Prepárate para la conferencia más importante del año donde se presentarán los avances en tecnología digital aplicada a la odontología moderna, con ponentes internacionales de primer nivel.",
+            imageUrl: "/assets/noticias/alto.png",
+        },
+    ];
+
+    // Handle window resize and set carousel width and screen size
     useEffect(() => {
         const handleResize = () => {
+            if (carouselRef.current) {
+                setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+            }
+            
             if (window.innerWidth < 640) {
                 setScreenSize('sm');
             } else if (window.innerWidth < 1024) {
@@ -18,211 +68,77 @@ const Noticias = () => {
                 setScreenSize('lg');
             }
         };
-        
-        // Establecer tamaño inicial
         handleResize();
-        
-        // Añadir event listener
         window.addEventListener('resize', handleResize);
         
-        // Cleanup
-        return () => window.removeEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
     }, []);
 
-    const newsItems = [
-        {
-            date: "14/05/2024",
-            time: "12:30pm",
-            title: "XLII Juegos Nacionales de Odontólogos TACHIRA 2024",
-            description: "XLII Juegos Nacionales de Odontólogos TACHIRA 2024. Desde el domingo 28 de abril hasta el viernes 03 de mayo se celebraron los...",
-            imageUrl: ["/assets/noticias/ancho.png"],
-            size: "normal"
-        },
-        {
-            date: "14/05/2024",
-            time: "12:30pm",
-            title: "PROYECTO DE ACTUALIZACIÓN DE LEY ORGÁNICA DE LA ODONTOLOGÍA",
-            description: "Artículo 1. Objeto de la Ley. La presente Ley tiene por objeto establecer las bases...",
-            imageUrl: ["/assets/noticias/normal2.png", "/assets/noticias/normal.png"],
-            size: "alto"
-        },
-        {
-            date: "14/05/2024",
-            time: "12:30pm",
-            title: "NUEVO EPISODIO",
-            description: "XLII Juegos Nacionales de Odontólogos TACHIRA 2024. Desde el domingo 28 de abril hasta el viernes 03 de mayo se celebraron los...",
-            imageUrl: ["/assets/noticias/ancho2.png"],
-            size: "normal" 
-        },
-        {
-            date: "14/05/2024",
-            time: "12:30pm",
-            title: "Revista Venezuela Odontológica",
-            description: "XLII Juegos Nacionales de Odontólogos TACHIRA 2024. Desde el domingo 28 de abril hasta el viernes 03 de mayo se celebraron los...",
-            imageUrl: ["/assets/noticias/ancho.png", "/assets/noticias/ancho2.png"],
-            size: "ancho"
-        },
-        {
-            date: "14/05/2024",
-            time: "12:30pm",
-            title: "NUEVO EPISODIO",
-            description: "XLII Juegos Nacionales de Odontólogos TACHIRA 2024. Desde el domingo 28 de abril hasta el viernes 03 de mayo se celebraron los...",
-            imageUrl: ["/assets/noticias/normal5.png"],
-            size: "normal"
-        },
-        {
-            date: "14/05/2024",
-            time: "12:30pm",
-            title: "PROYECTO DE ACTUALIZACIÓN DE LEY ORGÁNICA DE LA ODONTOLOGÍA",
-            description: "Artículo 1. Objeto de la Ley. La presente Ley tiene por objeto establecer las bases...",
-            imageUrl: ["/assets/noticias/alto.png"],
-            size: "alto"
-        },
-    ];
-
-    const parseDateAndTime = (dateStr, timeStr) => {
-        const [day, month, year] = dateStr.split('/');
-        let hours = parseInt(timeStr.slice(0, -2));
-        const isPM = timeStr.toLowerCase().includes('pm');
-        
-        if (isPM && hours !== 12) {
-            hours += 12;
-        } else if (!isPM && hours === 12) {
-            hours = 0;
+    // Autoplay functionality - changed to 5 seconds
+    useEffect(() => {
+        // Clear any existing interval first
+        if (autoplayRef.current) {
+            clearInterval(autoplayRef.current);
         }
         
-        return new Date(`${year}-${month}-${day}T${hours.toString().padStart(2, '0')}:${timeStr.slice(3, 5)}:00`);
-    };
-
-    const sortedNewsItems = useMemo(() => {
-        return [...newsItems].sort((a, b) => {
-            const dateA = parseDateAndTime(a.date, a.time);
-            const dateB = parseDateAndTime(b.date, b.time);
-            return dateB - dateA;
-        });
-    }, [newsItems]);
-
-    const generateGridLayout = (items) => {
-        // Determinar número de columnas según tamaño de pantalla
-        const numColumns = screenSize === 'lg' ? 3 : screenSize === 'md' ? 2 : 1;
+        if (autoplay) {
+            autoplayRef.current = setInterval(() => {
+                setCurrentIndex((prevIndex) => 
+                    prevIndex === newsItems.length - 1 ? 0 : prevIndex + 1
+                );
+            }, 5000); // Changed to 5 seconds
+        }
         
-        const grid = Array(Math.ceil(items.length * 1.5)).fill().map(() => Array(numColumns).fill(null));
-        const itemPositions = {};
-
-        items.forEach((item, index) => {
-            const itemId = `card-${index + 1}`;
-            let placed = false;
-
-            // Ajustar tamaños según el breakpoint
-            let adjustedSize = item.size;
-            
-            // En pantallas pequeñas, todo ocupa el ancho completo (1 columna)
-            if (screenSize === 'sm') {
-                adjustedSize = item.size === 'alto' ? 'alto' : 'normal';
-            } 
-            // En pantallas medianas, ancho ocupa 2 columnas
-            else if (screenSize === 'md') {
-                if (item.size === 'ancho') {
-                    adjustedSize = 'ancho'; // Ocupa las 2 columnas completas
-                } else {
-                    adjustedSize = item.size; // normal o alto
-                }
+        return () => {
+            if (autoplayRef.current) {
+                clearInterval(autoplayRef.current);
             }
-
-            for (let row = 0; row < grid.length && !placed; row++) {
-                for (let col = 0; col < grid[0].length && !placed; col++) {
-                    if (grid[row][col] === null) {
-                        if (adjustedSize === "normal") {
-                            grid[row][col] = itemId;
-                            itemPositions[itemId] = { row, col, rowSpan: 1, colSpan: 1 };
-                            placed = true;
-                        } else if (adjustedSize === "ancho" && col < grid[0].length - 1 && grid[row][col + 1] === null) {
-                            grid[row][col] = itemId;
-                            grid[row][col + 1] = itemId;
-                            itemPositions[itemId] = { row, col, rowSpan: 1, colSpan: 2 };
-                            placed = true;
-                        } else if (adjustedSize === "alto" && row < grid.length - 1 && grid[row + 1][col] === null) {
-                            grid[row][col] = itemId;
-                            grid[row + 1][col] = itemId;
-                            itemPositions[itemId] = { row, col, rowSpan: 2, colSpan: 1 };
-                            placed = true;
-                        } else if (screenSize === 'sm' && adjustedSize === "ancho") {
-                            // En móvil, ancho ocupa una sola columna pero con altura normal
-                            grid[row][col] = itemId;
-                            itemPositions[itemId] = { row, col, rowSpan: 1, colSpan: 1 };
-                            placed = true;
-                        }
-                    }
-                }
-            }
-
-            if (!placed) {
-                const newRow = Array(numColumns).fill(null);
-                grid.push(newRow);
-
-                if (adjustedSize === "normal" || (screenSize === 'sm' && adjustedSize === "ancho")) {
-                    grid[grid.length - 1][0] = itemId;
-                    itemPositions[itemId] = { row: grid.length - 1, col: 0, rowSpan: 1, colSpan: 1 };
-                } else if (adjustedSize === "ancho") {
-                    grid[grid.length - 1][0] = itemId;
-                    if (numColumns > 1) {
-                        grid[grid.length - 1][1] = itemId;
-                        itemPositions[itemId] = { row: grid.length - 1, col: 0, rowSpan: 1, colSpan: 2 };
-                    } else {
-                        itemPositions[itemId] = { row: grid.length - 1, col: 0, rowSpan: 1, colSpan: 1 };
-                    }
-                } else if (adjustedSize === "alto") {
-                    grid[grid.length - 1][0] = itemId;
-                    grid.push(Array(numColumns).fill(null));
-                    grid[grid.length - 1][0] = itemId;
-                    itemPositions[itemId] = { row: grid.length - 2, col: 0, rowSpan: 2, colSpan: 1 };
-                }
-            }
-        });
-
-        // Limpiar filas vacías al final del grid
-        let lastNonEmptyRow = grid.length - 1;
-        while (lastNonEmptyRow >= 0 && grid[lastNonEmptyRow].every(cell => cell === null)) {
-            lastNonEmptyRow--;
-        }
-        grid.splice(lastNonEmptyRow + 1);
-
-        let gridTemplateAreas = '';
-        for (let row = 0; row < grid.length; row++) {
-            gridTemplateAreas += '"';
-            for (let col = 0; col < grid[0].length; col++) {
-                gridTemplateAreas += (grid[row][col] || '.') + ' ';
-            }
-            gridTemplateAreas = gridTemplateAreas.trim() + '"\n';
-        }
-
-        return {
-            areas: gridTemplateAreas,
-            columns: screenSize === 'lg' ? "1fr 1fr 1fr" : screenSize === 'md' ? "1fr 1fr" : "1fr",
-            rows: `repeat(${grid.length}, auto)`
         };
+    }, [autoplay, newsItems.length]);
+
+    const nextSlide = () => {
+        setCurrentIndex((prevIndex) => 
+            prevIndex === newsItems.length - 1 ? 0 : prevIndex + 1
+        );
+        resetAutoplayTimer();
     };
 
-    const gridLayout = useMemo(() => {
-        return generateGridLayout(sortedNewsItems);
-    }, [sortedNewsItems, screenSize]);
+    const prevSlide = () => {
+        setCurrentIndex((prevIndex) => 
+            prevIndex === 0 ? newsItems.length - 1 : prevIndex - 1
+        );
+        resetAutoplayTimer();
+    };
 
-    const fadeInUpVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: (custom) => ({
-            opacity: 1,
-            y: 0,
-            transition: {
-                delay: custom * 0.1,
-                duration: 0.5
+    const handleDotClick = (index) => {
+        setCurrentIndex(index);
+        resetAutoplayTimer();
+    };
+
+    // Reset autoplay timer when manually navigating
+    const resetAutoplayTimer = () => {
+        if (autoplayRef.current) {
+            clearInterval(autoplayRef.current);
+            if (autoplay) {
+                autoplayRef.current = setInterval(() => {
+                    setCurrentIndex((prevIndex) => 
+                        prevIndex === newsItems.length - 1 ? 0 : prevIndex + 1
+                    );
+                }, 5000); // Changed to 5 seconds
             }
-        })
+        }
     };
+
+    // Handle pause/resume autoplay when hovering
+    const handleMouseEnter = () => setAutoplay(false);
+    const handleMouseLeave = () => setAutoplay(true);
 
     return (
-        <section className="py-8">
+        <section className="py-8 bg-[#F9F9F9]">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-8 sm:mb-10 md:mb-12">
+                <div className="text-center mb-8 sm:mb-10">
                     <motion.span 
                         className="text-xs sm:text-sm font-medium text-[#C40180] uppercase tracking-wider"
                         initial={{ opacity: 0 }}
@@ -253,51 +169,213 @@ const Noticias = () => {
                     </motion.p>
                 </div>
 
-                <div 
-                    className="grid gap-4 sm:gap-6"
-                    style={{
-                        gridTemplateAreas: gridLayout.areas,
-                        gridTemplateColumns: gridLayout.columns,
-                        gridTemplateRows: gridLayout.rows
-                    }}
-                >
-                    {sortedNewsItems.map((item, index) => (
+                {/* Main Carousel Container with Side Navigation for MD and LG */}
+                <div className="relative">
+                    {/* Navigation Buttons for MD and LG screens - Outside at the middle sides */}
+                    <div className="hidden md:block">
+                        <motion.button
+                            className=" cursor-pointer absolute left-[-100] top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-lg hover:bg-gray-50 transition-all border border-gray-200"
+                            whileHover={{ scale: 1.1, x: -18 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={prevSlide}
+                            aria-label="Previous slide"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </motion.button>
+                        
+                        <motion.button
+                            className=" cursor-pointer absolute right-[-100] top-1/2 -translate-y-1/2 translate-x-5 z-10 w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-lg hover:bg-gray-50 transition-all border border-gray-200"
+                            whileHover={{ scale: 1.1, x: 18 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={nextSlide}
+                            aria-label="Next slide"
+                        >
+                            <ArrowRight className="w-5 h-5" />
+                        </motion.button>
+                    </div>
+
+                    {/* Carousel Content */}
+                    <div 
+                        className="relative overflow-hidden rounded-xl bg-white shadow-xl border border-gray-100"
+                        ref={carouselRef}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                    >
+                        {/* Carousel Slider */}
+                        <div className="relative w-full h-full">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={currentIndex}
+                                    initial={{ opacity: 0, x: 100 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -100 }}
+                                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                                    className="w-full"
+                                >
+                                    <div className={`flex flex-col md:flex-row w-full`}>
+                                        {/* Image Section */}
+                                        <div className="w-full md:w-1/2 h-64 md:h-96 relative overflow-hidden">
+                                            <img 
+                                                src={newsItems[currentIndex].imageUrl}
+                                                alt={newsItems[currentIndex].title}
+                                                className="w-full h-full object-cover object-center"
+                                                onError={(e) => {
+                                                    e.target.src = "https://via.placeholder.com/800x600?text=News+Image";
+                                                }}
+                                            />
+                                            
+                                            {/* Overlay Gradient */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                        </div>
+                                        
+                                        {/* Content Section */}
+                                        <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between">
+                                            {/* Date & Time Badge - Moved outside the image */}
+                                            <div className="mb-4 flex items-center space-x-2 text-sm">
+                                                <div className="flex items-center text-[#C40180]">
+                                                    <Calendar className="w-4 h-4 mr-1" />
+                                                    <span className="font-medium text-gray-800">{newsItems[currentIndex].date}</span>
+                                                </div>
+                                                <span className="text-gray-400">|</span>
+                                                <div className="flex items-center text-[#C40180]">
+                                                    <Clock className="w-4 h-4 mr-1" />
+                                                    <span className="font-medium text-gray-800">{newsItems[currentIndex].time}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-4">
+                                                    {newsItems[currentIndex].title}
+                                                </h3>
+                                                
+                                                <p className="text-gray-600 text-sm md:text-base mb-6">
+                                                    {newsItems[currentIndex].description}
+                                                </p>
+                                            </div>
+                                            
+                                            {/* Read More Button - Now aligned to the right */}
+                                            <div className="mt-auto flex justify-end">
+                                                <motion.button 
+                                                    className=" cursor-pointer flex items-center text-[#C40180] font-medium text-sm md:text-base group"
+                                                    whileHover={{ x: 5 }}
+                                                >
+                                                    Leer más 
+                                                    <ChevronRight className="w-4 h-4 ml-1 group-hover:ml-2 transition-all" />
+                                                </motion.button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+                        
+                        {/* Progress Bar - Updated to 5 seconds */}
+                        <motion.div 
+                            className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#C40180] to-[#590248]"
+                            initial={{ width: 0 }}
+                            key={currentIndex} // Important: forces animation restart with each slide change
+                            animate={{ 
+                                width: "100%",
+                                transition: {
+                                    duration: 5, // Changed to 5 seconds to match autoplay
+                                    ease: "linear"
+                                }
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {/* Navigation Controls for Mobile (SM) - Outside and below the carousel */}
+                <div className="flex md:hidden justify-center items-center mt-6 space-x-4">
+                    <motion.button
+                        className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-md hover:bg-gray-50 transition-all border border-gray-200"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={prevSlide}
+                        aria-label="Previous slide"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                    </motion.button>
+                    
+                    {/* Progress Indicator Dots */}
+                    <div className="flex justify-center space-x-2">
+                        {newsItems.map((_, index) => (
+                            <motion.button
+                                key={index}
+                                className={`w-2 h-2 rounded-full ${currentIndex === index ? 'bg-[#C40180]' : 'bg-gray-300'}`}
+                                onClick={() => handleDotClick(index)}
+                                whileHover={{ scale: 1.2 }}
+                                animate={{
+                                    scale: currentIndex === index ? [1, 1.2, 1] : 1,
+                                    transition: {
+                                        duration: 0.5,
+                                        repeat: currentIndex === index ? Infinity : 0,
+                                        repeatType: "reverse"
+                                    }
+                                }}
+                                aria-label={`Go to slide ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+                    
+                    <motion.button
+                        className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-md hover:bg-gray-50 transition-all border border-gray-200"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={nextSlide}
+                        aria-label="Next slide"
+                    >
+                        <ArrowRight className="w-4 h-4" />
+                    </motion.button>
+                </div>
+
+                {/* Thumbnails Preview - Only for desktop */}
+                <div className="hidden md:flex justify-center mt-6 gap-2">
+                    {newsItems.map((item, index) => (
                         <motion.div
                             key={index}
-                            custom={index}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, amount: 0.1 }}
-                            variants={fadeInUpVariants}
-                            style={{ 
-                                gridArea: `card-${index + 1}`,
-                                height: '100%'
-                            }}
+                            className={`relative cursor-pointer rounded-md overflow-hidden ${currentIndex === index ? 'ring-2 ring-[#C40180]' : 'opacity-70'}`}
+                            onClick={() => handleDotClick(index)}
+                            whileHover={{ scale: 1.05, opacity: 1 }}
                         >
-                            <CardNoticias 
-                                item={item} 
-                                index={index} 
-                                screenSize={screenSize} 
-                            />
+                            <div className="w-20 h-12 relative">
+                                <img 
+                                    src={item.imageUrl}
+                                    alt={`Thumbnail ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                />
+                                {currentIndex === index && (
+                                    <motion.div 
+                                        className="absolute inset-0 bg-[#C40180]/20"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                    />
+                                )}
+                            </div>
                         </motion.div>
                     ))}
                 </div>
 
+                {/* View All Button */}
                 <motion.div 
-                    className="text-center mt-8 sm:mt-10 md:mt-12"
+                    className="text-center mt-8 sm:mt-10"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                     viewport={{ once: true }}
                 >
-                    <button className="px-6 sm:px-8 py-2 sm:py-3 cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white text-sm sm:text-base font-medium rounded-full hover:shadow-lg transition-all duration-300 flex items-center mx-auto">
+                    <motion.button 
+                        className="px-6 sm:px-8 py-2 sm:py-3 cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white text-sm sm:text-base font-medium rounded-full hover:shadow-lg transition-all duration-300 flex items-center mx-auto"
+                        whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(196, 1, 128, 0.3)" }}
+                        whileTap={{ scale: 0.98 }}
+                    >
                         Ver Todas las Noticias
                         <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
-                    </button>
+                    </motion.button>
                 </motion.div>
             </div>
         </section>
     );
 };
 
-export default Noticias;
+export default NewsCarousel;

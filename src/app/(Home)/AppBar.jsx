@@ -28,15 +28,11 @@ const menuItems = [
   },
   {
     title: "Eventos",
-    submenu: [
-      { title: "Eventos COV", route: "/Eventos/EventosCOV" },
-      { title: "Juegos Nacionales", route: "/Eventos/JuegosNacionales" },
-      // { title: "Certificados", route: "/Eventos/Certificados" }
-    ]
+    route: "/Eventos"
   },
   { title: "Trámites", route: "/Tramites" },
   { title: "Contáctenos", route: "/Contactenos" },
-  { title: "Revista", route: "/Revista" }
+  { title: "Revista", route: "https://rov.colegiadoselcov.com/" }
 ];
 
 export default function AppBar() {

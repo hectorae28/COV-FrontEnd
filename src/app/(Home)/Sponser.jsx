@@ -145,8 +145,8 @@ const Sponsor = () => {
     const logoPositions = calculatePositions();
 
     return (
-        <section className="overflow-hidden">
-            <div className="container mx-auto">
+        <section className="overflow-hidden bg-[#f9f9f9]">
+            <div className="container mx-auto mb-10">
                 <div className="text-center mt-18">
                     <motion.h2
                         className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"

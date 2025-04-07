@@ -2,8 +2,8 @@ import { FaFacebook, FaInstagram, FaYoutube } from 'react-icons/fa';
 
 const Footer = () => {
     return (
-        <footer className="bg-gradient-to-b from-[#6A0080] to-[#C40180] text-white py-6 sm:py-8 md:py-10 px-4 rounded-t-3xl sm:rounded-t-4xl">
-            <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+        <footer className="bg-gradient-to-b from-[#6A0080] to-[#C40180] text-white py-6 sm:py-8 md:py-10 px-4 rounded-t-3xl sm:rounded-t-4xl z-1000">
+            <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 z-1111">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 items-start sm:justify-items-center">
                     {/* Columna 1 - Logo y dirección */}
                     <div className="flex flex-col sm:flex-row items-center sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
