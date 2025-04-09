@@ -90,3 +90,12 @@ export const fetchDatosAdicionales = async (params = " ") => {
         throw error;
     }
 }
+export const fetchEventosCursos = async () => {
+    try {
+        const data = api.get('eventos/eventosCursos/')
+        return data;
+    } catch (error) {
+        console.error("Error fetching footer:", error);
+        throw error;
+    }
+}

@@ -19,6 +19,16 @@ const Noticias = ({ props }) => {
   const autoplayRef = useRef(null);
   const [screenSize, setScreenSize] = useState("lg");
   const newsItems = props;
+  function separarFechaYHora(cadenaFecha) {
+    const fechaCompleta = new Date(cadenaFecha);
+    const fecha = fechaCompleta.toISOString().split("T")[0];
+    const hora = fechaCompleta.toTimeString().split(" ")[0];
+    return { fecha, hora };
+  }
+  const handleDate = (date) => {
+    const { fecha, hora } = separarFechaYHora(date);
+    return `${fecha} ${hora}`;
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -204,14 +214,18 @@ const Noticias = ({ props }) => {
                         <div className="flex items-center text-[#C40180]">
                           <Calendar className="w-4 h-4 mr-1" />
                           <span className="font-medium text-gray-800">
-                            {newsItems[currentIndex]?.created_at}
+                            {new Date(
+                              newsItems[currentIndex]?.created_at
+                            ).toLocaleDateString()}
                           </span>
                         </div>
                         <span className="text-gray-400">|</span>
                         <div className="flex items-center text-[#C40180]">
                           <Clock className="w-4 h-4 mr-1" />
                           <span className="font-medium text-gray-800">
-                            {newsItems[currentIndex]?.created_at}
+                            {new Date(
+                              newsItems[currentIndex]?.created_at
+                            ).toLocaleTimeString()}
                           </span>
                         </div>
                       </div>
