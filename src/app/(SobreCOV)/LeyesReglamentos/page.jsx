@@ -2,58 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, ChevronDown, Download, ExternalLink } from "lucide-react";
-//import { fetchLeyes } from "@/api/endpoints/landingPage";
 import { fetchLeyes } from "../../../api/endpoints/landingPage";
-
-// Document options with their titles and PDF paths
-// const leyes = [
-//   {
-//     id: "ley-ejercicio",
-//     title: "Ley del Ejercicio de la Odontología",
-//     description:
-//       "Marco legal que regula el ejercicio profesional de la odontología en Venezuela",
-//     pdfPath: "/PdfLeyes.pdf",
-//   },
-//   {
-//     id: "codigo-deontologia",
-//     title: "Código de Deontología Odontológica",
-//     description: "Principios éticos que rigen la práctica odontológica",
-//     pdfPath: "/PdfLeyes.pdf",
-//   },
-//   {
-//     id: "reglamento-ley",
-//     title: "Reglamento de la Ley de Ejercicio de la Odontología",
-//     description:
-//       "Disposiciones que desarrollan la aplicación de la Ley de Ejercicio",
-//     pdfPath: "/PdfLeyes.pdf",
-//   },
-//   {
-//     id: "reglamento-interno",
-//     title: "Reglamento Interno",
-//     description:
-//       "Normas que rigen el funcionamiento interno del Colegio de Odontólogos",
-//     pdfPath: "/PdfLeyes.pdf",
-//   },
-//   {
-//     id: "reglamento-educacion",
-//     title:
-//       "Reglamento para Realización de las Actividades de Educación Odontológica Permanente",
-//     description: "Normativa para la formación continua de los profesionales",
-//     pdfPath: "/PdfLeyes.pdf",
-//   },
-//   {
-//     id: "reglamento-academico",
-//     title: "Reglamento de Reconocimiento Académico",
-//     description: "Lineamientos para el reconocimiento de méritos académicos",
-//     pdfPath: "/PdfLeyes.pdf",
-//   },
-//   {
-//     id: "reglamento-electoral",
-//     title: "Reglamento Electoral",
-//     description: "Normas que rigen los procesos electorales del Colegio",
-//     pdfPath: "/PdfLeyes.pdf",
-//   },
-// ];
 
 const formatDocuments = (rows) => {
   return rows.map((row) => {
@@ -203,6 +152,7 @@ const PDFViewer = ({ pdfPath, title }) => {
               className="flex items-center justify-center px-6 py-3 rounded-lg bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              about="_blank"
             >
               <Download className="w-5 h-5 mr-2" />
               <span className="font-medium">Descargar</span>

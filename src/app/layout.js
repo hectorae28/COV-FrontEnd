@@ -3,6 +3,7 @@ import Head from "next/head";
 import "./globals.css";
 import AppBar from "./(Home)/AppBar";
 import Footer from "./(Home)/Footer";
+import { fetchFooter } from "../api/endpoints/landingPage";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -14,7 +15,8 @@ export const metadata = {
   title: "COV - Colegio de Odontólogos de Venezuela",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const footerData = await fetchFooter();
   return (
     <html lang="es-ES">
       <Head>
@@ -26,7 +28,7 @@ export default function RootLayout({ children }) {
         </header>
         <main>{children}</main>
         <footer className="bg-[#F9F9F9]">
-          <Footer />
+          <Footer props={footerData.data} />
         </footer>
       </body>
     </html>

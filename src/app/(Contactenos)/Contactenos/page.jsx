@@ -1,19 +1,32 @@
-"use client"
-import { motion } from "framer-motion"
-import { Clock, Phone, Mail, MapPin } from "lucide-react"
+"use client";
+import { fetchContactInfo } from "../../../api/endpoints/landingPage";
+import { motion } from "framer-motion";
+import { Clock, Phone, Mail, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
 
 /**
  * EmailSection Component
  * Displays a list of contact email addresses with descriptions
  */
-const EmailSection = () => {
+const EmailSection = ({ contactInfo }) => {
   const emails = [
-    { email: "secretariapresidencia@elcov.org", description: "Secretaría de Presidencia" },
-    { email: "secretariafinanzas@elcov.org", description: "Secretaría de Finanzas" },
-    { email: "secretariaorganizacion@elcov.org", description: "Secretaría de Organización" },
-    { email: "soporteweb@elcov.org", description: "Soporte de Sistemas COV Web" }
+    {
+      email: contactInfo?.email_secretaria_presidencia,
+      description: "Secretaría de Presidencia",
+    },
+    {
+      email: contactInfo?.email_secretaria_finanzas,
+      description: "Secretaría de Finanzas",
+    },
+    {
+      email: contactInfo?.email_secretaria_organizacion,
+      description: "Secretaría de Organización",
+    },
+    {
+      email: contactInfo?.email_soporte_sistemas,
+      description: "Soporte de Sistemas COV Web",
+    },
   ];
-  
   return (
     <div className="rounded-lg shadow-md overflow-hidden h-full">
       <div className="p-4 bg-white">
@@ -26,12 +39,17 @@ const EmailSection = () => {
           </motion.div>
           <h3 className="text-lg font-bold text-black">Correos Electrónicos</h3>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-3">
           {emails.map((item, index) => (
-            <div key={index} className="flex items-center bg-gradient-to-r from-[#C40180]/5 to-[#590248]/5 p-3 rounded-lg">
+            <div
+              key={index}
+              className="flex items-center bg-gradient-to-r from-[#C40180]/5 to-[#590248]/5 p-3 rounded-lg"
+            >
               <div>
-                <p className="text-xs font-semibold text-gray-800">{item.description}</p>
+                <p className="text-xs font-semibold text-gray-800">
+                  {item.description}
+                </p>
                 <a
                   href={`mailto:${item.email}`}
                   className="text-[#C40180] hover:text-[#590248] transition-colors duration-300 text-sm break-all"
@@ -53,7 +71,8 @@ const EmailSection = () => {
  * HoursAndPhonesSection Component
  * Displays business hours and contact phone numbers
  */
-const HoursAndPhonesSection = () => {
+const HoursAndPhonesSection = ({ contactInfo }) => {
+  console.log(contactInfo);
   return (
     <div className="rounded-lg shadow-md overflow-hidden h-full">
       <div className="p-4 bg-white">
@@ -64,20 +83,27 @@ const HoursAndPhonesSection = () => {
           >
             <Clock className="w-5 h-5" />
           </motion.div>
-          <h3 className="text-lg font-bold text-black">Información de Contacto</h3>
+          <h3 className="text-lg font-bold text-black">
+            Información de Contacto
+          </h3>
         </div>
-        
+
         {/* Business Hours */}
         <div className="mb-6 bg-gradient-to-r from-[#C40180]/5 to-[#590248]/5 p-3 rounded-lg">
-          <p className="text-sm font-semibold text-black mb-1">Horario de Atención:</p>
+          <p className="text-sm font-semibold text-black mb-1">
+            Horario de Atención:
+          </p>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <span className="font-medium">Lunes a Viernes</span>
-            <span className="px-3 py-1 bg-white rounded-full text-sm font-semibold shadow-sm inline-block">
-              09:00 AM - 03:00 PM
+            <span className="font-medium flex gap-2">
+              {contactInfo?.horario_atencion}
+              {/* Lunes a Viernes
+              <span className="px-3 py-1 bg-white rounded-full text-sm font-semibold shadow-sm inline-block">
+                09:00 AM - 03:00 PM
+              </span> */}
             </span>
           </div>
         </div>
-        
+
         {/* Phone Numbers */}
         <div>
           <p className="text-sm font-semibold text-black mb-2">Teléfonos:</p>
@@ -92,7 +118,9 @@ const HoursAndPhonesSection = () => {
             <div className="flex items-center bg-gradient-to-r from-[#C40180]/5 to-[#590248]/5 p-3 rounded-lg">
               <Phone className="w-5 h-5 text-[#C40180] mr-3 flex-shrink-0" />
               <div>
-                <p className="text-xs font-semibold text-gray-800">PRESIDENCIA</p>
+                <p className="text-xs font-semibold text-gray-800">
+                  PRESIDENCIA
+                </p>
                 <p className="font-medium text-black">(0212) 781-22 67</p>
               </div>
             </div>
@@ -113,7 +141,7 @@ const LocationSection = () => {
   // Google Maps coordinates
   const latitude = "10.50767";
   const longitude = "-66.88259";
-  
+
   return (
     <div className="rounded-lg shadow-md overflow-hidden h-full">
       <div className="p-4 bg-white">
@@ -126,11 +154,12 @@ const LocationSection = () => {
           </motion.div>
           <h3 className="text-lg font-bold text-black">Dirección</h3>
         </div>
-        
+
         <p className="text-gray-800 mb-4">
-          Urb. Las Palmas, Calle el Pasaje, Edif. Colegio de Odontólogos. Caracas, Venezuela
+          Urb. Las Palmas, Calle el Pasaje, Edif. Colegio de Odontólogos.
+          Caracas, Venezuela
         </p>
-        
+
         {/* Map container */}
         <div className="rounded-lg overflow-hidden h-[300px] md:h-[400px] bg-gray-200">
           <iframe
@@ -156,6 +185,18 @@ const LocationSection = () => {
  * Main contact page with information, email addresses, and location map
  */
 export default function Contactenos() {
+  const [contactInfo, setContactInfo] = useState([]);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchContactInfo();
+        setContactInfo(data.data);
+      } catch (error) {
+        console.error("Error fetching presidentes:", error);
+      }
+    };
+    loadData();
+  }, []);
   return (
     <div className="flex flex-col mt-12 lg:mt-20">
       <main className="container mx-auto px-4 py-12 md:py-20 flex-grow">
@@ -180,7 +221,8 @@ export default function Contactenos() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Estamos aquí para atenderle. No dude en comunicarse con nosotros a través de cualquiera de nuestros canales de contacto.
+            Estamos aquí para atenderle. No dude en comunicarse con nosotros a
+            través de cualquiera de nuestros canales de contacto.
           </motion.p>
         </motion.div>
 
@@ -200,9 +242,9 @@ export default function Contactenos() {
               transition={{ duration: 0.5 }}
               className="col-span-1"
             >
-              <HoursAndPhonesSection />
+              <HoursAndPhonesSection contactInfo={contactInfo} />
             </motion.div>
-            
+
             {/* Email Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -210,9 +252,9 @@ export default function Contactenos() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="col-span-1"
             >
-              <EmailSection />
+              <EmailSection contactInfo={contactInfo} />
             </motion.div>
-            
+
             {/* Location Card - Full Width */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -226,5 +268,5 @@ export default function Contactenos() {
         </motion.div>
       </main>
     </div>
-  )
+  );
 }
