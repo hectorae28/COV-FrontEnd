@@ -8,8 +8,6 @@ import {
   Clock,
   ChevronRight,
 } from "lucide-react";
-import newsItems from "../Components/Home/NoticiasData";
-import { fetchNoticias } from "../../api/endpoints/landingPage";
 
 const Noticias = ({ props }) => {
   const [currentIndex, setCurrentIndex] = useState(0);

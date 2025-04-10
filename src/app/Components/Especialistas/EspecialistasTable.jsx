@@ -1,9 +1,18 @@
-"use client"
-import { useState, useRef, useCallback, useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Search, ChevronDown, ChevronUp, ChevronLeft, Info, X, ChevronRight, Menu } from "lucide-react"
-import { especialidadesData } from "./especialidadesData"
-import { especialidadesInfo } from "./especialidadesData"
+"use client";
+import { useState, useRef, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  Info,
+  X,
+  ChevronRight,
+  Menu,
+} from "lucide-react";
+import { especialidadesData } from "./especialidadesData";
+import { especialidadesInfo } from "./especialidadesData";
 
 export default function EspecialistasTable({
   activeTab,
@@ -12,93 +21,108 @@ export default function EspecialistasTable({
   currentPage,
   setCurrentPage,
   onTabChange,
-  clearSearch
+  clearSearch,
+  especialidadesInfo,
 }) {
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" })
-  const [recordsPerPage, setRecordsPerPage] = useState(10)
-  const [expandedRow, setExpandedRow] = useState(null)
-  const tablaRef = useRef(null)
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: "ascending",
+  });
+  const [recordsPerPage, setRecordsPerPage] = useState(10);
+  const [expandedRow, setExpandedRow] = useState(null);
+  const tablaRef = useRef(null);
 
   // Obtener información de la especialidad activa
-  const getEspecialidadInfo = useCallback((id = activeTab) => {
-    return especialidadesInfo[id] || especialidadesInfo["todas"];
-  }, [activeTab]);
+  const getEspecialidadInfo = useCallback(
+    (id = activeTab) => {
+      return especialidadesInfo[id] || especialidadesInfo["todas"];
+    },
+    [activeTab]
+  );
 
-  const especialidadInfo = getEspecialidadInfo()
+  const especialidadInfo = getEspecialidadInfo();
 
   // Filtrar datos según la especialidad activa y término de búsqueda
   const getFilteredData = useCallback(() => {
-    let filtered = [...especialidadesData]
+    let filtered = [...especialidadesData];
     // Filtrar por especialidad si no es "todas"
     if (activeTab !== "todas") {
       filtered = filtered.filter(
-        (item) => item.especialidad.toLowerCase().replace(/\s+/g, "-") === activeTab.toLowerCase(),
-      )
+        (item) =>
+          item.especialidad.toLowerCase().replace(/\s+/g, "-") ===
+          activeTab.toLowerCase()
+      );
     }
     // Aplicar búsqueda
     if (searchTerm) {
       filtered = filtered.filter((item) =>
-        Object.values(item).some((val) => val.toString().toLowerCase().includes(searchTerm.toLowerCase())),
-      )
+        Object.values(item).some((val) =>
+          val.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
     }
     // Aplicar ordenamiento
     if (sortConfig.key) {
       filtered.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? -1 : 1
+          return sortConfig.direction === "ascending" ? -1 : 1;
         }
         if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? 1 : -1
+          return sortConfig.direction === "ascending" ? 1 : -1;
         }
-        return 0
-      })
+        return 0;
+      });
     }
-    return filtered
-  }, [activeTab, searchTerm, sortConfig])
+    return filtered;
+  }, [activeTab, searchTerm, sortConfig]);
 
-  const filteredData = useMemo(() => getFilteredData(), [getFilteredData])
+  const filteredData = useMemo(() => getFilteredData(), [getFilteredData]);
 
   // Calcular índices para paginación
-  const indexOfLastRecord = currentPage * recordsPerPage
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
-  const currentRecords = filteredData.slice(indexOfFirstRecord, indexOfLastRecord)
-  const totalPages = Math.ceil(filteredData.length / recordsPerPage)
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredData.slice(
+    indexOfFirstRecord,
+    indexOfLastRecord
+  );
+  const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
   // Función para ordenar datos
   const requestSort = (key) => {
-    let direction = "ascending"
+    let direction = "ascending";
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending"
+      direction = "descending";
     }
-    setSortConfig({ key, direction })
-  }
+    setSortConfig({ key, direction });
+  };
 
   // Cambiar página
-  const paginate = (pageNumber) => setCurrentPage(pageNumber)
-  const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1))
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const nextPage = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   // Obtener icono de ordenamiento
   const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return null
+    if (sortConfig.key !== key) return null;
     return sortConfig.direction === "ascending" ? (
       <ChevronUp className="w-4 h-4" />
     ) : (
       <ChevronDown className="w-4 h-4" />
-    )
-  }
+    );
+  };
 
   // Cambiar especialidad desde la tabla
   const handleEspecialidadChange = (especialidad) => {
-    const espKey = especialidad.toLowerCase().replace(/\s+/g, "-")
-    onTabChange(espKey)
+    const espKey = especialidad.toLowerCase().replace(/\s+/g, "-");
+    onTabChange(espKey);
     // No necesitamos desplazamiento aquí ya que ya estamos en la tabla
-  }
+  };
 
   // Toggle expanded row for mobile view
   const toggleExpandRow = (id) => {
-    setExpandedRow(expandedRow === id ? null : id)
-  }
+    setExpandedRow(expandedRow === id ? null : id);
+  };
 
   return (
     <AnimatePresence mode="wait">
@@ -125,16 +149,22 @@ export default function EspecialistasTable({
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: especialidadInfo.color }}>
+              <h2
+                className="text-2xl md:text-3xl font-bold mb-2"
+                style={{ color: especialidadInfo.color }}
+              >
                 {especialidadInfo.title}
               </h2>
-              <p className="text-sm md:text-base text-gray-600 max-w-2xl">{especialidadInfo.description}</p>
+              <p className="text-sm md:text-base text-gray-600 max-w-2xl">
+                {especialidadInfo.description}
+              </p>
               {activeTab !== "todas" && (
                 <button
                   className="mt-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline flex items-center"
                   onClick={() => onTabChange("todas")}
                 >
-                  <ChevronLeft className="w-4 h-4 mr-1" /> Ver todas las especialidades
+                  <ChevronLeft className="w-4 h-4 mr-1" /> Ver todas las
+                  especialidades
                 </button>
               )}
             </motion.div>
@@ -151,7 +181,7 @@ export default function EspecialistasTable({
                   className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none"
                   style={{
                     boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-                    focusRingColor: `${especialidadInfo.color}60`
+                    focusRingColor: `${especialidadInfo.color}60`,
                   }}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -171,7 +201,7 @@ export default function EspecialistasTable({
                   className="p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none bg-white"
                   style={{
                     boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-                    focusRingColor: `${especialidadInfo.color}60`
+                    focusRingColor: `${especialidadInfo.color}60`,
                   }}
                   value={recordsPerPage}
                   onChange={(e) => setRecordsPerPage(Number(e.target.value))}
@@ -292,24 +322,45 @@ export default function EspecialistasTable({
                     currentRecords.map((item, index) => {
                       // Obtener el color de la especialidad
                       const espKey = item.especialidad;
-                      const espColor = getEspecialidadInfo(espKey)?.color || "#073B4C";
+                      const espColor =
+                        getEspecialidadInfo(espKey)?.color || "#073B4C";
                       return (
                         <motion.tr
                           key={`desktop-${item.id}`}
                           className="hover:bg-gray-50 transition-colors"
-                          initial={{ opacity: 0, backgroundColor: `${espColor}08` }}
-                          animate={{ opacity: 1, backgroundColor: "transparent" }}
+                          initial={{
+                            opacity: 0,
+                            backgroundColor: `${espColor}08`,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            backgroundColor: "transparent",
+                          }}
                           transition={{ duration: 0.3, delay: index * 0.05 }}
                           exit={{ opacity: 0 }}
                           whileHover={{ backgroundColor: `${espColor}10` }}
                         >
-                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.nombres}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{item.apellidos}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{item.libro}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{item.folio}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{item.numEspecialidad}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{item.cedula}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{item.cov}</td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {item.nombres}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.apellidos}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.libro}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.folio}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.numEspecialidad}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.cedula}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.cov}
+                          </td>
                           <td className="px-4 py-4 whitespace-nowrap">
                             <motion.span
                               whileHover={{ scale: 1.05 }}
@@ -320,13 +371,15 @@ export default function EspecialistasTable({
                                 color: espColor,
                                 border: `1px solid ${espColor}30`,
                               }}
-                              onClick={() => handleEspecialidadChange(item.especialidad)}
+                              onClick={() =>
+                                handleEspecialidadChange(item.especialidad)
+                              }
                             >
                               {item.especialidad}
                             </motion.span>
                           </td>
                         </motion.tr>
-                      )
+                      );
                     })
                   ) : (
                     <motion.tr
@@ -337,8 +390,12 @@ export default function EspecialistasTable({
                       <td colSpan={8} className="px-4 py-12 text-center">
                         <div className="flex flex-col items-center justify-center text-gray-500">
                           <Search className="w-12 h-12 mb-4 text-gray-300" />
-                          <p className="text-lg font-medium mb-1">No se encontraron resultados</p>
-                          <p className="text-sm">Intenta con otros criterios de búsqueda</p>
+                          <p className="text-lg font-medium mb-1">
+                            No se encontraron resultados
+                          </p>
+                          <p className="text-sm">
+                            Intenta con otros criterios de búsqueda
+                          </p>
                           {searchTerm && (
                             <button
                               onClick={clearSearch}
@@ -367,7 +424,8 @@ export default function EspecialistasTable({
               currentRecords.map((item, index) => {
                 // Obtener el color de la especialidad
                 const espKey = item.especialidad;
-                const espColor = getEspecialidadInfo(espKey)?.color || "#073B4C";
+                const espColor =
+                  getEspecialidadInfo(espKey)?.color || "#073B4C";
                 const isExpanded = expandedRow === item.id;
 
                 return (
@@ -379,7 +437,7 @@ export default function EspecialistasTable({
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                     exit={{ opacity: 0 }}
                     style={{
-                      borderLeft: `4px solid ${espColor}`
+                      borderLeft: `4px solid ${espColor}`,
                     }}
                   >
                     {/* Card Header - Always visible */}
@@ -388,7 +446,9 @@ export default function EspecialistasTable({
                       onClick={() => toggleExpandRow(item.id)}
                     >
                       <div>
-                        <h3 className="font-medium text-gray-900">{item.nombres} {item.apellidos}</h3>
+                        <h3 className="font-medium text-gray-900">
+                          {item.nombres} {item.apellidos}
+                        </h3>
                         <motion.span
                           className="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full"
                           style={{
@@ -424,19 +484,29 @@ export default function EspecialistasTable({
                         >
                           <div className="p-4 grid grid-cols-2 gap-3 text-sm">
                             <div>
-                              <p className="text-gray-500 text-xs mb-1">Libro</p>
+                              <p className="text-gray-500 text-xs mb-1">
+                                Libro
+                              </p>
                               <p className="font-medium">{item.libro}</p>
                             </div>
                             <div>
-                              <p className="text-gray-500 text-xs mb-1">Folio</p>
+                              <p className="text-gray-500 text-xs mb-1">
+                                Folio
+                              </p>
                               <p className="font-medium">{item.folio}</p>
                             </div>
                             <div>
-                              <p className="text-gray-500 text-xs mb-1">N° Especialidad</p>
-                              <p className="font-medium">{item.numEspecialidad}</p>
+                              <p className="text-gray-500 text-xs mb-1">
+                                N° Especialidad
+                              </p>
+                              <p className="font-medium">
+                                {item.numEspecialidad}
+                              </p>
                             </div>
                             <div>
-                              <p className="text-gray-500 text-xs mb-1">Cédula</p>
+                              <p className="text-gray-500 text-xs mb-1">
+                                Cédula
+                              </p>
                               <p className="font-medium">{item.cedula}</p>
                             </div>
                             <div className="col-span-2">
@@ -459,8 +529,12 @@ export default function EspecialistasTable({
               >
                 <div className="flex flex-col items-center justify-center text-gray-500">
                   <Search className="w-10 h-10 mb-3 text-gray-300" />
-                  <p className="text-base font-medium mb-1">No se encontraron resultados</p>
-                  <p className="text-sm">Intenta con otros criterios de búsqueda</p>
+                  <p className="text-base font-medium mb-1">
+                    No se encontraron resultados
+                  </p>
+                  <p className="text-sm">
+                    Intenta con otros criterios de búsqueda
+                  </p>
                   {searchTerm && (
                     <button
                       onClick={clearSearch}
@@ -482,8 +556,10 @@ export default function EspecialistasTable({
             transition={{ duration: 0.5, delay: 0.6 }}
           >
             <div className="text-xs md:text-sm text-gray-600 mb-4 md:mb-0">
-              Mostrando desde {filteredData.length > 0 ? indexOfFirstRecord + 1 : 0} hasta{" "}
-              {Math.min(indexOfLastRecord, filteredData.length)} de {filteredData.length} registros
+              Mostrando desde{" "}
+              {filteredData.length > 0 ? indexOfFirstRecord + 1 : 0} hasta{" "}
+              {Math.min(indexOfLastRecord, filteredData.length)} de{" "}
+              {filteredData.length} registros
             </div>
             <div className="flex items-center space-x-2">
               <motion.button
@@ -491,32 +567,35 @@ export default function EspecialistasTable({
                 whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
                 onClick={prevPage}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${currentPage === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === 1
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm"
+                }`}
               >
                 <ChevronLeft className="w-5 h-5" />
               </motion.button>
 
               {/* Mobile page indicator */}
               <div className="md:hidden flex items-center justify-center px-3 py-1 bg-white border border-gray-300 rounded-md shadow-sm">
-                <span className="text-sm font-medium">{currentPage} / {totalPages}</span>
+                <span className="text-sm font-medium">
+                  {currentPage} / {totalPages}
+                </span>
               </div>
 
               {/* Desktop pagination buttons */}
               <div className="hidden md:flex space-x-2">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   // Lógica para mostrar páginas alrededor de la página actual
-                  let pageNum
+                  let pageNum;
                   if (totalPages <= 5) {
-                    pageNum = i + 1
+                    pageNum = i + 1;
                   } else if (currentPage <= 3) {
-                    pageNum = i + 1
+                    pageNum = i + 1;
                   } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i
+                    pageNum = totalPages - 4 + i;
                   } else {
-                    pageNum = currentPage - 2 + i
+                    pageNum = currentPage - 2 + i;
                   }
                   return (
                     <motion.button
@@ -524,17 +603,19 @@ export default function EspecialistasTable({
                       whileHover={{ scale: currentPage === pageNum ? 1 : 1.05 }}
                       whileTap={{ scale: currentPage === pageNum ? 1 : 0.95 }}
                       onClick={() => paginate(pageNum)}
-                      className={`w-10 h-10 flex items-center justify-center rounded-md shadow-sm ${currentPage === pageNum
-                        ? "text-white font-medium"
-                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                        }`}
+                      className={`w-10 h-10 flex items-center justify-center rounded-md shadow-sm ${
+                        currentPage === pageNum
+                          ? "text-white font-medium"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                      }`}
                       style={{
-                        backgroundColor: currentPage === pageNum ? especialidadInfo.color : "",
+                        backgroundColor:
+                          currentPage === pageNum ? especialidadInfo.color : "",
                       }}
                     >
                       {pageNum}
                     </motion.button>
-                  )
+                  );
                 })}
               </div>
 
@@ -543,10 +624,11 @@ export default function EspecialistasTable({
                 whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
                 onClick={nextPage}
                 disabled={currentPage === totalPages || totalPages === 0}
-                className={`p-2 rounded-md ${currentPage === totalPages || totalPages === 0
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === totalPages || totalPages === 0
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm"
+                }`}
               >
                 <ChevronRight className="w-5 h-5" />
               </motion.button>
@@ -555,6 +637,5 @@ export default function EspecialistasTable({
         </div>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }
-

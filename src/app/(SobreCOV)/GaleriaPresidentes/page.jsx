@@ -384,7 +384,7 @@ const LineaTiempo = () => {
                 ref={gridRef}
                 className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6 overflow-y-auto custom-scrollbar pr-2"
                 style={{
-                  maxHeight: "190px",
+                  maxHeight: "333px",
                   paddingTop: "10px",
                   paddingBottom: "10px",
                 }}
