@@ -60,6 +60,47 @@ export default function DynamicForm(props) {
     }));
   };
 
+  const [isDragging, setIsDragging] = useState(false);
+
+  // ... (resto del código anterior)
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      const inputName = e.currentTarget.dataset.inputName;
+
+      setFormData((prev) => ({
+        ...prev,
+        [inputName]: file,
+      }));
+      setSelectedFileName((prev) => ({
+        ...prev,
+        [inputName]: file.name,
+      }));
+    }
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -315,55 +356,57 @@ export default function DynamicForm(props) {
 
               {campo.tipo === "archivo" && (
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-center w-full">
-                    <label
-                      htmlFor={campo.nombre}
-                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 border-slate-300"
-                    >
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg
-                          className="w-8 h-8 mb-2 text-slate-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          ></path>
-                        </svg>
-                        <p className="mb-2 text-sm text-slate-500">
-                          <span className="font-semibold">
-                            Haga clic para cargar
-                          </span>{" "}
-                          o arrastre y suelte
-                        </p>
+                  <div
+                    className={`flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 border-slate-300 ${
+                      isDragging ? "border-blue-500" : ""
+                    }`}
+                    onDrop={(e) => handleDrop(e)}
+                    onDragEnter={(e) => handleDragEnter(e)}
+                    onDragLeave={(e) => handleDragLeave(e)}
+                    onDragOver={(e) => handleDragOver(e)}
+                    data-input-name={campo.nombre}
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg
+                        className="w-8 h-8 mb-2 text-slate-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        ></path>
+                      </svg>
+                      <p className="mb-2 text-sm text-slate-500">
+                        <span className="font-semibold">
+                          Haga clic para cargar
+                        </span>{" "}
+                        o arrastre y suelte
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {campo.tipo_archivo === "imagen"
+                          ? "PNG o JPG"
+                          : "Cualquier tipo de archivo"}
+                      </p>
+                      {campo.tamano_maximo && (
                         <p className="text-xs text-slate-500">
-                          {campo.tipo_archivo === "imagen"
-                            ? "PNG o JPG"
-                            : "Cualquier tipo de archivo"}
+                          Tamaño máximo: {campo.tamano_maximo}
                         </p>
-                        {campo.tamano_maximo && (
-                          <p className="text-xs text-slate-500">
-                            Tamaño máximo: {campo.tamano_maximo}
-                          </p>
-                        )}
-                      </div>
-                      <input
-                        id={campo.nombre}
-                        type="file"
-                        name={campo.nombre}
-                        accept={
-                          campo.tipo_archivo === "imagen" ? "image/*" : "*"
-                        }
-                        required={campo.requerido === "true"}
-                        onChange={(e) => handleChange(e)}
-                        className="hidden"
-                      />
-                    </label>
+                      )}
+                    </div>
+                    <input
+                      id={campo.nombre}
+                      type="file"
+                      name={campo.nombre}
+                      accept={campo.tipo_archivo === "imagen" ? "image/*" : "*"}
+                      required={campo.requerido === "true"}
+                      onChange={(e) => handleChange(e)}
+                      className="hidden"
+                    />
                   </div>
                   {selectedFileName[campo.nombre] && (
                     <p className="text-xs text-slate-500 flex items-center gap-1">

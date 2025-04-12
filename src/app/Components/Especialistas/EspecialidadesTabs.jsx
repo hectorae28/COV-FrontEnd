@@ -9,15 +9,14 @@ export default function EspecialidadesTabs({ props }) {
   const onTabChange = handleTabChange;
   const [hoveredCard, setHoveredCard] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 0
-  );
+  const [windowWidth, setWindowWidth] = useState(null);
 
   // Get all specialties
   const especialidades = Object.entries(especialidadesInfo);
 
   // Handle window resize
   useEffect(() => {
+    setWindowWidth(typeof window !== "undefined" ? window.innerWidth : 0);
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
       // Close expanded view on larger screens
@@ -25,7 +24,6 @@ export default function EspecialidadesTabs({ props }) {
         setIsExpanded(false);
       }
     };
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -37,7 +35,6 @@ export default function EspecialidadesTabs({ props }) {
       setIsExpanded(!isExpanded);
       return;
     }
-
     onTabChange(id);
     // Close expanded view after selection on mobile
     if (isMobile) {
@@ -49,13 +46,14 @@ export default function EspecialidadesTabs({ props }) {
   };
 
   // Find active specialty info
-  const activeSpecialty = activeTab ? especialidadesInfo[activeTab] : null;
-
+  const activeSpecialty =
+    activeTab !== false
+      ? especialidades.filter(([id, info]) => info.id === activeTab)[0][1]
+      : null;
   // Filter out the active specialty from dropdown options
   const dropdownOptions = especialidades.filter(
     ([id, info]) => info.id !== activeTab
   );
-
   return (
     <div className="w-full">
       <div className="mb-4 flex items-center">
@@ -86,12 +84,17 @@ export default function EspecialidadesTabs({ props }) {
             {/* Background image */}
             <div
               className="absolute inset-0 bg-cover bg-center z-0 transition-all duration-500"
-              style={{
-                backgroundImage: activeSpecialty
-                  ? `url(${activeSpecialty.image})`
-                  : "none",
-                filter: "brightness(0.6)",
-              }}
+              style={
+                activeSpecialty.id == 0
+                  ? {
+                      backgroundImage: `url(${activeSpecialty.image})`,
+                      filter: "brightness(0.6)",
+                    }
+                  : {
+                      backgroundImage: `url(http://localhost:8000${activeSpecialty.image})`,
+                      filter: "brightness(0.6)",
+                    }
+              }
             />
 
             {/* Overlay gradient */}
@@ -146,7 +149,9 @@ export default function EspecialidadesTabs({ props }) {
             {/* Color bar */}
             <div
               className="absolute bottom-0 left-0 right-0 h-1.5 z-10 w-full"
-              style={{ backgroundColor: activeSpecialty?.color || "#cbd5e0" }}
+              style={{
+                backgroundColor: activeSpecialty?.color || "#cbd5e0",
+              }}
             />
           </motion.div>
 
@@ -170,10 +175,17 @@ export default function EspecialidadesTabs({ props }) {
                     {/* Background image */}
                     <div
                       className="absolute inset-0 bg-cover bg-center z-0"
-                      style={{
-                        backgroundImage: `url(${info.image})`,
-                        filter: "brightness(0.6)",
-                      }}
+                      style={
+                        info.id == 0
+                          ? {
+                              backgroundImage: `url(${info.image})`,
+                              filter: "brightness(0.6)",
+                            }
+                          : {
+                              backgroundImage: `url(http://localhost:8000${info.image})`,
+                              filter: "brightness(0.6)",
+                            }
+                      }
                     />
 
                     {/* Overlay gradient */}
@@ -219,14 +231,14 @@ export default function EspecialidadesTabs({ props }) {
       {/* Desktop view - Grid layout */}
       {!isMobile && (
         <motion.div
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-16"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, staggerChildren: 0.1 }}
         >
           {especialidades.map(([id, info], index) => (
             <motion.div
-              key={id}
+              key={info.id}
               className={`relative overflow-hidden rounded-2xl shadow-lg cursor-pointer transition-all duration-300 group h-66 ${
                 activeTab === info.id
                   ? "ring-3 transform scale-[1.02] z-10"
@@ -264,9 +276,15 @@ export default function EspecialidadesTabs({ props }) {
                       : "brightness(0.6)",
                 }}
                 transition={{ duration: 0.7 }}
-                style={{
-                  backgroundImage: `url(http://localhost:8000${info.image})`,
-                }}
+                style={
+                  info.id == 0
+                    ? {
+                        backgroundImage: `url(${info.image})`,
+                      }
+                    : {
+                        backgroundImage: `url(http://localhost:8000${info.image})`,
+                      }
+                }
               />
 
               {/* Overlay gradiente */}

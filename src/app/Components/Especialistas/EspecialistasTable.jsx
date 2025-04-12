@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -11,11 +11,9 @@ import {
   ChevronRight,
   Menu,
 } from "lucide-react";
-import { especialidadesData } from "./especialidadesData";
-import { especialidadesInfo } from "./especialidadesData";
+import { fetchData } from "../../../api/endpoints/landingPage";
 
 export default function EspecialistasTable({
-  activeTab,
   searchTerm,
   setSearchTerm,
   currentPage,
@@ -23,6 +21,7 @@ export default function EspecialistasTable({
   onTabChange,
   clearSearch,
   especialidadesInfo,
+  activeTab,
 }) {
   const [sortConfig, setSortConfig] = useState({
     key: null,
@@ -30,12 +29,44 @@ export default function EspecialistasTable({
   });
   const [recordsPerPage, setRecordsPerPage] = useState(10);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [especialidadesData, setEspecialidadesData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(0);
   const tablaRef = useRef(null);
+  const [paginacionConfig, setPaginacionConfig] = useState(null);
+
+  useEffect(() => {
+    fetchData(
+      "colegiado_especializacion",
+      `?especializacion=${
+        activeTab == 0 ? "" : activeTab
+      }&page_size=${recordsPerPage}&page=${currentPage}${
+        sortConfig.key !== null
+          ? `&ordering=${sortConfig.direction === "ascending" ? "-" : ""}${
+              sortConfig.key
+            }`
+          : ""
+      }&search=${searchTerm}`
+    )
+      .then((res) => {
+        setEspecialidadesData(res.data.results);
+        setPaginacionConfig(res.data);
+        setTotalPages(Math.ceil(res.data.count / recordsPerPage));
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error al cargar los datos:", error);
+      });
+  }, [activeTab, currentPage, recordsPerPage, sortConfig]);
 
   // Obtener información de la especialidad activa
   const getEspecialidadInfo = useCallback(
-    (id = activeTab) => {
-      return especialidadesInfo[id] || especialidadesInfo["todas"];
+    (label = activeTab) => {
+      // Encontrar el item correspondiente al id de activeTab
+      const selectedItem = Object.entries(especialidadesInfo).filter(
+        ([_, info]) => info.id === label
+      );
+      return selectedItem[0][1];
     },
     [activeTab]
   );
@@ -44,48 +75,22 @@ export default function EspecialistasTable({
 
   // Filtrar datos según la especialidad activa y término de búsqueda
   const getFilteredData = useCallback(() => {
+    if (!especialidadesData) {
+      return [];
+    }
     let filtered = [...especialidadesData];
-    // Filtrar por especialidad si no es "todas"
-    if (activeTab !== "todas") {
-      filtered = filtered.filter(
-        (item) =>
-          item.especialidad.toLowerCase().replace(/\s+/g, "-") ===
-          activeTab.toLowerCase()
-      );
-    }
-    // Aplicar búsqueda
-    if (searchTerm) {
-      filtered = filtered.filter((item) =>
-        Object.values(item).some((val) =>
-          val.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-    }
-    // Aplicar ordenamiento
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
     return filtered;
-  }, [activeTab, searchTerm, sortConfig]);
+  }, [especialidadesData]);
 
   const filteredData = useMemo(() => getFilteredData(), [getFilteredData]);
 
-  // Calcular índices para paginación
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = filteredData.slice(
-    indexOfFirstRecord,
-    indexOfLastRecord
-  );
-  const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+  // // Calcular índices para paginación
+  // const indexOfLastRecord = currentPage * recordsPerPage;
+  // const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredData;
+  //   indexOfFirstRecord,
+  //   indexOfLastRecord
+  // );
 
   // Función para ordenar datos
   const requestSort = (key) => {
@@ -94,13 +99,14 @@ export default function EspecialistasTable({
       direction = "descending";
     }
     setSortConfig({ key, direction });
+    setCurrentPage(1);
+    console.log("Ordenando por:", key, direction);
   };
 
   // Cambiar página
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  const nextPage = () =>
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const nextPage = () => setCurrentPage(currentPage + 1);
+  const prevPage = () => setCurrentPage(currentPage - 1);
 
   // Obtener icono de ordenamiento
   const getSortIcon = (key) => {
@@ -114,8 +120,7 @@ export default function EspecialistasTable({
 
   // Cambiar especialidad desde la tabla
   const handleEspecialidadChange = (especialidad) => {
-    const espKey = especialidad.toLowerCase().replace(/\s+/g, "-");
-    onTabChange(espKey);
+    console.log("Especialidad seleccionada:", especialidad);
     // No necesitamos desplazamiento aquí ya que ya estamos en la tabla
   };
 
@@ -123,6 +128,10 @@ export default function EspecialistasTable({
   const toggleExpandRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
+
+  if (isLoading) {
+    return <div className="text-center py-8">Cargando especialistas...</div>;
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -161,7 +170,7 @@ export default function EspecialistasTable({
               {activeTab !== "todas" && (
                 <button
                   className="mt-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline flex items-center"
-                  onClick={() => onTabChange("todas")}
+                  onClick={() => onTabChange(0)}
                 >
                   <ChevronLeft className="w-4 h-4 mr-1" /> Ver todas las
                   especialidades
@@ -237,43 +246,51 @@ export default function EspecialistasTable({
                   <th className="px-4 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button
                       className="flex items-center font-medium focus:outline-none mx-auto"
-                      onClick={() => requestSort("nombres")}
+                      onClick={() =>
+                        requestSort("colegiado__recaudos__persona__nombre")
+                      }
                     >
                       Nombre(s)
-                      {getSortIcon("nombres")}
+                      {getSortIcon("colegiado__recaudos__persona__nombre")}
                     </button>
                   </th>
                   <th className="px-4 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button
                       className="flex items-center font-medium focus:outline-none mx-auto"
-                      onClick={() => requestSort("apellidos")}
+                      onClick={() =>
+                        requestSort(
+                          "colegiado__recaudos__persona__primer_apellido"
+                        )
+                      }
                     >
                       Apellido(s)
-                      {getSortIcon("apellidos")}
+                      {getSortIcon(
+                        "colegiado__recaudos__persona__primer_apellido"
+                      )}
                     </button>
                   </th>
                   <th className="px-4 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button
                       className="flex items-center font-medium focus:outline-none mx-auto"
-                      onClick={() => requestSort("libro")}
+                      onClick={() => requestSort("colegiado__libro")}
                     >
                       Libro
-                      {getSortIcon("libro")}
+                      {getSortIcon("colegiado__libro")}
                     </button>
                   </th>
                   <th className="px-4 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button
                       className="flex items-center font-medium focus:outline-none mx-auto"
-                      onClick={() => requestSort("folio")}
+                      onClick={() => requestSort("colegiado__pagina")}
                     >
                       Folio
-                      {getSortIcon("folio")}
+                      {getSortIcon("colegiado__pagina")}
                     </button>
                   </th>
                   <th className="px-4 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button
                       className="flex items-center font-medium focus:outline-none group mx-auto"
-                      onClick={() => requestSort("numEspecialidad")}
+                      onClick={() => requestSort("nEspecializacion")}
                     >
                       <span className="flex items-center">
                         N° Esp
@@ -284,34 +301,40 @@ export default function EspecialistasTable({
                           </span>
                         </span>
                       </span>
-                      {getSortIcon("numEspecialidad")}
+                      {getSortIcon("nEspecializacion")}
                     </button>
                   </th>
                   <th className="px-4 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button
                       className="flex items-center font-medium focus:outline-none mx-auto"
-                      onClick={() => requestSort("cedula")}
+                      onClick={() =>
+                        requestSort(
+                          "colegiado__recaudos__persona__identificacion"
+                        )
+                      }
                     >
                       Cédula
-                      {getSortIcon("cedula")}
+                      {getSortIcon(
+                        "colegiado__recaudos__persona__identificacion"
+                      )}
                     </button>
                   </th>
                   <th className="px-4 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button
                       className="flex items-center font-medium focus:outline-none mx-auto"
-                      onClick={() => requestSort("cov")}
+                      onClick={() => requestSort("colegiado__num_cov")}
                     >
                       COV
-                      {getSortIcon("cov")}
+                      {getSortIcon("colegiado__num_cov")}
                     </button>
                   </th>
                   <th className="px-4 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <button
                       className="flex items-center font-medium focus:outline-none mx-auto"
-                      onClick={() => requestSort("especialidad")}
+                      onClick={() => requestSort("especializacion__pk")}
                     >
                       Especialidad
-                      {getSortIcon("especialidad")}
+                      {getSortIcon("especializacion__pk")}
                     </button>
                   </th>
                 </tr>
@@ -375,7 +398,7 @@ export default function EspecialistasTable({
                                 handleEspecialidadChange(item.especialidad)
                               }
                             >
-                              {item.especialidad}
+                              {getEspecialidadInfo(espKey)?.title}
                             </motion.span>
                           </td>
                         </motion.tr>
@@ -412,7 +435,6 @@ export default function EspecialistasTable({
               </tbody>
             </table>
           </motion.div>
-
           {/* Mobile Card View */}
           <motion.div
             className="md:hidden space-y-3"
@@ -547,7 +569,6 @@ export default function EspecialistasTable({
               </motion.div>
             )}
           </motion.div>
-
           {/* Paginación mejorada */}
           <motion.div
             className="flex flex-col md:flex-row justify-between items-center mt-6"
@@ -556,17 +577,14 @@ export default function EspecialistasTable({
             transition={{ duration: 0.5, delay: 0.6 }}
           >
             <div className="text-xs md:text-sm text-gray-600 mb-4 md:mb-0">
-              Mostrando desde{" "}
-              {filteredData.length > 0 ? indexOfFirstRecord + 1 : 0} hasta{" "}
-              {Math.min(indexOfLastRecord, filteredData.length)} de{" "}
-              {filteredData.length} registros
+              Mostrando desde 1 hasta 5 de 50 registros
             </div>
             <div className="flex items-center space-x-2">
               <motion.button
                 whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
                 whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
                 onClick={prevPage}
-                disabled={currentPage === 1}
+                disabled={paginacionConfig.prev === null}
                 className={`p-2 rounded-md ${
                   currentPage === 1
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
@@ -623,7 +641,7 @@ export default function EspecialistasTable({
                 whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
                 whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
                 onClick={nextPage}
-                disabled={currentPage === totalPages || totalPages === 0}
+                disabled={paginacionConfig.next == null}
                 className={`p-2 rounded-md ${
                   currentPage === totalPages || totalPages === 0
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"

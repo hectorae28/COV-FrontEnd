@@ -10,13 +10,14 @@ export default function EspecialistasPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const [especialidadesInfo, setEspecialidadesInfo] = useState({
     todas: {
       id: 0,
       title: "Todas las Especialidades",
       description: "Directorio completo de especialistas odontológicos.",
       color: "#073B4C",
-      image: "/files/otros/Todas.avif",
+      image: "/assets/especialistas/Todas.avif",
       icon: "users",
     },
   });
@@ -24,16 +25,14 @@ export default function EspecialistasPage() {
   // Referencia a la tabla para el desplazamiento
   const tableRef = useRef(null);
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const response = await fetchData("especializacion");
-        setEspecialidadesInfo((prev) => ({ ...prev, ...response.data }));
-      } catch (error) {
+    fetchData("especializacion")
+      .then((res) => {
+        setEspecialidadesInfo((prev) => ({ ...prev, ...res.data }));
+        setIsLoading(false);
+      })
+      .catch((error) => {
         console.error("Error al cargar los datos:", error);
-      }
-    };
-
-    loadData();
+      });
   }, []);
 
   // Restablecer la página actual cuando cambia la pestaña o el término de búsqueda
@@ -43,11 +42,8 @@ export default function EspecialistasPage() {
 
   // Manejar cambio de tab
   const handleTabChange = (id) => {
-    console.log("Tab changed:", id);
-    console.log({ activeTab });
     setActiveTab(id);
   };
-
   // Limpiar búsqueda
   const clearSearch = () => {
     setSearchTerm("");
@@ -65,6 +61,14 @@ export default function EspecialistasPage() {
       }, 100); // Pequeño retraso para asegurar que la animación de la tabla haya comenzado
     }
   };
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-5 justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#C40180]"></div>
+        <p className="ml-4 text-gray-600">Cargando...</p>
+      </div>
+    );
+  }
   return (
     <div className="container mx-auto px-4 md:px-8 lg:px-16 xl:px-32 py-12 max-w-full">
       {/* Título principal con animaciones mejoradas y margin-top agregado */}
@@ -109,7 +113,7 @@ export default function EspecialistasPage() {
 
       {/* Tabla de especialistas */}
       <div ref={tableRef}>
-        {/* <EspecialistasTable
+        <EspecialistasTable
           activeTab={activeTab}
           onTabChange={handleTabChange}
           searchTerm={searchTerm}
@@ -117,7 +121,8 @@ export default function EspecialistasPage() {
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           clearSearch={clearSearch}
-        /> */}
+          especialidadesInfo={especialidadesInfo}
+        />
       </div>
     </div>
   );
