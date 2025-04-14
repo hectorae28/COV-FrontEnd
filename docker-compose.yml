@@ -28,3 +28,7 @@ services:
         read_only: true
     ports:
       - '80:80'
+networks:
+  shared_net:
+    external: true
+    name: cov_network

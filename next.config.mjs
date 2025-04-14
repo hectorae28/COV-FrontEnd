@@ -8,6 +8,12 @@ const nextConfig = {
                 port: '8000',
                 pathname: '/**',
             },
+            {
+                protocol: 'http',
+                hostname: 'host.docker.internal',
+                port: '8000',
+                pathname: '/**',
+            }
         ],
     },
 };;
