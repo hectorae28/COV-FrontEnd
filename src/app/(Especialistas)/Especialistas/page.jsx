@@ -25,14 +25,18 @@ export default function EspecialistasPage() {
   // Referencia a la tabla para el desplazamiento
   const tableRef = useRef(null);
   useEffect(() => {
-    fetchData("especializacion")
-      .then((res) => {
+    const loadData = async () => {
+      try {
+        const res = await fetchData("especializacion");
         setEspecialidadesInfo((prev) => ({ ...prev, ...res.data }));
         setIsLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error al cargar los datos:", error);
-      });
+      }
+    };
+    if (isLoading) {
+      loadData();
+    }
   }, []);
 
   // Restablecer la página actual cuando cambia la pestaña o el término de búsqueda

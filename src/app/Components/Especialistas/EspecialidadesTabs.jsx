@@ -91,7 +91,7 @@ export default function EspecialidadesTabs({ props }) {
                       filter: "brightness(0.6)",
                     }
                   : {
-                      backgroundImage: `url(http://localhost:8000${activeSpecialty.image})`,
+                      backgroundImage: `url(process.env.NEXT_PUBLIC_BACK_HOST${activeSpecialty.image})`,
                       filter: "brightness(0.6)",
                     }
               }
@@ -182,7 +182,7 @@ export default function EspecialidadesTabs({ props }) {
                               filter: "brightness(0.6)",
                             }
                           : {
-                              backgroundImage: `url(http://localhost:8000${info.image})`,
+                              backgroundImage: `url(process.env.NEXT_PUBLIC_BACK_HOST${info.image})`,
                               filter: "brightness(0.6)",
                             }
                       }
@@ -282,7 +282,7 @@ export default function EspecialidadesTabs({ props }) {
                         backgroundImage: `url(${info.image})`,
                       }
                     : {
-                        backgroundImage: `url(http://localhost:8000${info.image})`,
+                        backgroundImage: `url(process.env.NEXT_PUBLIC_BACK_HOST${info.image})`,
                       }
                 }
               />

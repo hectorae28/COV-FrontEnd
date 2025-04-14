@@ -192,7 +192,7 @@ const Noticias = ({ props }) => {
                     {/* Image Section */}
                     <div className="w-full md:w-1/2 h-64 md:h-96 relative overflow-hidden">
                       <img
-                        src={`http://localhost:8000${newsItems[currentIndex]?.imagen_portada_url}`}
+                        src={`${process.env.NEXT_PUBLIC_BACK_HOST}${newsItems[currentIndex]?.imagen_portada_url}`}
                         alt={newsItems[currentIndex]?.titulo}
                         className="w-full h-full object-cover object-center"
                         onError={(e) => {
@@ -333,7 +333,7 @@ const Noticias = ({ props }) => {
               >
                 <div className="w-20 h-12 relative">
                   <img
-                    src={`http://localhost:8000${item.imagen_portada_url}`}
+                    src={`${process.env.NEXT_PUBLIC_BACK_HOST}${item.imagen_portada_url}`}
                     alt={`Thumbnail ${index + 1}`}
                     className="w-full h-full object-cover"
                   />

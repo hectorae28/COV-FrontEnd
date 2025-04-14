@@ -219,7 +219,7 @@ const Sponsor = () => {
                   >
                     <div className="w-full h-full flex items-center justify-center">
                       <Image
-                        src={`http://localhost:8000${aliado.logo_url}`}
+                        src={`${process.env.NEXT_PUBLIC_BACK_HOST}${aliado.logo_url}`}
                         alt={`Logo de ${aliado.name}`}
                         width={aliado.isActive ? 180 : 100}
                         height={aliado.isActive ? 160 : 80}

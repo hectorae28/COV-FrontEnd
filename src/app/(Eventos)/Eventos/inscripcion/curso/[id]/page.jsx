@@ -6,7 +6,7 @@ export default async function CourseShowcase({ params }) {
   const options = { method: "GET" };
 
   const res = await fetch(
-    `http://localhost:8000/api/v1/eventos/curso/${id}/`,
+    `${process.env.NEXT_PUBLIC_BACK_HOST}/eventos/curso/${id}/`,
     options
   );
   const data = await res.json();
@@ -33,7 +33,7 @@ export default async function CourseShowcase({ params }) {
           <Image
             src={
               courseData.cover_url
-                ? `http://localhost:8000${courseData.cover_url}`
+                ? `process.env.NEXT_PUBLIC_BACK_HOST${courseData.cover_url}`
                 : "/placeholder.svg"
             }
             alt={courseData.nombre}

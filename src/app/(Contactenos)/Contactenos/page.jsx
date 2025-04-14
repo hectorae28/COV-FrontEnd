@@ -3,30 +3,7 @@ import { fetchContactInfo } from "../../../api/endpoints/landingPage";
 import { motion } from "framer-motion";
 import { Clock, Phone, Mail, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
-
-/**
- * EmailSection Component
- * Displays a list of contact email addresses with descriptions
- */
 const EmailSection = ({ contactInfo }) => {
-  const emails = [
-    {
-      email: contactInfo?.email_secretaria_presidencia,
-      description: "Secretaría de Presidencia",
-    },
-    {
-      email: contactInfo?.email_secretaria_finanzas,
-      description: "Secretaría de Finanzas",
-    },
-    {
-      email: contactInfo?.email_secretaria_organizacion,
-      description: "Secretaría de Organización",
-    },
-    {
-      email: contactInfo?.email_soporte_sistemas,
-      description: "Soporte de Sistemas COV Web",
-    },
-  ];
   return (
     <div className="rounded-lg shadow-md overflow-hidden h-full">
       <div className="p-4 bg-white">
@@ -41,20 +18,20 @@ const EmailSection = ({ contactInfo }) => {
         </div>
 
         <div className="grid grid-cols-1 gap-3">
-          {emails.map((item, index) => (
+          {contactInfo.map((item, index) => (
             <div
               key={index}
               className="flex items-center bg-gradient-to-r from-[#C40180]/5 to-[#590248]/5 p-3 rounded-lg"
             >
               <div>
                 <p className="text-xs font-semibold text-gray-800">
-                  {item.description}
+                  {item.label}
                 </p>
                 <a
-                  href={`mailto:${item.email}`}
+                  href={`mailto:${item.valor}`}
                   className="text-[#C40180] hover:text-[#590248] transition-colors duration-300 text-sm break-all"
                 >
-                  {item.email}
+                  {item.valor}
                 </a>
               </div>
             </div>
@@ -67,12 +44,9 @@ const EmailSection = ({ contactInfo }) => {
   );
 };
 
-/**
- * HoursAndPhonesSection Component
- * Displays business hours and contact phone numbers
- */
 const HoursAndPhonesSection = ({ contactInfo }) => {
-  console.log(contactInfo);
+  console.log({ contactInfo });
+
   return (
     <div className="rounded-lg shadow-md overflow-hidden h-full">
       <div className="p-4 bg-white">
@@ -93,37 +67,40 @@ const HoursAndPhonesSection = ({ contactInfo }) => {
           <p className="text-sm font-semibold text-black mb-1">
             Horario de Atención:
           </p>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <span className="font-medium flex gap-2">
-              {contactInfo?.horario_atencion}
-              {/* Lunes a Viernes
-              <span className="px-3 py-1 bg-white rounded-full text-sm font-semibold shadow-sm inline-block">
-                09:00 AM - 03:00 PM
-              </span> */}
-            </span>
-          </div>
+          {contactInfo?.horarios.map((item, index) => (
+            <div
+              className="flex flex-col sm:flex-row sm:items-center gap-2"
+              key={index}
+            >
+              <span className="font-medium flex gap-2">
+                {item?.valor}
+                {/* Lunes a Viernes
+                <span className="px-3 py-1 bg-white rounded-full text-sm font-semibold shadow-sm inline-block">
+                  09:00 AM - 03:00 PM
+                </span> */}
+              </span>
+            </div>
+          ))}
         </div>
 
         {/* Phone Numbers */}
         <div>
           <p className="text-sm font-semibold text-black mb-2">Teléfonos:</p>
           <div className="grid grid-cols-1 gap-3">
-            <div className="flex items-center bg-gradient-to-r from-[#C40180]/5 to-[#590248]/5 p-3 rounded-lg">
-              <Phone className="w-5 h-5 text-[#C40180] mr-3 flex-shrink-0" />
-              <div>
-                <p className="text-xs font-semibold text-gray-800">FINANZAS</p>
-                <p className="font-medium text-black">(0212) 793-56 87</p>
+            {contactInfo?.telefonos.map((item, index) => (
+              <div
+                className="flex items-center bg-gradient-to-r from-[#C40180]/5 to-[#590248]/5 p-3 rounded-lg"
+                key={index}
+              >
+                <Phone className="w-5 h-5 text-[#C40180] mr-3 flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-gray-800">
+                    {item.label}
+                  </p>
+                  <p className="font-medium text-black">{item.valor}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center bg-gradient-to-r from-[#C40180]/5 to-[#590248]/5 p-3 rounded-lg">
-              <Phone className="w-5 h-5 text-[#C40180] mr-3 flex-shrink-0" />
-              <div>
-                <p className="text-xs font-semibold text-gray-800">
-                  PRESIDENCIA
-                </p>
-                <p className="font-medium text-black">(0212) 781-22 67</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -137,7 +114,7 @@ const HoursAndPhonesSection = ({ contactInfo }) => {
  * LocationSection Component
  * Displays the organization's address and location map
  */
-const LocationSection = () => {
+const LocationSection = ({ location }) => {
   // Google Maps coordinates
   const latitude = "10.50767";
   const longitude = "-66.88259";
@@ -155,15 +132,12 @@ const LocationSection = () => {
           <h3 className="text-lg font-bold text-black">Dirección</h3>
         </div>
 
-        <p className="text-gray-800 mb-4">
-          Urb. Las Palmas, Calle el Pasaje, Edif. Colegio de Odontólogos.
-          Caracas, Venezuela
-        </p>
+        <p className="text-gray-800 mb-4">{location.label}</p>
 
         {/* Map container */}
         <div className="rounded-lg overflow-hidden h-[300px] md:h-[400px] bg-gray-200">
           <iframe
-            src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3923.0064611371!2d${longitude}!3d${latitude}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDMwJzI3LjYiTiA2NsKwNTInNTcuMyJX!5e0!3m2!1ses!2sve!4v1620000000000!5m2!1ses!2sve`}
+            src={location.valor}
             width="100%"
             height="100%"
             style={{ border: 0 }}
@@ -186,6 +160,7 @@ const LocationSection = () => {
  */
 export default function Contactenos() {
   const [contactInfo, setContactInfo] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -193,10 +168,20 @@ export default function Contactenos() {
         setContactInfo(data.data);
       } catch (error) {
         console.error("Error fetching presidentes:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadData();
   }, []);
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-5 justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#C40180]"></div>
+        <p className="ml-4 text-gray-600">Cargando...</p>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col mt-12 lg:mt-20">
       <main className="container mx-auto px-4 py-12 md:py-20 flex-grow">
@@ -242,7 +227,12 @@ export default function Contactenos() {
               transition={{ duration: 0.5 }}
               className="col-span-1"
             >
-              <HoursAndPhonesSection contactInfo={contactInfo} />
+              <HoursAndPhonesSection
+                contactInfo={{
+                  horarios: contactInfo.horario_atencion,
+                  telefonos: contactInfo.telefonos,
+                }}
+              />
             </motion.div>
 
             {/* Email Card */}
@@ -252,7 +242,7 @@ export default function Contactenos() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="col-span-1"
             >
-              <EmailSection contactInfo={contactInfo} />
+              <EmailSection contactInfo={contactInfo.emails} />
             </motion.div>
 
             {/* Location Card - Full Width */}
@@ -262,7 +252,7 @@ export default function Contactenos() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="col-span-1 md:col-span-2"
             >
-              <LocationSection />
+              <LocationSection location={contactInfo.direccion} />
             </motion.div>
           </div>
         </motion.div>

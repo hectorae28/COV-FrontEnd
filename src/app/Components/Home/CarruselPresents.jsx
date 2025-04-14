@@ -100,7 +100,7 @@ export default function CarruselPresents({ props }) {
           <div className="relative w-full h-full">
             <div className="absolute inset-0">
               <Image
-                src={`http://localhost:8000${slides[currentSlide]?.imagen_portada_url}`}
+                src={`${process.env.NEXT_PUBLIC_BACK_HOST}${slides[currentSlide]?.imagen_portada_url}`}
                 alt={slides[currentSlide].titulo}
                 fill
                 unoptimized

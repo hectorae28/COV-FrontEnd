@@ -36,28 +36,31 @@ export default function EspecialistasTable({
   const [paginacionConfig, setPaginacionConfig] = useState(null);
 
   useEffect(() => {
-    fetchData(
-      "colegiado_especializacion",
-      `?especializacion=${
-        activeTab == 0 ? "" : activeTab
-      }&page_size=${recordsPerPage}&page=${currentPage}${
-        sortConfig.key !== null
-          ? `&ordering=${sortConfig.direction === "ascending" ? "-" : ""}${
-              sortConfig.key
-            }`
-          : ""
-      }&search=${searchTerm}`
-    )
-      .then((res) => {
+    const loadData = async () => {
+      try {
+        const res = await fetchData(
+          "colegiado_especializacion",
+          `?especializacion=${
+            activeTab == 0 ? "" : activeTab
+          }&page_size=${recordsPerPage}&page=${currentPage}${
+            sortConfig.key !== null
+              ? `&ordering=${sortConfig.direction === "ascending" ? "-" : ""}${
+                  sortConfig.key
+                }`
+              : ""
+          }&search=${searchTerm}`
+        );
+
         setEspecialidadesData(res.data.results);
         setPaginacionConfig(res.data);
         setTotalPages(Math.ceil(res.data.count / recordsPerPage));
         setIsLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error al cargar los datos:", error);
-      });
-  }, [activeTab, currentPage, recordsPerPage, sortConfig]);
+      }
+    };
+    loadData();
+  }, [activeTab, currentPage, recordsPerPage, sortConfig, searchTerm]);
 
   // Obtener información de la especialidad activa
   const getEspecialidadInfo = useCallback(
@@ -100,7 +103,6 @@ export default function EspecialistasTable({
     }
     setSortConfig({ key, direction });
     setCurrentPage(1);
-    console.log("Ordenando por:", key, direction);
   };
 
   // Cambiar página
@@ -118,19 +120,27 @@ export default function EspecialistasTable({
     );
   };
 
-  // Cambiar especialidad desde la tabla
-  const handleEspecialidadChange = (especialidad) => {
-    console.log("Especialidad seleccionada:", especialidad);
-    // No necesitamos desplazamiento aquí ya que ya estamos en la tabla
-  };
-
-  // Toggle expanded row for mobile view
   const toggleExpandRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
+  const handleSearch = (e) => {
+    console.log(e.target.value);
+    const setSearchTimeout = setTimeout(() => {
+      setSearchTerm(e.target.value.split(".").join(""));
+      setCurrentPage(1);
+    }, 500);
+    if (setSearchTimeout) {
+      clearTimeout(setSearchTimeout);
+    }
+  };
 
   if (isLoading) {
-    return <div className="text-center py-8">Cargando especialistas...</div>;
+    return (
+      <div className="flex flex-col gap-5 justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#C40180]"></div>
+        <p className="ml-4 text-gray-600">Cargando...</p>
+      </div>
+    );
   }
 
   return (
@@ -193,7 +203,9 @@ export default function EspecialistasTable({
                     focusRingColor: `${especialidadInfo.color}60`,
                   }}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) =>
+                    setSearchTerm(e.target.value.split(".").join(""))
+                  }
                 />
                 <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 {searchTerm && (
@@ -394,9 +406,6 @@ export default function EspecialistasTable({
                                 color: espColor,
                                 border: `1px solid ${espColor}30`,
                               }}
-                              onClick={() =>
-                                handleEspecialidadChange(item.especialidad)
-                              }
                             >
                               {getEspecialidadInfo(espKey)?.title}
                             </motion.span>
@@ -621,7 +630,7 @@ export default function EspecialistasTable({
                       whileHover={{ scale: currentPage === pageNum ? 1 : 1.05 }}
                       whileTap={{ scale: currentPage === pageNum ? 1 : 0.95 }}
                       onClick={() => paginate(pageNum)}
-                      className={`w-10 h-10 flex items-center justify-center rounded-md shadow-sm ${
+                      className={`w-10 h-10 flex items-center justify-center rounded-md cursor-pointer shadow-sm ${
                         currentPage === pageNum
                           ? "text-white font-medium"
                           : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
@@ -645,7 +654,7 @@ export default function EspecialistasTable({
                 className={`p-2 rounded-md ${
                   currentPage === totalPages || totalPages === 0
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm cursor-pointer"
                 }`}
               >
                 <ChevronRight className="w-5 h-5" />

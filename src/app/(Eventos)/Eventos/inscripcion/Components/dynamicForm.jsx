@@ -130,7 +130,7 @@ export default function DynamicForm(props) {
       console.log("Form data to send:", extra);
 
       const response = await fetch(
-        "http://localhost:8000/api/v1/eventos/inscripcion/",
+        "process.env.NEXT_PUBLIC_BACK_HOST/api/v1/eventos/inscripcion/",
         {
           method: "POST",
           body: extra,

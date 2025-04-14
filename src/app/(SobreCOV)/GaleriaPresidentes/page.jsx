@@ -238,7 +238,7 @@ const LineaTiempo = () => {
                         <img
                           src={
                             selected.imagen_url
-                              ? `http://localhost:8000${selected.imagen_url}`
+                              ? `process.env.NEXT_PUBLIC_BACK_HOST${selected.imagen_url}`
                               : "/assets/presidente.webp"
                           }
                           alt={selected.nombre}
@@ -440,7 +440,7 @@ const LineaTiempo = () => {
                           <img
                             src={
                               presidente.imagen_url
-                                ? `http://localhost:8000${presidente.imagen_url}`
+                                ? `process.env.NEXT_PUBLIC_BACK_HOST${presidente.imagen_url}`
                                 : "/assets/presidente.webp"
                             }
                             alt={presidente.nombre}

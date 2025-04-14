@@ -42,7 +42,7 @@ const EventCardWrapper = ({
           <div className="absolute inset-0">
             {image ? (
               <img
-                src={`http://localhost:8000${image}`}
+                src={`process.env.NEXT_PUBLIC_BACK_HOST${image}`}
                 alt={title}
                 className="w-full h-full object-cover"
               />
