@@ -6,7 +6,7 @@ import { fetchFooter } from "../api/endpoints/landingPage";
 
 
 export const metadata = {
-  title: "COV - Colegio de Odontólogos de Venezuela",
+  title: "INICIO DE SESION - COV",
 };
 
 export default async function RootLayout({ children }) {
