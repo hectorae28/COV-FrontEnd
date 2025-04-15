@@ -11,7 +11,7 @@ import {
   ChevronRight,
   Menu,
 } from "lucide-react";
-import { fetchData } from "../../../api/endpoints/landingPage";
+import { fetchData } from "@/api/endpoints/landingPage";
 
 export default function EspecialistasTable({
   searchTerm,
