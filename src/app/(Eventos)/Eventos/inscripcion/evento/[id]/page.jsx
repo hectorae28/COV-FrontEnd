@@ -27,7 +27,7 @@ export default async function CourseShowcase({ params }) {
           <Image
             src={
               courseData.cover_url
-                ? `process.env.NEXT_PUBLIC_BACK_HOST${courseData.cover_url}`
+                ? `${process.env.NEXT_PUBLIC_BACK_HOST}${courseData.cover_url}`
                 : "/placeholder.svg"
             }
             alt={courseData.nombre}

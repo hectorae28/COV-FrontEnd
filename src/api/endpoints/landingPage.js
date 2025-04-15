@@ -108,3 +108,12 @@ export const fetchData = async (url, params = " ") => {
         throw error;
     }
 }
+export const fetchDataLanding = async (url, params = " ") => {
+    try {
+        const data = api.get(`landing-cms/${url}/${params}`)
+        return data;
+    } catch (error) {
+        console.error("Error fetching footer:", error);
+        throw error;
+    }
+}

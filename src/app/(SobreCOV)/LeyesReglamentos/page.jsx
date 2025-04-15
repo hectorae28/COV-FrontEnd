@@ -19,7 +19,7 @@ const formatDocuments = (rows) => {
       id: idSlug,
       title: row.titulo,
       description: row.resumen,
-      pdfPath: `process.env.NEXT_PUBLIC_BACK_HOST${pdfPath}`,
+      pdfPath: `${process.env.NEXT_PUBLIC_BACK_HOST}${pdfPath}`,
     };
   });
 };

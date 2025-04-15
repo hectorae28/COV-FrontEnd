@@ -5,7 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { getGradientColor } from "../../Components/SobreCOV/LineaTHist";
 import { ReflexionSection } from "../../Components/SobreCOV/ReflexionSection";
-import { fetchHistoria } from "../../../api/endpoints/landingPage";
+import {
+  fetchDataLanding,
+  fetchHistoria,
+} from "../../../api/endpoints/landingPage";
 import {
   Clock,
   Award,
@@ -264,13 +267,31 @@ const ReflectionCard = ({ title, content, index }) => {
 
 export default function Historia() {
   const [LineaTSection, setLineaTSection] = useState([]);
+  const [reflexiones, setReflexiones] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    const fetchData = async () => {
-      const LineaTSection = await fetchHistoria();
-      setLineaTSection(LineaTSection.data);
+    const loadData = async () => {
+      try {
+        const LineaTSection = await fetchHistoria();
+        setLineaTSection(LineaTSection.data);
+        const reflexiones = await fetchDataLanding("reflexiones");
+        setReflexiones(reflexiones.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    fetchData();
+    loadData();
   }, []);
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-5 justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#C40180]"></div>
+        <p className="ml-4 text-gray-600">Cargando...</p>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col mt-12 lg:mt-20">
       <main className="container mx-auto px-4 py-20 flex-grow">
@@ -327,31 +348,41 @@ export default function Historia() {
             className="md:w-1/2 relative"
           >
             <div className="sticky top-[120px] pb-8 pr-2">
-              <div className="border-b border-gray-300 pb-4 mb-4">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text">
-                  {ReflexionSection[0].title}
-                </h2>
-                <p className="text-sm text-gray-800 mt-1">
-                  {ReflexionSection[0].subtitle}
-                </p>
-              </div>
+              {reflexiones.title.map((item, index) => (
+                <div className="border-b border-gray-300 pb-4 mb-4" key={index}>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text">
+                    {item.title}
+                  </h2>
+                  <p className="text-sm text-gray-800 mt-1">{item.contenido}</p>
+                </div>
+              ))}
 
               <div className="space-y-6 overflow-x-visible">
-                {ReflexionSection[0].content.props.children[0].map(
-                  (section, index) => (
-                    <ReflectionCard
-                      key={index}
-                      title={section.title}
-                      content={section.text}
-                      index={index}
-                    />
-                  )
-                )}
+                {reflexiones.reflexions.map((section, index) => (
+                  <ReflectionCard
+                    key={index}
+                    title={section.title}
+                    content={section.contenido}
+                    index={index}
+                  />
+                ))}
               </div>
 
               {/* Final Quote is now part of the content */}
               <div className="mt-6">
-                {ReflexionSection[0].content.props.children[1]}
+                {reflexiones.quote.map((item, index) => (
+                  <div
+                    className="mt-6 border-t border-gray-300 pt-4"
+                    key={index}
+                  >
+                    <blockquote className="italic text-gray-700 text-sm pl-4 border-l-2 border-[#C40180]">
+                      {item.contenido}
+                    </blockquote>
+                    <p className="text-right text-xs text-gray-500 mt-2">
+                      {item.title}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </motion.section>
