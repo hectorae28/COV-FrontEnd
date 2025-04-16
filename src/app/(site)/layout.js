@@ -3,6 +3,7 @@ import "../globals.css";
 import AppBar from "./(Home)/AppBar";
 import Footer from "./(Home)/Footer";
 import { fetchFooter } from "@/api/endpoints/landingPage";
+import Providers from "@/Components/Provider";
 
 
 export const metadata = {
@@ -20,7 +21,9 @@ export default async function RootLayout({ children }) {
         <header>
           <AppBar />
         </header>
-        <main>{children}</main>
+        <Providers>
+          <main>{children}</main>
+        </Providers>
         <footer className="bg-[#F9F9F9]">
           <Footer props={footerData.data} />
         </footer>

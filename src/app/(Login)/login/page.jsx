@@ -1,31 +1,31 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
-import PanelAdmin from "../PanelAdmin"
-import Colegiados from "../Colegiados"
-import BackgroundAnimation from "../../Components/Home/BackgroundAnimation"
-import InfoSection from "../../Components/Home/InfoSection"
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import PanelAdmin from "../PanelAdmin";
+import Colegiados from "../Colegiados";
+import BackgroundAnimation from "@/Components/Home/BackgroundAnimation";
+import InfoSection from "@/Components/Home/InfoSection";
 
 export default function LoginScreen() {
-  const [showLogin, setShowLogin] = useState(false)
-  const [direction, setDirection] = useState("right")
-  const [isClosing, setIsClosing] = useState(false)
+  const [showLogin, setShowLogin] = useState(false);
+  const [direction, setDirection] = useState("right");
+  const [isClosing, setIsClosing] = useState(false);
 
   const handleSignIn = (slideDirection) => {
-    setDirection(slideDirection)
-    setShowLogin(true)
-    setIsClosing(false)
-  }
+    setDirection(slideDirection);
+    setShowLogin(true);
+    setIsClosing(false);
+  };
 
   const handleClose = () => {
-    setIsClosing(true)
+    setIsClosing(true);
     setTimeout(() => {
-      setShowLogin(false)
-      setIsClosing(false)
-    }, 10)
-  }
+      setShowLogin(false);
+      setIsClosing(false);
+    }, 10);
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen w-full">
@@ -96,9 +96,9 @@ export default function LoginScreen() {
                       height={80}
                       className="relative drop-shadow-md object-contain max-w-full h-auto"
                       onError={(e) => {
-                        e.target.onerror = null
+                        e.target.onerror = null;
                         e.target.src =
-                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='80' fill='%23ffffff' /%3E%3Ctext x='50%' y='50%' fontSize='24' textAnchor='middle' dominantBaseline='middle' fill='%23D7008A'%3ECOV%3C/text%3E%3C/svg%3E"
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='80' fill='%23ffffff' /%3E%3Ctext x='50%' y='50%' fontSize='24' textAnchor='middle' dominantBaseline='middle' fill='%23D7008A'%3ECOV%3C/text%3E%3C/svg%3E";
                       }}
                     />
                   </div>
@@ -111,9 +111,12 @@ export default function LoginScreen() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.4 }}
                 >
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">Bienvenido</h1>
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+                    Bienvenido
+                  </h1>
                   <p className="text-base sm:text-lg md:text-xl text-white max-w-4xl mx-auto px-4">
-                    Portal del Colegio de Odontólogos de Venezuela para profesionales de la salud bucal
+                    Portal del Colegio de Odontólogos de Venezuela para
+                    profesionales de la salud bucal
                   </p>
                 </motion.div>
 
@@ -134,9 +137,12 @@ export default function LoginScreen() {
                     <div className="absolute -inset-1 bg-gradient-to-r from-[#D7008A]/20 to-[#41023B]/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
 
                     <div className="relative p-6 sm:p-8 z-10 text-center">
-                      <h2 className="text-xl sm:text-2xl font-bold text-[#41023B] mb-4 sm:mb-5">Panel de Administradores</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold text-[#41023B] mb-4 sm:mb-5">
+                        Panel de Administradores
+                      </h2>
                       <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                        Acceso exclusivo para personal administrativo del Colegio de Odontólogos de Venezuela.
+                        Acceso exclusivo para personal administrativo del
+                        Colegio de Odontólogos de Venezuela.
                       </p>
                       <motion.button
                         onClick={() => handleSignIn("left")}
@@ -162,9 +168,12 @@ export default function LoginScreen() {
                     <div className="absolute -inset-1 bg-gradient-to-r from-[#41023B]/20 to-[#D7008A]/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
 
                     <div className="relative p-6 sm:p-8 z-10 text-center">
-                      <h2 className="text-xl sm:text-2xl font-bold text-[#41023B] mb-4 sm:mb-5">Colegiados</h2>
+                      <h2 className="text-xl sm:text-2xl font-bold text-[#41023B] mb-4 sm:mb-5">
+                        Colegiados
+                      </h2>
                       <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                        Para odontólogos adscritos al COV o profesionales que desean registrarse y realizar solicitudes.
+                        Para odontólogos adscritos al COV o profesionales que
+                        desean registrarse y realizar solicitudes.
                       </p>
                       <motion.button
                         onClick={() => handleSignIn("right")}
@@ -191,21 +200,44 @@ export default function LoginScreen() {
                   {/* Redes Sociales */}
                   <div className="flex justify-center items-center space-x-4 sm:space-x-6 mb-2 sm:mb-4">
                     <a href="#" className="hover:opacity-40 transition-opacity">
-                      <Image src="/assets/icons/facebook.png" alt="Facebook" width={20} height={20} />
+                      <Image
+                        src="/assets/icons/facebook.png"
+                        alt="Facebook"
+                        width={20}
+                        height={20}
+                      />
                     </a>
                     <a href="#" className="hover:opacity-40 transition-opacity">
-                      <Image src="/assets/icons/instagram.png" alt="Instagram" width={20} height={20} />
+                      <Image
+                        src="/assets/icons/instagram.png"
+                        alt="Instagram"
+                        width={20}
+                        height={20}
+                      />
                     </a>
                     <a href="#" className="hover:opacity-40 transition-opacity">
-                      <Image src="/assets/icons/twitter.png" alt="Twitter" width={20} height={20} />
+                      <Image
+                        src="/assets/icons/twitter.png"
+                        alt="Twitter"
+                        width={20}
+                        height={20}
+                      />
                     </a>
                     <a href="#" className="hover:opacity-40 transition-opacity">
-                      <Image src="/assets/icons/youtube.png" alt="Youtube" width={24} height={20} />
+                      <Image
+                        src="/assets/icons/youtube.png"
+                        alt="Youtube"
+                        width={24}
+                        height={20}
+                      />
                     </a>
                   </div>
 
                   {/* Copyright */}
-                  <p className="text-xs sm:text-sm">© {new Date().getFullYear()} Colegio de Odontólogos de Venezuela J-00041277-4</p>
+                  <p className="text-xs sm:text-sm">
+                    © {new Date().getFullYear()} Colegio de Odontólogos de
+                    Venezuela J-00041277-4
+                  </p>
                 </motion.div>
               </motion.div>
             )}
@@ -232,5 +264,5 @@ export default function LoginScreen() {
         </div>
       </div>
     </div>
-  )
+  );
 }
