@@ -1,12 +1,16 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Lock, Mail, Check } from "lucide-react"
-import Image from "next/image"
-import { useState } from "react"
+import { motion } from "framer-motion";
+import { Lock, Mail, Check } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import LoginForm from "../Components/Home/LoginForm";
 
 export default function PanelAdmin({ onClose, isClosing }) {
-  const [rememberMe, setRememberMe] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false);
+  const [currentView, setCurrentView] = useState("login");
+  const router = useRouter();
 
   return (
     <motion.div
@@ -31,9 +35,24 @@ export default function PanelAdmin({ onClose, isClosing }) {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#chevron-gradient-left)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="url(#chevron-gradient-left)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <defs>
-              <linearGradient id="chevron-gradient-left" x1="100%" y1="0%" x2="0%" y2="100%">
+              <linearGradient
+                id="chevron-gradient-left"
+                x1="100%"
+                y1="0%"
+                x2="0%"
+                y2="100%"
+              >
                 <stop offset="0%" stopColor="#D7008A" />
                 <stop offset="100%" stopColor="#41023B" />
               </linearGradient>
@@ -54,17 +73,21 @@ export default function PanelAdmin({ onClose, isClosing }) {
               height={80}
               className="drop-shadow-md"
               onError={(e) => {
-                e.target.onerror = null
+                e.target.onerror = null;
                 e.target.src =
-                  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='80' fill='%23ffffff' /%3E%3Ctext x='50%' y='50%' fontSize='24' textAnchor='middle' dominantBaseline='middle' fill='%23D7008A'%3ECOV%3C/text%3E%3C/svg%3E"
+                  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='80' fill='%23ffffff' /%3E%3Ctext x='50%' y='50%' fontSize='24' textAnchor='middle' dominantBaseline='middle' fill='%23D7008A'%3ECOV%3C/text%3E%3C/svg%3E";
               }}
             />
           </div>
 
-          <h2 className="text-center text-3xl font-bold text-[#41023B] mb-2">Panel de Administradores</h2>
-          <p className="text-center text-gray-700 mb-10">Acceso exclusivo para personal administrativo</p>
+          <h2 className="text-center text-3xl font-bold text-[#41023B] mb-2">
+            Panel de Administradores
+          </h2>
+          <p className="text-center text-gray-700 mb-10">
+            Acceso exclusivo para personal administrativo
+          </p>
 
-          <form>
+          {/* <form>
             <div className="mb-6">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -91,7 +114,6 @@ export default function PanelAdmin({ onClose, isClosing }) {
               </div>
             </div>
 
-            {/* Remember me checkbox */}
             <div className="flex items-center mb-8 ml-8">
               <div className="relative w-5 h-5 mr-3 cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
                 <div
@@ -105,7 +127,6 @@ export default function PanelAdmin({ onClose, isClosing }) {
               </label>
             </div>
 
-            {/* Login button */}
             <motion.button
               type="submit"
               className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
@@ -116,9 +137,14 @@ export default function PanelAdmin({ onClose, isClosing }) {
             >
               Iniciar Sesión
             </motion.button>
-          </form>
+          </form> */}
+          <LoginForm
+            onForgotPassword={() => setCurrentView("forgot-password")}
+            onRegister={() => router.replace("/RegistrationForm")}
+            callbackUrl="/PanelControl"
+          />
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

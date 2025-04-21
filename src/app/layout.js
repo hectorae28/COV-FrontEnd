@@ -1,6 +1,7 @@
 import Head from "next/head";
 import "./globals.css";
 import Providers from "@/Components/Provider";
+import AutoLog from "@/Components/autoLogOut";
 
 export default async function RootLayout({ children }) {
     return (
@@ -9,8 +10,10 @@ export default async function RootLayout({ children }) {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             </Head>
             <body className={`antialiased`}>
-                <Providers>
-                    <main>{children}</main>
+                <Providers session={children.session}  >
+                    <AutoLog>
+                        <main>{children}</main>
+                    </AutoLog>
                 </Providers>
             </body>
         </html>

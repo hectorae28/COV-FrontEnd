@@ -8,57 +8,23 @@ import Cards from "./Components/Cards";
 import Carnet from "./Components/Carnet";
 import Tabla from "./Components/Tabla";
 import Chat from "./Components/Chat";
-import { useSession, signIn, signOut } from "next-auth/react";
-import api from "@/api/api";
+import { useSession } from "next-auth/react";
+import { fetchMe } from "@/api/endpoints/colegiado";
 
 export default function Colegiado() {
+  // useRoleGuard(["Colegiados"]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userInfo, setUser_info] = useState(null);
   const { data: session, status } = useSession();
   const solvencyInfo = "12/12/2025"; // Fecha de solvencia
-  // function getUserInfo() {
-  //   const cookies = document.cookie.split(";");
-  //   for (let i = 0; i < cookies.length; i++) {
-  //     const cookie = cookies[i].trim();
-  //     if (cookie.startsWith("user_info=")) {
-  //       const userInfoString = cookie.substring("user_info=".length);
-  //       try {
-  //         return JSON.parse(decodeURIComponent(userInfoString));
-  //       } catch (e) {
-  //         console.error("Error parsing user info cookie:", e);
-  //         return null;
-  //       }
-  //     }
-  //   }
-  //   return null;
-  // }
-
-  // // Uso
-  // const userInfo = getUserInfo();
-  // if (userInfo) {
-  //   console.log("User Info:", userInfo);
-  //   // Aquí puedes acceder a los datos del usuario:
-  //   console.log("Username:", userInfo.username);
-  //   console.log("Email:", userInfo.email);
-  //   console.log("Role:", userInfo.role);
-  //   console.log("ID:", userInfo.id);
-  // } else {
-  //   console.log("User info cookie not found");
-  // }
   useEffect(() => {
+    if (status === "loading") return;
     if (session) {
-      api
-        .get("usuario/me/", {
-          headers: {
-            // En caso de utilizar un token JWT:
-            Authorization: `Bearer ${session?.user?.access}`,
-          },
-        })
+      fetchMe(session)
         .then((response) => setUser_info(response.data))
         .catch((error) => console.log(error));
-      console.log(userInfo);
     }
-  }, [session]);
+  }, [session, status]);
   if (status === "loading") {
     return <div>Loading...</div>;
   }

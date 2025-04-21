@@ -1,8 +1,12 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { refreshAccessToken } from "@/utils/auth";
+import { fetchMe } from "@/api/endpoints/colegiado";
+import { sign } from "crypto";
+import { se } from "date-fns/locale";
 
-const handler = NextAuth({
+
+export const authOptions = {
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -22,11 +26,10 @@ const handler = NextAuth({
                         credentials: 'include',
                     });
                     const data = await res.json();
-                    if (res.ok && data?.access && data?.refresh) {
+                    if (res.ok && data?.access) {
                         return {
                             username: credentials.username,
                             access: data.access,
-                            refresh: data.refresh,
                             access_expires_in: data.access_expires_in,
                         };
                     }
@@ -44,31 +47,40 @@ const handler = NextAuth({
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
+                const userData = await fetchMe({
+                    user: {
+                        access: user.access,
+                    },
+                });
                 token.access = user.access;
-                token.refresh = user.refresh;
                 token.username = user.username;
                 token.accessTokenExpires = Date.now() + user.access_expires_in * 1000;
+                token.role = userData?.data?.groups[0];
                 return token;
             }
             if (Date.now() < token.accessTokenExpires) {
                 return token;
             }
-
-            // Si el token ha expirado, intentamos refrescarlo:
-            return await refreshAccessToken(token);
+            return token
         },
         async session({ session, token }) {
             session.user = session.user || {};
             session.user.access = token.access;
-            session.user.refresh = token.refresh;
             session.user.username = token.username;
+            session.user.role = token.role;
             return session;
+        },
+
+        async redirect({ url, baseUrl }) {
+            return url.startsWith("/") ? `${baseUrl}${url}` : baseUrl;
         },
     },
     pages: {
         signIn: "/login",
     },
     secret: process.env.NEXTAUTH_SECRET,
-});
+}
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

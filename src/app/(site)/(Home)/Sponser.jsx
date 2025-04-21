@@ -195,9 +195,8 @@ const Sponsor = () => {
                 const zIndex = Math.round(aliado.z + 1000);
 
                 return (
-                  <Link
+                  <div
                     key={aliado.id}
-                    href={aliado.link}
                     className={`absolute bg-white rounded-xl shadow-lg transition-all duration-500 ease-in-out flex items-center justify-center cursor-pointer
                                             ${
                                               aliado.isActive
@@ -212,9 +211,11 @@ const Sponsor = () => {
                       zIndex,
                     }}
                     onClick={() =>
-                      handleClickLogo(
-                        aliados.findIndex((a) => a.id === aliado.id)
-                      )
+                      aliado.isActive
+                        ? window.open(aliado.link, "_blank")
+                        : handleClickLogo(
+                            aliados.findIndex((a) => a.id === aliado.id)
+                          )
                     }
                   >
                     <div className="w-full h-full flex items-center justify-center">
@@ -227,7 +228,7 @@ const Sponsor = () => {
                         priority={aliado.isActive}
                       />
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

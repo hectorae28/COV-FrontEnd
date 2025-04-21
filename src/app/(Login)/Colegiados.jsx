@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { useState } from "react"
-import LoginForm from "../Components/Home/LoginForm"
-import ForgotPasswordForm from "../Components/Home/ForgotPasswordForm"
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useState } from "react";
+import LoginForm from "../Components/Home/LoginForm";
+import ForgotPasswordForm from "../Components/Home/ForgotPasswordForm";
 
 export default function Colegiados({ onClose, isClosing }) {
-  const [currentView, setCurrentView] = useState('login')
-  const router = useRouter()
+  const [currentView, setCurrentView] = useState("login");
+  const router = useRouter();
 
   const handleRegisterClick = () => {
     // Close the current modal if needed
@@ -17,8 +17,8 @@ export default function Colegiados({ onClose, isClosing }) {
       onClose();
     }
     // Navigate to the registration page
-    router.push('/Registro/RegistrationForm');
-  }
+    router.push("/Registro/RegistrationForm");
+  };
 
   return (
     <motion.div
@@ -38,9 +38,24 @@ export default function Colegiados({ onClose, isClosing }) {
           whileTap={{ scale: 0.95 }}
           aria-label="Cerrar"
         >
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#chevron-gradient)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="url(#chevron-gradient)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <defs>
-              <linearGradient id="chevron-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient
+                id="chevron-gradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="100%"
+              >
                 <stop offset="0%" stopColor="#D7008A" />
                 <stop offset="100%" stopColor="#41023B" />
               </linearGradient>
@@ -64,28 +79,27 @@ export default function Colegiados({ onClose, isClosing }) {
           </div>
 
           <h2 className="text-center text-3xl font-bold text-[#41023B] mb-2">
-            {currentView === 'login' ? 'Colegiados' : 'Recuperar Contraseña'}
+            {currentView === "login" ? "Colegiados" : "Recuperar Contraseña"}
           </h2>
           <p className="text-center text-gray-700 mb-10 px-4">
-            {currentView === 'login'
-              ? 'Acceso para odontólogos adscritos al COV'
-              : 'Ingresa tu correo para recuperar tu contraseña'}
+            {currentView === "login"
+              ? "Acceso para odontólogos adscritos al COV"
+              : "Ingresa tu correo para recuperar tu contraseña"}
           </p>
 
-          {currentView === 'login' && (
-            <LoginForm 
-              onForgotPassword={() => setCurrentView('forgot-password')} 
-              onRegister={() => router.replace('/RegistrationForm')} 
+          {currentView === "login" && (
+            <LoginForm
+              onForgotPassword={() => setCurrentView("forgot-password")}
+              onRegister={() => router.replace("/RegistrationForm")}
+              callbackUrl="/Colegiado"
             />
           )}
-          
-          {currentView === 'forgot-password' && (
-            <ForgotPasswordForm 
-              onBackToLogin={() => setCurrentView('login')} 
-            />
+
+          {currentView === "forgot-password" && (
+            <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
           )}
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

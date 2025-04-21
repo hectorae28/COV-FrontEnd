@@ -7,7 +7,7 @@ import Providers from "@/Components/Provider";
 
 
 export const metadata = {
-  title: "INICIO DE SESION - COV",
+  title: "Colegio de Odontólogos de Venezuela - COV",
 };
 
 export default async function RootLayout({ children }) {
