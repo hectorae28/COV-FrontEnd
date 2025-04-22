@@ -15,50 +15,67 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
   const [showSolicitudForm, setShowSolicitudForm] = useState(false);
   const [showSolvencyWarning, setShowSolvencyWarning] = useState(false); // Estado para la advertencia
-  const [showTabs, setShowTabs] = useState(true); // Estado para mostrar/ocultar pestañas
+  const [showTabs, setShowTabs] = useState(false); // Estado para mostrar/ocultar pestañas
   const [userInfo, setUser_info] = useState(null);
   const { data: session, status } = useSession();
   const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
-
-  // Datos de solvencia
-  const solvencyInfo = {
-    date: session?.user.solvente,
-    amount: "7.00",
-  };
-
-  // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
     if (status === "loading") return;
-    const checkSolvencyStatus = () => {
-      const today = new Date();
-      const [day, month, year] = solvencyInfo.date.split("-").map(Number);
-      const solvencyDate = new Date(year, month - 1, day); // Meses en JS son 0-indexed
-
-      const warningDate = new Date(solvencyDate);
-      warningDate.setDate(warningDate.getDate() - 14);
-
-      if (today > solvencyDate) {
-        setIsSolvent(false);
-      } else if (today >= warningDate) {
-        setShowSolvencyWarning(true);
-      } else {
-        setShowSolvencyWarning(false);
-      }
-    };
-
-    checkSolvencyStatus();
-
-    const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas
-
     if (session) {
       fetchMe(session)
         .then((response) => {
           setUser_info(response.data);
         })
         .catch((error) => console.log(error));
+      const fechaExpiracion = new Date(session.user.solvente);
+      setIsSolvent(fechaExpiracion >= new Date());
     }
+  }, [session, status]);
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+  // Datos de solvencia
+  const solvencyInfo = {
+    date: "29/04/2025",
+    amount: "50.00",
+  };
+
+  // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
+  useEffect(() => {
+    const checkSolvencyStatus = () => {
+      const today = new Date();
+      // Convertir la fecha de formato DD/MM/YYYY a objeto Date
+      const [day, month, year] = solvencyInfo.date.split("/").map(Number);
+      const solvencyDate = new Date(year, month - 1, day); // Meses en JS son 0-indexed
+
+      // Calcular fecha límite para mostrar advertencia (2 semanas antes)
+      const warningDate = new Date(solvencyDate);
+      warningDate.setDate(warningDate.getDate() - 14);
+
+      // Verificar si el usuario está solvente
+      if (today > solvencyDate) {
+        setIsSolvent(false);
+        setShowTabs(true);
+      } else {
+        setIsSolvent(true);
+        // Mostrar advertencia y pestañas si estamos a menos de 2 semanas del vencimiento
+        if (today >= warningDate) {
+          setShowSolvencyWarning(true);
+          setShowTabs(true);
+        } else {
+          setShowSolvencyWarning(false);
+          setShowTabs(false);
+        }
+      }
+    };
+
+    checkSolvencyStatus();
+
+    // Configurar un intervalo para comprobar el estado cada día
+    const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas en milisegundos
+
     return () => clearInterval(intervalId);
-  }, [solvencyInfo.date, session, status]);
+  }, [solvencyInfo.date]);
 
   // Manejar clic en card
   const handleCardClick = (cardId) => {
@@ -76,16 +93,12 @@ export default function Home() {
   const handleBackToPanel = () => {
     setShowSolicitudForm(false);
   };
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
 
   return (
     <DashboardLayout
       solvencyInfo={solvencyInfo.date}
       isSolvent={isSolvent}
       showSolvencyWarning={showSolvencyWarning}
-      userInfo={userInfo}
     >
       {/* Contenido principal sin pestañas cuando el usuario está completamente solvente */}
       {!showTabs ? (
