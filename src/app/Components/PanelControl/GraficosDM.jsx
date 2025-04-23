@@ -10,14 +10,14 @@ import {
   Tooltip,
 } from "recharts";
 import {
-  FilterDropdown,
-  generateColors,
-} from "../../PanelControl/Components/Graficos";
-import {
   chartSizes,
   dataGroups,
   groupTitles,
 } from "../../Models/Home/GraficosData";
+import {
+  FilterDropdown,
+  generateColors,
+} from "../../PanelControl/Components/Graficos";
 
 const GraficosDonutMultiple = () => {
   const [sortType, setSortType] = useState("highest");

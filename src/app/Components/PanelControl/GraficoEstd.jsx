@@ -10,13 +10,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { dataBaseEstd } from "../../Models/Home/GraficosData";
 import {
   CustomTooltip,
   FilterDropdown,
   generateColors,
   sortData,
 } from "../../PanelControl/Components/Graficos";
-import { dataBaseEstd } from "../../Models/Home/GraficosData";
 
 const GraficosEstd = () => {
   const [sortType, setSortType] = useState("alphabetical");

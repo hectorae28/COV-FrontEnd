@@ -1,24 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import LoginForm from "../Components/Home/LoginForm";
 import ForgotPasswordForm from "../Components/Home/ForgotPasswordForm";
+import LoginForm from "../Components/Home/LoginForm";
 
 export default function Colegiados({ onClose, isClosing }) {
   const [currentView, setCurrentView] = useState("login");
   const router = useRouter();
-
-  const handleRegisterClick = () => {
-    // Close the current modal if needed
-    if (onClose) {
-      onClose();
-    }
-    // Navigate to the registration page
-    router.push("/Registro/RegistrationForm");
-  };
 
   return (
     <motion.div
@@ -90,7 +81,7 @@ export default function Colegiados({ onClose, isClosing }) {
           {currentView === "login" && (
             <LoginForm
               onForgotPassword={() => setCurrentView("forgot-password")}
-              onRegister={() => router.replace("/RegistrationForm")}
+              onRegister={() => router.replace("/Registro")}
               callbackUrl="/Colegiado"
             />
           )}

@@ -1,9 +1,6 @@
+import { fetchMe } from "@/api/endpoints/colegiado";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { refreshAccessToken } from "@/utils/auth";
-import { fetchMe } from "@/api/endpoints/colegiado";
-import { sign } from "crypto";
-import { se } from "date-fns/locale";
 
 
 export const authOptions = {
@@ -78,7 +75,7 @@ export const authOptions = {
         },
     },
     pages: {
-        signIn: "/login",
+        signIn: "/Login",
     },
     secret: process.env.NEXTAUTH_SECRET,
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import Cards from "./Components/Cards";
-import Graficos from "./Components/Graficos";
+import Cards from "../Components/Cards";
+import Graficos from "../Components/Graficos";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import useRoleGuard from "@/hooks/useRoleGuard";

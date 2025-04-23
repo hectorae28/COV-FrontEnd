@@ -1,14 +1,14 @@
 "use client";
 
-import { AccountCircle, Notifications } from "@mui/icons-material";
-import { Menu } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useRef, useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { fetchMe } from "@/api/endpoints/colegiado";
 import ProfileDropdown from "@/app/Colegiado/Components/PerfilDropdown";
+import { Notifications } from "@mui/icons-material";
+import { Menu } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { NotificacionesModal } from "../../Components/Comunicaciones/Notificaciones/NotificacionesModal";
 import { NotificacionesProvider } from "../../Models/Comunicaciones/Notificaciones/NotificacionesData";
-import { fetchMe } from "@/api/endpoints/colegiado";
 
 export default function Barra({ onMenuClick, title = "Inicio", icon }) {
   const router = useRouter();
@@ -95,3 +95,4 @@ function NotificacionesBadge() {
 
 // Importar el hook de notificaciones
 import { useNotificaciones } from "../../Models/Comunicaciones/Notificaciones/NotificacionesData";
+

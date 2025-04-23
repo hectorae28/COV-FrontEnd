@@ -10,13 +10,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { universidadData } from "../../Models/Home/GraficosData";
 import {
   CustomTooltip,
   FilterDropdown,
   generateColors,
   sortData,
 } from "../../PanelControl/Components/Graficos";
-import { universidadData } from "../../Models/Home/GraficosData";
 
 const GraficoUniv = () => {
   const [sortType, setSortType] = useState("alphabetical");

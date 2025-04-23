@@ -13,7 +13,7 @@ export async function middleware(request) {
 
     // Si no hay sesión, vas al login
     if (!token) {
-        url.pathname = '/login';
+        url.pathname = '/Login';
         return NextResponse.redirect(url);
     }
 

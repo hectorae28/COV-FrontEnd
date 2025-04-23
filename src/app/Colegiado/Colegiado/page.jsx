@@ -4,10 +4,10 @@ import SolicitudesForm from "@/Components/Cards/MultipleSol/FormMult";
 import SolvencyStatus from "@/Components/Solvencia/EstatusSolv";
 import SolvenciaPago from "@/Components/Solvencia/PagoSolv";
 import DashboardLayout from "@/Components/DashboardLayout";
-import Cards from "./Components/Cards";
-import Carnet from "./Components/Carnet";
-import Chat from "./Components/Chat";
-import TablaHistorial from "./Components/Tabla";
+import Cards from "../Components/Cards";
+import Carnet from "../Components/Carnet";
+import Chat from "../Components/Chat";
+import TablaHistorial from "../Components/Tabla";
 import { useSession } from "next-auth/react";
 import { fetchMe } from "@/api/endpoints/colegiado";
 

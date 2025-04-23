@@ -11,7 +11,7 @@ export default function useRoleGuard(allowedRoles = []) {
         if (status === "loading") return;
         console.log(session);
         if (!session) {
-            router.replace("/login");
+            router.replace("/Login");
             return;
         }
         const role = session.user.role;

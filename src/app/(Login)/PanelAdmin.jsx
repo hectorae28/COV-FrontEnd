@@ -87,7 +87,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
             Acceso exclusivo para personal administrativo
           </p>
 
-          {/* <form>
+          <form>
             <div className="mb-6">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -137,12 +137,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
             >
               Iniciar Sesión
             </motion.button>
-          </form> */}
-          <LoginForm
-            onForgotPassword={() => setCurrentView("forgot-password")}
-            onRegister={() => router.replace("/RegistrationForm")}
-            callbackUrl="/PanelControl"
-          />
+          </form>
         </div>
       </div>
     </motion.div>
