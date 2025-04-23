@@ -30,14 +30,6 @@ export default function LoginForm({
     } else {
       console.log("Inicio de sesión exitoso:", result);
       router.push(callbackUrl);
-      // fetchMe(session)
-      //   .then((response) => {
-      //     if (response.data.group[0] === "Colegiados") {
-      //     } else if (response.data.group[0] === "Personal_Administrativo") {
-      //       router.push("/Colegiado");
-      //     }
-      //   })
-      //   .catch((error) => console.log(error));
     }
   };
 

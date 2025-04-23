@@ -102,7 +102,6 @@ export default function PagosColg({ onPaymentComplete }) {
       JSON.stringify({ modelo_solvencia: 1, costo_solicitud_solvencia: 4 })
     );
     form.append("comprobante", paymentFile);
-    ``;
 
     const options = {
       method: "POST",
