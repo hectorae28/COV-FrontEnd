@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { FaChevronDown, FaBars, FaTimes } from "react-icons/fa";
-import Whatsapp from "./WhatsApp";
+import Whatsapp from "./BottomFloat";
 import LogoDownloadModal from "../../Components/SobreCOV/LogoDownloadModal";
 
 const menuItems = [

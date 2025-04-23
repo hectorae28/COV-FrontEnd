@@ -1,20 +1,15 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence, useAnimation } from "framer-motion"
 // Import icons from Lucide React
-import {
-  FileClock,
-  BookUser,
-  TrendingUpIcon as TrendingUpDown,
-  Stamp,
-} from "lucide-react";
+import { FileClock, BookUser, TrendingUpIcon as TrendingUpDown, Stamp } from "lucide-react"
 
 // Import individual dashboard components
-import HistoriaDashboard from "../../../Components/PaginaWeb/SobreCOV/HistoriaDashboard.jsx";
-import PresidentesDashboard from "../../../Components/PaginaWeb/SobreCOV/PresidentesDashboard.jsx";
-import JuntaDDashboard from "../../../Components/PaginaWeb/SobreCOV/JuntaDDashboard.jsx";
-import LeyesRDashboard from "../../../Components/PaginaWeb/SobreCOV/LeyesRDashboard.jsx";
+import HistoriaDashboard from "../../Components/PaginaWeb/SobreCOV/HistoriaDashboard.jsx"
+import PresidentesDashboard from "../../Components/PaginaWeb/SobreCOV/PresidentesDashboard.jsx"
+import JuntaDDashboard from "../../Components/PaginaWeb/SobreCOV/JuntaDDashboard.jsx"
+import LeyesRDashboard from "../../Components/PaginaWeb/SobreCOV/LeyesRDashboard.jsx"
 
 // Dashboard modules data moved directly into the component
 const dashboardModules = {
@@ -49,81 +44,80 @@ const dashboardModules = {
     image: "/assets/PaginaWeb/SobreCOV/LeyesR.avif",
     icon: "Stamp",
   },
-};
+}
 
 export default function DashboardPanel() {
   // State management
-  const [activeModule, setActiveModule] = useState("Historia");
-  const [hoveredCard, setHoveredCard] = useState(null);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [activeModule, setActiveModule] = useState("Historia")
+  const [hoveredCard, setHoveredCard] = useState(null)
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   // Window width state for responsive design
-  const [windowWidth, setWindowWidth] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
 
   // Refs and animations
-  const contentRef = useRef(null);
-  const controls = useAnimation();
+  const contentRef = useRef(null)
+  const controls = useAnimation()
 
   // Get current module information
-  const moduleInfo =
-    dashboardModules[activeModule] || dashboardModules["Historia"];
+  const moduleInfo = dashboardModules[activeModule] || dashboardModules["Historia"]
 
   // Function to render the icon based on icon name
   const renderIcon = (iconName, size = 24, color = "white") => {
     switch (iconName) {
       case "FileClock":
-        return <FileClock size={size} color={color} />;
+        return <FileClock size={size} color={color} />
       case "BookUser":
-        return <BookUser size={size} color={color} />;
+        return <BookUser size={size} color={color} />
       case "TrendingUpDown":
-        return <TrendingUpDown size={size} color={color} />;
+        return <TrendingUpDown size={size} color={color} />
       case "Stamp":
-        return <Stamp size={size} color={color} />;
+        return <Stamp size={size} color={color} />
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   // Check for mobile view on mount and resize
   useEffect(() => {
     // Set the initial width
-    setWindowWidth(window.innerWidth);
-    setIsMobile(window.innerWidth < 768);
+    setWindowWidth(window.innerWidth)
+    setIsMobile(window.innerWidth < 768)
 
     const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-      setIsMobile(window.innerWidth < 768);
+      setWindowWidth(window.innerWidth)
+      setIsMobile(window.innerWidth < 768)
       // Close dropdown on larger screens
       if (window.innerWidth >= 768) {
-        setIsDropdownOpen(false);
+        setIsDropdownOpen(false)
       }
-    };
+    }
 
     // Add event listener for window resize
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize)
 
     // Cleanup
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   // Initialize animations and confetti effect when tab changes
   useEffect(() => {
-    setShowConfetti(true);
-    const timer = setTimeout(() => setShowConfetti(false), 2000);
-    controls.start({ opacity: 1, y: 0 });
-    return () => clearTimeout(timer);
-  }, [activeModule, controls]);
+    setShowConfetti(true)
+    const timer = setTimeout(() => setShowConfetti(false), 2000)
+    controls.start({ opacity: 1, y: 0 })
+    return () => clearTimeout(timer)
+  }, [activeModule, controls])
 
   // Generate star animation for the confetti effect
   const generateStars = () => {
     return Array.from({ length: 25 }).map((_, index) => {
-      const size = Math.random() * 5 + 2;
-      const x = Math.random() * 100;
-      const y = Math.random() * 100;
-      const delay = Math.random() * 1;
-      const duration = Math.random() * 3 + 1;
+      const size = Math.random() * 5 + 2
+      const x = Math.random() * 100
+      const y = Math.random() * 100
+      const delay = Math.random() * 1
+      const duration = Math.random() * 3 + 1
       return (
         <motion.div
           key={index}
@@ -140,47 +134,41 @@ export default function DashboardPanel() {
             repeatDelay: Math.random() * 3,
           }}
         />
-      );
-    });
-  };
+      )
+    })
+  }
 
   // Handle tab click for mobile dropdown
   const handleTabClick = (id) => {
     if (isMobile && id === activeModule && !isDropdownOpen) {
-      setIsDropdownOpen(!isDropdownOpen);
-      return;
+      setIsDropdownOpen(!isDropdownOpen)
+      return
     }
-    setActiveModule(id);
+    setActiveModule(id)
     // Close dropdown after selection on mobile
     if (isMobile) {
-      setIsDropdownOpen(false);
+      setIsDropdownOpen(false)
     }
-  };
+  }
 
   // Filter out the active tab from dropdown options
-  const dropdownOptions = Object.entries(dashboardModules).filter(
-    ([id]) => id !== activeModule
-  );
+  const dropdownOptions = Object.entries(dashboardModules).filter(([id]) => id !== activeModule)
 
   // Render the appropriate dashboard component based on active module
   const renderDashboardComponent = () => {
     switch (activeModule) {
       case "Historia":
-        return (
-          <HistoriaDashboard moduleInfo={dashboardModules[activeModule]} />
-        );
+        return <HistoriaDashboard moduleInfo={dashboardModules[activeModule]} />
       case "Presidentes":
-        return (
-          <PresidentesDashboard moduleInfo={dashboardModules[activeModule]} />
-        );
+        return <PresidentesDashboard moduleInfo={dashboardModules[activeModule]} />
       case "JuntaDirectiva":
-        return <JuntaDDashboard moduleInfo={dashboardModules[activeModule]} />;
+        return <JuntaDDashboard moduleInfo={dashboardModules[activeModule]} />
       case "LeyesReglamentos":
-        return <LeyesRDashboard moduleInfo={dashboardModules[activeModule]} />;
+        return <LeyesRDashboard moduleInfo={dashboardModules[activeModule]} />
       default:
-        return <HistoriaDashboard moduleInfo={dashboardModules["Historia"]} />;
+        return <HistoriaDashboard moduleInfo={dashboardModules["Historia"]} />
     }
-  };
+  }
 
   return (
     <div className="w-full px-4 md:px-20 py-10 md:py-12">
@@ -195,12 +183,7 @@ export default function DashboardPanel() {
           className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{
-            duration: 0.8,
-            delay: 0.2,
-            type: "spring",
-            stiffness: 100,
-          }}
+          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
         >
           Sección Sobre Nosotros
         </motion.h1>
@@ -210,9 +193,8 @@ export default function DashboardPanel() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
         >
-          Gestión de contenidos de la sección{" "}
-          <span className="font-bold text-[#C40180]">Sobre Nosotros</span> del
-          sitio web del Colegio Odontológico de Venezuela
+          Gestión de contenidos de la sección <span className="font-bold text-[#C40180]">Sobre Nosotros</span> del sitio web
+          del Colegio Odontológico de Venezuela
         </motion.p>
       </motion.div>
 
@@ -229,9 +211,7 @@ export default function DashboardPanel() {
               <motion.div
                 key={id}
                 className={`relative mt-2 overflow-hidden rounded-xl shadow-lg cursor-pointer transition-all duration-300 group ${
-                  activeModule === id
-                    ? "ring-2 transform scale-[1.02] z-10"
-                    : "hover:shadow-xl bg-white"
+                  activeModule === id ? "ring-2 transform scale-[1.02] z-10" : "hover:shadow-xl bg-white"
                 }`}
                 style={{
                   ringColor: activeModule === id ? info.color : "transparent",
@@ -263,10 +243,7 @@ export default function DashboardPanel() {
                   initial={{ scale: 1 }}
                   animate={{
                     scale: hoveredCard === id ? 1.15 : 1.05,
-                    filter:
-                      hoveredCard === id
-                        ? "brightness(0.7)"
-                        : "brightness(0.6)",
+                    filter: hoveredCard === id ? "brightness(0.7)" : "brightness(0.6)",
                   }}
                   transition={{ duration: 0.7 }}
                   style={{
@@ -277,11 +254,7 @@ export default function DashboardPanel() {
                 <div
                   className="absolute inset-0 z-5 opacity-90 transition-opacity duration-300"
                   style={{
-                    background: `linear-gradient(to right, ${info.color}DD, ${
-                      activeModule === id
-                        ? info.color + "88"
-                        : "rgba(0,0,0,0.6)"
-                    })`,
+                    background: `linear-gradient(to right, ${info.color}DD, ${activeModule === id ? info.color + "88" : "rgba(0,0,0,0.6)"})`,
                   }}
                 />
                 {/* Card Content */}
@@ -361,22 +334,16 @@ export default function DashboardPanel() {
             <div
               className="absolute inset-0 z-5 opacity-90 transition-opacity duration-300"
               style={{
-                background: `linear-gradient(to right, ${moduleInfo.color}DD, ${
-                  moduleInfo.color + "88"
-                })`,
+                background: `linear-gradient(to right, ${moduleInfo.color}DD, ${moduleInfo.color + "88"})`,
               }}
             />
             {/* Card Content */}
             <div className="absolute inset-0 px-4 flex items-center justify-between z-10">
               <div className="flex items-center justify-center w-full gap-3">
                 {/* Icon */}
-                <div className="flex-shrink-0">
-                  {renderIcon(moduleInfo.icon, 28)}
-                </div>
+                <div className="flex-shrink-0">{renderIcon(moduleInfo.icon, 28)}</div>
                 {/* Title */}
-                <h3 className="text-lg font-bold text-white drop-shadow-md text-center">
-                  {moduleInfo.title}
-                </h3>
+                <h3 className="text-lg font-bold text-white drop-shadow-md text-center">{moduleInfo.title}</h3>
               </div>
             </div>
             {/* Active Indicator - Moved to bottom */}
@@ -425,13 +392,9 @@ export default function DashboardPanel() {
                     <div className="absolute inset-0 px-4 flex items-center justify-center z-10">
                       <div className="flex items-center gap-3">
                         {/* Icon */}
-                        <div className="flex-shrink-0">
-                          {renderIcon(info.icon, 22)}
-                        </div>
+                        <div className="flex-shrink-0">{renderIcon(info.icon, 22)}</div>
                         {/* Title */}
-                        <h3 className="text-lg font-bold text-white drop-shadow-md">
-                          {info.title}
-                        </h3>
+                        <h3 className="text-lg font-bold text-white drop-shadow-md">{info.title}</h3>
                       </div>
                     </div>
                   </motion.div>
@@ -455,9 +418,7 @@ export default function DashboardPanel() {
           >
             {/* Confetti Effect */}
             {showConfetti && (
-              <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
-                {generateStars()}
-              </div>
+              <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">{generateStars()}</div>
             )}
 
             {/* Colored Top Border */}
@@ -470,12 +431,10 @@ export default function DashboardPanel() {
             />
 
             {/* Content Container */}
-            <div className="p-4 md:p-8 h-full overflow-y-auto">
-              {renderDashboardComponent()}
-            </div>
+            <div className="p-4 md:p-8 h-full overflow-y-auto">{renderDashboardComponent()}</div>
           </motion.div>
         </AnimatePresence>
       </div>
     </div>
-  );
+  )
 }

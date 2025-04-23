@@ -2,20 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Bar,
-  BarChart,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+    Bar,
+    BarChart,
+    Cell,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from "recharts";
 import { universidadData } from "../../Models/Home/GraficosData";
 import {
-  CustomTooltip,
-  FilterDropdown,
-  generateColors,
-  sortData,
+    CustomTooltip,
+    FilterDropdown,
+    generateColors,
+    sortData,
 } from "../../PanelControl/Components/Graficos";
 
 const GraficoUniv = () => {

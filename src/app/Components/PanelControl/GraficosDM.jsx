@@ -2,21 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Sector,
-  Tooltip,
+    Cell,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Sector,
+    Tooltip,
 } from "recharts";
 import {
-  chartSizes,
-  dataGroups,
-  groupTitles,
+    chartSizes,
+    dataGroups,
+    groupTitles,
 } from "../../Models/Home/GraficosData";
 import {
-  FilterDropdown,
-  generateColors,
+    FilterDropdown,
+    generateColors,
 } from "../../PanelControl/Components/Graficos";
 
 const GraficosDonutMultiple = () => {

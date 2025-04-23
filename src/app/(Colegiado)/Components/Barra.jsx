@@ -1,13 +1,12 @@
 "use client";
 
-import { Menu } from "lucide-react";
 import {
-  Notifications,
-  AccountCircle,
   Info,
-  Warning,
+  Notifications,
+  Warning
 } from "@mui/icons-material";
-import PerfilDropdown from "./PerfilDropdown";
+import { Menu } from "lucide-react";
+import PerfilDropdown from "../../Components/PerfilDropdown";
 
 export default function Barra({
   onMenuClick,

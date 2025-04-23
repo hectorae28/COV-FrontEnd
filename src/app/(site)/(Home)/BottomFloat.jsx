@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const WhatsApp = () => {
+const BottomFloat = () => {
   const [showWhatsappText, setShowWhatsappText] = useState(false);
   const [showInstagramText, setShowInstagramText] = useState(false);
   const [whatsappLink, setWhatsappLink] = useState("");
@@ -168,4 +168,4 @@ const WhatsApp = () => {
   );
 };
 
-export default WhatsApp;
+export default BottomFloat;
