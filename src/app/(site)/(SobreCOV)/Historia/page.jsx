@@ -1,19 +1,14 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight } from "lucide-react";
-import { getGradientColor } from "../../../Components/SobreCOV/LineaTHist";
-import { ReflexionSection } from "../../../Components/SobreCOV/ReflexionSection";
 import { fetchDataLanding, fetchHistoria } from "@/api/endpoints/landingPage";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Clock,
   Award,
-  BookOpen,
-  Users,
-  GlobeIcon,
-  MedalIcon,
+  BookOpen, ChevronRight, Clock, GlobeIcon,
+  MedalIcon, Users
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getGradientColor } from "../../../Components/SobreCOV/LineaTHist";
 
 const iconMap = {
   Clock,
