@@ -276,7 +276,7 @@ export default function AppBar() {
             {/* Botón Colegiados - Desktop */}
             <div className="hidden lg:flex items-center">
               <div
-                onClick={() => navigateTo("/Colegiado")}
+                onClick={() => navigateTo("/Login")}
                 className={`bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[12px] lg:text-[14px] xl:text-[16px] 2xl:text-[18px] py-1.5 lg:py-2 px-3 lg:px-4 xl:px-6 2xl:px-8 rounded-full cursor-pointer transition-all duration-200 whitespace-nowrap ${
                   pathname === "/colegiados" ? "ring-2 ring-yellow-300" : ""
                 }`}

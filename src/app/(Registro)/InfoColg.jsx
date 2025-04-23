@@ -11,12 +11,17 @@ export default function InfoColegiado({ formData, onInputChange }) {
   };
 
   const professionalFields = [
-    'Medicina', 'Ingeniería', 'Derecho', 'Arquitectura', 
-    'Psicología', 'Contaduría', 'Otra'
+    "Medicina",
+    "Ingeniería",
+    "Derecho",
+    "Arquitectura",
+    "Psicología",
+    "Contaduría",
+    "Otra",
   ];
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -24,10 +29,10 @@ export default function InfoColegiado({ formData, onInputChange }) {
     >
       {/* Graduate Institute */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+        <label className="mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Instituto donde se Graduó
         </label>
-        <input 
+        <input
           type="text"
           name="graduateInstitute"
           value={formData.graduateInstitute}
@@ -40,10 +45,10 @@ export default function InfoColegiado({ formData, onInputChange }) {
 
       {/* University */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+        <label className="mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Universidad que Expidió el Título
         </label>
-        <input 
+        <input
           type="text"
           name="universityTitle"
           value={formData.universityTitle}
@@ -60,7 +65,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Número de Registro Principal
           </label>
-          <input 
+          <input
             type="text"
             name="mainRegistrationNumber"
             value={formData.mainRegistrationNumber}
@@ -75,7 +80,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
             Fecha de Registro Principal
           </label>
           <div className="relative">
-            <input 
+            <input
               type="date"
               name="mainRegistrationDate"
               value={formData.mainRegistrationDate}
@@ -94,7 +99,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Número de Registro M.P.P.S
           </label>
-          <input 
+          <input
             type="text"
             name="mppsRegistrationNumber"
             value={formData.mppsRegistrationNumber}
@@ -109,7 +114,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
             Fecha de Registro M.P.P.S
           </label>
           <div className="relative">
-            <input 
+            <input
               type="date"
               name="mppsRegistrationDate"
               value={formData.mppsRegistrationDate}
@@ -128,7 +133,7 @@ export default function InfoColegiado({ formData, onInputChange }) {
           Fecha de Emisión del Título
         </label>
         <div className="relative">
-          <input 
+          <input
             type="date"
             name="titleIssuanceDate"
             value={formData.titleIssuanceDate}
@@ -140,19 +145,23 @@ export default function InfoColegiado({ formData, onInputChange }) {
             text-gray-700"
           />
         </div>
-        
+
         {/* Warning message that appears when date field is focused */}
         {showTitleDateWarning && (
           <div className="absolute z-10 mt-2 w-full sm:w-80 md:w-96 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r shadow-md">
             <div className="flex items-center">
-              <AlertTriangle className="text-yellow-500 mr-2 flex-shrink-0" size={20} />
+              <AlertTriangle
+                className="text-yellow-500 mr-2 flex-shrink-0"
+                size={20}
+              />
               <h3 className="text-sm font-semibold text-yellow-800">
                 ¡Atención Colegiado!
               </h3>
             </div>
             <p className="mt-1 text-yellow-700 text-xs">
-              La fecha de emisión del título es importante y aparecerá en documentos oficiales.
-              Verifique que la información proporcionada sea precisa.
+              La fecha de emisión del título es importante y aparecerá en
+              documentos oficiales. Verifique que la información proporcionada
+              sea precisa.
             </p>
           </div>
         )}

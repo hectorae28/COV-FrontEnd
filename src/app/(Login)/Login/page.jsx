@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import PanelAdmin from "../PanelAdmin";
 import Colegiados from "../Colegiados";
@@ -12,6 +14,19 @@ export default function LoginScreen() {
   const [showLogin, setShowLogin] = useState(false);
   const [direction, setDirection] = useState("right");
   const [isClosing, setIsClosing] = useState(false);
+
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const authRouter = {
+    Colegiados: "/Colegiado",
+    Personal_Administrativo: "/PanelControl",
+  };
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push(authRouter[session.user.role]);
+    }
+  }, [status, router]);
 
   const handleSignIn = (slideDirection) => {
     setDirection(slideDirection);

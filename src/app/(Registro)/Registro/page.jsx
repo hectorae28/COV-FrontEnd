@@ -118,6 +118,26 @@ export default function RegistrationForm() {
     // Solo procesar si hay una sumisión intencional
     if (isIntentionalSubmit) {
       console.log("Formulario enviado:", formData);
+      // const Form = new FormData();
+      // Form.append(
+      //   "persona",
+      //   JSON.stringify({
+      //     direccion: {
+      //       referencia: formData.address,
+      //       estado: formData.state,
+      //     },
+      //     nombre: formData.firstName,
+      //     primer_apellido: formData.lastName,
+      //     genero: formData.gender,
+      //     tipo_identificacion: formData.nationality,
+      //     identificacion: formData.identityCard,
+      //     correo: formData.email,
+      //     telefono_movil: formData.phoneNumber,
+      //     telefono_de_habitacion: formData.homePhone,
+      //     fecha_de_nacimiento: formData.birthDate,
+      //     estado_civil: null, //por ver
+      //   })
+      // );
       setIsSubmitting(true);
       // Simular un retraso para procesar el formulario
       await new Promise((resolve) => setTimeout(resolve, 1500));

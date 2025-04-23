@@ -18,13 +18,23 @@ export async function middleware(request) {
     }
 
     // “Colegiados” solo pueden entrar a /Colegiado
-    if (url.pathname.startsWith('/Colegiados') && token.role !== 'Colegiados') {
+    if (url.pathname.startsWith('/Colegiado') && token.role !== 'Colegiados') {
         url.pathname = '/unauthorized';
+        return NextResponse.redirect(url);
+    }
+    if (url.pathname.startsWith('/Login') && (token.role === 'Colegiados' || token.role === 'Personal_Administrativo')) {
+        if (token.role === 'Colegiados') {
+            url.pathname = '/Colegiado';
+        } else if (token.role === 'Personal_Administrativo') {
+            url.pathname = '/PanelControl';
+        } else {
+            url.pathname = '/Login';
+        }
         return NextResponse.redirect(url);
     }
 
     // “Personal_Administrativo” solo pueden entrar a /PanelControl
-    if (url.pathname.startsWith('/PanelControl') && token.role !== 'Personal_Administrativo') {
+    if (url.pathname.startsWith('/PanelContro') && token.role !== 'Personal_Administrativo') {
         url.pathname = '/unauthorized';
         return NextResponse.redirect(url);
     }
