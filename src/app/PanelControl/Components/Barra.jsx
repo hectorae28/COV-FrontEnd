@@ -1,7 +1,7 @@
 "use client";
 
 import { fetchMe } from "@/api/endpoints/colegiado";
-import ProfileDropdown from "@/app/Colegiado/Components/PerfilDropdown";
+import ProfileDropdown from "@/app/(Colegiado)/Components/PerfilDropdown";
 import { Notifications } from "@mui/icons-material";
 import { Menu } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -95,4 +95,3 @@ function NotificacionesBadge() {
 
 // Importar el hook de notificaciones
 import { useNotificaciones } from "../../Models/Comunicaciones/Notificaciones/NotificacionesData";
-

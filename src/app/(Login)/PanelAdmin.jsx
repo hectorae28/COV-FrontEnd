@@ -3,14 +3,34 @@
 import { motion } from "framer-motion";
 import { Lock, Mail, Check } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import LoginForm from "../Components/Home/LoginForm";
+import { signIn } from "next-auth/react";
 
 export default function PanelAdmin({ onClose, isClosing }) {
   const [rememberMe, setRememberMe] = useState(false);
   const [currentView, setCurrentView] = useState("login");
   const router = useRouter();
+  const formRef = useRef(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const Form = new FormData(formRef.current);
+    console.log({
+      Form,
+    });
+    const result = await signIn("credentials", {
+      username: Form.get("email").split("@")[0],
+      password: Form.get("password"),
+      redirect: false,
+    });
+    if (result?.error) {
+      console.error("Error al iniciar sesión:", result.error);
+    } else {
+      console.log("Inicio de sesión exitoso:", result);
+      router.push("/PanelControl");
+    }
+  };
 
   return (
     <motion.div
@@ -87,7 +107,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
             Acceso exclusivo para personal administrativo
           </p>
 
-          <form>
+          <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
             <div className="mb-6">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -95,6 +115,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
                 </div>
                 <input
                   type="text"
+                  name="email"
                   className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
                   placeholder="Usuario o correo electrónico"
                 />
@@ -108,6 +129,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
                 </div>
                 <input
                   type="password"
+                  name="password"
                   className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
                   placeholder="Contraseña"
                 />
@@ -115,14 +137,24 @@ export default function PanelAdmin({ onClose, isClosing }) {
             </div>
 
             <div className="flex items-center mb-8 ml-8">
-              <div className="relative w-5 h-5 mr-3 cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
+              <div
+                className="relative w-5 h-5 mr-3 cursor-pointer"
+                onClick={() => setRememberMe(!rememberMe)}
+              >
                 <div
-                  className={`absolute inset-0 rounded border ${rememberMe ? "bg-[#41023B] border-[#41023B]" : "border-gray-800"}`}
+                  className={`absolute inset-0 rounded border ${
+                    rememberMe
+                      ? "bg-[#41023B] border-[#41023B]"
+                      : "border-gray-800"
+                  }`}
                 >
                   {rememberMe && <Check className="h-4 w-4 text-white" />}
                 </div>
               </div>
-              <label className="text-gray-700 cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
+              <label
+                className="text-gray-700 cursor-pointer"
+                onClick={() => setRememberMe(!rememberMe)}
+              >
                 Recordarme
               </label>
             </div>

@@ -1,4 +1,4 @@
-import ClientLayout from "../../Components/ClientLayout";
+import ClientLayout from "@/Components/ClientLayout";
 
 export const metadata = {
   title: "PANEL DE CONTROL - COV",

@@ -13,11 +13,11 @@ export const metadata = {
 export default async function RootLayout({ children }) {
   const footerData = await fetchFooter();
   return (
-    <html lang="es-ES">
+    <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
-      <body className={`antialiased`}>
+      <div className={`antialiased`}>
         <header>
           <AppBar />
         </header>
@@ -27,7 +27,7 @@ export default async function RootLayout({ children }) {
         <footer className="bg-[#F9F9F9]">
           <Footer props={footerData.data} />
         </footer>
-      </body>
-    </html>
+      </div>
+    </>
   );
 }

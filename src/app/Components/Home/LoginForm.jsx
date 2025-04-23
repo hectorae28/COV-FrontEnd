@@ -2,18 +2,12 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { Lock, Mail, Check } from "lucide-react";
 import { useState, useRef } from "react";
-import { fetchMe } from "@/api/endpoints/colegiado";
 
-export default function LoginForm({
-  onForgotPassword,
-  onRegister,
-  callbackUrl,
-}) {
+export default function LoginForm({ onForgotPassword, onRegister }) {
   const [rememberMe, setRememberMe] = useState(false);
-  const { data: session } = useSession();
   const router = useRouter();
   const formRef = useRef(null);
 
@@ -29,7 +23,7 @@ export default function LoginForm({
       console.error("Error al iniciar sesión:", result.error);
     } else {
       console.log("Inicio de sesión exitoso:", result);
-      router.push(callbackUrl);
+      router.push("/Colegiado");
     }
   };
 

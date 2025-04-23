@@ -1,5 +1,5 @@
 import Head from "next/head";
-import "../globals.css";
+import "../../globals.css";
 import Providers from "@/Components/Provider";
 import AutoLog from "@/Components/autoLogOut";
 
