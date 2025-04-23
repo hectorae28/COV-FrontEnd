@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Phone,
   User,
+  FilePlus,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -21,6 +22,7 @@ import InfoColegiado from "./InfoColg";
 import InfoContacto from "./InfoCont";
 import InfoLaboral from "./InfoLab";
 import InfoPersonal from "./InfoPers";
+import DocsRequirements from "./DocsRequirements";
 
 const steps = [
   {
@@ -51,6 +53,13 @@ const steps = [
     icon: Building,
     component: InfoLaboral,
     requiredFields: ["selectedOption"],
+  },
+  {
+    id: 5,
+    title: "Documentos Requeridos",
+    description: "Documentos necesarios",
+    icon: FilePlus,
+    component: DocsRequirements,
   },
 ];
 
