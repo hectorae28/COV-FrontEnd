@@ -1,21 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { 
-  PlusCircle, 
-  Search, 
-  ChevronRight, 
-  CheckCircle, 
-  XCircle, 
+import {
+  CheckCircle,
+  ChevronRight,
   Clock,
-  Filter,
   Download,
-  Eye
+  Filter,
+  PlusCircle,
+  Search,
+  XCircle
 } from "lucide-react"
-import Link from "next/link"
-import CrearSolicitudModal from "../../Components/Solicitudes/Solicitudes/CrearSolicitudModal"
-import DetalleSolicitud from "../../components/Solicitudes/Solicitudes/DetalleSolicitud"
+import { useEffect, useState } from "react"
+import CrearSolicitudModal from "../../../Components/Solicitudes/Solicitudes/CrearSolicitudModal"
+import DetalleSolicitud from "../../../Components/Solicitudes/Solicitudes/DetalleSolicitud"
 
 export default function ListaSolicitudes() {
   // Estados para manejar los datos

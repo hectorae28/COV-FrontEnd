@@ -1,21 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { 
-  Search, 
-  ChevronRight, 
-  Filter,
-  Download,
+import {
+  BarChart,
+  ChevronRight,
   Clock,
   CreditCard,
+  DollarSign,
+  Download,
+  Filter,
   PieChart,
-  BarChart,
   Printer,
-  DollarSign
+  Search
 } from "lucide-react"
-import DetallePago from "../../Components/Solicitudes/Pagos/DetallePago"
-import GenerarReporteModal from "../../Components/Solicitudes/Pagos/GenerarReporteModal"
+import { useEffect, useState } from "react"
+import DetallePago from "../../../Components/Solicitudes/Pagos/DetallePago"
+import GenerarReporteModal from "../../../Components/Solicitudes/Pagos/GenerarReporteModal"
 
 export default function ListaPagos() {
   // Estados para manejar los datos

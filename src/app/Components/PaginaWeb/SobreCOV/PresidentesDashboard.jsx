@@ -11,7 +11,7 @@ import {
   Trash2, 
   Upload
 } from "lucide-react"
-import LineaTPresi from "../../../Models/PaginaWeb/SobreCOV/PresidentesData"
+import LineaTPresi from "@/app/Models/PanelControl/PaginaWeb/SobreCOV/PresidentesData"
 
 // Definimos valores predeterminados para moduleInfo
 const defaultModuleInfo = {

@@ -17,7 +17,7 @@ import {
 import Image from "next/image";
 
 // Importamos los datos iniciales de noticias
-import initialNewsItems from "../../../Models/PaginaWeb/Inicio/NoticiasData";
+import initialNewsItems from "@/app/Models/PanelControl/PaginaWeb/Inicio/NoticiasData";;
 
 export default function NoticiasDashboard({ moduleInfo }) {
   const [newsItems, setNewsItems] = useState(initialNewsItems);

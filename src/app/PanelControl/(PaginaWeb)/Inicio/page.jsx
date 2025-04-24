@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence, useAnimation } from "framer-motion"
+import { AnimatePresence, motion, useAnimation } from "framer-motion"
+import { useEffect, useRef, useState } from "react"
 // Import icons from Lucide React
-import { GalleryVertical, LayoutGrid, Newspaper, Handshake } from "lucide-react"
+import { GalleryVertical, Handshake, LayoutGrid, Newspaper } from "lucide-react"
 
 // Import individual dashboard components
-import PresentacionDashboard from "../../Components/PaginaWeb/Inicio/PresentacionDashboard"
-import ServiciosDashboard from "../../Components/PaginaWeb/Inicio/ServiciosDashboard"
-import NoticiasDDashboard from "../../Components/PaginaWeb/Inicio/NoticiasDDashboard"
-import AliadosDashboard from "../../Components/PaginaWeb/Inicio/AliadosDashboard"
+import AliadosDashboard from "../../../Components/PaginaWeb/Inicio/AliadosDashboard"
+import NoticiasDDashboard from "../../../Components/PaginaWeb/Inicio/NoticiasDDashboard"
+import PresentacionDashboard from "../../../Components/PaginaWeb/Inicio/PresentacionDashboard"
+import ServiciosDashboard from "../../../Components/PaginaWeb/Inicio/ServiciosDashboard"
 
 // Dashboard modules data moved directly into the component
 const dashboardModules = {

@@ -6,7 +6,7 @@ import { es } from "date-fns/locale"
 import { Bell, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
-import { useNotificaciones } from "../../../Models/Comunicaciones/Notificaciones/NotificacionesData"
+import { useNotificaciones } from "@/app/Models/PanelControl/Comunicaciones/Notificaciones/NotificacionesData"
 
 export function NotificacionesModal({ isOpen, onClose, anchorRef }) {
   const router = useRouter()
@@ -97,20 +97,23 @@ export function NotificacionesModal({ isOpen, onClose, anchorRef }) {
   }
 
   // Navegar a la página de notificaciones y abrir una específica
-  const handleNotificacionClick = (notificacion) => {
-    if (!notificacion.leida) {
-      toggleLeidaNotificacion(notificacion.id);
-    }
-    marcarVistaEnModal(notificacion.id);
-    setNotificacionesVisibles((prev) => prev.filter((n) => n.id !== notificacion.id));
-    onClose();
-    router.push(`/Notificaciones?id=${notificacion.id}`);
+const handleNotificacionClick = (notificacion) => {
+  if (!notificacion.leida) {
+    toggleLeidaNotificacion(notificacion.id);
   }
+  marcarVistaEnModal(notificacion.id);
+  setNotificacionesVisibles((prev) => prev.filter((n) => n.id !== notificacion.id));
+  onClose();
+  
+  // Fix: Use absolute path starting with /
+  router.push(`/PanelControl/Notificaciones?id=${notificacion.id}`);
+}
 
-  const handleVerTodasClick = () => {
-    onClose()
-    router.push("/Notificaciones")
-  }
+const handleVerTodasClick = () => {
+  onClose()
+  // Fix: Use absolute path starting with /
+  router.push("/PanelControl/Notificaciones")
+}
 
   if (!isOpen) return null
 

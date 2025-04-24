@@ -1,12 +1,8 @@
 "use client"
 import { useState } from "react"
-import { useContactStore } from "./ContactenosData"
+import { useContactStore } from "@/app/Models/PanelControl/Contactenos/ContactenosData"
 import { Save, Plus, Trash2, RefreshCw } from "lucide-react"
 
-/**
- * ContactenosDashboard Component
- * Dashboard for editing contact information
- */
 export default function ContactenosDashboard() {
   const contactData = useContactStore((state) => state.contactData);
   const {

@@ -13,8 +13,8 @@ import {
   ChevronUp,
   Save,
 } from "lucide-react"
-import { LineaTSection } from "../../../Models/PaginaWeb/SobreCOV/LineaTHist"
-import { ReflexionSection } from "../../../Models/PaginaWeb/SobreCOV/ReflexionSection"
+import { LineaTSection } from "@/app/Models/PanelControl/PaginaWeb/SobreCOV/LineaTHist"
+import { ReflexionSection } from "@/app/Models/PanelControl/PaginaWeb/SobreCOV/ReflexionSection"
 
 // Iconos disponibles para seleccionar
 const availableIcons = {

@@ -1,6 +1,6 @@
 "use client";
-import AppBar from "@/app/(Colegiado)/Components/AppBar";
-import Barra from "@/app/(Colegiado)/Components/Barra";
+import AppBar from "@/app/(Colegiado)/AppBar";
+import Barra from "@/app/(Colegiado)/Barra";
 import { useState } from "react";
 
 export default function DashboardLayout({

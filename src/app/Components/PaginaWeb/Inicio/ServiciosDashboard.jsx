@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, ChevronRight, Edit, Plus, Save, Trash } from 'lucide-react';
 import React from "react";
-import useServiciosData, { getIconComponent } from '../../../Models/PaginaWeb/Inicio/ServiciosData';
+import useServiciosData, { getIconComponent } from "@/app/Models/PanelControl/PaginaWeb/Inicio/ServiciosData";;
 
 // Componente para la tarjeta de servicio en modo visualización
 const ServiceCard = ({ icon: Icon, number, title, description, index, onEdit, onDelete }) => (

@@ -1,228 +1,237 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, Search, Clock, CheckCircle, XCircle, AlertTriangle, Eye, Calendar } from "lucide-react"
+import { FileText, Download, CreditCard, CheckCircle, AlertCircle, Search, ChevronLeft } from "lucide-react"
 
-export default function TablaSolicitudes({ colegiadoId }) {
-  const [solicitudes, setSolicitudes] = useState([])
+export default function TablaPagos({ colegiadoId, onVolver }) {
+  const [pagos, setPagos] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
 
   // Simulación de carga de datos
   useEffect(() => {
-    const fetchSolicitudes = async () => {
+    const fetchPagos = async () => {
       try {
         // Simulamos la carga con un setTimeout
         await new Promise(resolve => setTimeout(resolve, 1000))
         
         // Datos de ejemplo
-        setSolicitudes([
+        setPagos([
           {
             id: "1",
-            tipo: "Constancia de inscripción",
-            fecha: "10/01/2024",
-            estado: "Completada",
-            referencia: "CONST-2024-001",
-            costo: 20.00,
-            descripcion: "Constancia de inscripción en el Colegio de Odontólogos",
-            fechaCompletada: "12/01/2024",
-            urgente: false
+            concepto: "Cuota anual 2024",
+            referencia: "REF-AN-2024",
+            fecha: "15/01/2024",
+            monto: 120.00,
+            estado: "Pagado",
+            metodoPago: "Tarjeta de crédito",
+            comprobante: true
           },
           {
             id: "2",
-            tipo: "Registro de especialidad",
-            fecha: "15/02/2024",
-            estado: "Completada",
-            referencia: "ESP-2024-005",
-            costo: 50.00,
-            descripcion: "Registro de especialidad en Ortodoncia",
-            fechaCompletada: "22/02/2024",
-            urgente: false
+            concepto: "Inscripción curso de ortodoncia",
+            referencia: "REF-CURSO-052",
+            fecha: "05/02/2024",
+            monto: 85.00,
+            estado: "Pagado",
+            metodoPago: "Transferencia bancaria",
+            comprobante: true
           },
           {
             id: "3",
-            tipo: "Renovación de carnet",
-            fecha: "25/02/2024",
-            estado: "Completada",
-            referencia: "CARNET-2024-078",
-            costo: 30.00,
-            descripcion: "Renovación de carnet COV",
-            fechaCompletada: "27/02/2024",
-            urgente: true
+            concepto: "Renovación de carnet",
+            referencia: "REF-CARNET-2024",
+            fecha: "27/02/2024",
+            monto: 30.00,
+            estado: "Pagado",
+            metodoPago: "Zelle",
+            comprobante: true
           },
           {
             id: "4",
-            tipo: "Constancia de solvencia",
-            fecha: "05/03/2024",
-            estado: "En proceso",
-            referencia: "SOLV-2024-045",
-            costo: 15.00,
-            descripcion: "Constancia de solvencia de pagos",
-            fechaCompletada: null,
-            urgente: false
+            concepto: "Constancia de solvencia",
+            referencia: "REF-CONST-2024",
+            fecha: "10/03/2024",
+            monto: 20.00,
+            estado: "Pagado",
+            metodoPago: "Transferencia bancaria",
+            comprobante: true
           },
           {
             id: "5",
-            tipo: "Cambio de jurisdicción",
-            fecha: "10/04/2024",
+            concepto: "Cuota extraordinaria 2024",
+            referencia: "REF-EXTRA-2024",
+            fecha: "01/04/2024",
+            monto: 50.00,
             estado: "Pendiente",
-            referencia: "CAMB-2024-012",
-            costo: 40.00,
-            descripcion: "Cambio de jurisdicción de Caracas a Maracaibo",
-            fechaCompletada: null,
-            urgente: false
+            metodoPago: "-",
+            comprobante: false
           }
         ])
         
         setIsLoading(false)
       } catch (error) {
-        console.error("Error al cargar las solicitudes:", error)
+        console.error("Error al cargar los pagos:", error)
         setIsLoading(false)
       }
     }
     
-    fetchSolicitudes()
+    fetchPagos()
   }, [colegiadoId])
 
-  // Filtrar solicitudes según el término de búsqueda
-  const solicitudesFiltradas = solicitudes.filter(solicitud => 
-    solicitud.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.referencia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.fecha.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.estado.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filtrar pagos según el término de búsqueda
+  const pagosFiltrados = pagos.filter(pago => 
+    pago.concepto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pago.referencia.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pago.fecha.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pago.estado.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const getStatusIcon = (estado) => {
-    switch (estado) {
-      case 'Completada':
-        return <CheckCircle size={18} className="text-green-500" />
-      case 'En proceso':
-        return <Clock size={18} className="text-blue-500" />
-      case 'Pendiente':
-        return <AlertTriangle size={18} className="text-yellow-500" />
-      case 'Rechazada':
-        return <XCircle size={18} className="text-red-500" />
-      default:
-        return null
-    }
-  }
+  // Calcular el total pagado y pendiente
+  const totalPagado = pagos
+    .filter(pago => pago.estado === "Pagado")
+    .reduce((suma, pago) => suma + pago.monto, 0)
+    
+  const totalPendiente = pagos
+    .filter(pago => pago.estado === "Pendiente")
+    .reduce((suma, pago) => suma + pago.monto, 0)
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center">
         <div>
-          <h3 className="text-lg font-medium text-gray-900">Solicitudes</h3>
-          <p className="text-sm text-gray-500 mt-1">Historial de solicitudes y trámites</p>
+          <h3 className="text-lg font-medium text-gray-900">Pagos y cuotas</h3>
+          <p className="text-sm text-gray-500 mt-1">Historial de pagos y estado de cuotas</p>
         </div>
         
-        <div className="mt-4 md:mt-0">
+        <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
           <div className="relative">
             <input
               type="text"
-              placeholder="Buscar solicitud..."
+              placeholder="Buscar pago..."
               className="pl-8 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
           </div>
+          
+          <button className="bg-[#C40180] text-white px-4 py-2 rounded-md hover:bg-[#590248] transition-colors flex items-center justify-center gap-2">
+            <CreditCard size={18} />
+            <span>Registrar pago</span>
+          </button>
         </div>
       </div>
       
-      {/* Tabla de solicitudes */}
+      {/* Resumen de pagos */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <p className="text-sm text-gray-500 mb-1">Total pagado</p>
+          <p className="text-xl font-semibold text-green-600">${totalPagado.toFixed(2)}</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <p className="text-sm text-gray-500 mb-1">Pendiente por pagar</p>
+          <p className="text-xl font-semibold text-red-600">${totalPendiente.toFixed(2)}</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <p className="text-sm text-gray-500 mb-1">Estado general</p>
+          <p className={`text-lg font-semibold flex items-center ${totalPendiente > 0 ? 'text-yellow-600' : 'text-green-600'}`}>
+            {totalPendiente > 0 ? (
+              <>
+                <AlertCircle size={18} className="mr-1" />
+                Pagos pendientes
+              </>
+            ) : (
+              <>
+                <CheckCircle size={18} className="mr-1" />
+                Al día
+              </>
+            )}
+          </p>
+        </div>
+      </div>
+      
+      {/* Tabla de pagos */}
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
         </div>
       ) : (
         <>
-          {solicitudesFiltradas.length === 0 ? (
+          {pagosFiltrados.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
               <div className="flex justify-center mb-4">
-                <FileText size={48} className="text-gray-300" />
+                <CreditCard size={48} className="text-gray-300" />
               </div>
-              <h3 className="text-lg font-medium text-gray-500">No se encontraron solicitudes</h3>
-              <p className="text-gray-400 mt-1">No hay registros de solicitudes que coincidan con tu búsqueda</p>
+              <h3 className="text-lg font-medium text-gray-500">No se encontraron pagos</h3>
+              <p className="text-gray-400 mt-1">No hay registros de pago que coincidan con tu búsqueda</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Tipo
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Concepto
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Referencia
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fecha solicitud
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Fecha
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Monto
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Estado
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Costo
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Acciones
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {solicitudesFiltradas.map((solicitud) => (
-                      <tr key={solicitud.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900">{solicitud.tipo}</div>
-                          <div className="text-xs text-gray-500">{solicitud.descripcion}</div>
-                          {solicitud.urgente && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mt-1">
-                              Urgente
-                            </span>
-                          )}
+                    {pagosFiltrados.map((pago) => (
+                      <tr key={pago.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <div className="font-medium text-gray-900">{pago.concepto}</div>
+                          <div className="text-sm text-gray-500">{pago.metodoPago}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {solicitud.referencia}
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                          {pago.referencia}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Calendar size={14} className="mr-1 text-gray-400" />
-                            {solicitud.fecha}
-                          </div>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                          {pago.fecha}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            {getStatusIcon(solicitud.estado)}
-                            <span className={`ml-1.5 text-sm font-medium ${
-                              solicitud.estado === 'Completada' 
-                                ? 'text-green-800' 
-                                : solicitud.estado === 'En proceso'
-                                  ? 'text-blue-800'
-                                  : solicitud.estado === 'Pendiente'
-                                    ? 'text-yellow-800'
-                                    : 'text-red-800'
-                            }`}>
-                              {solicitud.estado}
-                            </span>
-                          </div>
-                          {solicitud.fechaCompletada && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              Completada: {solicitud.fechaCompletada}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
                           <div className="text-sm font-medium text-gray-900">
-                            ${solicitud.costo.toFixed(2)}
+                            ${pago.monto.toFixed(2)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button className="text-[#C40180] hover:text-[#590248] flex items-center justify-end gap-1">
-                            <Eye size={16} />
-                            <span>Ver detalles</span>
-                          </button>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            pago.estado === 'Pagado' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {pago.estado}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                          <div className="flex justify-center space-x-2">
+                            {pago.comprobante && (
+                              <button className="text-blue-600 hover:text-blue-800">
+                                <Download size={18} />
+                              </button>
+                            )}
+                            <button className="text-purple-600 hover:text-purple-800">
+                              <FileText size={18} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -232,6 +241,19 @@ export default function TablaSolicitudes({ colegiadoId }) {
             </div>
           )}
         </>
+      )}
+      
+      {/* Botón para volver */}
+      {onVolver && (
+        <div className="mt-6">
+          <button
+            onClick={onVolver}
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2"
+          >
+            <ChevronLeft size={18} />
+            <span>Volver a la lista</span>
+          </button>
+        </div>
       )}
     </div>
   )

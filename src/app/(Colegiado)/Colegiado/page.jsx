@@ -1,15 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";
+import { fetchMe } from "@/api/endpoints/colegiado";
 import SolicitudesForm from "@/Components/Cards/MultipleSol/FormMult";
+import DashboardLayout from "@/Components/DashboardLayout";
 import SolvencyStatus from "@/Components/Solvencia/EstatusSolv";
 import SolvenciaPago from "@/Components/Solvencia/PagoSolv";
-import DashboardLayout from "@/Components/DashboardLayout";
-import Cards from "../Components/Cards";
-import Carnet from "../Components/Carnet";
-import Chat from "../Components/Chat";
-import TablaHistorial from "../Components/Tabla";
 import { useSession } from "next-auth/react";
-import { fetchMe } from "@/api/endpoints/colegiado";
+import { useEffect, useState } from "react";
+import Cards from "../Cards";
+import Carnet from "../Carnet";
+import Chat from "../Chat";
+import TablaHistorial from "../Tabla";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'

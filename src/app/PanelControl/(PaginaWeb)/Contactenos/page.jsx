@@ -1,7 +1,6 @@
 "use client"
-
+import ContactenosDashboard from "@/app/Components/PaginaWeb/Contactenos/ContactenosDashboard"
 import { motion } from "framer-motion"
-import ContactenosDashboard from "@/app/Models/PanelControl/Contactenos/ContactenosData"
 
 export default function ContactPage() {
   return (
