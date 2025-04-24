@@ -99,7 +99,7 @@ export const fetchEventosCursos = async () => {
         throw error;
     }
 }
-export const fetchData = async (url, params = " ") => {
+export const fetchDataSolicitudes = async (url, params = " ") => {
     try {
         const data = api.get(`solicitudes/${url}/${params}`)
         return data;

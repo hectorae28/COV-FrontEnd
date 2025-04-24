@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import EspecialistasTable from "@/Components/Especialistas/EspecialistasTable";
 import EspecialidadesTabs from "@/Components/Especialistas/EspecialidadesTabs";
-import { fetchData } from "@/api/endpoints/landingPage";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function EspecialistasPage() {
   const [activeTab, setActiveTab] = useState(0);
@@ -27,7 +27,7 @@ export default function EspecialistasPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const res = await fetchData("especializacion");
+        const res = await fetchDataSolicitudes("especializacion");
         setEspecialidadesInfo((prev) => ({ ...prev, ...res.data }));
         setIsLoading(false);
       } catch (error) {

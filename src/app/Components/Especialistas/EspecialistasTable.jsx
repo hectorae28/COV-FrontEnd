@@ -11,7 +11,7 @@ import {
   ChevronRight,
   Menu,
 } from "lucide-react";
-import { fetchData } from "@/api/endpoints/landingPage";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function EspecialistasTable({
   searchTerm,
@@ -38,7 +38,7 @@ export default function EspecialistasTable({
   useEffect(() => {
     const loadData = async () => {
       try {
-        const res = await fetchData(
+        const res = await fetchDataSolicitudes(
           "colegiado_especializacion",
           `?especializacion=${
             activeTab == 0 ? "" : activeTab

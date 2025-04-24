@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { PlusCircle, Search, ChevronRight, CheckCircle, XCircle, ChevronLeft } from "lucide-react"
-import RegistrarColegiadoModal from "../../components/solicitudes/listacolegiados/RegistrarColegiaModal"
-import DetalleColegiado from "../../components/solicitudes/listacolegiados/DetalleColegiado"
-import DetallePendiente from "../../Components/Solicitudes/ListaColegiados/DetallePendiente"
+import RegistrarColegiadoModal from "@/app/PanelControl/Components/Solicitudes/ListaColegiados/RegistrarColegiaModal"
+import DetalleColegiado from "@/app/PanelControl/Components/Solicitudes/ListaColegiados/DetalleColegiado"
+import DetallePendiente from "@/app/PanelControl/Components/Solicitudes/ListaColegiados/DetallePendiente"
 
 export default function ListaColegiados() {
   // Estados para manejar los datos

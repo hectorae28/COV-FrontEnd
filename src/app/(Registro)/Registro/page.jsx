@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // Import step components
 import DocsRequirements from "../DocsRequirements";
 import InfoColegiado from "../InfoColg";
@@ -24,6 +24,8 @@ import InfoLaboral from "../InfoLab";
 import InfoPersonal from "../InfoPers";
 import PagosColg from "../PagosColg";
 import Head from "next/head";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import { set } from "date-fns";
 
 const steps = [
   {
@@ -92,6 +94,25 @@ export default function RegistrationForm() {
   const [isComplete, setIsComplete] = useState(false);
   const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
+  const [tazaBcv, setTazaBcv] = useState(0);
+  const [costoInscripcion, setCostoInscripcion] = useState(0)
+  const [metodoPago, setMetodoPago] = useState([]);
+  
+  useEffect(()=>{
+    const LoadData = async () => {
+      try {
+        const taza = await fetchDataSolicitudes("tasa-bcv");
+        setTazaBcv(taza.data.rate);
+        const costo = await fetchDataSolicitudes("costo", "?tipo_costo=1&es_vigente=true");
+        setCostoInscripcion(Number(costo.data[0].monto_usd));
+        const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
+        setMetodoPago(Mpagos.data);
+      } catch (error) {
+        console.error("Error al obtener los datos:", error);
+      }
+    }
+    LoadData();
+  },[])
 
   const handleInputChange = (updates) => {
     setFormData((prevState) => ({
@@ -117,96 +138,103 @@ export default function RegistrationForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isIntentionalSubmit) {
-      const Form = new FormData();
 
-      Form.append(
-        "persona",
-        JSON.stringify({
-          direccion: {
-            referencia: formData.address,
-            estado: 1,
-          },
-          nombre: formData.firstName,
-          primer_apellido: formData.lastName,
-          genero: formData.gender,
-          tipo_identificacion: formData.nationality,
-          identificacion: formData.identityCard,
-          correo: formData.email,
-          telefono_movil: formData.phoneNumber,
-          telefono_de_habitacion: formData.homePhone,
-          fecha_de_nacimiento: formData.birthDate,
-          estado_civil: formData.maritalStatus || null,
-        })
-      );
-      Form.append("instituto_bachillerato", formData.graduateInstitute);
-      Form.append("universidad", formData.universityTitle);
-      Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
-      Form.append("num_registro_principal", formData.mainRegistrationNumber);
-      Form.append("fecha_registro_principal", formData.mainRegistrationDate);
-      Form.append("num_mpps", formData.mppsRegistrationNumber);
-      Form.append("fecha_mpps", formData.mppsRegistrationDate);
-      Form.append(
-        "instituciones",
-        JSON.stringify([
-          {
-            nombre: formData.institutionName,
-            cargo: formData.institutionName,
-            direccion: formData.institutionAddress,
-            telefono: formData.institutionPhone,
-          },
-          {
-            nombre: formData.clinicName,
-            cargo: formData.clinicName,
-            direccion: formData.clinicAddress,
-            telefono: formData.clinicPhone,
-          },
-        ])
-      );
-      Form.append("file_ci", formData.ci || null);
-      Form.append("file_rif", formData.rif || null);
-      Form.append("file_fondo_negro", formData.titulo || null);
-      Form.append("file_mpps", formData.mpps || null);
-
-      console.log("FormData:", Form);
-
-      try {
-        const response = await axios.post(
-          "http://localhost:8000/api/v1/usuario/register/",
-          Form,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        console.log("Datos enviados correctamente:", response.data);
-      } catch (error) {
-        console.error(
-          "Error al enviar los datos:",
-          error.response?.data || error
-        );
-      }
       // setIsSubmitting(true);
       // // Simular un retraso para procesar el formulario
       // await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // // En lugar de mostrar el confeti, mostrar la pantalla de pagos
       // setIsSubmitting(false);
-      // setShowPaymentScreen(true);
+      setShowPaymentScreen(true);
     }
   };
 
-  const handlePaymentComplete = () => {
+  const handlePaymentComplete = async ({paymentDate, paymentMethod, referenceNumber, paymentFile}) => {
     // Mostrar el confeti después de completar el pago
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-    });
+    const Form = new FormData();
 
-    // Finalizar el proceso y mostrar la pantalla de confirmación
-    setShowPaymentScreen(false);
-    setIsComplete(true);
+    Form.append(
+      "persona",
+      JSON.stringify({
+        direccion: {
+          referencia: formData.address,
+          estado: 1,
+        },
+        nombre: formData.firstName,
+        primer_apellido: formData.lastName,
+        genero: formData.gender,
+        tipo_identificacion: formData.nationality,
+        identificacion: formData.identityCard,
+        correo: formData.email,
+        telefono_movil: formData.phoneNumber,
+        telefono_de_habitacion: formData.homePhone,
+        fecha_de_nacimiento: formData.birthDate,
+        estado_civil: formData.maritalStatus || null,
+      })
+    );
+    Form.append("instituto_bachillerato", formData.graduateInstitute);
+    Form.append("universidad", formData.universityTitle);
+    Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
+    Form.append("num_registro_principal", formData.mainRegistrationNumber);
+    Form.append("fecha_registro_principal", formData.mainRegistrationDate);
+    Form.append("num_mpps", formData.mppsRegistrationNumber);
+    Form.append("fecha_mpps", formData.mppsRegistrationDate);
+    Form.append(
+      "instituciones",
+      JSON.stringify([
+        {
+          nombre: formData.institutionName,
+          cargo: formData.institutionName,
+          direccion: formData.institutionAddress,
+          telefono: formData.institutionPhone,
+        },
+        {
+          nombre: formData.clinicName,
+          cargo: formData.clinicName,
+          direccion: formData.clinicAddress,
+          telefono: formData.clinicPhone,
+        },
+      ])
+    );
+    Form.append("file_ci", formData.ci || null);
+    Form.append("file_rif", formData.rif || null);
+    Form.append("file_fondo_negro", formData.titulo || null);
+    Form.append("file_mpps", formData.mpps || null);
+    Form.append("comprobante", paymentFile);
+    Form.append("pago", JSON.stringify({
+      fecha_pago: paymentDate,
+      metodo_pago: paymentMethod,
+      referencia_pago: referenceNumber,
+    }));
+    setIsSubmitting(false)
+    console.log("FormData:", Form);
+
+    // try {
+    //   const response = await axios.post(
+    //     "http://localhost:8000/api/v1/usuario/register/",
+    //     Form,
+    //     {
+    //       headers: {
+    //         "Content-Type": "multipart/form-data",
+    //       },
+    //     }
+    //   );
+    //   console.log("Datos enviados correctamente:", response.data);
+    // } catch (error) {
+    //   console.error(
+    //     "Error al enviar los datos:",
+    //     error.response?.data || error
+    //   );
+    // }
+    // confetti({
+    //   particleCount: 100,
+    //   spread: 70,
+    //   origin: { y: 0.6 },
+    // });
+
+    // // Finalizar el proceso y mostrar la pantalla de confirmación
+    // setShowPaymentScreen(false);
+    // setIsComplete(true);
   };
 
   const CurrentStepComponent = steps.find(
@@ -428,7 +456,7 @@ export default function RegistrationForm() {
                         transition={{ duration: 0.5 }}
                         className="relative z-10 p-8"
                       >
-                        <PagosColg onPaymentComplete={handlePaymentComplete} />
+                        <PagosColg props={{handlePaymentComplete,tazaBcv,costoInscripcion,metodoPago}} />
                       </motion.div>
                     ) : (
                       <form onSubmit={handleSubmit} className="relative z-10">

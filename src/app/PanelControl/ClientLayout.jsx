@@ -5,20 +5,13 @@ import { useState } from "react";
 import "../globals.css";
 import AppBar from "./(Home)/AppBar";
 import Barra from "./(Home)/Barra";
-
-const montserrat = Montserrat({
-    variable: "--font-montserrat",
-    subsets: ["latin"],
-    weight: ["100", "200", "300", "400", "500", "600", "700"],
-});
-
 export default function ClientLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [selectedTitle, setSelectedTitle] = useState({ title: "Inicio", icon: null });
 
     return (
         <html lang="es-ES">
-            <body className={`${montserrat.variable} antialiased`}>
+            <body className={`antialiased`}>
                 <div className="bg-[#F9F9F9] h-screen flex-1 relative overflow-hidden">
                     {/* Overlay para cerrar sidebar en móvil */}
                     {sidebarOpen && (

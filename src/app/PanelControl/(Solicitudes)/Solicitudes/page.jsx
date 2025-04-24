@@ -14,8 +14,8 @@ import {
   Eye
 } from "lucide-react"
 import Link from "next/link"
-import CrearSolicitudModal from "../../Components/Solicitudes/Solicitudes/CrearSolicitudModal"
-import DetalleSolicitud from "../../components/Solicitudes/Solicitudes/DetalleSolicitud"
+import CrearSolicitudModal from "@/app/PanelControl/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
+import DetalleSolicitud from "@/app/PanelControl/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 
 export default function ListaSolicitudes() {
   // Estados para manejar los datos

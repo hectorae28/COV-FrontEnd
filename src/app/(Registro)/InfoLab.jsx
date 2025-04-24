@@ -46,6 +46,7 @@ export default function InfoLaboral({ formData, onInputChange }) {
             name="institutionPhone"
             value={formData.institutionPhone}
             onChange={handleChange}
+            maxLength="11"
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
             placeholder="Número de teléfono de la institución"
           />
@@ -82,6 +83,7 @@ export default function InfoLaboral({ formData, onInputChange }) {
             name="clinicPhone"
             value={formData.clinicPhone}
             onChange={handleChange}
+            maxLength="11"
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
             placeholder="Número de teléfono de la clínica"
           />

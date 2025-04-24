@@ -55,6 +55,7 @@ export default function InfoContacto({ formData, onInputChange }) {
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleChange}
+              maxLength="11"
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl 
               focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
               placeholder="0412-1234567"
@@ -75,6 +76,7 @@ export default function InfoContacto({ formData, onInputChange }) {
               name="homePhone"
               value={formData.homePhone}
               onChange={handleChange}
+              maxLength="11"
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl 
               focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
               placeholder="0212-1234567"
