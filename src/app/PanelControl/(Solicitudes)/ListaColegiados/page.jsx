@@ -1,32 +1,25 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  PlusCircle,
-  Search,
-  ChevronRight,
-  CheckCircle,
-  XCircle,
-  ChevronLeft,
-} from "lucide-react";
-import RegistrarColegiadoModal from "@/Components/Solicitudes/ListaColegiados/RegistrarColegiaModal";
-import DetalleColegiado from "@/Components/Solicitudes/ListaColegiados/DetalleColegiado";
-import DetallePendiente from "@/Components/Solicitudes/ListaColegiados/DetallePendiente";
+import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
+import { PlusCircle, Search, ChevronRight, CheckCircle, XCircle, ChevronLeft } from "lucide-react"
+import RegistrarColegiadoModal from "../../components/solicitudes/listacolegiados/RegistrarColegiaModal"
+import DetalleColegiado from "../../components/solicitudes/listacolegiados/DetalleColegiado"
+import DetallePendiente from "../../Components/Solicitudes/ListaColegiados/DetallePendiente"
 
 export default function ListaColegiados() {
   // Estados para manejar los datos
-  const [colegiados, setColegiados] = useState([]);
-  const [colegiadosPendientes, setColegiadosPendientes] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showModal, setShowModal] = useState(false);
-
+  const [colegiados, setColegiados] = useState([])
+  const [colegiadosPendientes, setColegiadosPendientes] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [showModal, setShowModal] = useState(false)
+  
   // Estados para la navegación interna
-  const [vistaActual, setVistaActual] = useState("lista"); // lista, detalleColegiado, detallePendiente
-  const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null);
-  const [tabActivo, setTabActivo] = useState("registrados"); // registrados o pendientes
-  const [filtroSolvencia, setFiltroSolvencia] = useState("todos"); // todos, solventes, insolventes
+  const [vistaActual, setVistaActual] = useState("lista") // lista, detalleColegiado, detallePendiente
+  const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null)
+  const [tabActivo, setTabActivo] = useState("registrados") // registrados o pendientes
+  const [filtroSolvencia, setFiltroSolvencia] = useState("todos") // todos, solventes, insolventes
 
   // Simulación de datos - en producción se reemplazaría por llamadas a API
   useEffect(() => {
@@ -43,7 +36,7 @@ export default function ListaColegiados() {
           fechaRegistro: "12/04/2023",
           estado: "Activo",
           solvente: true,
-          especialidad: "Ortodoncia",
+          especialidad: "Ortodoncia"
         },
         {
           id: "2",
@@ -55,11 +48,11 @@ export default function ListaColegiados() {
           fechaRegistro: "15/05/2023",
           estado: "Activo",
           solvente: false,
-          especialidad: "Endodoncia",
+          especialidad: "Endodoncia"
         },
         // Más colegiados aquí...
-      ]);
-
+      ])
+      
       setColegiadosPendientes([
         {
           id: "p1",
@@ -68,7 +61,7 @@ export default function ListaColegiados() {
           email: "carlos.ramirez@mail.com",
           telefono: "+58 416-7777777",
           fechaSolicitud: "10/04/2024",
-          documentosCompletos: true,
+          documentosCompletos: true
         },
         {
           id: "p2",
@@ -77,83 +70,79 @@ export default function ListaColegiados() {
           email: "ana.lopez@mail.com",
           telefono: "+58 424-8888888",
           fechaSolicitud: "11/04/2024",
-          documentosCompletos: false,
+          documentosCompletos: false
         },
         // Más colegiados pendientes aquí...
-      ]);
-
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+      ])
+      
+      setIsLoading(false)
+    }, 1000)
+  }, [])
 
   // Filtrar colegiados basado en búsqueda y filtros
-  const colegiadosFiltrados = colegiados.filter((colegiado) => {
-    const matchesSearch =
-      colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase());
+  const colegiadosFiltrados = colegiados.filter(colegiado => {
+    const matchesSearch = colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    if (filtroSolvencia === "todos") return matchesSearch
+    if (filtroSolvencia === "solventes") return matchesSearch && colegiado.solvente
+    if (filtroSolvencia === "insolventes") return matchesSearch && !colegiado.solvente
+    
+    return matchesSearch
+  })
 
-    if (filtroSolvencia === "todos") return matchesSearch;
-    if (filtroSolvencia === "solventes")
-      return matchesSearch && colegiado.solvente;
-    if (filtroSolvencia === "insolventes")
-      return matchesSearch && !colegiado.solvente;
-
-    return matchesSearch;
-  });
-
-  const colegiadosPendientesFiltrados = colegiadosPendientes.filter(
-    (colegiado) =>
-      colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const colegiadosPendientesFiltrados = colegiadosPendientes.filter(colegiado => 
+    colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   // Función para ver detalle de un colegiado
   const verDetalleColegiado = (id) => {
-    setColegiadoSeleccionadoId(id);
-    setVistaActual("detalleColegiado");
-  };
+    setColegiadoSeleccionadoId(id)
+    setVistaActual("detalleColegiado")
+  }
 
   // Función para ver detalle de un pendiente
   const verDetallePendiente = (id) => {
-    setColegiadoSeleccionadoId(id);
-    setVistaActual("detallePendiente");
-  };
+    setColegiadoSeleccionadoId(id)
+    setVistaActual("detallePendiente")
+  }
 
   // Función para volver a la lista
   const volverALista = () => {
-    setVistaActual("lista");
-    setColegiadoSeleccionadoId(null);
-  };
+    setVistaActual("lista")
+    setColegiadoSeleccionadoId(null)
+  }
 
   // Función para manejar el registro exitoso de un nuevo colegiado
   const handleRegistroExitoso = (nuevoColegiado) => {
     // Dependiendo de si es un colegiado completo o una solicitud pendiente
     if (nuevoColegiado.numeroRegistro) {
-      setColegiados((prev) => [...prev, nuevoColegiado]);
+      setColegiados(prev => [...prev, nuevoColegiado])
     } else {
-      setColegiadosPendientes((prev) => [...prev, nuevoColegiado]);
+      setColegiadosPendientes(prev => [...prev, nuevoColegiado])
     }
-    setShowModal(false);
-  };
+    setShowModal(false)
+  }
 
   // Renderizado condicional basado en la vista actual
   if (vistaActual === "detalleColegiado") {
     return (
-      <DetalleColegiado
-        params={{ id: colegiadoSeleccionadoId }}
+      <DetalleColegiado 
+        params={{ id: colegiadoSeleccionadoId }} 
         onVolver={volverALista}
       />
-    );
+    )
   }
 
   if (vistaActual === "detallePendiente") {
     return (
-      <DetallePendiente
+      <DetallePendiente 
         params={{ id: colegiadoSeleccionadoId }}
         onVolver={volverALista}
       />
-    );
+    )
   }
 
   // Vista principal de lista
@@ -170,12 +159,7 @@ export default function ListaColegiados() {
           className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{
-            duration: 0.8,
-            delay: 0.2,
-            type: "spring",
-            stiffness: 100,
-          }}
+          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
         >
           Lista de colegiados
         </motion.h1>
@@ -203,9 +187,9 @@ export default function ListaColegiados() {
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
           </div>
         </div>
-
+        
         <div className="flex gap-4 w-full md:w-auto">
-          <button
+          <button 
             onClick={() => setShowModal(true)}
             className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
           >
@@ -220,8 +204,8 @@ export default function ListaColegiados() {
         <nav className="flex gap-8">
           <button
             className={`py-4 px-1 font-medium text-sm sm:text-base border-b-2 ${
-              tabActivo === "registrados"
-                ? "border-[#C40180] text-[#C40180]"
+              tabActivo === "registrados" 
+                ? "border-[#C40180] text-[#C40180]" 
                 : "border-transparent text-gray-500 hover:text-gray-700"
             } transition-colors`}
             onClick={() => setTabActivo("registrados")}
@@ -230,8 +214,8 @@ export default function ListaColegiados() {
           </button>
           <button
             className={`py-4 px-1 font-medium text-sm sm:text-base border-b-2 ${
-              tabActivo === "pendientes"
-                ? "border-[#C40180] text-[#C40180]"
+              tabActivo === "pendientes" 
+                ? "border-[#C40180] text-[#C40180]" 
                 : "border-transparent text-gray-500 hover:text-gray-700"
             } transition-colors relative`}
             onClick={() => setTabActivo("pendientes")}
@@ -249,30 +233,30 @@ export default function ListaColegiados() {
       {/* Filtros adicionales para colegiados registrados */}
       {tabActivo === "registrados" && (
         <div className="mb-6 flex flex-wrap gap-3">
-          <button
+          <button 
             className={`px-4 py-2 rounded-full text-sm font-medium ${
-              filtroSolvencia === "todos"
-                ? "bg-purple-100 text-purple-800"
+              filtroSolvencia === "todos" 
+                ? "bg-purple-100 text-purple-800" 
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
             onClick={() => setFiltroSolvencia("todos")}
           >
             Todos
           </button>
-          <button
+          <button 
             className={`px-4 py-2 rounded-full text-sm font-medium ${
-              filtroSolvencia === "solventes"
-                ? "bg-green-100 text-green-800"
+              filtroSolvencia === "solventes" 
+                ? "bg-green-100 text-green-800" 
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
             onClick={() => setFiltroSolvencia("solventes")}
           >
             Solventes
           </button>
-          <button
+          <button 
             className={`px-4 py-2 rounded-full text-sm font-medium ${
-              filtroSolvencia === "insolventes"
-                ? "bg-red-100 text-red-800"
+              filtroSolvencia === "insolventes" 
+                ? "bg-red-100 text-red-800" 
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
             onClick={() => setFiltroSolvencia("insolventes")}
@@ -325,12 +309,8 @@ export default function ListaColegiados() {
                       {colegiadosFiltrados.map((colegiado) => (
                         <tr key={colegiado.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-medium text-gray-900">
-                              {colegiado.nombre}
-                            </div>
-                            <div className="text-sm text-gray-500 md:hidden">
-                              {colegiado.cedula}
-                            </div>
+                            <div className="font-medium text-gray-900">{colegiado.nombre}</div>
+                            <div className="text-sm text-gray-500 md:hidden">{colegiado.cedula}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                             {colegiado.cedula}
@@ -342,18 +322,16 @@ export default function ListaColegiados() {
                             {colegiado.especialidad}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                colegiado.solvente
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {colegiado.solvente ? "Solvente" : "Insolvente"}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              colegiado.solvente 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {colegiado.solvente ? 'Solvente' : 'Insolvente'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button
+                            <button 
                               onClick={() => verDetalleColegiado(colegiado.id)}
                               className="text-[#C40180] hover:text-[#590248] flex items-center justify-end gap-1"
                             >
@@ -400,12 +378,8 @@ export default function ListaColegiados() {
                       {colegiadosPendientesFiltrados.map((colegiado) => (
                         <tr key={colegiado.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-medium text-gray-900">
-                              {colegiado.nombre}
-                            </div>
-                            <div className="text-sm text-gray-500 md:hidden">
-                              {colegiado.cedula}
-                            </div>
+                            <div className="font-medium text-gray-900">{colegiado.nombre}</div>
+                            <div className="text-sm text-gray-500 md:hidden">{colegiado.cedula}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                             {colegiado.cedula}
@@ -414,26 +388,18 @@ export default function ListaColegiados() {
                             {colegiado.fechaSolicitud}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                colegiado.documentosCompletos
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}
-                            >
-                              {colegiado.documentosCompletos ? (
-                                <>
-                                  <CheckCircle size={12} /> Completos
-                                </>
-                              ) : (
-                                <>
-                                  <XCircle size={12} /> Incompletos
-                                </>
-                              )}
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              colegiado.documentosCompletos 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {colegiado.documentosCompletos 
+                                ? <><CheckCircle size={12} /> Completos</> 
+                                : <><XCircle size={12} /> Incompletos</>}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button
+                            <button 
                               onClick={() => verDetallePendiente(colegiado.id)}
                               className="text-[#C40180] hover:text-[#590248] flex items-center justify-end gap-1"
                             >
@@ -451,14 +417,14 @@ export default function ListaColegiados() {
           )}
         </>
       )}
-
+      
       {/* Modal para registrar nuevo colegiado */}
       {showModal && (
-        <RegistrarColegiadoModal
+        <RegistrarColegiadoModal 
           onClose={() => setShowModal(false)}
           onRegistroExitoso={handleRegistroExitoso}
         />
       )}
     </div>
-  );
+  )
 }

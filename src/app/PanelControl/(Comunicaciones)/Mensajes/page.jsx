@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { Plus, Search, X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { MessageList } from "../../../Components/Comunicaciones/Mensajes/MensagesLista";
-import { MessageDetail } from "../../../Components/Comunicaciones/Mensajes/MensajesDetalles";
-import { MessageTabs } from "../../../Components/Comunicaciones/Mensajes/MensajesTabs";
-import { ComposeModal } from "../../../Components/Comunicaciones/Mensajes/ModalCompose";
-import { useMessages } from "../../../Models/Comunicaciones/Mensajes/MensajesData";
+import { Plus, Search, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { MessageList } from "../../Components/Comunicaciones/Mensajes/MensagesLista"
+import { MessageDetail } from "../../Components/Comunicaciones/Mensajes/MensajesDetalles"
+import { MessageTabs } from "../../Components/Comunicaciones/Mensajes/MensajesTabs"
+import { ComposeModal } from "../../Components/Comunicaciones/Mensajes/ModalCompose"
+import { useMessages } from "../../Models/Comunicaciones/Mensajes/MensajesData"
 
 export default function MessagingPage() {
-  const [activeTab, setActiveTab] = useState("recibidos");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showComposeModal, setShowComposeModal] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [activeTab, setActiveTab] = useState("recibidos")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showComposeModal, setShowComposeModal] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   const {
     selectedMessage,
@@ -27,38 +27,34 @@ export default function MessagingPage() {
     handleSendReply,
     handleSendNewMessage,
     markMessageAsRead,
-  } = useMessages(activeTab, searchQuery);
+  } = useMessages(activeTab, searchQuery)
 
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkScreenSize()
+    window.addEventListener("resize", checkScreenSize)
     return () => {
-      window.removeEventListener("resize", checkScreenSize);
-    };
-  }, []);
+      window.removeEventListener("resize", checkScreenSize)
+    }
+  }, [])
 
   const handleBackToList = () => {
-    setSelectedMessage(null);
-  };
+    setSelectedMessage(null)
+  }
 
   useEffect(() => {
     if (selectedMessage && !selectedMessage.leido) {
-      markMessageAsRead(selectedMessage.id);
+      markMessageAsRead(selectedMessage.id)
     }
-  }, [selectedMessage]);
+  }, [selectedMessage])
 
   return (
     <div className="flex flex-col h-screen overflow-hidden pt-20">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-3 bg-white border-b shadow-sm z-20 flex-shrink-0">
         {/* Navegación de pestañas con opciones de visibilidad responsive */}
-        <div
-          className={`${
-            selectedMessage && isMobile ? "hidden" : "block"
-          } w-full`}
-        >
+        <div className={`${selectedMessage && isMobile ? "hidden" : "block"} w-full`}>
           <MessageTabs
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -95,11 +91,7 @@ export default function MessagingPage() {
         )}
 
         {/* Botón de nuevo mensaje en desktop */}
-        <div
-          className={`${
-            selectedMessage && isMobile ? "hidden" : "flex"
-          } md:w-auto mt-3 md:mt-0 md:ml-3`}
-        >
+        <div className={`${selectedMessage && isMobile ? "hidden" : "flex"} md:w-auto mt-3 md:mt-0 md:ml-3`}>
           <button
             onClick={() => setShowComposeModal(true)}
             className="items-center px-4 py-2 text-white rounded-md bg-gradient-to-r from-[#D7008A] to-[#41023B] hover:opacity-90 md:flex hidden"
@@ -148,11 +140,8 @@ export default function MessagingPage() {
       </div>
       {/* Modal de composición de mensaje */}
       {showComposeModal && (
-        <ComposeModal
-          onClose={() => setShowComposeModal(false)}
-          onSendMessage={handleSendNewMessage}
-        />
+        <ComposeModal onClose={() => setShowComposeModal(false)} onSendMessage={handleSendNewMessage} />
       )}
     </div>
-  );
+  )
 }

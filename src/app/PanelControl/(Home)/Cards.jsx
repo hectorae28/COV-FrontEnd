@@ -1,22 +1,16 @@
-import { AnimatePresence, motion, useAnimation } from "framer-motion";
-import React, { useEffect, useState } from "react";
-import cards from "../../Models/Home/CardsData";
+import { AnimatePresence, motion, useAnimation } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import cards from '@/app/Models/PanelControl/Home/CardsData';
 
-const Card = ({
-  title,
-  subtitle,
-  description,
-  icon,
-  accentColor = "indigo",
-}) => {
+const Card = ({ title, subtitle, description, icon, accentColor = 'indigo' }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const colorMap = {
-    indigo: "from-indigo-500 to-purple-500",
-    blue: "from-blue-500 to-cyan-400",
-    green: "from-green-500 to-emerald-400",
-    red: "from-red-500 to-rose-400",
-    amber: "from-amber-500 to-yellow-400",
+    indigo: 'from-indigo-500 to-purple-500',
+    blue: 'from-blue-500 to-cyan-400',
+    green: 'from-green-500 to-emerald-400',
+    red: 'from-red-500 to-rose-400',
+    amber: 'from-amber-500 to-yellow-400',
   };
 
   const gradientColor = colorMap[accentColor] || colorMap.indigo;
@@ -24,17 +18,13 @@ const Card = ({
   return (
     <motion.div
       className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-lg overflow-hidden transition-all duration-300 ease-in-out w-full"
-      whileHover={{
-        y: -5,
-        boxShadow:
-          "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-      }}
+      whileHover={{ y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
       <motion.div
         className={`absolute top-0 left-0 h-1 bg-gradient-to-r ${gradientColor} transition-all duration-300`}
-        animate={{ width: isHovered ? "100%" : "30%" }}
+        animate={{ width: isHovered ? '100%' : '30%' }}
       />
 
       <div className="flex flex-col items-start text-left">
@@ -43,25 +33,21 @@ const Card = ({
             className="flex-shrink-0 mr-4"
             animate={{
               rotate: isHovered ? 10 : 0,
-              scale: isHovered ? 1.1 : 1,
+              scale: isHovered ? 1.1 : 1
             }}
             transition={{
               type: "spring",
               stiffness: 400,
-              damping: 10,
+              damping: 10
             }}
           >
             {icon}
           </motion.div>
 
           <div>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
-              {title}
-            </h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">{title}</h3>
             {subtitle && (
-              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
-                {subtitle}
-              </p>
+              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
             )}
           </div>
         </div>
@@ -69,8 +55,8 @@ const Card = ({
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-4 leading-relaxed text-justify">
           {Array.isArray(description)
             ? description.map((item, index) => (
-                <React.Fragment key={index}>{item}</React.Fragment>
-              ))
+              <React.Fragment key={index}>{item}</React.Fragment>
+            ))
             : description}
         </p>
       </div>
@@ -101,9 +87,7 @@ export default function Dashboard() {
     if (swipe < -50) {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % cards.length);
     } else if (swipe > 50) {
-      setCurrentIndex(
-        (prevIndex) => (prevIndex - 1 + cards.length) % cards.length
-      );
+      setCurrentIndex((prevIndex) => (prevIndex - 1 + cards.length) % cards.length);
     }
   };
 
@@ -136,7 +120,7 @@ export default function Dashboard() {
                 key={index}
                 onClick={() => setCurrentIndex(index)}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  currentIndex === index ? "bg-[#41023B]" : "bg-gray-300"
+                  currentIndex === index ? 'bg-[#41023B]' : 'bg-gray-300'
                 }`}
                 aria-label={`Ir a slide ${index + 1}`}
               />
