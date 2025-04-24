@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 
 export default function InfoPersonal({ formData, onInputChange }) {
-  const [age, setAge] = useState('');
+  const [age, setAge] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     onInputChange({ [name]: value });
 
     // Special handling for birth date to calculate age
-    if (name === 'birthDate') {
+    if (name === "birthDate") {
       calculateAge(value);
     }
   };
 
   const calculateAge = (birthDate) => {
     if (!birthDate) {
-      setAge('');
+      setAge("");
       return;
     }
 
@@ -24,9 +24,9 @@ export default function InfoPersonal({ formData, onInputChange }) {
     const birthDateObj = new Date(birthDate);
     let calculatedAge = today.getFullYear() - birthDateObj.getFullYear();
     const monthDifference = today.getMonth() - birthDateObj.getMonth();
-    
+
     if (
-      monthDifference < 0 || 
+      monthDifference < 0 ||
       (monthDifference === 0 && today.getDate() < birthDateObj.getDate())
     ) {
       calculatedAge--;
@@ -37,7 +37,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -50,7 +50,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
             Nacionalidad
           </label>
           <div className="relative">
-            <select 
+            <select
               name="nationality"
               value={formData.nationality}
               onChange={handleChange}
@@ -59,11 +59,15 @@ export default function InfoPersonal({ formData, onInputChange }) {
               appearance-none text-gray-700"
             >
               <option value="">Seleccionar Nacionalidad</option>
-              <option value="venezolana">Venezolana</option>
-              <option value="extranjera">Extranjera</option>
+              <option value="cedula">Venezolana</option>
+              <option value="pasaporte">Extranjera</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <svg
+                className="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
               </svg>
             </div>
@@ -75,7 +79,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Número de Identificación
           </label>
-          <input 
+          <input
             type="text"
             name="identityCard"
             value={formData.identityCard}
@@ -93,7 +97,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Nombre(s)
           </label>
-          <input 
+          <input
             type="text"
             name="firstName"
             value={formData.firstName}
@@ -109,7 +113,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Apellido(s)
           </label>
-          <input 
+          <input
             type="text"
             name="lastName"
             value={formData.lastName}
@@ -127,7 +131,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Lugar de Nacimiento
           </label>
-          <input 
+          <input
             type="text"
             name="birthPlace"
             value={formData.birthPlace}
@@ -144,7 +148,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
             Fecha de Nacimiento
           </label>
           <div className="relative">
-            <input 
+            <input
               type="date"
               name="birthDate"
               value={formData.birthDate}
@@ -161,7 +165,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Edad
           </label>
-          <input 
+          <input
             type="text"
             name="age"
             value={age}
@@ -179,9 +183,9 @@ export default function InfoPersonal({ formData, onInputChange }) {
           Estado Civil
         </label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {['Soltero', 'Casado', 'Divorciado', 'Viudo'].map((status) => (
-            <label 
-              key={status} 
+          {["Soltero", "Casado", "Divorciado", "Viudo"].map((status) => (
+            <label
+              key={status}
               className="flex items-center space-x-2 cursor-pointer"
             >
               <input

@@ -2,6 +2,7 @@
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation";
 import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
+import axios from "axios";
 import {
   Building,
   Check,
@@ -115,36 +116,83 @@ export default function RegistrationForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Solo procesar si hay una sumisión intencional
     if (isIntentionalSubmit) {
-      console.log("Formulario enviado:", formData);
-      // const Form = new FormData();
-      // Form.append(
-      //   "persona",
-      //   JSON.stringify({
-      //     direccion: {
-      //       referencia: formData.address,
-      //       estado: formData.state,
-      //     },
-      //     nombre: formData.firstName,
-      //     primer_apellido: formData.lastName,
-      //     genero: formData.gender,
-      //     tipo_identificacion: formData.nationality,
-      //     identificacion: formData.identityCard,
-      //     correo: formData.email,
-      //     telefono_movil: formData.phoneNumber,
-      //     telefono_de_habitacion: formData.homePhone,
-      //     fecha_de_nacimiento: formData.birthDate,
-      //     estado_civil: null, //por ver
-      //   })
-      // );
-      setIsSubmitting(true);
-      // Simular un retraso para procesar el formulario
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const Form = new FormData();
 
-      // En lugar de mostrar el confeti, mostrar la pantalla de pagos
-      setIsSubmitting(false);
-      setShowPaymentScreen(true);
+      Form.append(
+        "persona",
+        JSON.stringify({
+          direccion: {
+            referencia: formData.address,
+            estado: 1,
+          },
+          nombre: formData.firstName,
+          primer_apellido: formData.lastName,
+          genero: formData.gender,
+          tipo_identificacion: formData.nationality,
+          identificacion: formData.identityCard,
+          correo: formData.email,
+          telefono_movil: formData.phoneNumber,
+          telefono_de_habitacion: formData.homePhone,
+          fecha_de_nacimiento: formData.birthDate,
+          estado_civil: formData.maritalStatus || null,
+        })
+      );
+      Form.append("instituto_bachillerato", formData.graduateInstitute);
+      Form.append("universidad", formData.universityTitle);
+      Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
+      Form.append("num_registro_principal", formData.mainRegistrationNumber);
+      Form.append("fecha_registro_principal", formData.mainRegistrationDate);
+      Form.append("num_mpps", formData.mppsRegistrationNumber);
+      Form.append("fecha_mpps", formData.mppsRegistrationDate);
+      Form.append(
+        "instituciones",
+        JSON.stringify([
+          {
+            nombre: formData.institutionName,
+            cargo: formData.institutionName,
+            direccion: formData.institutionAddress,
+            telefono: formData.institutionPhone,
+          },
+          {
+            nombre: formData.clinicName,
+            cargo: formData.clinicName,
+            direccion: formData.clinicAddress,
+            telefono: formData.clinicPhone,
+          },
+        ])
+      );
+      Form.append("file_ci", formData.ci || null);
+      Form.append("file_rif", formData.rif || null);
+      Form.append("file_fondo_negro", formData.titulo || null);
+      Form.append("file_mpps", formData.mpps || null);
+
+      console.log("FormData:", Form);
+
+      try {
+        const response = await axios.post(
+          "http://localhost:8000/api/v1/usuario/register/",
+          Form,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        console.log("Datos enviados correctamente:", response.data);
+      } catch (error) {
+        console.error(
+          "Error al enviar los datos:",
+          error.response?.data || error
+        );
+      }
+      // setIsSubmitting(true);
+      // // Simular un retraso para procesar el formulario
+      // await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // // En lugar de mostrar el confeti, mostrar la pantalla de pagos
+      // setIsSubmitting(false);
+      // setShowPaymentScreen(true);
     }
   };
 
