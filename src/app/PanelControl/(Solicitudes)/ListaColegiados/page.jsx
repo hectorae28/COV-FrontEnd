@@ -230,21 +230,16 @@ export default function ListaColegiados() {
       {/* Tabs para alternar entre colegiados registrados y pendientes */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex gap-8">
-          <button
-            className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${
-              tabActivo === "pendientes" 
-                ? "border-[#C40180] text-[#C40180]" 
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            } transition-colors relative`}
-            onClick={() => setTabActivo("pendientes")}
-          >
-            Pendientes por aprobación ({colegiadosPendientes.length})
-            {colegiadosPendientes.length > 0 && (
-              <span className="absolute top-3 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                {colegiadosPendientes.length}
-              </span>
-            )}
-          </button>
+        <button
+  className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${
+    tabActivo === "pendientes" 
+      ? 'border-[#C40180] text-[#C40180]' 
+      : 'border-transparent text-gray-500 hover:text-gray-700'
+  } transition-colors`}
+  onClick={() => setTabActivo("pendientes")}
+>
+  Pendientes por aprobación ({colegiadosPendientes.length})
+</button>
           <button
             className={`py-4 px-1 cursor-pointer font-medium text-sm sm:text-base border-b-2 ${
               tabActivo === "registrados" 

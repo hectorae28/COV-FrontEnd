@@ -499,57 +499,60 @@ export default function DetalleColegiado({ params, onVolver }) {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre completo</p>
-                      <p className="font-medium text-gray-800">{nombreCompleto}</p>
-                    </div>
+  {/* Primera columna: nombre, cédula, fecha de nacimiento */}
+  <div className="space-y-4">
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre completo</p>
+      <p className="font-medium text-gray-800">{nombreCompleto}</p>
+    </div>
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.tipo_identificacion}-{colegiado.persona.identificacion}</p>
-                    </div>
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
+      <p className="font-medium text-gray-800">{colegiado.persona.tipo_identificacion}-{colegiado.persona.identificacion}</p>
+    </div>
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</p>
-                      <p className="font-medium text-gray-800">{formatearFecha(colegiado.persona.fecha_de_nacimiento)}</p>
-                    </div>
-                  </div>
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</p>
+      <p className="font-medium text-gray-800">{formatearFecha(colegiado.persona.fecha_de_nacimiento)}</p>
+    </div>
+  </div>
 
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.direccion.referencia}, {colegiado.persona.direccion.estado}</p>
-                    </div>
+  {/* Segunda columna: correo, número móvil, número de teléfono */}
+  <div className="space-y-4">
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
+      <p className="font-medium text-gray-800">{colegiado.persona.correo}</p>
+    </div>
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono móvil</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.telefono_movil}</p>
-                    </div>
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono móvil</p>
+      <p className="font-medium text-gray-800">{colegiado.persona.telefono_movil}</p>
+    </div>
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono de habitación</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.telefono_de_habitacion || "No especificado"}</p>
-                    </div>
-                  </div>
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono de habitación</p>
+      <p className="font-medium text-gray-800">{colegiado.persona.telefono_de_habitacion || "No especificado"}</p>
+    </div>
+  </div>
 
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.correo}</p>
-                    </div>
+  {/* Tercera columna: estado civil, género, dirección */}
+  <div className="space-y-4">
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
+      <p className="font-medium text-gray-800">{colegiado.persona.estado_civil || "No especificado"}</p>
+    </div>
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.estado_civil || "No especificado"}</p>
-                    </div>
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Género</p>
+      <p className="font-medium text-gray-800">{colegiado.persona.genero === 'M' ? 'Masculino' : colegiado.persona.genero === 'F' ? 'Femenino' : colegiado.persona.genero}</p>
+    </div>
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Género</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.genero === 'M' ? 'Masculino' : colegiado.persona.genero === 'F' ? 'Femenino' : colegiado.persona.genero}</p>
-                    </div>
-                  </div>
-                </div>
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
+      <p className="font-medium text-gray-800">{colegiado.persona.direccion.referencia}, {colegiado.persona.direccion.estado}</p>
+    </div>
+  </div>
+</div>
               </div>
 
               {/* Información académica */}
