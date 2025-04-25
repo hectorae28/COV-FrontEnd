@@ -4,34 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
-const slides = [
-  {
-    id: 1,
-    image: "/assets/noticias/ancho.png",
-    title: "Bienvenidos al Colegio de Odontólogos",
-    description: "Comprometidos con la excelencia en la salud bucal"
-  },
-  {
-    id: 2,
-    image: "/assets/noticias/ancho2.png",
-    title: "Próximos Eventos",
-    description: "Mantente actualizado con nuestros cursos y certificaciones"
-  },
-  {
-    id: 3,
-    image: "/assets/noticias/ancho3.png",
-    title: "Nueva Ley de Odontología",
-    description: "Conoce los cambios importantes para tu práctica profesional"
-  }
-];
-
-export default function CarruselPresents() {
+export default function CarruselPresents({ props }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const autoPlayRef = useRef(null);
   const slideRef = useRef(null);
+  const slides = props;
 
   const minSwipeDistance = 50;
 
@@ -39,14 +19,12 @@ export default function CarruselPresents() {
     autoPlayRef.current = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
-
     return () => {
       if (autoPlayRef.current) {
         clearInterval(autoPlayRef.current);
       }
     };
   }, []);
-
   const handleMouseEnter = () => {
     setIsHovering(true);
     if (autoPlayRef.current) {
@@ -79,7 +57,7 @@ export default function CarruselPresents() {
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
@@ -99,7 +77,6 @@ export default function CarruselPresents() {
     setTouchStart(null);
     setTouchEnd(null);
   };
-
   return (
     <div
       ref={slideRef}
@@ -123,15 +100,15 @@ export default function CarruselPresents() {
           <div className="relative w-full h-full">
             <div className="absolute inset-0">
               <Image
-                src={slides[currentSlide].image}
-                alt={slides[currentSlide].title}
+                src={`${process.env.NEXT_PUBLIC_BACK_HOST}${slides[currentSlide]?.imagen_portada_url}`}
+                alt={slides[currentSlide].titulo}
                 fill
                 unoptimized
                 style={{
-                  objectFit: 'cover',
-                  objectPosition: 'center',
-                  width: '100%',
-                  height: '100%'
+                  objectFit: "cover",
+                  objectPosition: "center",
+                  width: "100%",
+                  height: "100%",
                 }}
                 priority
                 quality={100}
@@ -140,18 +117,18 @@ export default function CarruselPresents() {
             </div>
             <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
 
-            {/* Contenido */}
+            {/* Contenido truncate  */}
             <motion.div
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.1 }}
               className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 lg:p-10 text-white"
             >
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-bold px-2 sm:px-4 md:px-8 lg:px-16 xl:px-20">
-                {slides[currentSlide].title}
+              <h2 className="text-xl line-clamp-2 sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-bold px-2 sm:px-4 md:px-8 lg:px-16 xl:px-20">
+                {slides[currentSlide].titulo}
               </h2>
-              <p className="text-sm sm:text-base md:text-xl lg:text-2xl xl:text-[28px] px-2 sm:px-4 md:px-8 lg:px-16 xl:px-20 mt-1 sm:mt-2">
-                {slides[currentSlide].description}
+              <p className="text-sm line-clamp-2 sm:text-base md:text-xl lg:text-2xl xl:text-[28px] px-2 sm:px-4 md:px-8 lg:px-16 xl:px-20 mt-1 sm:mt-2">
+                {slides[currentSlide].contenido}
               </p>
 
               <motion.button
@@ -169,13 +146,35 @@ export default function CarruselPresents() {
       {/* Desplazamiento */}
       <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:flex justify-between px-4 opacity-0">
         <div className="bg-white/20 rounded-full p-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </div>
         <div className="bg-white/20 rounded-full p-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </div>
       </div>
@@ -187,22 +186,43 @@ export default function CarruselPresents() {
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`h-2 sm:h-2.5 md:h-3 rounded-full transition-all duration-300 cursor-pointer ${
-              currentSlide === index ? 'bg-white w-4 sm:w-6 md:w-8' : 'bg-white/30 w-2 sm:w-2.5 md:w-3'
+              currentSlide === index
+                ? "bg-white w-4 sm:w-6 md:w-8"
+                : "bg-white/30 w-2 sm:w-2.5 md:w-3"
             }`}
           />
         ))}
       </div>
 
       {/* Flechas */}
-      <div className={`transition-opacity duration-300 ${isHovering ? 'opacity-100' : 'opacity-0'}`}>
+      <div
+        className={`transition-opacity duration-300 ${
+          isHovering ? "opacity-100" : "opacity-0"
+        }`}
+      >
         {/* Botón Izquierdo */}
         <button
-          onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+          onClick={() =>
+            setCurrentSlide(
+              (prev) => (prev - 1 + slides.length) % slides.length
+            )
+          }
           className="absolute left-2 sm:left-3 md:left-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white p-1 sm:p-2 md:p-3 transition-all duration-100 cursor-pointer"
           aria-label="Previous slide"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
 
@@ -212,8 +232,19 @@ export default function CarruselPresents() {
           className="absolute right-2 sm:right-3 md:right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white p-1 sm:p-2 md:p-3 transition-all duration-100 cursor-pointer"
           aria-label="Next slide"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>

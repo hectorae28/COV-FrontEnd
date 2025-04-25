@@ -1,26 +1,21 @@
-import { Montserrat } from "next/font/google";
 import Head from "next/head";
 import "./globals.css";
+import Providers from "@/Components/Provider";
+import AutoLog from "@/Components/autoLogOut";
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700"],
-});
-
-export const metadata = {
-  title: "COV - Colegio de Odontólogos de Venezuela",
-};
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="es-ES">
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </Head>
-      <body className={`${montserrat.variable} antialiased`}>
-        {children}
-      </body>
-    </html>
-  );
+export default async function RootLayout({ children }) {
+    return (
+        <html lang="es-ES">
+            <Head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            </Head>
+            <body className={`antialiased`}>
+                <Providers session={children.session}  >
+                    <AutoLog>
+                        <main>{children}</main>
+                    </AutoLog>
+                </Providers>
+            </body>
+        </html>
+    );
 }

@@ -1,0 +1,33 @@
+import Head from "next/head";
+import "../globals.css";
+import AppBar from "./(Home)/AppBar";
+import Footer from "./(Home)/Footer";
+import { fetchFooter } from "@/api/endpoints/landingPage";
+import Providers from "@/Components/Provider";
+
+
+export const metadata = {
+  title: "Colegio de Odontólogos de Venezuela - COV",
+};
+
+export default async function RootLayout({ children }) {
+  const footerData = await fetchFooter();
+  return (
+    <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
+      <div className={`antialiased`}>
+        <header>
+          <AppBar />
+        </header>
+        <Providers>
+          <main>{children}</main>
+        </Providers>
+        <footer className="bg-[#F9F9F9]">
+          <Footer props={footerData.data} />
+        </footer>
+      </div>
+    </>
+  );
+}
