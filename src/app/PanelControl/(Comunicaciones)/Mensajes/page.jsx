@@ -1,12 +1,12 @@
 "use client"
 
+import { useMessages } from "@/app/Models/PanelControl/Comunicaciones/Mensajes/MensajesData"
 import { Plus, Search, X } from "lucide-react"
 import { useEffect, useState } from "react"
-import { MessageList } from "../../Components/Comunicaciones/Mensajes/MensagesLista"
-import { MessageDetail } from "../../Components/Comunicaciones/Mensajes/MensajesDetalles"
-import { MessageTabs } from "../../Components/Comunicaciones/Mensajes/MensajesTabs"
-import { ComposeModal } from "../../Components/Comunicaciones/Mensajes/ModalCompose"
-import { useMessages } from "../../Models/Comunicaciones/Mensajes/MensajesData"
+import { MessageList } from "../../../Components/Comunicaciones/Mensajes/MensagesLista"
+import { MessageDetail } from "../../../Components/Comunicaciones/Mensajes/MensajesDetalles"
+import { MessageTabs } from "../../../Components/Comunicaciones/Mensajes/MensajesTabs"
+import { ComposeModal } from "../../../Components/Comunicaciones/Mensajes/ModalCompose"
 
 export default function MessagingPage() {
   const [activeTab, setActiveTab] = useState("recibidos")

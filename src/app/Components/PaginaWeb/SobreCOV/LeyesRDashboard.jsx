@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { initialDocumentOptions, pageContent } from "../../../Models/PaginaWeb/SobreCOV/LeyesRData";
+import { initialDocumentOptions, pageContent } from "@/app/Models/PanelControl/PaginaWeb/SobreCOV/LeyesRData";
 import { 
   FileText, 
   ChevronUp, 

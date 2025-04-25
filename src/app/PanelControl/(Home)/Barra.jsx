@@ -1,15 +1,15 @@
 "use client"
 
-import { AccountCircle, Notifications, Lightbulb } from "@mui/icons-material"
-import { Menu } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useRef, useState, useEffect } from "react" // Agregamos useEffect
-import { NotificacionesModal } from "../Components/Comunicaciones/Notificaciones/NotificacionesModal"
+import { fetchMe } from "@/api/endpoints/colegiado"
+import ProfileDropdown from "@/app/Components/PerfilDropdown"
 import { NotificacionesProvider } from "@/app/Models/PanelControl/Comunicaciones/Notificaciones/NotificacionesData"
+import { Lightbulb, Notifications } from "@mui/icons-material"
+import { Menu } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
+import { NotificacionesModal } from "../../Components/Comunicaciones/Notificaciones/NotificacionesModal"
 import RecomendacionesModal from "./RecomendacionesModal"
-import ProfileDropdown from "@/app/Components/PerfilDropdown" // Importamos el componente
-import { useSession } from "next-auth/react" // Importamos useSession
-import { fetchMe } from "@/api/endpoints/colegiado" // Importamos fetchMe
 
 export default function Barra({ onMenuClick, title = "Inicio", icon }) {
   const router = useRouter()

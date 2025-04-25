@@ -1,18 +1,18 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence, useAnimation } from "framer-motion"
+import { AnimatePresence, motion, useAnimation } from "framer-motion"
+import { useEffect, useRef, useState } from "react"
 // Import icons from Lucide React
-import { BadgeDollarSign, IdCard, User, WandSparkles, Wand, Award, GraduationCap } from "lucide-react"
+import { Award, BadgeDollarSign, GraduationCap, IdCard, User, Wand, WandSparkles } from "lucide-react"
 
 // Import individual dashboard components
-import AvalCursosDashboard from "../../Components/PaginaWeb/Tramites/AvalCursosDashboard"
-import CarnetDashboard from "../../Components/PaginaWeb/Tramites/CarnetDashboard"
-import EspecialidadesDashboard from "../../Components/PaginaWeb/Tramites/EspecialidadesDashboard"
-import HigienistasDDashboard from "../../Components/PaginaWeb/Tramites/HiginistasDDashboard"
-import OdontologosDashboard from "../../Components/PaginaWeb/Tramites/OdontologosDashboard"
-import TecnicosDDashboard from "../../Components/PaginaWeb/Tramites/TecnicosDDashboard"
-import TramitesDashboard from "../../Components/PaginaWeb/Tramites/TramitesDashboard"
+import AvalCursosDashboard from "../../../Components/PaginaWeb/Tramites/AvalCursosDashboard"
+import CarnetDashboard from "../../../Components/PaginaWeb/Tramites/CarnetDashboard"
+import EspecialidadesDashboard from "../../../Components/PaginaWeb/Tramites/EspecialidadesDashboard"
+import HigienistasDDashboard from "../../../Components/PaginaWeb/Tramites/HiginistasDDashboard"
+import OdontologosDashboard from "../../../Components/PaginaWeb/Tramites/OdontologosDashboard"
+import TecnicosDDashboard from "../../../Components/PaginaWeb/Tramites/TecnicosDDashboard"
+import TramitesDashboard from "../../../Components/PaginaWeb/Tramites/TramitesDashboard"
 
 // Dashboard modules data moved directly into the component
 const dashboardModules = {

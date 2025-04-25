@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, Download, CreditCard, CheckCircle, AlertCircle, Search } from "lucide-react"
+import { FileText, Download, CreditCard, CheckCircle, AlertCircle, Search, ChevronLeft } from "lucide-react"
 
-export default function TablaPagos({ colegiadoId }) {
+export default function TablaPagos({ colegiadoId, onVolver }) {
   const [pagos, setPagos] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -174,22 +174,22 @@ export default function TablaPagos({ colegiadoId }) {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Concepto
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Referencia
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Fecha
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Monto
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Estado
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Acciones
                       </th>
                     </tr>
@@ -197,22 +197,22 @@ export default function TablaPagos({ colegiadoId }) {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {pagosFiltrados.map((pago) => (
                       <tr key={pago.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
                           <div className="font-medium text-gray-900">{pago.concepto}</div>
                           <div className="text-sm text-gray-500">{pago.metodoPago}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                           {pago.referencia}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                           {pago.fecha}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
                           <div className="text-sm font-medium text-gray-900">
                             ${pago.monto.toFixed(2)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             pago.estado === 'Pagado' 
                               ? 'bg-green-100 text-green-800' 
@@ -221,8 +221,8 @@ export default function TablaPagos({ colegiadoId }) {
                             {pago.estado}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-2">
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                          <div className="flex justify-center space-x-2">
                             {pago.comprobante && (
                               <button className="text-blue-600 hover:text-blue-800">
                                 <Download size={18} />
@@ -241,6 +241,19 @@ export default function TablaPagos({ colegiadoId }) {
             </div>
           )}
         </>
+      )}
+      
+      {/* Botón para volver */}
+      {onVolver && (
+        <div className="mt-6">
+          <button
+            onClick={onVolver}
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2"
+          >
+            <ChevronLeft size={18} />
+            <span>Volver a la lista</span>
+          </button>
+        </div>
       )}
     </div>
   )

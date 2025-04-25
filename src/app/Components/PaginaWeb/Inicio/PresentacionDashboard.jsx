@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Image as ImageIcon, PlusCircle, Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { createNewSection, getNextImage, initialSections } from "../../../Models/PaginaWeb/Inicio/PresentacionData";
+import { createNewSection, getNextImage, initialSections } from "@/app/Models/PanelControl/PaginaWeb/Inicio/PresentacionData";
 
 export default function PresentacionDashboard({ moduleInfo }) {
   const [sections, setSections] = useState(initialSections);

@@ -6,7 +6,7 @@ import {
   Calendar, Trophy, Plus, Trash2, ChevronDown,
   ChevronUp, Save
 } from "lucide-react";
-import { initialJuntaDData } from "../../../Models/PaginaWeb/SobreCOV/JuntaDData";
+import { initialJuntaDData } from "@/app/Models/PanelControl/PaginaWeb/SobreCOV/JuntaDData";
 
 // Available icons for selection
 const availableIcons = {

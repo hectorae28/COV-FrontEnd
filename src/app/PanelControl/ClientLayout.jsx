@@ -10,8 +10,8 @@ export default function ClientLayout({ children }) {
     const [selectedTitle, setSelectedTitle] = useState({ title: "Inicio", icon: null });
 
     return (
-        <html lang="es-ES">
-            <body className={`antialiased`}>
+        <div lang="es-ES">
+            <div className={`antialiased`}>
                 <div className="bg-[#F9F9F9] h-screen flex-1 relative overflow-hidden">
                     {/* Overlay para cerrar sidebar en móvil */}
                     {sidebarOpen && (
@@ -46,7 +46,7 @@ export default function ClientLayout({ children }) {
                         </main>
                     </div>
                 </div>
-            </body>
-        </html>
+            </div>
+        </div>
     );
 }
