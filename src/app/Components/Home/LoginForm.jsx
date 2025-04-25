@@ -2,14 +2,21 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Lock, Mail, Check } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import DangerAlert from "@/Components/DangerAlert"
 
 export default function LoginForm({ onForgotPassword, onRegister }) {
   const [rememberMe, setRememberMe] = useState(false);
+  const searchParams = useSearchParams();
+  const [error, setError] = useState(searchParams.get("error"));
   const router = useRouter();
   const formRef = useRef(null);
+  useEffect(() => {
+    setError(searchParams.get("error"));
+  },[])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,8 +26,17 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
       password: Form.get("password"),
       redirect: false,
     });
-    if (result?.error) {
-      console.error("Error al iniciar sesión:", result.error);
+    if (result.error) {
+      if (result.error === "Account is locked" || result.error === "Account locked due to too many failed attempts") {
+        setError("Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña.");
+
+      } else if (result.error === "Invalid credentials") {
+        setError("Credenciales inválidas. Por favor, verifica tu email y contraseña.");
+      }else {
+        setError("Ocurrió un error inesperado. Intenta nuevamente.");
+      }
+      //setError("Error al iniciar sesión:", result);
+      
     } else {
       console.log("Inicio de sesión exitoso:", result);
       router.push("/Colegiado");
@@ -29,6 +45,10 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
 
   return (
     <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
+      {error && (
+        <DangerAlert>{error}</DangerAlert>
+
+      )}
       <div className="mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

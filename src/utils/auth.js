@@ -30,10 +30,9 @@ export const authOptions = {
                             access_expires_in: data.access_expires_in,
                         };
                     }
-                    return null;
+                    return data;
                 } catch (error) {
-                    console.error("Error en authorize:", error);
-                    return null;
+                    throw new Error(error.message || "Error de autenticación");
                 }
             },
         }),
@@ -42,6 +41,12 @@ export const authOptions = {
         strategy: "jwt",
     },
     callbacks: {
+        async signIn({ user, account, profile, email, credentials }) {
+            if (user?.error) {
+                return `${process.env.NEXTAUTH_URL}/Login?error=${encodeURIComponent(user.error)}`;
+            }
+            return true;
+          },
         async jwt({ token, user }) {
             if (user) {
                 const userData = await fetchMe({
@@ -76,6 +81,7 @@ export const authOptions = {
     },
     pages: {
         signIn: "/login",
+        error: "/Login",
     },
     secret: process.env.NEXTAUTH_SECRET,
 }
