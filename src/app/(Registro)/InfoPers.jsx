@@ -58,7 +58,9 @@ export default function InfoPersonal({ formData, onInputChange }) {
               focus:outline-none focus:ring-2 focus:ring-[#D7008A] 
               appearance-none text-gray-700"
             >
-              <option value="">Seleccionar Nacionalidad</option>
+              <option value="" disabled>
+                Seleccionar Nacionalidad
+              </option>
               <option value="cedula">Venezolana</option>
               <option value="pasaporte">Extranjera</option>
             </select>
@@ -125,7 +127,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Birth Place */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
@@ -146,6 +148,7 @@ export default function InfoPersonal({ formData, onInputChange }) {
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Fecha de Nacimiento
+            {formData.age && formData.age > 0 && ` (${formData.age} años)`}
           </label>
           <div className="relative">
             <input
@@ -159,21 +162,38 @@ export default function InfoPersonal({ formData, onInputChange }) {
             />
           </div>
         </div>
-
-        {/* Age (Read-only) */}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
-            Edad
+            Genero
           </label>
-          <input
-            type="text"
-            name="age"
-            value={age}
-            readOnly
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-            bg-gray-100 cursor-not-allowed"
-            placeholder="Mayor de 18 años de edad"
-          />
+          <div className="relative">
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl 
+              focus:outline-none focus:ring-2 focus:ring-[#D7008A] 
+              appearance-none text-gray-700"
+            >
+              <option value="" disabled>
+                Seleccionar Genero
+              </option>
+              <option value="masculino">Masculino</option>
+              <option value="femenino">Femenino</option>
+              <option value="otro">Otro</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg
+                className="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 

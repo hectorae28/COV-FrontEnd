@@ -1,45 +1,56 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { X, ArrowLeft, ArrowRight, CheckCircle, UserPlus } from "lucide-react"
-import React from 'react';
+import { useState, useEffect } from "react";
+import { X, ArrowLeft, ArrowRight, CheckCircle, UserPlus } from "lucide-react";
+import React from "react";
 
-// Importaciones de componentes 
-import InfoPersonal from "@/app/(Registro)/InfoPers"
-import InfoContacto from "@/app/(Registro)/InfoCont"
-import InfoColegiado from "@/app/(Registro)/InfoColg"
-import InfoLaboral from "@/app/(Registro)/InfoLab"
-import DocsRequirements from "@/app/(Registro)/DocsRequirements"
-import PagosColg from "@/app/(Registro)/PagosColg"
+// Importaciones de componentes
+import InfoPersonal from "@/app/(Registro)/InfoPers";
+import InfoContacto from "@/app/(Registro)/InfoCont";
+import InfoColegiado from "@/app/(Registro)/InfoColg";
+import InfoLaboral from "@/app/(Registro)/InfoLab";
+import DocsRequirements from "@/app/(Registro)/DocsRequirements";
+import PagosColg from "@/app/(Registro)/PagosColg";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import api from "@/api/api";
 
-export default function RegistroColegiados({ isAdmin = true, onClose, onRegistroExitoso }) {
+export default function RegistroColegiados({
+  isAdmin = true,
+  onClose,
+  onRegistroExitoso,
+}) {
   // Estado para seguimiento de pasos
-  const [pasoActual, setPasoActual] = useState(1)
-  const [completedSteps, setCompletedSteps] = useState([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [exonerarPagos, setExonerarPagos] = useState(false)
-  
-  // Estado para los datos del formulario
-  const [formData, setFormData] = useState({
-    // Datos personales
+  const [pasoActual, setPasoActual] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [exonerarPagos, setExonerarPagos] = useState(false);
+  const [tazaBcv, setTazaBcv] = useState(0);
+  const [costoInscripcion, setCostoInscripcion] = useState(0);
+  const [metodoPago, setMetodoPago] = useState([]);
+  const initialState = {
+    nationality: "",
+    identityCard: "",
     firstName: "",
     lastName: "",
-    identityCard: "",
-    nationality: "venezolana",
-    birthDate: "",
     birthPlace: "",
+    birthDate: "",
+    gender: "",
     age: "",
     maritalStatus: "",
-    
-    // Datos de contacto
     email: "",
     phoneNumber: "",
     homePhone: "",
     address: "",
-    state: "",
     city: "",
-    
-    // Datos de colegiado
+    collegeNumber: "",
+    professionalField: "",
+    institutionName: "",
+    institutionAddress: "",
+    institutionPhone: "",
+    clinicName: "",
+    clinicAddress: "",
+    clinicPhone: "",
+    selectedOption: "",
     graduateInstitute: "",
     universityTitle: "",
     mainRegistrationNumber: "",
@@ -47,168 +58,158 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
     mppsRegistrationNumber: "",
     mppsRegistrationDate: "",
     titleIssuanceDate: "",
-    
-    // Información laboral
-    institutionName: "",
-    institutionAddress: "",
-    institutionPhone: "",
-    clinicName: "",
-    clinicAddress: "",
-    clinicPhone: "",
-    
-    // Para mantener compatibilidad con el sistema existente
-    especialidad: "",
-    
-    // Documentos
-    documentos: {
-      ci: null,
-      rif: null,
-      titulo: null,
-      mpps: null
-    }
-  })
-  
+    state: "",
+    ci: {},
+    rif: {},
+    titulo: {},
+    mpps: {},
+  };
+
+  // Estado para los datos del formulario
+  const [formData, setFormData] = useState(initialState);
+
   // Función para actualizar datos del formulario
   const handleInputChange = (data) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      ...data
-    }))
-  }
-  
+      ...data,
+    }));
+  };
+
   // Función para manejar cambios en documentos
   const handleDocumentosChange = (docs) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       documentos: {
         ...prev.documentos,
-        ...docs
-      }
-    }))
-  }
-  
+        ...docs,
+      },
+    }));
+  };
+
   // Marcamos un paso como completado
   const marcarPasoCompletado = (paso) => {
     if (!completedSteps.includes(paso)) {
-      setCompletedSteps(prev => [...prev, paso])
+      setCompletedSteps((prev) => [...prev, paso]);
     }
-  }
-  
+  };
+
   // Función para avanzar al siguiente paso sin validaciones
   const avanzarPaso = () => {
     // Marcamos el paso actual como completado
-    marcarPasoCompletado(pasoActual)
-    
+    marcarPasoCompletado(pasoActual);
+
     // Si estamos en el paso 5 (documentos), pasamos directamente a pagos (paso 6)
     if (pasoActual === 5) {
-      setPasoActual(6)
+      setPasoActual(6);
     } else if (pasoActual < 5) {
       // Para los pasos 1-4, avanzamos normalmente
-      setPasoActual(pasoActual + 1)
+      setPasoActual(pasoActual + 1);
     }
-  }
-  
+  };
+
   // Función para retroceder al paso anterior
   const retrocederPaso = () => {
-    setPasoActual(Math.max(1, pasoActual - 1))
-  }
-  
+    setPasoActual(Math.max(1, pasoActual - 1));
+  };
+
   // Función para reiniciar el formulario y comenzar un nuevo registro
   const iniciarNuevoRegistro = () => {
     // Reiniciamos todos los estados
-    setPasoActual(1)
-    setCompletedSteps([])
-    setExonerarPagos(false)
-    setFormData({
-      firstName: "",
-      lastName: "",
-      identityCard: "",
-      nationality: "venezolana",
-      birthDate: "",
-      birthPlace: "",
-      age: "",
-      maritalStatus: "",
-      email: "",
-      phoneNumber: "",
-      homePhone: "",
-      address: "",
-      state: "",
-      city: "",
-      graduateInstitute: "",
-      universityTitle: "",
-      mainRegistrationNumber: "",
-      mainRegistrationDate: "",
-      mppsRegistrationNumber: "",
-      mppsRegistrationDate: "",
-      titleIssuanceDate: "",
-      institutionName: "",
-      institutionAddress: "",
-      institutionPhone: "",
-      clinicName: "",
-      clinicAddress: "",
-      clinicPhone: "",
-      especialidad: "",
-      documentos: {
-        ci: null,
-        rif: null,
-        titulo: null,
-        mpps: null
-      }
-    })
-  }
-  
+    setPasoActual(1);
+    setCompletedSteps([]);
+    setExonerarPagos(false);
+    setFormData(initialState);
+  };
+
   // Función para manejar la finalización del registro
-  const handleRegistroFinalizado = async () => {
-    setIsSubmitting(true)
-    
+  const handlePaymentComplete = async () => {
+    setIsSubmitting(true);
+
     try {
       // Simulando envío de datos al servidor
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      const nombre = `${formData.firstName} ${formData.lastName}`
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      const nombre = `${formData.firstName} ${formData.lastName}`;
+
       // Creamos objeto con los datos necesarios para el listado
       const nuevoColegiado = {
         id: `COL-${Date.now()}`,
         nombre: nombre,
         cedula: formData.identityCard,
-        numeroRegistro: formData.mainRegistrationNumber || `ODV-${Math.floor(1000 + Math.random() * 9000)}`,
+        numeroRegistro:
+          formData.mainRegistrationNumber ||
+          `ODV-${Math.floor(1000 + Math.random() * 9000)}`,
         email: formData.email,
         telefono: formData.phoneNumber,
         fechaRegistro: new Date().toLocaleDateString(),
         estado: "Activo",
         solvente: exonerarPagos, // Solvente si está exonerado
         especialidad: formData.especialidad || "Odontología general",
-        exoneradoPagos: exonerarPagos
-      }
-      
+        exoneradoPagos: exonerarPagos,
+      };
+
       // Avanzamos al paso de confirmación
-      setPasoActual(7)
-      
+      setPasoActual(7);
+
       // Llamamos a la función de registro exitoso (esto no ocurre hasta el paso final)
       if (pasoActual === 7) {
-        onRegistroExitoso(nuevoColegiado)
+        onRegistroExitoso(nuevoColegiado);
       }
     } catch (error) {
-      console.error("Error al registrar:", error)
+      console.error("Error al registrar:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
-  
+  };
+  useEffect(() => {
+    const LoadData = async () => {
+      try {
+        const taza = await fetchDataSolicitudes("tasa-bcv");
+        setTazaBcv(taza.data.rate);
+        const costo = await fetchDataSolicitudes(
+          "costo",
+          "?tipo_costo=1&es_vigente=true"
+        );
+        setCostoInscripcion(Number(costo.data[0].monto_usd));
+        const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
+        setMetodoPago(Mpagos.data);
+      } catch (error) {
+        console.error("Error al obtener los datos:", error);
+      }
+    };
+    LoadData();
+  }, []);
+
   // Renderizar paso actual
   const renderPasoActual = () => {
     switch (pasoActual) {
       case 1:
-        return <InfoPersonal formData={formData} onInputChange={handleInputChange} />
+        return (
+          <InfoPersonal formData={formData} onInputChange={handleInputChange} />
+        );
       case 2:
-        return <InfoContacto formData={formData} onInputChange={handleInputChange} />
+        return (
+          <InfoContacto formData={formData} onInputChange={handleInputChange} />
+        );
       case 3:
-        return <InfoColegiado formData={formData} onInputChange={handleInputChange} />
+        return (
+          <InfoColegiado
+            formData={formData}
+            onInputChange={handleInputChange}
+          />
+        );
       case 4:
-        return <InfoLaboral formData={formData} onInputChange={handleInputChange} />
+        return (
+          <InfoLaboral formData={formData} onInputChange={handleInputChange} />
+        );
       case 5:
-        return <DocsRequirements formData={formData} onInputChange={handleDocumentosChange} />
+        return (
+          <DocsRequirements
+            formData={formData}
+            onInputChange={handleDocumentosChange}
+          />
+        );
       case 6:
         return (
           <div className="space-y-6">
@@ -222,22 +223,37 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
                     className="h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
                   />
                   <p className="text-md text-gray-800">
-                  <span className="text-[#41023B] font-bold text-lg">Exonerar pagos:</span> Al habilitar esta opción, el colegiado quedará  registrado como solvente sin necesidad de realizar un pago.
-                </p>
+                    <span className="text-[#41023B] font-bold text-lg">
+                      Exonerar pagos:
+                    </span>{" "}
+                    Al habilitar esta opción, el colegiado quedará registrado
+                    como solvente sin necesidad de realizar un pago.
+                  </p>
                 </label>
               </div>
             )}
-            
-            {!exonerarPagos && <PagosColg onPaymentComplete={handleRegistroFinalizado} />}
+
+            {!exonerarPagos && (
+              <PagosColg
+                props={{
+                  handlePaymentComplete,
+                  tazaBcv,
+                  costoInscripcion,
+                  metodoPago,
+                }}
+              />
+            )}
           </div>
-        )
+        );
       case 7:
         return (
           <div className="text-center py-8">
             <div className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-[#41023B] mb-4">¡Registro Completado!</h2>
+            <h2 className="text-2xl font-bold text-[#41023B] mb-4">
+              ¡Registro Completado!
+            </h2>
             <p className="text-gray-800 mb-8">
               El colegiado ha sido registrado exitosamente en el sistema.
             </p>
@@ -246,15 +262,15 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
               className="px-8 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all flex items-center gap-2 mx-auto"
             >
               <UserPlus size={20} />
-            ¿Quieres Registrar otro colegiado?
+              ¿Quieres Registrar otro colegiado?
             </button>
           </div>
-        )
+        );
       default:
-        return null
+        return null;
     }
-  }
-  
+  };
+
   // Títulos de los pasos (completos)
   const titulosPasos = [
     "Información Personal",
@@ -263,9 +279,9 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
     "Información Laboral",
     "Documentos Requeridos",
     "Pagos",
-    "Confirmación"
-  ]
-  
+    "Confirmación",
+  ];
+
   // Títulos para mostrar en el indicador de pasos (divididos en dos líneas excepto para documentos)
   const getTituloIndicador = (paso) => {
     switch (paso) {
@@ -303,10 +319,10 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
         return null;
     }
   };
-  
+
   // Determinar si mostrar el encabezado con los pasos (no se muestra en la pantalla de pagos o confirmación)
   const mostrarEncabezadoPasos = pasoActual <= 5;
-  
+
   return (
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-auto">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto">
@@ -316,7 +332,8 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
             Registrar nuevo colegiado
             {pasoActual <= 6 && (
               <span className="ml-2 text-sm text-gray-500">
-                {pasoActual && `• Paso ${pasoActual}: ${titulosPasos[pasoActual - 1]}`}
+                {pasoActual &&
+                  `• Paso ${pasoActual}: ${titulosPasos[pasoActual - 1]}`}
               </span>
             )}
           </h2>
@@ -327,7 +344,7 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
             <X size={24} />
           </button>
         </div>
-        
+
         {/* Indicador de pasos - Solo visible hasta el paso 5 */}
         {mostrarEncabezadoPasos && (
           <div className="px-6 pt-6">
@@ -336,35 +353,46 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
               {[1, 2, 3, 4, 5].map((paso, index) => (
                 <React.Fragment key={paso}>
                   <div className="flex flex-col items-center">
-                    <div className={`w-10 h-10 flex items-center justify-center rounded-full 
-                    ${completedSteps.includes(paso) 
-                      ? 'bg-[#41023B] text-white' 
-                      : pasoActual === paso 
-                        ? 'bg-[#D7008A] text-white' 
-                        : 'bg-gray-200 text-gray-600'
-                    }`}>
-                      {completedSteps.includes(paso) ? <CheckCircle size={18} /> : paso}
+                    <div
+                      className={`w-10 h-10 flex items-center justify-center rounded-full 
+                    ${
+                      completedSteps.includes(paso)
+                        ? "bg-[#41023B] text-white"
+                        : pasoActual === paso
+                        ? "bg-[#D7008A] text-white"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                    >
+                      {completedSteps.includes(paso) ? (
+                        <CheckCircle size={18} />
+                      ) : (
+                        paso
+                      )}
                     </div>
                     {/* Aquí usamos la función para mostrar el título dividido */}
                     <div className="mt-1 min-h-10">
                       {getTituloIndicador(paso)}
                     </div>
                   </div>
-                  
+
                   {index < 4 && (
-                    <div className={`h-1 flex-1 mx-1 ${completedSteps.includes(paso) ? 'bg-[#41023B]' : 'bg-gray-200'}`}></div>
+                    <div
+                      className={`h-1 flex-1 mx-1 ${
+                        completedSteps.includes(paso)
+                          ? "bg-[#41023B]"
+                          : "bg-gray-200"
+                      }`}
+                    ></div>
                   )}
                 </React.Fragment>
               ))}
             </div>
           </div>
         )}
-        
+
         {/* Contenido del paso actual */}
-        <div className="p-6">
-          {renderPasoActual()}
-        </div>
-        
+        <div className="p-6">{renderPasoActual()}</div>
+
         {/* Botones de navegación */}
         {pasoActual !== 7 && pasoActual !== 6 && (
           <div className="flex justify-between p-6 border-t bg-gray-50">
@@ -380,7 +408,7 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
             ) : (
               <div></div>
             )}
-            
+
             {pasoActual < 5 ? (
               <button
                 type="button"
@@ -390,33 +418,51 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
                 Siguiente
                 <ArrowRight size={16} />
               </button>
-            ) : pasoActual === 5 && (
-              <button
-                type="button"
-                onClick={avanzarPaso}
-                className="flex items-center gap-1 px-4 py-2 bg-[#D7008A] text-white rounded-lg hover:bg-[#590248] transition-colors"
-              >
-                Completar Registro
-                <ArrowRight size={16} />
-              </button>
+            ) : (
+              pasoActual === 5 && (
+                <button
+                  type="button"
+                  onClick={avanzarPaso}
+                  className="flex items-center gap-1 px-4 py-2 bg-[#D7008A] text-white rounded-lg hover:bg-[#590248] transition-colors"
+                >
+                  Completar Registro
+                  <ArrowRight size={16} />
+                </button>
+              )
             )}
           </div>
         )}
-        
+
         {/* Botón para la sección de pagos cuando hay exoneración */}
         {pasoActual === 6 && exonerarPagos && (
           <div className="flex justify-center p-6 border-t bg-gray-100">
             <button
               type="button"
-              onClick={handleRegistroFinalizado}
+              onClick={handlePaymentComplete}
               disabled={isSubmitting}
               className="px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Procesando...
                 </span>
@@ -428,5 +474,5 @@ export default function RegistroColegiados({ isAdmin = true, onClose, onRegistro
         )}
       </div>
     </div>
-  )
+  );
 }

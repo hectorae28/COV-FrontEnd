@@ -2,7 +2,6 @@
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation";
 import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
-import axios from "axios";
 import {
   Building,
   Check,
@@ -25,7 +24,6 @@ import InfoPersonal from "../InfoPers";
 import PagosColg from "../PagosColg";
 import Head from "next/head";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import { set } from "date-fns";
 import api from "@/api/api";
 
 const steps = [
@@ -69,18 +67,21 @@ const steps = [
 
 export default function RegistrationForm() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const initialState = {
     nationality: "",
     identityCard: "",
     firstName: "",
     lastName: "",
     birthPlace: "",
     birthDate: "",
+    gender: "",
     age: "",
     maritalStatus: "",
     email: "",
     phoneNumber: "",
+    homePhone: "",
     address: "",
+    city: "",
     collegeNumber: "",
     professionalField: "",
     institutionName: "",
@@ -90,30 +91,46 @@ export default function RegistrationForm() {
     clinicAddress: "",
     clinicPhone: "",
     selectedOption: "",
-  });
+    graduateInstitute: "",
+    universityTitle: "",
+    mainRegistrationNumber: "",
+    mainRegistrationDate: "",
+    mppsRegistrationNumber: "",
+    mppsRegistrationDate: "",
+    titleIssuanceDate: "",
+    state: "",
+    ci: {},
+    rif: {},
+    titulo: {},
+    mpps: {},
+  };
+  const [formData, setFormData] = useState(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
   const [tazaBcv, setTazaBcv] = useState(0);
-  const [costoInscripcion, setCostoInscripcion] = useState(0)
+  const [costoInscripcion, setCostoInscripcion] = useState(0);
   const [metodoPago, setMetodoPago] = useState([]);
-  
-  useEffect(()=>{
+
+  useEffect(() => {
     const LoadData = async () => {
       try {
         const taza = await fetchDataSolicitudes("tasa-bcv");
         setTazaBcv(taza.data.rate);
-        const costo = await fetchDataSolicitudes("costo", "?tipo_costo=1&es_vigente=true");
+        const costo = await fetchDataSolicitudes(
+          "costo",
+          "?tipo_costo=1&es_vigente=true"
+        );
         setCostoInscripcion(Number(costo.data[0].monto_usd));
         const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
         setMetodoPago(Mpagos.data);
       } catch (error) {
         console.error("Error al obtener los datos:", error);
       }
-    }
+    };
     LoadData();
-  },[])
+  }, []);
 
   const handleInputChange = (updates) => {
     setFormData((prevState) => ({
@@ -139,21 +156,18 @@ export default function RegistrationForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isIntentionalSubmit) {
-
-      // setIsSubmitting(true);
-      // // Simular un retraso para procesar el formulario
-      // await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // // En lugar de mostrar el confeti, mostrar la pantalla de pagos
-      // setIsSubmitting(false);
       setShowPaymentScreen(true);
     }
   };
 
-  const handlePaymentComplete = async ({paymentDate, paymentMethod, referenceNumber, paymentFile, totalAmount, metodo_de_pago}) => {
-    // Mostrar el confeti después de completar el pago
+  const handlePaymentComplete = async ({
+    paymentDate,
+    referenceNumber,
+    paymentFile,
+    totalAmount,
+    metodo_de_pago,
+  }) => {
     const Form = new FormData();
-
     Form.append(
       "persona",
       JSON.stringify({
@@ -170,7 +184,7 @@ export default function RegistrationForm() {
         telefono_movil: formData.phoneNumber,
         telefono_de_habitacion: formData.homePhone,
         fecha_de_nacimiento: formData.birthDate,
-        estado_civil: formData.maritalStatus || null,
+        estado_civil: formData.maritalStatus,
       })
     );
     Form.append("instituto_bachillerato", formData.graduateInstitute);
@@ -202,23 +216,22 @@ export default function RegistrationForm() {
     Form.append("file_fondo_negro", formData.titulo || null);
     Form.append("file_mpps", formData.mpps || null);
     Form.append("comprobante", paymentFile);
-    Form.append("pago", JSON.stringify({
-      fecha_pago: paymentDate,
-      metodo_de_pago: metodo_de_pago.id,
-      num_referencia: referenceNumber,
-      monto:totalAmount
-    }));
-    setIsSubmitting(false)
+    Form.append(
+      "pago",
+      JSON.stringify({
+        fecha_pago: paymentDate,
+        metodo_de_pago: metodo_de_pago.id,
+        num_referencia: referenceNumber,
+        monto: totalAmount,
+      })
+    );
+    setIsSubmitting(true);
     try {
-      const response = await api.post(
-        "usuario/register/",
-        Form,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await api.post("usuario/register/", Form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       if (response.status === 201) {
         confetti({
           particleCount: 100,
@@ -234,7 +247,6 @@ export default function RegistrationForm() {
         error.response?.data || error
       );
     }
-
   };
 
   const CurrentStepComponent = steps.find(
@@ -420,28 +432,7 @@ export default function RegistrationForm() {
                             setIsComplete(false);
                             setShowPaymentScreen(false);
                             setCurrentStep(1);
-                            setFormData({
-                              nationality: "",
-                              identityCard: "",
-                              firstName: "",
-                              lastName: "",
-                              birthPlace: "",
-                              birthDate: "",
-                              age: "",
-                              maritalStatus: "",
-                              email: "",
-                              phoneNumber: "",
-                              address: "",
-                              collegeNumber: "",
-                              professionalField: "",
-                              institutionName: "",
-                              institutionAddress: "",
-                              institutionPhone: "",
-                              clinicName: "",
-                              clinicAddress: "",
-                              clinicPhone: "",
-                              selectedOption: "",
-                            });
+                            setFormData(initialState);
                             setIsIntentionalSubmit(false);
                           }}
                           className="px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl hover:opacity-90 transition-all"
@@ -456,7 +447,14 @@ export default function RegistrationForm() {
                         transition={{ duration: 0.5 }}
                         className="relative z-10 p-8"
                       >
-                        <PagosColg props={{handlePaymentComplete,tazaBcv,costoInscripcion,metodoPago}} />
+                        <PagosColg
+                          props={{
+                            handlePaymentComplete,
+                            tazaBcv,
+                            costoInscripcion,
+                            metodoPago,
+                          }}
+                        />
                       </motion.div>
                     ) : (
                       <form onSubmit={handleSubmit} className="relative z-10">

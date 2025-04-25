@@ -11,8 +11,13 @@ export default function ForgotPasswordForm({ onBackToLogin }) {
     setCorreoRecuperacion(e.target.value)
   }
 
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    // Aquí puedes agregar la lógica para enviar el correo de recuperación
+  }
+
   return (
-    <form>
+    <form onSubmit={handleSubmit}>
       <div className="mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

@@ -10,16 +10,6 @@ export default function InfoColegiado({ formData, onInputChange }) {
     onInputChange({ [name]: value });
   };
 
-  const professionalFields = [
-    "Medicina",
-    "Ingeniería",
-    "Derecho",
-    "Arquitectura",
-    "Psicología",
-    "Contaduría",
-    "Otra",
-  ];
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
