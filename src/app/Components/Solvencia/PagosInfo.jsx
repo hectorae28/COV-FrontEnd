@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { fetchMe } from "@/api/endpoints/colegiado";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import PayPalProvider from "../utils/paypalProvider";
+
 
 export default function PagosColg({ onPaymentComplete }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -442,6 +444,11 @@ export default function PagosColg({ onPaymentComplete }) {
                         </a>
                       </p>
 
+
+                      <div className="mt-4 flex justify-center">
+                        <PayPalProvider />
+                      </div>
+                      {/* Botón de pagar en PayPal
                       <div className="mt-4 flex justify-center">
                         <a
                           href="https://www.paypal.com/paypalme/elcov"
@@ -453,6 +460,7 @@ export default function PagosColg({ onPaymentComplete }) {
                           Pagar en PayPal
                         </a>
                       </div>
+                      */}
                     </div>
                   </div>
                 </div>
