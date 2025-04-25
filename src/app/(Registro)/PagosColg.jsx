@@ -17,7 +17,7 @@ export default function PagosColg({ props }) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
-  const [paymentAmount, setPaymentAmount] = useState("50.00");
+  const [paymentAmount, setPaymentAmount] = useState(costoInscripcion);
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
 
@@ -41,7 +41,9 @@ export default function PagosColg({ props }) {
     // Simular procesamiento de pago
     await new Promise((resolve) => setTimeout(resolve, 1500));
     // Llamar a la función que maneja la finalización del pago
-    handlePaymentComplete({paymentDate, paymentMethod, referenceNumber, paymentFile});
+    handlePaymentComplete({paymentDate, paymentMethod, referenceNumber, paymentFile, totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount, metodo_de_pago:metodoPago.find(
+      m => m.datos_adicionales.slug === paymentMethod
+    )});
 
     setIsSubmitting(false);
   };
@@ -85,7 +87,7 @@ export default function PagosColg({ props }) {
           {/* Tasa de cambio */}
           <div className="bg-[#D7008A]/10 px-3 py-2 rounded-lg border border-[#D7008A]">
             <p className="text-sm font-bold text[#41023B]">
-              USD$ 1 = {tazaBcv}
+              USD$ 1 = {tazaBcv} bs
             </p>
           </div>
         </div>
@@ -107,11 +109,11 @@ export default function PagosColg({ props }) {
             <button
               key={index}
               className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${
-                metodo.slug === "bdv"
+                metodo.datos_adicionales.slug === "bdv"
                   ? "bg-red-50 border-red-300 text-red-700"
                   : "bg-blue-50 border-blue-300 text-blue-700"
               }`}
-              onClick={() => setPaymentMethod(metodo.slug)}
+              onClick={() => setPaymentMethod(metodo.datos_adicionales.slug)}
             >
               <img
                 src={

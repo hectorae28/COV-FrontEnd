@@ -26,6 +26,7 @@ import PagosColg from "../PagosColg";
 import Head from "next/head";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import { set } from "date-fns";
+import api from "@/api/api";
 
 const steps = [
   {
@@ -149,7 +150,7 @@ export default function RegistrationForm() {
     }
   };
 
-  const handlePaymentComplete = async ({paymentDate, paymentMethod, referenceNumber, paymentFile}) => {
+  const handlePaymentComplete = async ({paymentDate, paymentMethod, referenceNumber, paymentFile, totalAmount, metodo_de_pago}) => {
     // Mostrar el confeti después de completar el pago
     const Form = new FormData();
 
@@ -203,38 +204,37 @@ export default function RegistrationForm() {
     Form.append("comprobante", paymentFile);
     Form.append("pago", JSON.stringify({
       fecha_pago: paymentDate,
-      metodo_pago: paymentMethod,
-      referencia_pago: referenceNumber,
+      metodo_de_pago: metodo_de_pago.id,
+      num_referencia: referenceNumber,
+      monto:totalAmount
     }));
     setIsSubmitting(false)
-    console.log("FormData:", Form);
+    try {
+      const response = await api.post(
+        "usuario/register/",
+        Form,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      if (response.status === 201) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+        setShowPaymentScreen(false);
+        setIsComplete(true);
+      }
+    } catch (error) {
+      console.error(
+        "Error al enviar los datos:",
+        error.response?.data || error
+      );
+    }
 
-    // try {
-    //   const response = await axios.post(
-    //     "http://localhost:8000/api/v1/usuario/register/",
-    //     Form,
-    //     {
-    //       headers: {
-    //         "Content-Type": "multipart/form-data",
-    //       },
-    //     }
-    //   );
-    //   console.log("Datos enviados correctamente:", response.data);
-    // } catch (error) {
-    //   console.error(
-    //     "Error al enviar los datos:",
-    //     error.response?.data || error
-    //   );
-    // }
-    // confetti({
-    //   particleCount: 100,
-    //   spread: 70,
-    //   origin: { y: 0.6 },
-    // });
-
-    // // Finalizar el proceso y mostrar la pantalla de confirmación
-    // setShowPaymentScreen(false);
-    // setIsComplete(true);
   };
 
   const CurrentStepComponent = steps.find(
