@@ -1,12 +1,24 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
-  User, Phone, Mail, Calendar, FileText,
-  CheckCircle, AlertCircle, XCircle, ChevronLeft, X, Upload, Trash2,
-  Eye, Clock, Download, Award, Briefcase
+  AlertCircle,
+  Award, Briefcase,
+  Calendar,
+  CheckCircle,
+  ChevronLeft,
+  Clock, Download,
+  Eye,
+  FileText,
+  Mail,
+  Phone,
+  Trash2,
+  Upload,
+  User,
+  X,
+  XCircle
 } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function DetallePendiente({ params, onVolver }) {
   // Obtenemos el ID desde los parámetros de la URL
@@ -24,6 +36,14 @@ export default function DetallePendiente({ params, onVolver }) {
   const [mostrarConfirmacionEliminar, setMostrarConfirmacionEliminar] = useState(false)
   const [documentoAEliminar, setDocumentoAEliminar] = useState(null)
   const [documentosCompletos, setDocumentosCompletos] = useState(true)
+
+  const [datosRegistro, setDatosRegistro] = useState({
+    libro: "",
+    pagina: "",
+    tipo_profesion: "",
+    num_cov: ""
+  });
+  const [pasoModal, setPasoModal] = useState(1);
 
   // Simulación de obtención de datos
   useEffect(() => {
@@ -147,24 +167,29 @@ export default function DetallePendiente({ params, onVolver }) {
     setDocumentoSeleccionado(null)
   }
 
+  const handleReemplazarDocumento = (documento) => {
+    // Aquí iría la lógica para reemplazar un documento
+    alert(`Funcionalidad para reemplazar el documento: ${documento.nombre}`);
+  };
+
   const handleEliminarDocumento = (documento) => {
     // Make sure we're setting the full document object
     setDocumentoAEliminar(documento);
     setMostrarConfirmacionEliminar(true);
   };
-  
+
 
   const confirmarEliminarDocumento = () => {
     if (!documentoAEliminar) return;
-    
+
     // Create a new array without the document to be deleted
     const nuevosDocumentos = documentosRequeridos.filter(
       (doc) => doc.id !== documentoAEliminar.id
     );
-    
+
     // Update the documents list
     setDocumentosRequeridos(nuevosDocumentos);
-    
+
     // If we're deleting a required document with an archivo, this should change the status
     if (documentoAEliminar.requerido && documentoAEliminar.archivo) {
       setDocumentosCompletos(false);
@@ -172,11 +197,11 @@ export default function DetallePendiente({ params, onVolver }) {
       // Otherwise, recalculate based on the new list
       setDocumentosCompletos(verificarDocumentosCompletos(nuevosDocumentos));
     }
-    
+
     // Close the confirmation modal
     setMostrarConfirmacionEliminar(false);
     setDocumentoAEliminar(null);
-  };  
+  };
 
   const handleSubirDocumento = () => {
     // Aquí iría la lógica para subir un nuevo documento
@@ -187,21 +212,27 @@ export default function DetallePendiente({ params, onVolver }) {
 
   const handleAprobarSolicitud = async () => {
     try {
-      // Simular llamada a API para aprobar solicitud
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Simular llamada a API para aprobar solicitud con los datos del registro
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Aquí se enviarían los datos del registro junto con la aprobación
+      console.log("Datos de registro enviados:", datosRegistro);
 
       // Mostrar mensaje de confirmación exitosa
-      setConfirmacionExitosa(true)
-      setMostrarConfirmacion(false)
+      setConfirmacionExitosa(true);
+      setMostrarConfirmacion(false);
+
+      // Restablecer el estado del modal para futuros usos
+      setPasoModal(1);
 
       // Volver a la lista después de un tiempo
       setTimeout(() => {
-        onVolver()
-      }, 3000)
+        onVolver();
+      }, 3000);
     } catch (error) {
-      console.error("Error al aprobar solicitud:", error)
+      console.error("Error al aprobar solicitud:", error);
     }
-  }
+  };
 
   const handleRechazarSolicitud = async () => {
     try {
@@ -231,13 +262,13 @@ export default function DetallePendiente({ params, onVolver }) {
       console.error("Error: Los documentos no son un array:", documentos);
       return false; // Ensure we handle the case where it's not an array
     }
-    
+
     const documentosFaltantes = documentos.filter(
       (doc) => doc.requerido && !doc.archivo
     );
     return documentosFaltantes.length === 0;
   };
-  
+
 
   if (isLoading) {
     return (
@@ -263,6 +294,27 @@ export default function DetallePendiente({ params, onVolver }) {
       </div>
     )
   }
+
+  // Primero, necesito añadir nuevos estados para manejar el formulario y el flujo del modal
+
+
+  const handleDatosRegistroChange = (e) => {
+    const { name, value } = e.target;
+    setDatosRegistro(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const avanzarPasoModal = () => {
+    // Aquí podríamos añadir validación si fuera necesario
+    setPasoModal(2);
+  };
+
+  // Función para volver al paso anterior
+  const retrocederPasoModal = () => {
+    setPasoModal(1);
+  };
 
   const nombreCompleto = `${pendiente.persona.nombre} ${pendiente.persona.segundo_nombre || ''} ${pendiente.persona.primer_apellido} ${pendiente.persona.segundo_apellido || ''}`.trim();
   const fechaSolicitud = pendiente.fecha_solicitud ? new Date(pendiente.fecha_solicitud).toLocaleDateString('es-ES') : "No especificada";
@@ -355,8 +407,8 @@ export default function DetallePendiente({ params, onVolver }) {
                 {/* Estado de documentación completa/incompleta */}
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${documentosCompletos
-                      ? "bg-green-100 text-green-800 border border-green-200"
-                      : "bg-red-100 text-red-800 border border-red-200"
+                    ? "bg-green-100 text-green-800 border border-green-200"
+                    : "bg-red-100 text-red-800 border border-red-200"
                     }`}
                 >
                   {documentosCompletos ? (
@@ -442,6 +494,7 @@ export default function DetallePendiente({ params, onVolver }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Primera columna: nombre, cédula, fecha de nacimiento */}
           <div className="space-y-4">
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre completo</p>
@@ -459,10 +512,11 @@ export default function DetallePendiente({ params, onVolver }) {
             </div>
           </div>
 
+          {/* Segunda columna: correo, número móvil, número de teléfono */}
           <div className="space-y-4">
             <div className="bg-gray-50 p-3 rounded-md">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
-              <p className="font-medium text-gray-800">{pendiente.persona.direccion.referencia}, {pendiente.persona.direccion.estado}</p>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
+              <p className="font-medium text-gray-800">{pendiente.persona.correo}</p>
             </div>
 
             <div className="bg-gray-50 p-3 rounded-md">
@@ -476,12 +530,8 @@ export default function DetallePendiente({ params, onVolver }) {
             </div>
           </div>
 
+          {/* Tercera columna: estado civil, género, dirección */}
           <div className="space-y-4">
-            <div className="bg-gray-50 p-3 rounded-md">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
-              <p className="font-medium text-gray-800">{pendiente.persona.correo}</p>
-            </div>
-
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
               <p className="font-medium text-gray-800">{pendiente.persona.estado_civil || "No especificado"}</p>
@@ -490,6 +540,11 @@ export default function DetallePendiente({ params, onVolver }) {
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Género</p>
               <p className="font-medium text-gray-800">{pendiente.persona.genero === 'M' ? 'Masculino' : pendiente.persona.genero === 'F' ? 'Femenino' : pendiente.persona.genero}</p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
+              <p className="font-medium text-gray-800">{pendiente.persona.direccion.referencia}, {pendiente.persona.direccion.estado}</p>
             </div>
           </div>
         </div>
@@ -607,106 +662,78 @@ export default function DetallePendiente({ params, onVolver }) {
       </div>
 
       {/* Documentos */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
+<motion.div
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.4 }}
+  className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
+>
+  <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+    <div className="flex items-center mb-5 md:mb-0 border-b md:border-b-0 pb-3 md:pb-0">
+      <FileText size={20} className="text-[#C40180] mr-2" />
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900">Documentos</h2>
+        <p className="text-sm text-gray-500">Documentación del colegiado</p>
+      </div>
+    </div>
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {documentosRequeridos.map((documento) => (
+      <div
+        key={documento.id}
+        className="border rounded-lg border-gray-200 hover:border-[#C40180] hover:shadow-md transition-all duration-200"
       >
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-          <div className="flex items-center mb-5 md:mb-0 border-b md:border-b-0 pb-3 md:pb-0">
-            <FileText size={20} className="text-[#C40180] mr-2" />
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Documentos requeridos</h2>
-              <p className="text-sm text-gray-500">Revisión de documentación cargada por el solicitante</p>
-            </div>
-          </div>
-
-          <div className="mt-4 md:mt-0">
-            <button
-              onClick={handleSubirDocumento}
-              className="bg-gradient-to-br from-[#C40180] to-[#7D0053] text-white px-4 py-2.5 rounded-md flex items-center gap-2 hover:from-[#C40180] hover:to-[#C40180] transition-all duration-300 shadow-sm font-medium"
-            >
-              <Upload size={16} />
-              <span>Subir documento</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {documentosRequeridos.map((documento) => (
-            <motion.div
-              key={documento.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
-              className="border rounded-lg border-gray-200 hover:border-[#C40180] hover:shadow-md transition-all duration-200"
-            >
-              <div className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-2">
-                      <div className="bg-[#F9E6F3] p-2 rounded-md mr-3">
-                        <FileText
-                          className="text-[#C40180]"
-                          size={20}
-                        />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900 flex items-center">
-                          {documento.nombre}
-                          {documento.requerido && <span className="text-red-500 ml-1">*</span>}
-                        </h3>
-                        <p className="text-xs text-gray-500">{documento.descripcion}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-1">
-                    <button
-                      onClick={() => handleVerDocumento(documento)}
-                      className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                      title="Ver documento"
-                    >
-                      <Eye size={18} />
-                    </button>
-
-                    <button
-                      onClick={() => handleEliminarDocumento(documento)}
-                      className="text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors"
-                      title="Eliminar documento"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+        <div className="p-4">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <div className="flex items-center mb-2">
+                <div className="bg-[#F9E6F3] p-2 rounded-md mr-3">
+                  <FileText
+                    className="text-[#C40180]"
+                    size={20}
+                  />
                 </div>
-
-                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                    {documento.archivo}
-                  </span>
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                    Cargado
-                  </span>
+                <div>
+                  <h3 className="font-medium text-gray-900 flex items-center">
+                    {documento.nombre}
+                    {documento.requerido && <span className="text-red-500 ml-1">*</span>}
+                  </h3>
+                  <p className="text-xs text-gray-500">{documento.descripcion}</p>
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </div>
+            </div>
 
-        {documentosRequeridos.length === 0 && (
-          <div className="bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">
-            <FileText size={40} className="text-gray-300 mb-3" />
-            <p className="text-gray-500 text-center">No hay documentos disponibles</p>
-            <button
-              onClick={handleSubirDocumento}
-              className="mt-4 text-[#C40180] border border-[#C40180] px-4 py-2 rounded-md hover:bg-[#F9E6F3] transition-colors"
-            >
-              Subir primer documento
-            </button>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => handleVerDocumento(documento)}
+                className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                title="Ver documento"
+              >
+                <Eye size={18} />
+              </button>
+
+              <button
+                onClick={() => handleReemplazarDocumento(documento)}
+                className="text-orange-600 hover:bg-orange-50 p-2 rounded-full transition-colors"
+                title="Reemplazar documento"
+              >
+                <Upload size={18} />
+              </button>
+            </div>
           </div>
-        )}
-      </motion.div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {documentosRequeridos.length === 0 && (
+    <div className="bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">
+      <FileText size={40} className="text-gray-300 mb-3" />
+      <p className="text-gray-500 text-center">No hay documentos disponibles</p>
+    </div>
+  )}
+</motion.div>
 
       {/* Modal de confirmación para aprobación */}
       {mostrarConfirmacion && (
@@ -835,7 +862,7 @@ export default function DetallePendiente({ params, onVolver }) {
                   <FileText size={64} className="mx-auto mb-4 text-gray-400" />
                   <p className="text-gray-500 font-medium">Vista previa no disponible para {documentoSeleccionado.nombre}</p>
                   <p className="text-sm text-gray-400 mt-2">Archivo: {documentoSeleccionado.archivo}</p>
-                  <button className="mt-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-md hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm font-medium flex items-center justify-center gap-2 mx-auto">
+                  <button className="mt-6 bg-gradient-to-br from-[#C40180] to-[#7D0053] text-white px-5 py-2.5 rounded-md hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm font-medium flex items-center justify-center gap-2 mx-auto">
                     <Download size={16} />
                     Descargar documento
                   </button>
@@ -846,45 +873,175 @@ export default function DetallePendiente({ params, onVolver }) {
         </div>
       )}
 
-      {/* Modal de confirmación para eliminar documento */}
-      {mostrarConfirmacionEliminar && (
+      {/* Modal de confirmación modificado con pasos */}
+      {mostrarConfirmacion && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden"
+            className="bg-white rounded-lg shadow-xl w-full max-w-xl overflow-hidden"
           >
-            <div className="bg-red-50 p-4 border-b border-red-100">
-              <div className="flex items-center justify-center mb-2 text-red-600">
-                <Trash2 size={40} />
-              </div>
-              <h3 className="text-xl font-semibold text-center text-gray-900">
-                Eliminar documento
-              </h3>
-            </div>
+            {pasoModal === 1 ? (
+              // Paso 1: Formulario de registro
+              <>
+                <div className="bg-[#7D0053]/10 p-4 border-b border-[#7D0053]">
+                  <div className="flex items-center justify-center mb-2 text-[#7D0053]">
+                    <FileText size={40} />
+                  </div>
+                  <h3 className="text-xl font-semibold text-center text-gray-900">
+                    Datos de registro de colegiado
+                  </h3>
+                  <p className="text-center text-gray-600 mt-2">
+                    Ingrese los datos de registro para el colegiado <span className="font-medium text-gray-900">{nombreCompleto}</span>
+                  </p>
+                </div>
 
-            <div className="p-6">
-              <p className="text-center text-gray-600 mb-6">
-                ¿Está seguro que desea eliminar el documento "<span className="font-medium text-gray-900">{documentoAEliminar?.nombre}</span>"? Esta acción no se puede deshacer.
-              </p>
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={() => setMostrarConfirmacionEliminar(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={confirmarEliminarDocumento}
-                  className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-700 hover:to-red-800 transition-all shadow-sm font-medium"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Libro <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="libro"
+                          value={datosRegistro.libro}
+                          onChange={handleDatosRegistroChange}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                          placeholder="Número de libro"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Página <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="pagina"
+                          value={datosRegistro.pagina}
+                          onChange={handleDatosRegistroChange}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                          placeholder="Número de página"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de profesión <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="tipo_profesion"
+                        value={datosRegistro.tipo_profesion}
+                        onChange={handleDatosRegistroChange}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        required
+                      >
+                        <option value="">Seleccionar tipo</option>
+                        <option value="Odontólogo general">Odontólogo general</option>
+                        <option value="Especialista en ortodoncia">Especialista en ortodoncia</option>
+                        <option value="Especialista en endodoncia">Especialista en endodoncia</option>
+                        <option value="Especialista en periodoncia">Especialista en periodoncia</option>
+                        <option value="Especialista en odontopediatría">Especialista en odontopediatría</option>
+                        <option value="Especialista en cirugía maxilofacial">Especialista en cirugía maxilofacial</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Número COV <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                          type="text"
+                          name="num_cov"
+                          value={datosRegistro.num_cov}
+                          onChange={handleDatosRegistroChange}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                          placeholder="Número de registro COV"
+                          required
+                        />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center gap-4 mt-6">
+                    <button
+                      onClick={() => setMostrarConfirmacion(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={avanzarPasoModal}
+                      className="px-6 py-2 bg-gradient-to-br from-[#C40180] to-[#7D0053] text-white rounded-md hover:from-purple-700 hover:to-purple-800 transition-all shadow-sm font-medium"
+                    >
+                      Continuar
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Paso 2: Confirmación (modal original modificado)
+              <>
+                <div className="bg-green-50 p-4 border-b border-green-100">
+                  <div className="flex items-center justify-center mb-2 text-green-600">
+                    <CheckCircle size={40} />
+                  </div>
+                  <h3 className="text-xl font-semibold text-center text-gray-900">
+                    Confirmar aprobación
+                  </h3>
+                </div>
+
+                <div className="p-6">
+                  <p className="text-center text-gray-600 mb-4">
+                    ¿Está seguro que desea aprobar la solicitud de <span className="font-medium text-gray-900">{nombreCompleto}</span>?
+                    Se generará un nuevo registro de colegiado en el sistema con los siguientes datos:
+                  </p>
+
+                  <div className="bg-gray-50 p-4 rounded-md mb-6">
+                    <ul className="space-y-2 text-sm text-gray-700">
+                      <li className="flex justify-between">
+                        <span className="font-medium">Libro:</span>
+                        <span>{datosRegistro.libro}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="font-medium">Página:</span>
+                        <span>{datosRegistro.pagina}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="font-medium">Tipo de profesión:</span>
+                        <span>{datosRegistro.tipo_profesion}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="font-medium">Número COV:</span>
+                        <span>{datosRegistro.num_cov}</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="flex justify-center gap-4">
+                    <button
+                      onClick={retrocederPasoModal}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Volver
+                    </button>
+                    <button
+                      onClick={handleAprobarSolicitud}
+                      className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-md hover:from-green-700 hover:to-green-800 transition-all shadow-sm font-medium"
+                    >
+                      Confirmar aprobación
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </motion.div>
         </div>
       )}
+
     </div>
   )
 }
