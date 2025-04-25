@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState } from "react"
-import GraficoColegiados from "../../Components/Estadisticas/ColegiadosG"
-import GraficoEspecializaciones from "../../Components/Estadisticas/EspecializacionesG"
-import GraficoEventos from "../../Components/Estadisticas/EventosG"
-import GraficoFinanciero from "../../Components/Estadisticas/FinanzasG"
-import GraficoInscripciones from "../../Components/Estadisticas/InscripcionesG"
+import GraficoColegiados from "@/Components/Estadisticas/ColegiadosG"
+import GraficoEspecializaciones from "@/Components/Estadisticas/EspecializacionesG"
+import GraficoEventos from "@/Components/Estadisticas/EventosG"
+import GraficoFinanciero from "@/Components/Estadisticas/FinanzasG"
+import GraficoInscripciones from "@/Components/Estadisticas/InscripcionesG"
 
 // CustomTooltip
 export const CustomTooltip = React.memo(({ active, payload, label, total, tooltipType = "default" }) => {

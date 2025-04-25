@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react"
 
 // Importar los componentes separados
-import SectionSolict from "../Components/Home/SectionSolict"
-import SectionMessag from "../Components/Home/SectionMessag"
-import SectionAccesD from "../Components/Home/SectionAccesD"
-import SectionGraf from "../Components/Home/SectionGraf"
+import SectionSolict from "../../Components/Home/SectionSolict"
+import SectionMessag from "../../Components/Home/SectionMessag"
+import SectionAccesD from "../../Components/Home/SectionAccesD"
+import SectionGraf from "../../Components/Home/SectionGraf"
 
 // Componente principal Home
 export default function Home() {

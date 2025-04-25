@@ -3,7 +3,7 @@
 import { Edit, Image as ImageIcon, Plus, Save, Trash, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
-import { generateMockImagePath, initialAliados } from '../../../Models/PaginaWeb/Inicio/AliadosData';
+import { generateMockImagePath, initialAliados } from "@/app/Models/PanelControl/PaginaWeb/Inicio/AliadosData";;
 
 export default function AliadosDashboard({ moduleInfo }) {
   // Estado inicial de aliados - ahora importado desde AliadosData

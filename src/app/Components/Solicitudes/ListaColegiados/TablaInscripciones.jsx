@@ -1,9 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Book, Calendar, Download, Search, MapPin, Users, Award } from "lucide-react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
+import { Book, Calendar, Download, Search, MapPin, Users, Award, ChevronLeft } from "lucide-react"
 
-export default function TablaInscripciones({ colegiadoId }) {
+export default function TablaInscripciones({ colegiadoId, onVolver }) {
+  const [datosAsistencia, setDatosAsistencia] = useState([])
+  const [datosPagos, setDatosPagos] = useState([])
+  const [estadisticasGenerales, setEstadisticasGenerales] = useState([])
   const [inscripciones, setInscripciones] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -232,6 +236,19 @@ export default function TablaInscripciones({ colegiadoId }) {
             </div>
           )}
         </>
+      )}
+      
+      {/* Botón para volver */}
+      {onVolver && (
+        <div className="mt-6">
+          <button
+            onClick={onVolver}
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2"
+          >
+            <ChevronLeft size={18} />
+            <span>Volver a la lista</span>
+          </button>
+        </div>
       )}
     </div>
   )

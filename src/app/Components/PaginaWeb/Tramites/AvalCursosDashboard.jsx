@@ -1,6 +1,6 @@
 import { Edit, FileText, Save, GraduationCap } from "lucide-react";
 import { useEffect, useState } from "react";
-import { tramitesInfo } from "../../../Models/PaginaWeb/Tramites/TramitesData";
+import { tramitesInfo } from "@/app/Models/PanelControl/PaginaWeb/Tramites/TramitesData";
 
 export default function AvalCursosDashboard({ moduleInfo }) {
   // Estado para la información de Aval para Cursos

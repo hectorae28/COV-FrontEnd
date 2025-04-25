@@ -1,12 +1,12 @@
 "use client"
 
+import { NotificacionesProvider, useNotificaciones } from "@/app/Models/PanelControl/Comunicaciones/Notificaciones/NotificacionesData"
 import { CheckCircle, Search, Trash2, X } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { NotificacionDetail } from "../../Components/Comunicaciones/Notificaciones/NotificacionDetail"
-import { NotificacionesList } from "../../Components/Comunicaciones/Notificaciones/NotificacionesList"
-import { NotificacionesTabs } from "../../Components/Comunicaciones/Notificaciones/NotificacionesTabs"
-import { NotificacionesProvider, useNotificaciones } from "@/app/Models/PanelControl/Comunicaciones/Notificaciones/NotificacionesData"
+import { NotificacionDetail } from "../../../Components/Comunicaciones/Notificaciones/NotificacionDetail"
+import { NotificacionesList } from "../../../Components/Comunicaciones/Notificaciones/NotificacionesList"
+import { NotificacionesTabs } from "../../../Components/Comunicaciones/Notificaciones/NotificacionesTabs"
 
 function NotificacionesPage() {
   const searchParams = useSearchParams()

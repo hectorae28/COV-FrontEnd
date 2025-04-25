@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence, useAnimation } from "framer-motion"
+import { AnimatePresence, motion, useAnimation } from "framer-motion"
+import { useEffect, useRef, useState } from "react"
 // Import icons from Lucide React
-import { FileClock, BookUser, TrendingUpIcon as TrendingUpDown, Stamp } from "lucide-react"
+import { BookUser, FileClock, Stamp, TrendingUpIcon as TrendingUpDown } from "lucide-react"
 
 // Import individual dashboard components
-import HistoriaDashboard from "../../Components/PaginaWeb/SobreCOV/HistoriaDashboard.jsx"
-import PresidentesDashboard from "../../Components/PaginaWeb/SobreCOV/PresidentesDashboard.jsx"
-import JuntaDDashboard from "../../Components/PaginaWeb/SobreCOV/JuntaDDashboard.jsx"
-import LeyesRDashboard from "../../Components/PaginaWeb/SobreCOV/LeyesRDashboard.jsx"
+import HistoriaDashboard from "../../../Components/PaginaWeb/SobreCOV/HistoriaDashboard.jsx"
+import JuntaDDashboard from "../../../Components/PaginaWeb/SobreCOV/JuntaDDashboard.jsx"
+import LeyesRDashboard from "../../../Components/PaginaWeb/SobreCOV/LeyesRDashboard.jsx"
+import PresidentesDashboard from "../../../Components/PaginaWeb/SobreCOV/PresidentesDashboard.jsx"
 
 // Dashboard modules data moved directly into the component
 const dashboardModules = {
