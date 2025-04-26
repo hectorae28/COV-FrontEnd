@@ -1,13 +1,18 @@
 import React from 'react'
 import { motion } from "framer-motion"
-
-const DangerAlert = ({children}) => {
+const Alert = ({children,type}) => {
+  const optionsType={
+    info:"flex items-center p-4 mb-4 text-sm text-blue-800 border border-blue-300 rounded-lg bg-blue-50 ",
+    alert:"flex items-center p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50",
+    success:"flex items-center p-4 mb-4 text-sm text-green-800 border border-green-300 rounded-lg bg-green-50",
+    warning:"flex items-center p-4 mb-4 text-sm text-yellow-800 border border-yellow-300 rounded-lg bg-yellow-50"
+  }
   return (
     <motion.div
     initial={{ y: "100%" }}
     animate={{ y: "0%" }}
     transition={{ duration: 0.2, ease: "easeInOut" }}
-        className="flex items-center p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50"
+        className={optionsType[type] || optionsType.alert}
         role="alert"
       >
         <svg
@@ -27,4 +32,4 @@ const DangerAlert = ({children}) => {
   )
 }
 
-export default DangerAlert
+export default Alert

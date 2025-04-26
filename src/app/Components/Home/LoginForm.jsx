@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Lock, Mail, Check } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import DangerAlert from "@/Components/DangerAlert"
+import Alert from "@/app/Components/Alert"
 
 export default function LoginForm({ onForgotPassword, onRegister }) {
   const [rememberMe, setRememberMe] = useState(false);
@@ -31,7 +31,7 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
         setError("Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña.");
 
       } else if (result.error === "Invalid credentials") {
-        setError("Credenciales inválidas. Por favor, verifica tu email y contraseña.");
+        setError("Credenciales inválidas. Por favor, verifique su email y/o contraseña.");
       }else {
         setError("Ocurrió un error inesperado. Intenta nuevamente.");
       }
@@ -46,7 +46,7 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
   return (
     <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
       {error && (
-        <DangerAlert>{error}</DangerAlert>
+        <Alert type="alert">{error}</Alert>
 
       )}
       <div className="mb-6">

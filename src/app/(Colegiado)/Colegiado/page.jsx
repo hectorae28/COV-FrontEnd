@@ -17,14 +17,12 @@ export default function Home() {
   const [showSolvencyWarning, setShowSolvencyWarning] = useState(false); // Estado para la advertencia
   const [showTabs, setShowTabs] = useState(true); // Estado para mostrar/ocultar pestañas
   const [userInfo, setUser_info] = useState(null);
+  const [isFetch, setIsFetch] = useState(false)
   const { data: session, status } = useSession();
   const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
-
+  console.log("Estado de la sesión:", session);
   // Datos de solvencia
-  const solvencyInfo = {
-    date: session?.user.solvente,
-    amount: "7.00",
-  };
+
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
@@ -32,7 +30,7 @@ export default function Home() {
     const checkSolvencyStatus = () => {
       const today = new Date();
       const [day, month, year] = solvencyInfo.date.split("-").map(Number);
-      const solvencyDate = new Date(year, month - 1, day); // Meses en JS son 0-indexed
+      const solvencyDate = new Date(year, month - 1, day); 
 
       const warningDate = new Date(solvencyDate);
       warningDate.setDate(warningDate.getDate() - 14);
@@ -45,8 +43,9 @@ export default function Home() {
         setShowSolvencyWarning(false);
       }
     };
-
-    checkSolvencyStatus();
+    if (userInfo) {
+      checkSolvencyStatus();
+    }
 
     const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas
 
@@ -58,8 +57,12 @@ export default function Home() {
         .catch((error) => console.log(error));
     }
     return () => clearInterval(intervalId);
-  }, [solvencyInfo.date, session, status]);
+  }, [ session, status]);
 
+  const solvencyInfo = {
+    date: userInfo?.solvente,
+    amount: "7.00",
+  };
   // Manejar clic en card
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {

@@ -4,7 +4,7 @@ export { default as ClientLayout } from "./ClientLayout";
 export { default as DashboardLayout } from "./DashboardLayout";
 export { default as NavBar } from "./NavBar";
 export { default as Providers } from "./Provider";
-export { default as DangerAlert } from './DangerAlert'
+export { default as DangerAlert } from './Alert'
 
 // Exportar subcarpetas
 export * as Cards from "./Cards";
