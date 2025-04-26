@@ -1,15 +1,32 @@
 "use client";
 import { motion } from "framer-motion";
-import {
-  CreditCard,
-  ExternalLink,
-  DollarSign,
-} from "lucide-react";
+import { CreditCard, DollarSign } from "lucide-react";
 import { useState } from "react";
+import PayPalProvider from "@/app/Components/utils/paypalProvider";
 
-export default function PagosColg({ props }) {
-  const { handlePaymentComplete, tazaBcv, costoInscripcion, metodoPago } =
-    props;
+// Default values for props (in case they're not provided)
+const DEFAULT_COSTO = 75;
+const DEFAULT_TAZA = 36.55;
+const DEFAULT_METODOS = [
+  {
+    nombre: "Banco de Venezuela",
+    datos_adicionales: { slug: "bdv" },
+    logo_url: "/assets/icons/BDV.png"
+  },
+  {
+    nombre: "PayPal",
+    datos_adicionales: { slug: "paypal" },
+    logo_url: "/assets/icons/Paypal.png"
+  }
+];
+
+export default function PagosColg({ 
+  onPaymentComplete, 
+  costoInscripcion = DEFAULT_COSTO, 
+  tazaBcv = DEFAULT_TAZA, 
+  metodoPago = DEFAULT_METODOS,
+  handlePaymentComplete
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -37,10 +54,20 @@ export default function PagosColg({ props }) {
 
     // Simular procesamiento de pago
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    // Llamar a la función que maneja la finalización del pago
-    handlePaymentComplete({paymentDate, paymentMethod, referenceNumber, paymentFile, totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount, metodo_de_pago:metodoPago.find(
-      m => m.datos_adicionales.slug === paymentMethod
-    )});
+    
+    // Use the onPaymentComplete prop if handlePaymentComplete is not provided
+    const completeFn = handlePaymentComplete || onPaymentComplete;
+    
+    if (typeof completeFn === 'function') {
+      completeFn({
+        paymentDate, 
+        paymentMethod, 
+        referenceNumber, 
+        paymentFile, 
+        totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount, 
+        metodo_de_pago: metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)
+      });
+    }
 
     setIsSubmitting(false);
   };
@@ -115,7 +142,9 @@ export default function PagosColg({ props }) {
               <img
                 src={
                   metodo.logo_url
-                    ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                    ? metodo.logo_url.startsWith('/') 
+                      ? metodo.logo_url 
+                      : `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
                     : "/placeholder.svg"
                 }
                 alt={metodo.nombre}
@@ -129,7 +158,6 @@ export default function PagosColg({ props }) {
         {/* Contenido condicional según el método de pago */}
         {paymentMethod && (
           <div className="mt-6 border-t pt-6">
-            {/* {metodoPago.map((metodo) =>))} */}
             {paymentMethod === "bdv" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Información del Banco de Venezuela */}
@@ -354,15 +382,7 @@ export default function PagosColg({ props }) {
                       </p>
 
                       <div className="mt-4 flex justify-center">
-                        <a
-                          href="https://www.paypal.com/paypalme/elcov"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-6 py-2 rounded-lg bg-[#118AB2] hover:bg-[#118AB2]/90 transition-colors text-white font-medium flex items-center"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Pagar en PayPal
-                        </a>
+                        <PayPalProvider />
                       </div>
                     </div>
                   </div>
