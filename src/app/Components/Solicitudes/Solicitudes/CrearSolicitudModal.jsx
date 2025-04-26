@@ -10,8 +10,55 @@ import {
   Search,
   Check,
   User,
-  FileCheck
+  FileCheck,
+  ShoppingCart,
+  Tag,
+  Trash2
 } from "lucide-react"
+
+// Definición de tipos de solicitud y sus costos
+const TIPOS_SOLICITUD = {
+  Carnet: { 
+    id: "carnet",
+    nombre: "Carnet", 
+    costo: 75.00, 
+    codigo: "CARNET",
+    descripcion: "Solicitud de carnet de identificación profesional",
+    documentosRequeridos: ["Foto tipo carnet", "Comprobante de pago"]
+  },
+  Especializacion: { 
+    id: "especializacion",
+    nombre: "Especialización", 
+    costo: 150.00, 
+    codigo: "ESPEC",
+    descripcion: "Registro de título de especialización odontológica",
+    documentosRequeridos: ["Título de especialidad", "Copia de cédula", "Comprobante de pago"]
+  },
+  Solvencia: { 
+    id: "solvencia",
+    nombre: "Solvencia", 
+    costo: 50.00, 
+    codigo: "SOLV",
+    descripcion: "Certificado de solvencia profesional",
+    documentosRequeridos: ["Comprobante de pago"]
+  },
+  Constancia: { 
+    id: "constancia",
+    nombre: "Constancia", 
+    costo: 0, // El costo dependerá del subtipo
+    codigo: "CONST",
+    descripcion: "Constancia profesional (requiere seleccionar tipo específico)",
+    documentosRequeridos: ["Copia de cédula", "Comprobante de pago"],
+    subtipos: [
+      { nombre: "Inscripción del COV", costo: 60.00, codigo: "CONST-INSC" },
+      { nombre: "Solvencia", costo: 45.00, codigo: "CONST-SOLV" },
+      { nombre: "Libre ejercicio", costo: 55.00, codigo: "CONST-LIBRE" },
+      { nombre: "Declaración de habilitación", costo: 70.00, codigo: "CONST-HAB" },
+      { nombre: "Continuidad laboral", costo: 65.00, codigo: "CONST-CONT" },
+      { nombre: "Deontología odontológica", costo: 80.00, codigo: "CONST-DEONT" }
+    ]
+  }
+}
 
 export default function CrearSolicitudModal({ 
   onClose, 
@@ -21,12 +68,9 @@ export default function CrearSolicitudModal({
 }) {
   // Estado inicial del formulario
   const [formData, setFormData] = useState({
-    tipo: "",
     colegiadoId: colegiadoPreseleccionado ? colegiadoPreseleccionado.id : "",
     urgente: false,
     descripcion: "",
-    costo: "",
-    documentosRequeridos: []
   })
   
   const [documentosAdjuntos, setDocumentosAdjuntos] = useState({})
@@ -34,19 +78,12 @@ export default function CrearSolicitudModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [showColegiadosList, setShowColegiadosList] = useState(false)
-
-  // Tipos de solicitud predefinidos
-  const tiposSolicitud = [
-    { id: "constancia", nombre: "Constancia de inscripción", costo: 20, documentosRequeridos: ["Copia de cédula", "Comprobante de pago"] },
-    { id: "certificado", nombre: "Certificado de solvencia", costo: 15, documentosRequeridos: ["Comprobante de pago"] },
-    { id: "carnet", nombre: "Renovación de carnet", costo: 30, documentosRequeridos: ["Foto tipo carnet", "Comprobante de pago"] },
-    { id: "especialidad", nombre: "Registro de especialidad", costo: 50, documentosRequeridos: ["Título de especialidad", "Copia de cédula", "Comprobante de pago"] },
-    { id: "cambio", nombre: "Cambio de jurisdicción", costo: 40, documentosRequeridos: ["Constancia de residencia", "Comprobante de pago"] },
-    { id: "duplicado", nombre: "Duplicado de título", costo: 25, documentosRequeridos: ["Denuncia de pérdida", "Comprobante de pago"] },
-    { id: "actualizacion", nombre: "Actualización de datos", costo: 0, documentosRequeridos: ["Constancia de residencia"] },
-    { id: "informacion", nombre: "Solicitud de información", costo: 0, documentosRequeridos: [] },
-    { id: "otros", nombre: "Otro tipo de solicitud", costo: 0, documentosRequeridos: [] }
-  ]
+  
+  // Estados para gestionar las nuevas funcionalidades
+  const [tiposSeleccionados, setTiposSeleccionados] = useState([])
+  const [subtipoConstancia, setSubtipoConstancia] = useState(null)
+  const [itemsCarrito, setItemsCarrito] = useState([])
+  const [totalCarrito, setTotalCarrito] = useState(0)
 
   // Si hay un colegiado preseleccionado, establecer el ID en el formulario
   useEffect(() => {
@@ -58,19 +95,176 @@ export default function CrearSolicitudModal({
     }
   }, [colegiadoPreseleccionado])
 
-  // Cuando se selecciona un tipo de solicitud, actualizar formulario con valores predeterminados
-  useEffect(() => {
-    if (formData.tipo) {
-      const tipoSeleccionado = tiposSolicitud.find(tipo => tipo.id === formData.tipo)
-      if (tipoSeleccionado) {
-        setFormData(prev => ({
-          ...prev,
-          costo: tipoSeleccionado.id === "otros" ? "" : tipoSeleccionado.costo.toString(),
-          documentosRequeridos: tipoSeleccionado.documentosRequeridos
-        }))
+  // Función para agregar un item al carrito
+  const agregarAlCarrito = (tipo) => {
+    if (tipo === "Constancia" && !subtipoConstancia) {
+      alert("Debe seleccionar un tipo específico de constancia")
+      return
+    }
+
+    let nuevoItem;
+    
+    if (tipo === "Constancia") {
+      // Buscar el subtipo de constancia seleccionado
+      const subtipo = TIPOS_SOLICITUD.Constancia.subtipos.find(
+        st => st.nombre === subtipoConstancia
+      )
+      
+      nuevoItem = {
+        id: `${subtipo.codigo}-${Date.now()}`,
+        tipo: "Constancia",
+        subtipo: subtipoConstancia,
+        nombre: `Constancia: ${subtipoConstancia}`,
+        costo: subtipo.costo,
+        exonerado: false,
+        codigo: subtipo.codigo,
+        documentosRequeridos: [...TIPOS_SOLICITUD.Constancia.documentosRequeridos]
+      }
+    } else {
+      // Para otros tipos de solicitud
+      const tipoInfo = TIPOS_SOLICITUD[tipo]
+      
+      nuevoItem = {
+        id: `${tipoInfo.codigo}-${Date.now()}`,
+        tipo: tipo,
+        subtipo: null,
+        nombre: tipoInfo.nombre,
+        costo: tipoInfo.costo,
+        exonerado: false,
+        codigo: tipoInfo.codigo,
+        documentosRequeridos: [...tipoInfo.documentosRequeridos]
       }
     }
-  }, [formData.tipo])
+    
+    setItemsCarrito([...itemsCarrito, nuevoItem])
+    actualizarTotal([...itemsCarrito, nuevoItem])
+    
+    // Si es constancia, desmarcar después de agregar
+    if (tipo === "Constancia") {
+      const nuevosTiposSeleccionados = tiposSeleccionados.filter(t => t !== "Constancia")
+      setTiposSeleccionados(nuevosTiposSeleccionados)
+      setSubtipoConstancia(null)
+    }
+  }
+
+  // Función para actualizar el total del carrito
+  const actualizarTotal = (items) => {
+    const nuevoTotal = items.reduce((sum, item) => {
+      return sum + (item.exonerado ? 0 : item.costo)
+    }, 0)
+    
+    setTotalCarrito(nuevoTotal)
+  }
+
+  // Función para eliminar un item del carrito
+  const eliminarDelCarrito = (itemId) => {
+    // Encontrar el item a eliminar para obtener su tipo
+    const itemAEliminar = itemsCarrito.find(item => item.id === itemId);
+    
+    if (itemAEliminar) {
+      // Eliminar del carrito
+      const nuevosItems = itemsCarrito.filter(item => item.id !== itemId);
+      setItemsCarrito(nuevosItems);
+      actualizarTotal(nuevosItems);
+      
+      // Actualizar la selección en la lista de tipos
+      if (itemAEliminar.tipo === "Constancia") {
+        // Si era una constancia, quitar la selección del subtipo
+        setSubtipoConstancia(null);
+        
+        // Verificar si aún hay otras constancias
+        const sigueHabiendoConstancias = nuevosItems.some(item => item.tipo === "Constancia");
+        
+        // Si no hay más constancias, quitar también del tipo principal
+        if (!sigueHabiendoConstancias) {
+          setTiposSeleccionados(prev => prev.filter(tipo => tipo !== "Constancia"));
+        }
+      } else {
+        // Para otros tipos, verificar si aún hay otros items del mismo tipo
+        const sigueHabiendoDelMismoTipo = nuevosItems.some(item => item.tipo === itemAEliminar.tipo);
+        
+        // Si no hay más items del mismo tipo, quitar de la selección
+        if (!sigueHabiendoDelMismoTipo) {
+          setTiposSeleccionados(prev => prev.filter(tipo => tipo !== itemAEliminar.tipo));
+        }
+      }
+    }
+  }
+
+  // Función para toggle de exoneración de pago
+  const toggleExoneracion = (itemId) => {
+    const nuevosItems = itemsCarrito.map(item => {
+      if (item.id === itemId) {
+        return {...item, exonerado: !item.exonerado}
+      }
+      return item
+    })
+    
+    setItemsCarrito(nuevosItems)
+    actualizarTotal(nuevosItems)
+  }
+
+  // Función para exonerar todos los pagos
+  const exonerarTodos = () => {
+    const nuevosItems = itemsCarrito.map(item => ({
+      ...item,
+      exonerado: true
+    }))
+    
+    setItemsCarrito(nuevosItems)
+    setTotalCarrito(0)
+  }
+
+  // Manejar selección de tipos
+  const handleSeleccionTipo = (tipo) => {
+    // Para Constancia, solo puede haber una seleccionada
+    if (tipo === "Constancia") {
+      // Si ya está seleccionada, la quitamos
+      if (tiposSeleccionados.includes(tipo)) {
+        setTiposSeleccionados(tiposSeleccionados.filter(t => t !== tipo))
+        setSubtipoConstancia(null)
+      } else {
+        // Si no está, la agregamos
+        setTiposSeleccionados([...tiposSeleccionados, tipo])
+      }
+    } else {
+      // Para otros tipos, toggle normal y agregar/quitar automáticamente del carrito
+      if (tiposSeleccionados.includes(tipo)) {
+        // Si está seleccionado, lo quitamos
+        setTiposSeleccionados(tiposSeleccionados.filter(t => t !== tipo))
+        
+        // También eliminar del carrito
+        const itemsParaEliminar = itemsCarrito.filter(item => item.tipo === tipo)
+        if (itemsParaEliminar.length > 0) {
+          const nuevosItems = itemsCarrito.filter(item => item.tipo !== tipo)
+          setItemsCarrito(nuevosItems)
+          actualizarTotal(nuevosItems)
+        }
+      } else {
+        // Si no está seleccionado, lo agregamos
+        setTiposSeleccionados([...tiposSeleccionados, tipo])
+        
+        // Y agregamos automáticamente al carrito
+        const tipoInfo = TIPOS_SOLICITUD[tipo]
+        
+        const nuevoItem = {
+          id: `${tipoInfo.codigo}-${Date.now()}`,
+          tipo: tipo,
+          subtipo: null,
+          nombre: tipoInfo.nombre,
+          costo: tipoInfo.costo,
+          exonerado: false,
+          codigo: tipoInfo.codigo,
+          documentosRequeridos: [...tipoInfo.documentosRequeridos]
+        }
+        
+        // Actualizar carrito
+        const nuevosItems = [...itemsCarrito, nuevoItem]
+        setItemsCarrito(nuevosItems)
+        actualizarTotal(nuevosItems)
+      }
+    }
+  }
 
   // Manejar cambios en los campos del formulario
   const handleChange = (e) => {
@@ -90,12 +284,12 @@ export default function CrearSolicitudModal({
   }
 
   // Manejar subida de archivos
-  const handleFileChange = (e, documentoId) => {
+  const handleFileChange = (e, documentoId, itemId) => {
     const file = e.target.files[0]
     if (file) {
       setDocumentosAdjuntos(prev => ({
         ...prev,
-        [documentoId]: file
+        [`${itemId}-${documentoId}`]: file
       }))
     }
   }
@@ -132,20 +326,8 @@ export default function CrearSolicitudModal({
   const validarFormulario = () => {
     const nuevosErrores = {}
     
-    if (!formData.tipo) nuevosErrores.tipo = "Debe seleccionar un tipo de solicitud"
     if (!formData.colegiadoId) nuevosErrores.colegiadoId = "Debe seleccionar un colegiado"
-    
-    if (formData.tipo === "otros" && !formData.descripcion.trim()) {
-      nuevosErrores.descripcion = "La descripción es requerida para este tipo de solicitud"
-    }
-    
-    // Validar que el costo sea un número válido si es un valor personalizado
-    if (formData.tipo === "otros" && formData.costo.trim() !== "") {
-      const costoNum = parseFloat(formData.costo)
-      if (isNaN(costoNum) || costoNum < 0) {
-        nuevosErrores.costo = "El costo debe ser un número válido mayor o igual a cero"
-      }
-    }
+    if (itemsCarrito.length === 0) nuevosErrores.items = "Debe agregar al menos un tipo de solicitud"
     
     setErrors(nuevosErrores)
     return Object.keys(nuevosErrores).length === 0
@@ -163,25 +345,33 @@ export default function CrearSolicitudModal({
       // Simular envío a API
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      const tipoSeleccionado = tiposSolicitud.find(tipo => tipo.id === formData.tipo)
-      const costoNum = formData.tipo === "otros" && formData.costo.trim() !== "" 
-        ? parseFloat(formData.costo) 
-        : tipoSeleccionado.costo
-        
+      // Crear lista de documentos requeridos única (sin duplicados)
+      const todosDocumentosRequeridos = []
+      itemsCarrito.forEach(item => {
+        item.documentosRequeridos.forEach(doc => {
+          if (!todosDocumentosRequeridos.includes(doc)) {
+            todosDocumentosRequeridos.push(doc)
+          }
+        })
+      })
+      
       // Crear objeto de nueva solicitud
       const nuevaSolicitud = {
         id: `sol-${Date.now()}`,
-        tipo: tipoSeleccionado.nombre,
+        tipo: itemsCarrito.length === 1 
+          ? itemsCarrito[0].nombre 
+          : `Solicitud múltiple (${itemsCarrito.length} ítems)`,
         colegiadoId: formData.colegiadoId,
         colegiadoNombre: colegiadoSeleccionado?.nombre || "Colegiado",
         fecha: new Date().toLocaleDateString(),
         estado: "Pendiente",
         urgente: formData.urgente,
-        descripcion: formData.descripcion || tipoSeleccionado.nombre,
-        referencia: `REF-${tipoSeleccionado.id.toUpperCase()}-${Date.now().toString().slice(-4)}`,
-        costo: costoNum,
-        documentosRequeridos: formData.documentosRequeridos,
-        documentosAdjuntos: Object.keys(documentosAdjuntos).map(key => documentosAdjuntos[key].name || "documento.pdf")
+        descripcion: formData.descripcion || "Solicitud de servicios al Colegio",
+        referencia: `REF-${Date.now().toString().slice(-6)}`,
+        costo: totalCarrito,
+        documentosRequeridos: todosDocumentosRequeridos,
+        documentosAdjuntos: Object.keys(documentosAdjuntos).map(key => documentosAdjuntos[key].name || "documento.pdf"),
+        itemsSolicitud: itemsCarrito
       }
       
       onSolicitudCreada(nuevaSolicitud)
@@ -197,7 +387,7 @@ export default function CrearSolicitudModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold text-gray-800">Nueva solicitud</h2>
           <button 
@@ -285,43 +475,44 @@ export default function CrearSolicitudModal({
               </div>
             </div>
             
-            {/* Tipo de solicitud */}
+            {/* Selección de tipos de solicitud */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de solicitud <span className="text-red-500">*</span>
+                Tipos de solicitud <span className="text-red-500">*</span>
               </label>
               
-              {errors.tipo && (
+              {errors.items && (
                 <div className="text-red-500 text-xs mb-2">
-                  {errors.tipo}
+                  {errors.items}
                 </div>
               )}
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {tiposSolicitud.map(tipo => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                {Object.keys(TIPOS_SOLICITUD).map((tipo) => (
                   <div 
-                    key={tipo.id}
+                    key={tipo}
                     className={`
                       border rounded-md p-3 cursor-pointer transition-colors
-                      ${formData.tipo === tipo.id 
+                      ${tiposSeleccionados.includes(tipo) 
                         ? 'border-[#C40180] bg-purple-50' 
                         : 'border-gray-200 hover:border-gray-300'
                       }`}
-                    onClick={() => {
-                      setFormData(prev => ({...prev, tipo: tipo.id}));
-                      if (errors.tipo) {
-                        setErrors(prev => ({...prev, tipo: null}));
-                      }
-                    }}
+                    onClick={() => handleSeleccionTipo(tipo)}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-medium text-gray-800">{tipo.nombre}</p>
-                        <p className="text-xs text-gray-500">
-                          {tipo.costo > 0 ? `Costo: ${tipo.costo.toFixed(2)}` : 'Sin costo'}
-                        </p>
+                        <p className="font-medium text-gray-800">{TIPOS_SOLICITUD[tipo].nombre}</p>
+                        {tipo !== 'Constancia' ? (
+                          <p className="text-xs text-gray-500">
+                            Costo: ${TIPOS_SOLICITUD[tipo].costo.toFixed(2)}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-500">
+                            Requiere selección de tipo específico
+                          </p>
+                        )}
                       </div>
-                      {formData.tipo === tipo.id && (
+                      {tiposSeleccionados.includes(tipo) && (
                         <div className="bg-[#C40180] text-white rounded-full p-1">
                           <Check size={16} />
                         </div>
@@ -330,130 +521,186 @@ export default function CrearSolicitudModal({
                   </div>
                 ))}
               </div>
+              
+                                {/* Subtipos de constancia si está seleccionada */}
+              {tiposSeleccionados.includes('Constancia') && (
+                <div className="border border-[#C40180] rounded-md p-4 mb-4 bg-purple-50">
+                  <h3 className="text-sm font-medium text-gray-800 mb-2">Seleccione un tipo de constancia:</h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {TIPOS_SOLICITUD.Constancia.subtipos.map((subtipo) => (
+                      <div 
+                        key={subtipo.codigo}
+                        className={`
+                          border rounded p-2 cursor-pointer
+                          ${subtipoConstancia === subtipo.nombre 
+                            ? 'border-[#C40180] bg-white' 
+                            : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        onClick={() => {
+                          // Establecer el subtipo seleccionado
+                          setSubtipoConstancia(subtipo.nombre);
+                          
+                          // Agregar automáticamente al carrito
+                          // Primero eliminar cualquier constancia existente
+                          const nuevosItemsSinConstancias = itemsCarrito.filter(item => item.tipo !== "Constancia");
+                          
+                          // Crear nuevo item de constancia
+                          const nuevoItem = {
+                            id: `${subtipo.codigo}-${Date.now()}`,
+                            tipo: "Constancia",
+                            subtipo: subtipo.nombre,
+                            nombre: `Constancia: ${subtipo.nombre}`,
+                            costo: subtipo.costo,
+                            exonerado: false,
+                            codigo: subtipo.codigo,
+                            documentosRequeridos: [...TIPOS_SOLICITUD.Constancia.documentosRequeridos]
+                          };
+                          
+                          // Actualizar carrito
+                          const nuevosItems = [...nuevosItemsSinConstancias, nuevoItem];
+                          setItemsCarrito(nuevosItems);
+                          actualizarTotal(nuevosItems);
+                        }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm">{subtipo.nombre}</p>
+                            <p className="text-xs text-gray-500">
+                              ${subtipo.costo.toFixed(2)}
+                            </p>
+                          </div>
+                          {subtipoConstancia === subtipo.nombre && (
+                            <Check size={16} className="text-[#C40180]" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Mensaje informativo */}
+              {tiposSeleccionados.length > 0 && (
+                <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded border">
+                  <p className="flex items-center">
+                    <ShoppingCart size={16} className="mr-1 text-[#C40180]" />
+                    Los servicios seleccionados se agregan automáticamente al carrito
+                  </p>
+                </div>
+              )}
             </div>
             
-            {/* Descripción - Solo para "otros" */}
-            {formData.tipo === "otros" && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descripción <span className="text-red-500">*</span>
-                </label>
+            {/* Carrito de compras */}
+            <div className="mb-6 border rounded-lg overflow-hidden">
+              <div className="bg-gray-50 p-3 border-b flex justify-between items-center">
+                <h3 className="font-medium text-gray-800 flex items-center">
+                  <ShoppingCart size={18} className="mr-2 text-[#C40180]" /> 
+                  Servicios seleccionados
+                </h3>
                 
-                {errors.descripcion && (
-                  <div className="text-red-500 text-xs mb-2">
-                    {errors.descripcion}
-                  </div>
+                {itemsCarrito.length > 0 && (
+                  <span className="text-sm text-gray-600">
+                    Total: <strong className="text-[#C40180]">${totalCarrito.toFixed(2)}</strong>
+                  </span>
                 )}
-                
-                <textarea
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleChange}
-                  className={`w-full p-3 border rounded-md ${
-                    errors.descripcion ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Describa detalladamente el tipo de solicitud que necesita"
-                  rows="3"
-                ></textarea>
               </div>
-            )}
-            
-            {/* Costo personalizado - Solo para "otros" */}
-            {formData.tipo === "otros" && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Costo (USD)
-                </label>
-                
-                {errors.costo && (
-                  <div className="text-red-500 text-xs mb-2">
-                    {errors.costo}
+              
+              {itemsCarrito.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  Aún no ha agregado servicios a su solicitud
+                </div>
+              ) : (
+                <div>
+                  {/* Lista de items */}
+                  <ul className="divide-y">
+                    {itemsCarrito.map((item) => (
+                      <li key={item.id} className="p-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <div>
+                            <span className="font-medium">{item.nombre}</span>
+                            <span className={`ml-3 ${item.exonerado ? 'line-through text-gray-400' : 'text-[#C40180]'}`}>
+                              ${item.costo.toFixed(2)}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <label className="inline-flex items-center cursor-pointer">
+                              <span className="text-xs text-gray-600 mr-2">Exonerar</span>
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer"
+                                checked={item.exonerado}
+                                onChange={() => toggleExoneracion(item.id)}
+                              />
+                              <div className="relative w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                            
+                            <button 
+                              type="button"
+                              onClick={() => eliminarDelCarrito(item.id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Documentos requeridos para este item */}
+                        {item.documentosRequeridos.length > 0 && (
+                          <div className="pl-2 border-l-2 border-gray-200 mt-1">
+                            <p className="text-xs text-gray-500 mb-1">Documentos requeridos:</p>
+                            <ul className="space-y-2">
+                              {item.documentosRequeridos.map((doc, index) => (
+                                <li key={`${item.id}-${index}`} className="flex items-center">
+                                  <FileText size={14} className="text-gray-400 mr-1" />
+                                  <span className="text-xs">{doc}</span>
+                                  
+                                  <input
+                                    type="file"
+                                    id={`documento-${item.id}-${index}`}
+                                    onChange={(e) => handleFileChange(e, index, item.id)}
+                                    className="hidden"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                  />
+                                  <label
+                                    htmlFor={`documento-${item.id}-${index}`}
+                                    className="ml-2 text-xs text-blue-600 cursor-pointer hover:underline"
+                                  >
+                                    {documentosAdjuntos[`${item.id}-${index}`] 
+                                      ? <span className="text-green-600 flex items-center">
+                                          <FileCheck size={14} className="mr-1" />
+                                          {documentosAdjuntos[`${item.id}-${index}`].name.length > 15 
+                                            ? documentosAdjuntos[`${item.id}-${index}`].name.substring(0, 15) + '...' 
+                                            : documentosAdjuntos[`${item.id}-${index}`].name}
+                                        </span>
+                                      : "Adjuntar"}
+                                  </label>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  {/* Acciones del carrito */}
+                  <div className="bg-gray-50 p-3 border-t flex justify-between items-center">
+                    <span className="text-sm font-bold">
+                      Total a pagar: ${totalCarrito.toFixed(2)}
+                    </span>
+                    
+                    <button
+                      type="button"
+                      onClick={exonerarTodos}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Exonerar todos
+                    </button>
                   </div>
-                )}
-                
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
-                  <input
-                    type="text"
-                    name="costo"
-                    value={formData.costo}
-                    onChange={handleChange}
-                    className={`w-full pl-8 p-2 border rounded-md ${
-                      errors.costo ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="0.00"
-                  />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Deje en blanco si la solicitud no tiene costo</p>
-              </div>
-            )}
-            
-            {/* Documentos requeridos - Si hay documentos que adjuntar */}
-            {formData.tipo && formData.documentosRequeridos.length > 0 && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Documentos requeridos
-                </label>
-                
-                <div className="bg-blue-50 p-4 rounded-md flex items-start gap-3 mb-4">
-                  <AlertCircle className="text-blue-600 mt-0.5 flex-shrink-0" size={18} />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-1">Información importante</p>
-                    <p>
-                      Para esta solicitud es necesario adjuntar los siguientes documentos.
-                      Los documentos deben estar en formato PDF, JPG o PNG y no deben exceder los 5MB cada uno.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  {formData.documentosRequeridos.map((documento, index) => (
-                    <div key={index} className="border border-gray-200 rounded-md p-4">
-                      <div className="flex items-center mb-2">
-                        <FileText className="text-gray-400 mr-2" size={18} />
-                        <p className="font-medium text-gray-800">{documento}</p>
-                      </div>
-                      
-                      <div className="mt-2">
-                        <input
-                          type="file"
-                          id={`documento-${index}`}
-                          onChange={(e) => handleFileChange(e, index)}
-                          className="hidden"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                        />
-                        <label
-                          htmlFor={`documento-${index}`}
-                          className="flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 rounded-md py-2 px-4 w-full cursor-pointer hover:bg-gray-50"
-                        >
-                          <Upload size={16} />
-                          <span>{documentosAdjuntos[index] ? documentosAdjuntos[index].name : "Seleccionar archivo"}</span>
-                        </label>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Opción de urgente */}
-            <div className="mb-6">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="urgente"
-                  name="urgente"
-                  checked={formData.urgente}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-[#C40180] border-gray-300 rounded focus:ring-[#C40180]"
-                />
-                <label htmlFor="urgente" className="ml-2 block text-sm text-gray-900">
-                  Marcar como urgente
-                </label>
-              </div>
-              <p className="text-xs text-gray-500 mt-1 ml-6">
-                Las solicitudes urgentes tienen prioridad de procesamiento
-              </p>
+              )}
             </div>
             
             {/* Información adicional o notas */}
@@ -471,6 +718,26 @@ export default function CrearSolicitudModal({
                 rows="2"
               ></textarea>
             </div>
+            
+            {/* Opción de urgente (comentada pero no eliminada) */}
+            {/* <div className="mb-6">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="urgente"
+                  name="urgente"
+                  checked={formData.urgente}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-[#C40180] border-gray-300 rounded focus:ring-[#C40180]"
+                />
+                <label htmlFor="urgente" className="ml-2 block text-sm text-gray-900">
+                  Marcar como urgente
+                </label>
+              </div>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                Las solicitudes urgentes tienen prioridad de procesamiento
+              </p>
+            </div> */}
             
             {/* Mensaje de error general */}
             {errors.general && (
