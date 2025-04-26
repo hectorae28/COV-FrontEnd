@@ -9,11 +9,13 @@ import {
   Filter,
   PlusCircle,
   Search,
-  XCircle
+  XCircle,
+  FileCheck
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
+import { solicitudes as solicitudesIniciales, colegiados as colegiadosIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
 
 export default function ListaSolicitudes() {
   // Estados para manejar los datos
@@ -23,165 +25,57 @@ export default function ListaSolicitudes() {
   const [showModal, setShowModal] = useState(false)
   const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(null)
   const [colegiados, setColegiados] = useState([])
-  
+
   // Estados para la navegación interna
   const [vistaActual, setVistaActual] = useState("lista") // lista, detalleSolicitud
   const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null)
-  const [filtroEstado, setFiltroEstado] = useState("todas") // todas, pendientes, aprobadas, rechazadas
+  const [filtroEstado, setFiltroEstado] = useState("todas") // todas, pendientes, aprobadas, rechazadas, exoneradas
   const [filtroCosto, setFiltroCosto] = useState("todas") // todas, conCosto, sinCosto
 
-  // Simulación de datos - en producción se reemplazaría por llamadas a API
+  // Cargar datos iniciales
   useEffect(() => {
     // Simulando carga de datos con un pequeño retraso
     setTimeout(() => {
-      // Datos de ejemplo de colegiados para el dropdown
-      setColegiados([
-        {
-          id: "1",
-          nombre: "María González",
-          cedula: "V-12345678",
-          numeroRegistro: "ODV-1234",
-        },
-        {
-          id: "2",
-          nombre: "Juan Pérez",
-          cedula: "V-23456789",
-          numeroRegistro: "ODV-2345",
-        },
-        {
-          id: "3",
-          nombre: "Carlos Ramírez",
-          cedula: "V-34567890",
-          numeroRegistro: "ODV-3456",
-        },
-      ])
-      
-      // Datos de ejemplo de solicitudes
-      setSolicitudes([
-        {
-          id: "1",
-          tipo: "Constancia de inscripción",
-          colegiadoId: "1",
-          colegiadoNombre: "María González",
-          fecha: "15/04/2025",
-          estado: "Pendiente",
-          urgente: true,
-          descripcion: "Solicitud de constancia de inscripción al Colegio de Odontólogos",
-          referencia: "CONST-2025-001",
-          costo: 20,
-          observaciones: "",
-          documentosRequeridos: ["Copia de cédula", "Comprobante de pago"],
-          documentosAdjuntos: ["cedula.pdf"]
-        },
-        {
-          id: "2",
-          tipo: "Registro de especialidad",
-          colegiadoId: "2",
-          colegiadoNombre: "Juan Pérez",
-          fecha: "10/04/2025",
-          estado: "Aprobada",
-          urgente: false,
-          descripcion: "Registro de especialidad en Endodoncia",
-          referencia: "ESP-2025-005",
-          costo: 50,
-          fechaAprobacion: "12/04/2025",
-          aprobadoPor: "Admin",
-          observaciones: "Verificados todos los documentos",
-          documentosRequeridos: ["Título de especialidad", "Copia de cédula", "Comprobante de pago"],
-          documentosAdjuntos: ["titulo_especialidad.pdf", "cedula.pdf", "comprobante.pdf"]
-        },
-        {
-          id: "3",
-          tipo: "Cambio de jurisdicción",
-          colegiadoId: "3",
-          colegiadoNombre: "Carlos Ramírez",
-          fecha: "05/04/2025",
-          estado: "Rechazada",
-          urgente: false,
-          descripcion: "Cambio de jurisdicción de Caracas a Maracaibo",
-          referencia: "CAMB-2025-010",
-          costo: 40,
-          fechaRechazo: "08/04/2025",
-          rechazadoPor: "Admin",
-          motivoRechazo: "Documentación incompleta. Falta constancia de residencia",
-          documentosRequeridos: ["Constancia de residencia", "Comprobante de pago"],
-          documentosAdjuntos: ["comprobante.pdf"]
-        },
-        {
-          id: "4",
-          tipo: "Certificado de solvencia",
-          colegiadoId: "1",
-          colegiadoNombre: "María González",
-          fecha: "18/04/2025",
-          estado: "Pendiente",
-          urgente: false,
-          descripcion: "Solicitud de certificado de solvencia",
-          referencia: "SOLV-2025-008",
-          costo: 15,
-          observaciones: "",
-          documentosRequeridos: ["Comprobante de pago"],
-          documentosAdjuntos: ["comprobante.pdf"]
-        },
-        {
-          id: "5",
-          tipo: "Solicitud de información",
-          colegiadoId: "2",
-          colegiadoNombre: "Juan Pérez",
-          fecha: "12/04/2025",
-          estado: "Aprobada",
-          urgente: false,
-          descripcion: "Solicitud de información sobre cursos disponibles",
-          referencia: "INFO-2025-015",
-          costo: 0,
-          fechaAprobacion: "14/04/2025",
-          aprobadoPor: "Admin",
-          observaciones: "Información enviada por correo electrónico",
-          documentosRequeridos: [],
-          documentosAdjuntos: []
-        },
-        {
-          id: "6",
-          tipo: "Actualización de datos",
-          colegiadoId: "3",
-          colegiadoNombre: "Carlos Ramírez",
-          fecha: "09/04/2025",
-          estado: "Aprobada",
-          urgente: false,
-          descripcion: "Actualización de dirección y teléfono",
-          referencia: "ACT-2025-020",
-          costo: 0,
-          fechaAprobacion: "10/04/2025",
-          aprobadoPor: "Admin",
-          observaciones: "Datos actualizados correctamente",
-          documentosRequeridos: ["Constancia de residencia"],
-          documentosAdjuntos: ["residencia.pdf"]
-        }
-      ])
-      
-      setIsLoading(false)
-    }, 1000)
-  }, [])
+      setColegiados(colegiadosIniciales);
+      setSolicitudes(solicitudesIniciales);
+      setIsLoading(false);
+    }, 1000);
+  }, []);
 
   // Filtrar solicitudes basado en búsqueda y filtros
-  const solicitudesFiltradas = solicitudes.filter(solicitud => {
-    const matchesSearch = 
-      solicitud.tipo.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      solicitud.colegiadoNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      solicitud.referencia.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesEstado = 
-      filtroEstado === "todas" || 
-      (filtroEstado === "pendientes" && solicitud.estado === "Pendiente") ||
-      (filtroEstado === "aprobadas" && solicitud.estado === "Aprobada") ||
-      (filtroEstado === "rechazadas" && solicitud.estado === "Rechazada")
-    
-    const matchesCosto = 
-      filtroCosto === "todas" || 
-      (filtroCosto === "conCosto" && solicitud.costo > 0) ||
-      (filtroCosto === "sinCosto" && solicitud.costo === 0)
-    
-    return matchesSearch && matchesEstado && matchesCosto
-  })
+  const solicitudesFiltradas = solicitudes
+    .filter(solicitud => {
+      const matchesSearch =
+        solicitud.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        solicitud.colegiadoNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        solicitud.referencia.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesEstado =
+        filtroEstado === "todas" ||
+        (filtroEstado === "pendientes" && solicitud.estado === "Pendiente") ||
+        (filtroEstado === "aprobadas" && solicitud.estado === "Aprobada") ||
+        (filtroEstado === "rechazadas" && solicitud.estado === "Rechazada") ||
+        (filtroEstado === "exoneradas" && solicitud.estado === "Exonerada")
+
+      const matchesCosto =
+        filtroCosto === "todas" ||
+        (filtroCosto === "conCosto" && solicitud.costo > 0) ||
+        (filtroCosto === "sinCosto" && solicitud.costo === 0)
+
+      return matchesSearch && matchesEstado && matchesCosto
+    })
+    // Ordenar por fecha (de más reciente a más antigua)
+    .sort((a, b) => {
+      // Convertir fechas de formato DD/MM/YYYY a objetos Date
+      const [diaA, mesA, anioA] = a.fecha.split('/');
+      const [diaB, mesB, anioB] = b.fecha.split('/');
+
+      const fechaA = new Date(anioA, mesA - 1, diaA);
+      const fechaB = new Date(anioB, mesB - 1, diaB);
+
+      // Ordenar descendente (más reciente primero)
+      return fechaB - fechaA;
+    });
 
   // Función para ver detalle de una solicitud
   const verDetalleSolicitud = (id) => {
@@ -197,8 +91,7 @@ export default function ListaSolicitudes() {
 
   // Función para manejar la creación exitosa de una nueva solicitud
   const handleSolicitudCreada = (nuevaSolicitud) => {
-    setSolicitudes(prev => [...prev, nuevaSolicitud])
-    setShowModal(false)
+    setSolicitudes(prev => [nuevaSolicitud, ...prev]); // Añadir al principio del array
   }
 
   // Función para abrir el modal con un colegiado preseleccionado
@@ -208,18 +101,21 @@ export default function ListaSolicitudes() {
     setShowModal(true)
   }
 
+  // Actualizar una solicitud existente
+  const actualizarSolicitud = (solicitudActualizada) => {
+    setSolicitudes(prev => prev.map(s =>
+      s.id === solicitudActualizada.id ? solicitudActualizada : s
+    ))
+  }
+
   // Renderizado condicional basado en la vista actual
   if (vistaActual === "detalleSolicitud") {
     return (
-      <DetalleSolicitud 
-        solicitudId={solicitudSeleccionadaId} 
+      <DetalleSolicitud
+        solicitudId={solicitudSeleccionadaId}
         onVolver={volverALista}
         solicitudes={solicitudes}
-        actualizarSolicitud={(solicitudActualizada) => {
-          setSolicitudes(prev => prev.map(s => 
-            s.id === solicitudActualizada.id ? solicitudActualizada : s
-          ))
-        }}
+        actualizarSolicitud={actualizarSolicitud}
       />
     )
   }
@@ -266,10 +162,13 @@ export default function ListaSolicitudes() {
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
           </div>
         </div>
-        
+
         <div className="flex gap-4 w-full md:w-auto">
-          <button 
-            onClick={() => setShowModal(true)}
+          <button
+            onClick={() => {
+              setColegiadoSeleccionado(null);
+              setShowModal(true);
+            }}
             className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
           >
             <PlusCircle size={20} />
@@ -284,86 +183,80 @@ export default function ListaSolicitudes() {
           <Filter size={16} className="mr-2 text-gray-500" />
           <span className="text-sm font-medium text-gray-700">Filtros</span>
         </div>
-        
+
         <div className="flex flex-wrap gap-3">
           <div>
             <span className="text-xs text-gray-500 block mb-1">Estado</span>
             <div className="flex flex-wrap gap-2">
-              <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filtroEstado === "todas" 
-                    ? "bg-purple-100 text-purple-800" 
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "todas"
+                    ? "bg-purple-100 text-purple-800"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
                 onClick={() => setFiltroEstado("todas")}
               >
                 Todas
               </button>
-              <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filtroEstado === "pendientes" 
-                    ? "bg-yellow-100 text-yellow-800" 
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "pendientes"
+                    ? "bg-yellow-100 text-yellow-800"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
                 onClick={() => setFiltroEstado("pendientes")}
               >
                 Pendientes
               </button>
-              <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filtroEstado === "aprobadas" 
-                    ? "bg-green-100 text-green-800" 
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "aprobadas"
+                    ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
                 onClick={() => setFiltroEstado("aprobadas")}
               >
                 Aprobadas
               </button>
-              <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filtroEstado === "rechazadas" 
-                    ? "bg-red-100 text-red-800" 
+
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "rechazadas"
+                    ? "bg-red-100 text-red-800"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
                 onClick={() => setFiltroEstado("rechazadas")}
               >
                 Rechazadas
               </button>
             </div>
           </div>
-          
+
           <div>
             <span className="text-xs text-gray-500 block mb-1">Costo</span>
             <div className="flex flex-wrap gap-2">
-              <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filtroCosto === "todas" 
-                    ? "bg-purple-100 text-purple-800" 
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "todas"
+                    ? "bg-purple-100 text-purple-800"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
                 onClick={() => setFiltroCosto("todas")}
               >
                 Todas
               </button>
-              <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filtroCosto === "conCosto" 
-                    ? "bg-blue-100 text-blue-800" 
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "conCosto"
+                    ? "bg-blue-100 text-blue-800"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
                 onClick={() => setFiltroCosto("conCosto")}
               >
                 Con costo
               </button>
-              <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filtroCosto === "sinCosto" 
-                    ? "bg-teal-100 text-teal-800" 
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "sinCosto"
+                    ? "bg-teal-100 text-teal-800"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
                 onClick={() => setFiltroCosto("sinCosto")}
               >
-                Sin costo
+                Exonerada
               </button>
             </div>
           </div>
@@ -415,18 +308,13 @@ export default function ListaSolicitudes() {
                         <div className="text-xs text-gray-500 md:hidden">
                           Ref: {solicitud.referencia}
                         </div>
-                        {solicitud.urgente && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mt-1">
-                            Urgente
-                          </span>
-                        )}
                         <div className="text-xs text-gray-500 mt-1">
-                          {solicitud.costo > 0 ? `$${solicitud.costo.toFixed(2)}` : 'Sin costo'}
+                          {solicitud.costo > 0 ? `${solicitud.costo.toFixed(2)}` : 'Sin costo'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{solicitud.colegiadoNombre}</div>
-                        <button 
+                        <button
                           className="text-xs text-[#C40180] hover:underline mt-1"
                           onClick={() => abrirModalParaColegiado(solicitud.colegiadoId)}
                         >
@@ -440,15 +328,17 @@ export default function ListaSolicitudes() {
                         <div className="text-sm text-gray-500">{solicitud.fecha}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          solicitud.estado === 'Pendiente' 
-                            ? 'bg-yellow-100 text-yellow-800' 
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${solicitud.estado === 'Pendiente'
+                            ? 'bg-yellow-100 text-yellow-800'
                             : solicitud.estado === 'Aprobada'
                               ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                        }`}>
+                              : solicitud.estado === 'Exonerada'
+                                ? 'bg-teal-100 text-teal-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}>
                           {solicitud.estado === 'Pendiente' && <Clock size={12} />}
                           {solicitud.estado === 'Aprobada' && <CheckCircle size={12} />}
+                          {solicitud.estado === 'Exonerada' && <FileCheck size={12} />}
                           {solicitud.estado === 'Rechazada' && <XCircle size={12} />}
                           {solicitud.estado}
                         </span>
@@ -460,7 +350,7 @@ export default function ListaSolicitudes() {
                               <Download size={16} />
                             </button>
                           )}
-                          <button 
+                          <button
                             onClick={() => verDetalleSolicitud(solicitud.id)}
                             className="text-[#C40180] hover:text-[#590248] flex items-center justify-end gap-1"
                           >
@@ -477,10 +367,10 @@ export default function ListaSolicitudes() {
           )}
         </>
       )}
-      
+
       {/* Modal para crear nueva solicitud */}
       {showModal && (
-        <CrearSolicitudModal 
+        <CrearSolicitudModal
           onClose={() => {
             setShowModal(false)
             setColegiadoSeleccionado(null)
@@ -488,6 +378,7 @@ export default function ListaSolicitudes() {
           onSolicitudCreada={handleSolicitudCreada}
           colegiados={colegiados}
           colegiadoPreseleccionado={colegiadoSeleccionado}
+          onVerDetalle={verDetalleSolicitud}
         />
       )}
     </div>

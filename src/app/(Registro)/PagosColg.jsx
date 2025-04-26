@@ -2,9 +2,6 @@
 import { motion } from "framer-motion";
 import {
   CreditCard,
-  Check,
-  Upload,
-  X,
   ExternalLink,
   DollarSign,
 } from "lucide-react";

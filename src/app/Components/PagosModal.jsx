@@ -1,6 +1,6 @@
 "use client"
 import { motion } from "framer-motion"
-import { CreditCard, Check, Upload, X, ExternalLink, DollarSign } from "lucide-react"
+import { CreditCard, ExternalLink, DollarSign } from "lucide-react"
 import { useState } from "react"
 
 export default function PagosColg({ onPaymentComplete }) {
