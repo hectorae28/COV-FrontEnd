@@ -13,6 +13,23 @@ const nextConfig = {
                 hostname: 'host.docker.internal',
                 port: '8000',
                 pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'romance-suggestion-pam-boxed.trycloudflare.com',
+                pathname: '/**',
+                port: '80',
+            },
+            {
+                protocol: 'https',
+                hostname: 'composite-broadband-root-accordance.trycloudflare.com',
+                pathname: '/**',
+            },
+            {
+                //https://horizon-deemed-moss-principles.trycloudflare.com
+                protocol: 'https',
+                hostname: 'horizon-deemed-moss-principles.trycloudflare.com',
+                pathname: '/**',
             }
         ],
     },

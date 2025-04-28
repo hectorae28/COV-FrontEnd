@@ -3,13 +3,34 @@
 import { useState, useRef, useEffect } from "react";
 import { AccountCircle } from "@mui/icons-material";
 import { signOut } from "next-auth/react";
+import api from "@/api/api";
+import axios from "axios";
 
-export default function ProfileDropdown({ userInfo }) {
+export default function ProfileDropdown({ userInfo, session }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
+  };
+  const handleSingOut = () => {
+      axios.request({
+        method: 'POST',
+        url: process.env.NEXT_PUBLIC_BACK_HOST+'/api/v1/usuario/logout/',
+        headers: {
+          Accept: '*/*',
+          Authorization: 'Bearer ' + session?.user?.access,
+        },
+        data: {}
+      }
+        )
+        .then(() => {
+          console.log("Logout successful");
+          signOut(session);
+        })
+        .catch((error) => {
+          console.error("Logout error:", error);
+        });
   };
 
   useEffect(() => {
@@ -34,7 +55,7 @@ export default function ProfileDropdown({ userInfo }) {
         <AccountCircle fontSize="medium" />
       </div>
 
-      {isOpen && (
+      {isOpen && userInfo && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg pt-1 z-10 border border-gray-200">
           <div className="px-4 py-3 border-b border-gray-200 cursor-pointer">
             <p className="text-sm font-medium text-gray-900">
@@ -44,7 +65,7 @@ export default function ProfileDropdown({ userInfo }) {
           </div>
 
           <div
-            onClick={() => signOut()}
+            onClick={handleSingOut}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-100 transition-colors border-t border-gray-200 w-full cursor-pointer"
           >
             Cerrar sesión

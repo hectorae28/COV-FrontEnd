@@ -3,29 +3,55 @@
 import { motion } from "framer-motion";
 import { Lock, Mail, Check } from "lucide-react";
 import Image from "next/image";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import Alert from "@/app/Components/Alert";
+import ForgotPasswordForm from "@/Components/Home/ForgotPasswordForm";
+
 
 export default function PanelAdmin({ onClose, isClosing }) {
-  const [rememberMe, setRememberMe] = useState(false);
   const [currentView, setCurrentView] = useState("login");
+  const searchParams = useSearchParams();
+  const [error, setError] = useState(searchParams.get("error"));
   const router = useRouter();
   const formRef = useRef(null);
+  useEffect(() => {
+    setError(searchParams.get("error"));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const Form = new FormData(formRef.current);
-    console.log({
-      Form,
-    });
     const result = await signIn("credentials", {
       username: Form.get("email").split("@")[0],
       password: Form.get("password"),
       redirect: false,
     });
-    if (result?.error) {
-      console.error("Error al iniciar sesión:", result.error);
+    if (result.error) {
+      if (
+        result.error === "Account is locked" ||
+        result.error === "Account locked due to too many failed attempts"
+      ) {
+        setError(
+          "Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña."
+        );
+      } else if (result.error === "Invalid credentials") {
+        setError(
+          "Credenciales inválidas. Por favor, verifique su email y/o contraseña."
+        );
+      } else if (
+        result.error === "Ya existe una sesión activa para este usuario."
+      ) {
+        setError(
+          "Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente."
+        );
+      } else {
+        setError("Ocurrió un error inesperado. Intenta nuevamente.");
+      }
+      //setError("Error al iniciar sesión:", result);
     } else {
       console.log("Inicio de sesión exitoso:", result);
       router.push("/PanelControl");
@@ -101,75 +127,73 @@ export default function PanelAdmin({ onClose, isClosing }) {
           </div>
 
           <h2 className="text-center text-3xl font-bold text-[#41023B] mb-2">
-            Panel de Administradores
+            {currentView === "login"
+              ? "Panel de Administradores"
+              : "Recuperar Contraseña"}
           </h2>
           <p className="text-center text-gray-700 mb-10">
-            Acceso exclusivo para personal administrativo
+            {currentView === "login"
+              ? "Acceso exclusivo para personal administrativo"
+              : "Ingresa tu correo para recuperar tu contraseña"}
           </p>
-
-          <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
-            <div className="mb-6">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+          {currentView === "login" && (
+            <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
+              {error && <Alert type="alert">{error}</Alert>}
+              <div className="mb-6">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="email"
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
+                    placeholder="Usuario o correo electrónico"
+                  />
                 </div>
-                <input
-                  type="text"
-                  name="email"
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
-                  placeholder="Usuario o correo electrónico"
-                />
               </div>
-            </div>
 
-            <div className="mb-6">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+              <div className="mb-6">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="password"
+                    name="password"
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
+                    placeholder="Contraseña"
+                  />
                 </div>
-                <input
-                  type="password"
-                  name="password"
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
-                  placeholder="Contraseña"
-                />
               </div>
-            </div>
 
-            <div className="flex items-center mb-8 ml-8">
-              <div
-                className="relative w-5 h-5 mr-3 cursor-pointer"
-                onClick={() => setRememberMe(!rememberMe)}
+              <motion.button
+                type="submit"
+                className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
+                shadow-md hover:shadow-lg transition-all duration-300
+                focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
+                Iniciar Sesión
+              </motion.button>
+              {/* Forgot password link */}
+              <div className="text-center mt-4">
                 <div
-                  className={`absolute inset-0 rounded border ${
-                    rememberMe
-                      ? "bg-[#41023B] border-[#41023B]"
-                      : "border-gray-800"
-                  }`}
+                  className="text-[#D7008A] hover:underline text-sm cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentView("forgot-password");
+                  }}
                 >
-                  {rememberMe && <Check className="h-4 w-4 text-white" />}
+                  ¿Olvidaste tu contraseña?
                 </div>
               </div>
-              <label
-                className="text-gray-700 cursor-pointer"
-                onClick={() => setRememberMe(!rememberMe)}
-              >
-                Recordarme
-              </label>
-            </div>
-
-            <motion.button
-              type="submit"
-              className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
-              shadow-md hover:shadow-lg transition-all duration-300
-              focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Iniciar Sesión
-            </motion.button>
-          </form>
+            </form>
+          )}
+          {currentView === "forgot-password" && (
+            <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
+          )}
         </div>
       </div>
     </motion.div>
