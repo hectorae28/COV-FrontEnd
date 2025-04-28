@@ -1,6 +1,6 @@
+import { fetchMe } from "@/api/endpoints/colegiado";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { fetchMe } from "@/api/endpoints/colegiado";
 
 
 export const authOptions = {
@@ -21,7 +21,9 @@ export const authOptions = {
                             password: credentials.password,
                         }),
                         credentials: 'include',
-                    });
+                    }
+            );
+            console.log(res)
                     const data = await res.json();
                     if (res.ok && data?.access) {
                         return {
