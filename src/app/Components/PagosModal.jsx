@@ -2,10 +2,10 @@
 import { motion } from "framer-motion";
 import { CreditCard, DollarSign } from "lucide-react";
 import { useState } from "react";
-import PayPalProvider from "@/app/Components/utils/paypalProvider";
+import PaypalPaymentComponent from "@/app/Components/utils/PaypalPaymentComponent"
 
 // Default values for props (in case they're not provided)
-const DEFAULT_COSTO = 75;
+const DEFAULT_COSTO = 8;
 const DEFAULT_TAZA = 36.55;
 const DEFAULT_METODOS = [
   {
@@ -23,7 +23,7 @@ const DEFAULT_METODOS = [
 export default function PagosColg({
   onPaymentComplete,
   costoInscripcion = DEFAULT_COSTO,
-  tazaBcv = DEFAULT_TAZA,
+  tasaBcv = DEFAULT_TAZA,
   metodoPago = DEFAULT_METODOS,
   handlePaymentComplete
 }) {
@@ -34,9 +34,7 @@ export default function PagosColg({
   const [paymentAmount, setPaymentAmount] = useState(costoInscripcion);
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
-
-  // Tasa de cambio
-  const amountInBs = (parseFloat(costoInscripcion) * tazaBcv).toFixed(2);
+  const [montoEnBs, setMontoEnBs] = useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2)); // Add this state
 
   // PayPal fee calculation
   const calculatePaypalFee = (amount) => {
@@ -52,7 +50,7 @@ export default function PagosColg({
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simular procesamiento de pago
+    // Simulate payment processing
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // Use the onPaymentComplete prop if handlePaymentComplete is not provided
@@ -64,7 +62,7 @@ export default function PagosColg({
         paymentMethod,
         referenceNumber,
         paymentFile,
-        totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount,
+        totalAmount: paymentMethod === "bdv" ? montoEnBs : paypalAmount,
         metodo_de_pago: metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)
       });
     }
@@ -77,7 +75,7 @@ export default function PagosColg({
     if (file) {
       setPaymentFile(file);
 
-      // Crear una URL para previsualizar la imagen
+      // Create a URL for previewing the image
       const fileUrl = URL.createObjectURL(file);
       setPreviewUrl(fileUrl);
     }
@@ -108,26 +106,26 @@ export default function PagosColg({
             </div>
           </div>
 
-          {/* Tasa de cambio */}
+          {/* Exchange rate */}
           <div className="bg-[#D7008A]/10 px-3 py-2 rounded-lg border border-[#D7008A]">
             <p className="text-sm font-bold text[#41023B]">
-              USD$ 1 = {tazaBcv} bs
+              USD$ 1 = {tasaBcv} bs
             </p>
           </div>
         </div>
 
-        {/* Monto a pagar destacado */}
+        {/* Amount to pay highlighted */}
         <div className="text-center mb-8">
           <p className="text-lg text-gray-600">Monto a pagar:</p>
           <p className="text-4xl font-bold text-[#D7008A]">
             USD$ {costoInscripcion}
           </p>
           <p className="text-xl font-medium text-gray-700 mt-2">
-            Monto en Bs: {amountInBs}
+            Monto en Bs: {montoEnBs}
           </p>
         </div>
 
-        {/* Botones de selección de método de pago */}
+        {/* Payment method selection buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
           {metodoPago.map((metodo, index) => (
             <button
@@ -154,12 +152,12 @@ export default function PagosColg({
           ))}
         </div>
 
-        {/* Contenido condicional según el método de pago */}
+        {/* Conditional content based on payment method */}
         {paymentMethod && (
           <div className="mt-6 border-t pt-6">
             {paymentMethod === "bdv" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Información del Banco de Venezuela */}
+                {/* Banco de Venezuela information */}
                 <div className="space-y-4">
                   <div className="flex justify-center mb-4">
                     <img
@@ -211,7 +209,7 @@ export default function PagosColg({
                   </div>
                 </div>
 
-                {/* Formulario de detalles del pago */}
+                {/* Payment details form */}
                 <div className="space-y-4 md:pt-12">
                   <h3 className="text-lg font-bold text-center text-[#41023B] mb-4">
                     Detalles del Pago
@@ -311,7 +309,7 @@ export default function PagosColg({
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Información de PayPal */}
+                {/* PayPal information */}
                 <div className="space-y-4">
                   <div className="flex justify-center mb-4">
                     <img
@@ -333,14 +331,12 @@ export default function PagosColg({
                     <p className="text-sm">
                       Si estás realizando el trámite en línea deberás reportarlo
                       adjuntando el pago a la página. En caso contrario deberás
-                      notificarlo al correo{" "}
-                      <a
+                      notificarlo al correo{" "}<a
                         href="mailto:secretariafinanzas@elcov.org"
                         className="text-[#118AB2] hover:underline"
                       >
                         secretariafinanzas@elcov.org
-                      </a>{" "}
-                      indicando información necesaria.
+                      </a> indicando información necesaria.
                     </p>
 
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -371,8 +367,7 @@ export default function PagosColg({
                       </div>
 
                       <p className="text-center text-sm mt-4">
-                        Correo:{" "}
-                        <a
+                        Correo:{" "}<a
                           href="mailto:paypalelcov@gmail.com"
                           className="text-[#118AB2] hover:underline"
                         >
@@ -381,8 +376,16 @@ export default function PagosColg({
                       </p>
 
                       <div className="mt-4 flex justify-center">
-                        {/* Pass the calculated paypalAmount to the PayPalProvider */}
-                        <PayPalProvider amount={paypalAmount} />
+                        {/* Replace PayPalProvider with PayPalPaymentComponent */}
+                        <PaypalPaymentComponent
+                          totalPendiente={parseFloat(costoInscripcion)}
+                          exchangeRate={tasaBcv}
+                          onPaymentInfoChange={(info) => {
+                            setPaymentAmount(info.montoPago);
+                            setMontoEnBs(info.montoEnBs);
+                          }}
+                          allowMultiplePayments={false} // Set this to false for single payment mode
+                        />
                       </div>
                     </div>
                   </div>
@@ -392,7 +395,7 @@ export default function PagosColg({
           </div>
         )}
 
-        {/* Botón de enviar solo se muestra si se ha seleccionado un método de pago */}
+        {/* Send button only shows if a payment method is selected */}
         {paymentMethod && (
           <div className="pt-6 mt-6 border-t">
             <motion.button

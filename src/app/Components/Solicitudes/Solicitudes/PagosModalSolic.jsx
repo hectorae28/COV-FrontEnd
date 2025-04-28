@@ -2,7 +2,7 @@
 import { motion } from "framer-motion"
 import { CreditCard, Check, Upload, X, ExternalLink, DollarSign } from "lucide-react"
 import { useState, useEffect } from "react"
-import PayPalProvider from "@/app/Components/utils/paypalProvider"
+import PaypalPaymentComponent from "@/app/Components/utils/PaypalPaymentComponent"
 
 export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -382,62 +382,15 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
                         ) : (
                             <div className="space-y-5">
                                 {/* Información de PayPal */}
-                                <div className="space-y-4">
-                                    <div className="flex justify-center mb-3">
-                                        <img src="/assets/icons/Paypal.png" alt="PayPal" className="h-10" />
-                                    </div>
-                                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                                        <p className="font-semibold text-blue-700 text-xs">ATENCIÓN:</p>
-                                        <p className="text-xs text-blue-700">Recomendamos no colocar dirección de envío y liberar el pago. Hasta que este disponible el pago puede ser aceptado su trámite.</p>
-                                    </div>
-
-                                    {/* Monto a pagar en USD para PayPal */}
-                                    <div className="p-4 rounded-lg border border-blue-200 mb-4">
-                                        <label className="block text-sm font-medium mb-2">
-                                            Monto a pagar en USD <span className="text-red-500">*</span>
-                                        </label>
-                                        <div className="relative">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                                <DollarSign className="h-4 w-4 text-blue-400" />
-                                            </span>
-                                            <input
-                                                type="text"
-                                                value={montoPago}
-                                                onChange={handleMontoChange}
-                                                className="pl-10 w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-blue-700 mt-1">Equivalente a Bs {montoEnBs}</p>
-                                    </div>
-
-                                    <div className="space-y-3 text-gray-700">
-                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-
-                                            <div className="mb-2">
-                                                <p className="text-sm font-medium text-gray-700">Monto a depositar en PayPal:</p>
-                                                <div className="relative mt-1">
-                                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                                        <DollarSign className="h-4 w-4 text-gray-400" />
-                                                    </span>
-                                                    <input
-                                                        type="text"
-                                                        value={paypalAmount}
-                                                        disabled
-                                                        className="pl-10 w-full p-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700 font-semibold text-sm"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <p className="text-center text-sm mt-3">Correo: <a href="mailto:paypalelcov@gmail.com" className="text-[#118AB2] hover:underline">paypalelcov@gmail.com</a></p>
-
-                                            {/* Aquí reemplazamos el enlace anterior por el componente de PayPal */}
-                                            <div className="mt-3 flex justify-center">
-                                                <PayPalProvider amount={paypalAmount} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <PaypalPaymentComponent
+                                    totalPendiente={parseFloat(totalPendiente)}
+                                    exchangeRate={exchangeRate}
+                                    onPaymentInfoChange={(paymentInfo) => {
+                                        setMontoPago(paymentInfo.montoPago)
+                                        setMontoEnBs(paymentInfo.montoEnBs)
+                                    }}
+                                    allowMultiplePayments={true}
+                                />
                             </div>
                         )}
                     </div>

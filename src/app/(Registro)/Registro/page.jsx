@@ -109,15 +109,15 @@ export default function RegistrationForm() {
   const [isComplete, setIsComplete] = useState(false);
   const [isIntentionalSubmit, setIsIntentionalSubmit] = useState(false);
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
-  const [tazaBcv, setTazaBcv] = useState(0);
+  const [tasaBcv, setTasaBcv] = useState(0);
   const [costoInscripcion, setCostoInscripcion] = useState(0);
   const [metodoPago, setMetodoPago] = useState([]);
 
   useEffect(() => {
     const LoadData = async () => {
       try {
-        const taza = await fetchDataSolicitudes("tasa-bcv");
-        setTazaBcv(taza.data.rate);
+        const tasa = await fetchDataSolicitudes("tasa-bcv");
+        setTasaBcv(tasa.data.rate);
         const costo = await fetchDataSolicitudes(
           "costo",
           "?tipo_costo=1&es_vigente=true"
@@ -450,7 +450,7 @@ export default function RegistrationForm() {
                         <PagosColg
                           props={{
                             handlePaymentComplete,
-                            tazaBcv,
+                            tasaBcv,
                             costoInscripcion,
                             metodoPago,
                           }}
