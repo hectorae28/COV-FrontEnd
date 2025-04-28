@@ -37,7 +37,8 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     setAge(calculatedAge.toString());
   };
 
-  // Validate form when formData changes
+  // Validate form when formData changes - but don't call onInputChange here
+  // This is what was creating the infinite loop
   useEffect(() => {
     const requiredFields = [
       "nationality",
@@ -54,11 +55,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     const isValid = requiredFields.every(field => formData[field] && formData[field].trim() !== "");
     setIsFormValid(isValid);
 
-    // Pass the validity state up to the parent component
-    if (onInputChange) {
-      onInputChange({ isPersonalInfoValid: isValid });
-    }
-  }, [formData, onInputChange]);
+    // REMOVE THIS LINE - it was causing the infinite loop:
+    // onInputChange({ isPersonalInfoValid: isValid });
+  }, [formData]);
 
   // Checks if a field is empty to display the required message
   const isFieldEmpty = (fieldName) => {

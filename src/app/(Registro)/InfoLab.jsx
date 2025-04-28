@@ -121,7 +121,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
           {/* Título del registro */}
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-[#41023B] font-semibold text-lg">
-              Información Laboral {index + 1}
+              Información Laboral
             </h3>
             {registros.length > 1 && (
               <button
