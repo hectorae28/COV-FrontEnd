@@ -7,7 +7,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-// Add a ForgotPasswordForm component here, similar to what you have in Colegiados
+// ForgotPasswordForm component
 const ForgotPasswordForm = ({ onBackToLogin }) => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,30 +103,49 @@ export default function PanelAdmin({ onClose, isClosing }) {
   const [currentView, setCurrentView] = useState("login");
   const [showContact, setShowContact] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const formRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    const Form = new FormData(formRef.current);
-    console.log({
-      Form,
-    });
+    setErrorMessage("");
+    
+    const formData = new FormData(formRef.current);
+    const username = formData.get("email");
+    const password = formData.get("password");
+    
+    // Validation
+    if (!username || !password) {
+      setErrorMessage("Por favor, complete todos los campos");
+      setIsLoading(false);
+      return;
+    }
+    
     try {
+      // Pass the full username/email without splitting
       const result = await signIn("credentials", {
-        username: Form.get("email").split("@")[0],
-        password: Form.get("password"),
+        username: username, // Don't split the email
+        password: password,
         redirect: false,
       });
+      
       if (result?.error) {
         console.error("Error al iniciar sesión:", result.error);
+        // Display user-friendly error message
+        if (result.error === "CredentialsSignin") {
+          setErrorMessage("Usuario o contraseña incorrectos. Por favor, verifique sus credenciales.");
+        } else {
+          setErrorMessage("Error al iniciar sesión. Por favor, intente de nuevo más tarde.");
+        }
       } else {
         console.log("Inicio de sesión exitoso:", result);
         router.push("/PanelControl");
       }
     } catch (error) {
       console.error("Error en el proceso de inicio de sesión:", error);
+      setErrorMessage("Error de conexión. Por favor, intente de nuevo más tarde.");
     } finally {
       setIsLoading(false);
     }
@@ -243,6 +262,13 @@ export default function PanelAdmin({ onClose, isClosing }) {
                   />
                 </div>
               </div>
+
+              {/* Error message display */}
+              {errorMessage && (
+                <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg">
+                  {errorMessage}
+                </div>
+              )}
 
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center ml-8">
