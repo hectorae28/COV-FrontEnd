@@ -1,35 +1,140 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Lock, Mail, Check } from "lucide-react";
+import { Lock, Mail, Check, Phone, MapPin, Clock } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
+// Add a ForgotPasswordForm component here, similar to what you have in Colegiados
+const ForgotPasswordForm = ({ onBackToLogin }) => {
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setMessage(null);
+
+    try {
+      // Replace with your actual password reset logic
+      // For example: const response = await fetch('/api/reset-password', {...
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setMessage({
+        type: "success",
+        text: "Se ha enviado un enlace de recuperación a tu correo electrónico"
+      });
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: "Error al enviar el correo. Intenta de nuevo más tarde."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Mail className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
+            placeholder="Correo electrónico"
+            required
+          />
+        </div>
+      </div>
+
+      {message && (
+        <div
+          className={`mb-6 p-4 rounded-lg ${message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            }`}
+        >
+          {message.text}
+        </div>
+      )}
+
+      <motion.button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
+        shadow-md hover:shadow-lg transition-all duration-300
+        focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50 disabled:opacity-70"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {isSubmitting ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+            <span>Enviando...</span>
+          </div>
+        ) : (
+          "Recuperar Contraseña"
+        )}
+      </motion.button>
+
+      <div className="mt-6 text-center">
+        <button
+          type="button"
+          onClick={onBackToLogin}
+          className="text-[#D7008A] hover:text-[#41023B] transition-colors duration-300"
+        >
+          Volver a Iniciar Sesión
+        </button>
+      </div>
+    </form>
+  );
+};
+
 export default function PanelAdmin({ onClose, isClosing }) {
   const [rememberMe, setRememberMe] = useState(false);
   const [currentView, setCurrentView] = useState("login");
+  const [showContact, setShowContact] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     const Form = new FormData(formRef.current);
     console.log({
       Form,
     });
-    const result = await signIn("credentials", {
-      username: Form.get("email").split("@")[0],
-      password: Form.get("password"),
-      redirect: false,
-    });
-    if (result?.error) {
-      console.error("Error al iniciar sesión:", result.error);
-    } else {
-      console.log("Inicio de sesión exitoso:", result);
-      router.push("/PanelControl");
+    try {
+      const result = await signIn("credentials", {
+        username: Form.get("email").split("@")[0],
+        password: Form.get("password"),
+        redirect: false,
+      });
+      if (result?.error) {
+        console.error("Error al iniciar sesión:", result.error);
+      } else {
+        console.log("Inicio de sesión exitoso:", result);
+        router.push("/PanelControl");
+      }
+    } catch (error) {
+      console.error("Error en el proceso de inicio de sesión:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Función para alternar la sección de contacto
+  const toggleContactSection = () => {
+    setShowContact(!showContact);
   };
 
   return (
@@ -101,75 +206,149 @@ export default function PanelAdmin({ onClose, isClosing }) {
           </div>
 
           <h2 className="text-center text-3xl font-bold text-[#41023B] mb-2">
-            Panel de Administradores
+            {currentView === "login" ? "Panel de Administradores" : "Recuperar Contraseña"}
           </h2>
           <p className="text-center text-gray-700 mb-10">
-            Acceso exclusivo para personal administrativo
+            {currentView === "login"
+              ? "Acceso exclusivo para personal administrativo"
+              : "Ingresa tu correo para recuperar tu contraseña"}
           </p>
 
-          <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
-            <div className="mb-6">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+          {currentView === "login" ? (
+            <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
+              <div className="mb-6">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="email"
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
+                    placeholder="Usuario o correo electrónico"
+                  />
                 </div>
-                <input
-                  type="text"
-                  name="email"
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
-                  placeholder="Usuario o correo electrónico"
-                />
               </div>
-            </div>
 
-            <div className="mb-6">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+              <div className="mb-6">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="password"
+                    name="password"
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
+                    placeholder="Contraseña"
+                  />
                 </div>
-                <input
-                  type="password"
-                  name="password"
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
-                  placeholder="Contraseña"
-                />
               </div>
-            </div>
 
-            <div className="flex items-center mb-8 ml-8">
-              <div
-                className="relative w-5 h-5 mr-3 cursor-pointer"
-                onClick={() => setRememberMe(!rememberMe)}
-              >
-                <div
-                  className={`absolute inset-0 rounded border ${
-                    rememberMe
-                      ? "bg-[#41023B] border-[#41023B]"
-                      : "border-gray-800"
-                  }`}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center ml-8">
+                  <div
+                    className="relative w-5 h-5 mr-3 cursor-pointer"
+                    onClick={() => setRememberMe(!rememberMe)}
+                  >
+                    <div
+                      className={`absolute inset-0 rounded border ${rememberMe
+                        ? "bg-[#41023B] border-[#41023B]"
+                        : "border-gray-800"
+                        }`}
+                    >
+                      {rememberMe && <Check className="h-4 w-4 text-white" />}
+                    </div>
+                  </div>
+                  <label
+                    className="text-gray-700 cursor-pointer"
+                    onClick={() => setRememberMe(!rememberMe)}
+                  >
+                    Recordarme
+                  </label>
+                </div>
+
+                <button
+                  type="button"
+                  className="text-[#D7008A] hover:text-[#41023B] transition-colors duration-300 text-sm"
+                  onClick={() => setCurrentView("forgot-password")}
                 >
-                  {rememberMe && <Check className="h-4 w-4 text-white" />}
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+
+              <motion.button
+                type="submit"
+                disabled={isLoading}
+                className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
+                shadow-md hover:shadow-lg transition-all duration-300
+                focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50 disabled:opacity-70"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>Iniciando Sesión...</span>
+                  </div>
+                ) : (
+                  "Iniciar Sesión"
+                )}
+              </motion.button>
+            </form>
+          ) : (
+            <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
+          )}
+
+          {/* Botón para mostrar la sección de contacto */}
+          <div className="mt-6 text-center">
+            <motion.button
+              onClick={toggleContactSection}
+              className="text-[#D7008A] font-medium hover:text-[#41023B] transition-colors duration-300 md:hidden"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {showContact ? "Ocultar contacto" : "Contáctanos"}
+            </motion.button>
+          </div>
+
+          {/* Sección de contacto (visible solo cuando showContact es true) */}
+          {showContact && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="mt-6 p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg"
+            >
+              <h3 className="text-xl font-bold text-[#41023B] mb-4 ">Contáctanos</h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 text-black">
+                  <Phone className="text-[#41023B]" size={20} />
+                  <a
+                    href="tel:+582127812267"
+                    className="hover:text-[#D7008A] transition-all"
+                  >
+                    (0212) 781-22 67
+                  </a>
+                </div>
+                <div className="flex items-center space-x-3 text-black">
+                  <MapPin className="text-[#41023B]" size={20} />
+                  <a
+                    href="https://maps.app.goo.gl/sj999zBBXoV4ouV39"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[#D7008A] transition-all"
+                  >
+                    Dirección en Google Maps
+                  </a>
+                </div>
+                <div className="flex items-center space-x-3 text-black">
+                  <Clock className="text-[#41023B]" size={20} />
+                  <span>Lun-Vie: 8:00 AM - 4:00 PM</span>
                 </div>
               </div>
-              <label
-                className="text-gray-700 cursor-pointer"
-                onClick={() => setRememberMe(!rememberMe)}
-              >
-                Recordarme
-              </label>
-            </div>
-
-            <motion.button
-              type="submit"
-              className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
-              shadow-md hover:shadow-lg transition-all duration-300
-              focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Iniciar Sesión
-            </motion.button>
-          </form>
+            </motion.div>
+          )}
         </div>
       </div>
     </motion.div>

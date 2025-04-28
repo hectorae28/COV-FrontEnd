@@ -4,6 +4,15 @@ import { motion } from "framer-motion"
 import { Phone, MapPin, Clock, Award, GraduationCap, Sparkles } from "lucide-react"
 
 export default function InfoSection({ direction, isClosing }) {
+    // Social media links
+    const socialLinks = {
+        whatsapp: "https://wa.me/584149165829",
+        instagram: "https://www.instagram.com/elcovorg?igsh=Z2k0cGRjY3V3OTAw",
+        facebook: "https://www.facebook.com/elcovorg",
+        youtube: "https://www.youtube.com/@elcovorg",
+        twitter: "https://x.com/elcovorg"
+    };
+
     return (
         <motion.div
             key="info-section"
@@ -20,8 +29,8 @@ export default function InfoSection({ direction, isClosing }) {
             }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className={`absolute ${direction === "left"
-                    ? "right-[-200] pr-[5%] md:pr-[10%] lg:pr-[15%]"
-                    : "left-[-200] pl-[5%] md:pl-[10%] lg:pl-[15%]"
+                ? "right-[-200] pr-[5%] md:pr-[10%] lg:pr-[15%]"
+                : "left-[-200] pl-[5%] md:pl-[10%] lg:pl-[15%]"
                 } top-0 bottom-0 w-[45%] md:w-[50%] lg:w-[60%] 
                 hidden lg:flex flex-col justify-center items-center`}
         >
@@ -48,8 +57,9 @@ export default function InfoSection({ direction, isClosing }) {
                             <motion.div
                                 key={index}
                                 className="bg-white/10 rounded-2xl p-6 flex items-center space-x-5 border border-white/10 shadow-xl"
-                                whileHover={{ 
+                                whileHover={{
                                     scale: 1.03,
+                                    backgroundColor: "#f8e4f3", // Lighter shade of purple/pink
                                     transition: { duration: 0.2 }
                                 }}
                             >
@@ -85,8 +95,9 @@ export default function InfoSection({ direction, isClosing }) {
                             <motion.div
                                 key={index}
                                 className="bg-white/10 rounded-2xl p-6 flex justify-between items-center border border-white/10 shadow-xl"
-                                whileHover={{ 
+                                whileHover={{
                                     scale: 1.03,
+                                    backgroundColor: "#f8e4f3", // Lighter shade of purple/pink
                                     transition: { duration: 0.2 }
                                 }}
                             >
@@ -109,8 +120,18 @@ export default function InfoSection({ direction, isClosing }) {
                             <h3 className="text-3xl font-bold text-[#41023B] mb-6">Contáctanos</h3>
                             <div className="space-y-4">
                                 {[
-                                    { icon: <Phone className="text-[#41023B]" size={24} />, text: "+58 (212) 555-1234" },
-                                    { icon: <MapPin className="text-[#41023B]" size={24} />, text: "Av. Principal, Caracas" },
+                                    { icon: <Phone className="text-[#41023B]" size={24} />, text: "(0212) 781-22 67" },
+                                    {
+                                        icon: <MapPin className="text-[#41023B]" size={24} />,
+                                        text: <a
+                                            href="https://maps.app.goo.gl/sj999zBBXoV4ouV39"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:text-[#D7008A] transition-all"
+                                        >
+                                            Direccion en Google Maps
+                                        </a>
+                                    },
                                     { icon: <Clock className="text-[#41023B]" size={24} />, text: "Lun-Vie: 8:00 AM - 4:00 PM" }
                                 ].map((contact, index) => (
                                     <div key={index} className="flex items-center space-x-4 text-black">
@@ -123,19 +144,21 @@ export default function InfoSection({ direction, isClosing }) {
                         <div>
                             <h3 className="text-3xl font-bold text-[#41023B] mb-6">Síguenos</h3>
                             <div className="flex space-x-4">
-                                {["facebook", "instagram", "twitter", "youtube"].map((platform) => (
+                                {Object.entries(socialLinks).map(([platform, url]) => (
                                     <motion.a
                                         key={platform}
-                                        href="#"
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="bg-[#41023B] p-3 rounded-full hover:bg-[#D7008A] transition-all"
-                                        whileHover={{ 
+                                        whileHover={{
                                             scale: 1.1,
                                             transition: { duration: 0.2 }
                                         }}
                                     >
-                                        <img 
-                                            src={`/assets/icons/${platform}.png`} 
-                                            alt={platform} 
+                                        <img
+                                            src={`/assets/icons/${platform}.png`}
+                                            alt={platform}
                                             className="w-4 h-4"
                                         />
                                     </motion.a>

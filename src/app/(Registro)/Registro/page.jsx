@@ -16,15 +16,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 // Import step components
+import api from "@/api/api";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import Head from "next/head";
+import PagosColg from "../../Components/PagosModal";
 import DocsRequirements from "../DocsRequirements";
 import InfoColegiado from "../InfoColg";
 import InfoContacto from "../InfoCont";
 import InfoLaboral from "../InfoLab";
 import InfoPersonal from "../InfoPers";
-import PagosColg from "../PagosColg";
-import Head from "next/head";
-import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import api from "@/api/api";
 
 const steps = [
   {

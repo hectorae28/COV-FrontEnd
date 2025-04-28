@@ -22,6 +22,15 @@ export default function LoginScreen() {
     Personal_Administrativo: "/PanelControl",
   };
 
+  // Social media links - Shared with InfoSection
+  const socialLinks = {
+    whatsapp: "https://wa.me/584149165829",
+    instagram: "https://www.instagram.com/elcovorg?igsh=Z2k0cGRjY3V3OTAw",
+    facebook: "https://www.facebook.com/elcovorg",
+    youtube: "https://www.youtube.com/@elcovorg",
+    twitter: "https://x.com/elcovorg"
+  };
+
   useEffect(() => {
     if (status === "authenticated") {
       router.push(authRouter[session.user.role]);
@@ -205,24 +214,34 @@ export default function LoginScreen() {
                   </motion.div>
                 </motion.div>
 
-                {/* Footer - Responsive adjustments */}
+                {/* Footer - Responsive adjustments con orden actualizado de redes sociales */}
                 <motion.div
                   className="absolute bottom-0 left-0 right-0 text-center text-white text-xs sm:text-sm p-4 sm:p-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 1 }}
                 >
-                  {/* Redes Sociales */}
+                  {/* Redes Sociales con orden actualizado */}
                   <div className="flex justify-center items-center space-x-4 sm:space-x-6 mb-2 sm:mb-4">
-                    <a href="#" className="hover:opacity-40 transition-opacity">
+                    <a
+                      href={socialLinks.whatsapp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-40 transition-opacity"
+                    >
                       <Image
-                        src="/assets/icons/facebook.png"
-                        alt="Facebook"
+                        src="/assets/icons/whatsapp.png"
+                        alt="WhatsApp"
                         width={20}
                         height={20}
                       />
                     </a>
-                    <a href="#" className="hover:opacity-40 transition-opacity">
+                    <a
+                      href={socialLinks.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-40 transition-opacity"
+                    >
                       <Image
                         src="/assets/icons/instagram.png"
                         alt="Instagram"
@@ -230,19 +249,42 @@ export default function LoginScreen() {
                         height={20}
                       />
                     </a>
-                    <a href="#" className="hover:opacity-40 transition-opacity">
+                    <a
+                      href={socialLinks.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-40 transition-opacity"
+                    >
                       <Image
-                        src="/assets/icons/twitter.png"
-                        alt="Twitter"
+                        src="/assets/icons/facebook.png"
+                        alt="Facebook"
                         width={20}
                         height={20}
                       />
                     </a>
-                    <a href="#" className="hover:opacity-40 transition-opacity">
+                    <a
+                      href={socialLinks.youtube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-40 transition-opacity"
+                    >
                       <Image
                         src="/assets/icons/youtube.png"
                         alt="Youtube"
                         width={24}
+                        height={20}
+                      />
+                    </a>
+                    <a
+                      href={socialLinks.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-40 transition-opacity"
+                    >
+                      <Image
+                        src="/assets/icons/twitter.png"
+                        alt="Twitter"
+                        width={20}
                         height={20}
                       />
                     </a>

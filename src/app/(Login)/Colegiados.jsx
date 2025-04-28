@@ -6,10 +6,17 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ForgotPasswordForm from "../Components/Home/ForgotPasswordForm";
 import LoginForm from "../Components/Home/LoginForm";
+import { Phone, MapPin, Clock } from "lucide-react";
 
 export default function Colegiados({ onClose, isClosing }) {
   const [currentView, setCurrentView] = useState("login");
+  const [showContact, setShowContact] = useState(false);
   const router = useRouter();
+
+  // Función para alternar la sección de contacto
+  const toggleContactSection = () => {
+    setShowContact(!showContact);
+  };
 
   return (
     <motion.div
@@ -88,6 +95,57 @@ export default function Colegiados({ onClose, isClosing }) {
 
           {currentView === "forgot-password" && (
             <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
+          )}
+
+          {/* Botón para mostrar la sección de contacto */}
+          <div className="mt-6 text-center">
+            <motion.button
+              onClick={toggleContactSection}
+              className="text-[#D7008A] font-medium hover:text-[#41023B] transition-colors duration-300 md:hidden"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {showContact ? "Ocultar contacto" : "Contáctanos"}
+            </motion.button>
+          </div>
+
+          {/* Sección de contacto (visible solo cuando showContact es true) */}
+          {showContact && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="mt-6 p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg"
+            >
+              <h3 className="text-xl font-bold text-[#41023B] mb-4">Contáctanos</h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 text-black">
+                  <Phone className="text-[#41023B]" size={20} />
+                  <a
+                    href="tel:+582127812267"
+                    className="hover:text-[#D7008A] transition-all"
+                  >
+                    (0212) 781-22 67
+                  </a>
+                </div>
+                <div className="flex items-center space-x-3 text-black">
+                  <MapPin className="text-[#41023B]" size={20} />
+                  <a
+                    href="https://maps.app.goo.gl/sj999zBBXoV4ouV39"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[#D7008A] transition-all"
+                  >
+                    Dirección en Google Maps
+                  </a>
+                </div>
+                <div className="flex items-center space-x-3 text-black">
+                  <Clock className="text-[#41023B]" size={20} />
+                  <span>Lun-Vie: 8:00 AM - 4:00 PM</span>
+                </div>
+              </div>
+            </motion.div>
           )}
         </div>
       </div>

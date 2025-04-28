@@ -8,22 +8,30 @@ import { useState, useRef } from "react";
 
 export default function LoginForm({ onForgotPassword, onRegister }) {
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     const Form = new FormData(formRef.current);
-    const result = await signIn("credentials", {
-      username: Form.get("email").split("@")[0],
-      password: Form.get("password"),
-      redirect: false,
-    });
-    if (result?.error) {
-      console.error("Error al iniciar sesión:", result.error);
-    } else {
-      console.log("Inicio de sesión exitoso:", result);
-      router.push("/Colegiado");
+    try {
+      const result = await signIn("credentials", {
+        username: Form.get("email").split("@")[0],
+        password: Form.get("password"),
+        redirect: false,
+      });
+      if (result?.error) {
+        console.error("Error al iniciar sesión:", result.error);
+      } else {
+        console.log("Inicio de sesión exitoso:", result);
+        router.push("/Colegiado");
+      }
+    } catch (error) {
+      console.error("Error en el proceso de inicio de sesión:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -82,13 +90,21 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
       {/* Login button */}
       <motion.button
         type="submit"
+        disabled={isLoading}
         className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
         shadow-md hover:shadow-lg transition-all duration-300
-        focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50"
+        focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50 disabled:opacity-70"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        Iniciar Sesión
+        {isLoading ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+            <span>Iniciando sesión...</span>
+          </div>
+        ) : (
+          "Iniciar Sesión"
+        )}
       </motion.button>
 
       {/* Forgot password link */}

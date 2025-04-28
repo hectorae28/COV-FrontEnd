@@ -1,26 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { getCookie } from 'cookies-next/client';
 
-const Checkout = () => {
+const Checkout = ({ amount }) => {
     const [{ options, isPending }, dispatch] = usePayPalScriptReducer();
-    const [amount, setAmount] = useState("0.00");
+    // Use the passed amount from parent component, default to "0.00" if not provided
+    const [paymentAmount, setPaymentAmount] = useState(amount || "0.00");
 
-    const handleChange = (e) => setAmount(e.target.value);
+    // Update payment amount when the prop changes
+    useEffect(() => {
+        if (amount) {
+            setPaymentAmount(amount);
+        }
+    }, [amount]);
 
-    const onCreateOrder = (data,actions) => {
+    const onCreateOrder = (data, actions) => {
         return actions.order.create({
             purchase_units: [
                 {
                     amount: {
-                        value: amount,
+                        value: paymentAmount,
                     },
                 },
             ],
         });
     }
 
-    const onApproveOrder = (data,actions) => {
+    const onApproveOrder = (data, actions) => {
         const capturedOrder = fetch("http://localhost:8000/api/v1/solicitudes/capture-order/", {
             method: "POST",
             headers: {
@@ -38,11 +44,7 @@ const Checkout = () => {
         <div className="checkout">
             {isPending ? <p>LOADING...</p> : (
                 <div>
-                    <label>
-                        Enter amount to pay: 
-                        <input value={amount} onChange={handleChange} placeholder="0.00" />
-                    </label>
-                    <PayPalButtons 
+                    <PayPalButtons
                         style={{ layout: "vertical", color: "blue" }}
                         createOrder={(data, actions) => onCreateOrder(data, actions)}
                         onApprove={(data, actions) => onApproveOrder(data, actions)}

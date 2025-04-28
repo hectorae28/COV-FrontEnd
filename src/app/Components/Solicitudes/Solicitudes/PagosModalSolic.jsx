@@ -2,6 +2,7 @@
 import { motion } from "framer-motion"
 import { CreditCard, Check, Upload, X, ExternalLink, DollarSign } from "lucide-react"
 import { useState, useEffect } from "react"
+import PayPalProvider from "@/app/Components/utils/paypalProvider"
 
 export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -430,16 +431,9 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
 
                                             <p className="text-center text-sm mt-3">Correo: <a href="mailto:paypalelcov@gmail.com" className="text-[#118AB2] hover:underline">paypalelcov@gmail.com</a></p>
 
+                                            {/* Aquí reemplazamos el enlace anterior por el componente de PayPal */}
                                             <div className="mt-3 flex justify-center">
-                                                <a
-                                                    href="https://www.paypal.com/paypalme/elcov"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="px-4 py-2 rounded-lg bg-[#118AB2] hover:bg-[#118AB2]/90 transition-colors text-white font-medium flex items-center text-sm"
-                                                >
-                                                    <ExternalLink className="w-4 h-4 mr-2" />
-                                                    Pagar en PayPal
-                                                </a>
+                                                <PayPalProvider amount={paypalAmount} />
                                             </div>
                                         </div>
                                     </div>
