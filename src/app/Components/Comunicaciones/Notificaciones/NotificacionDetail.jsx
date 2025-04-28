@@ -150,6 +150,12 @@ export function NotificacionDetail({
       <div className="flex-grow overflow-y-auto p-6">
         <div className="max-w-3xl mx-auto">
           <div className="bg-white rounded-lg p-6 shadow-sm">
+            {/* Asunto de la notificación en el detalle */}
+            <div className="mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-sm font-medium bg-purple-100 text-purple-800 inline-block truncate max-w-full">Asunto</h3>
+              <p className="text-base font-medium text-gray-800 mt-1">{notificacion.asunto}</p>
+            </div>
+
             <p className="text-gray-700 whitespace-pre-line">{notificacion.contenido}</p>
 
             {notificacion.tipo === "curso" && (

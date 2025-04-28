@@ -1,7 +1,25 @@
 import Link from "next/link";
-import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaWhatsapp, FaYoutube } from "react-icons/fa";
 
 const Footer = ({ props }) => {
+  // Enlaces de redes sociales
+  const socialLinks = {
+    whatsapp: props?.link_whatsapp || "https://wa.me/584149165829",
+    instagram: props?.link_instagram || "https://www.instagram.com/elcovorg?igsh=Z2k0cGRjY3V3OTAw",
+    facebook: props?.link_facebook || "https://www.facebook.com/elcovorg",
+    youtube: props?.link_youtube || "https://www.youtube.com/@elcovorg",
+    twitter: props?.link_x || "https://x.com/elcovorg"
+  };
+
+  // Formatear números de teléfono para eliminar espacios y caracteres especiales
+  const formatPhoneNumber = (phoneNumber) => {
+    if (!phoneNumber) return "";
+    return phoneNumber.replace(/\s+/g, "").replace(/[()-]/g, "");
+  };
+
+  const telefonoFinanzas = props?.telefono_finanzas || "";
+  const telefonoPresidencia = props?.telefono_presidencia || "";
+
   return (
     <footer className="bg-gradient-to-b from-[#6A0080] to-[#C40180] text-white py-6 sm:py-8 md:py-10 px-4 rounded-t-3xl sm:rounded-t-4xl z-1000">
       <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 z-1111">
@@ -32,18 +50,70 @@ const Footer = ({ props }) => {
             <div className="text-center sm:text-left">
               <h3 className="text-base md:text-lg font-bold">Teléfonos:</h3>
               <p className="mt-2 text-sm md:text-base">
-                Finanzas: {props.telefono_finanzas}
+                Finanzas: {telefonoFinanzas ? (
+                  <a
+                    href={`tel:${formatPhoneNumber(telefonoFinanzas)}`}
+                    className="hover:underline hover:text-gray-300 transition-colors"
+                  >
+                    {telefonoFinanzas}
+                  </a>
+                ) : ""}
                 <br />
-                Presidencia: {props.telefono_presidencia}
+                Presidencia: {telefonoPresidencia ? (
+                  <a
+                    href={`tel:${formatPhoneNumber(telefonoPresidencia)}`}
+                    className="hover:underline hover:text-gray-300 transition-colors"
+                  >
+                    {telefonoPresidencia}
+                  </a>
+                ) : ""}
               </p>
             </div>
           </div>
 
-          {/* Columna 3 - Redes sociales */}
+          {/* Columna 3 - Redes sociales en el orden correcto */}
           <div className="flex justify-center sm:ml-80 md:ml-0 md:justify-end items-center space-x-6">
+            {/* WhatsApp */}
             <Link
-              href={props.link_x}
+              href={socialLinks.whatsapp}
               target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer hover:text-gray-300 transition-colors"
+            >
+              <FaWhatsapp size={24} className="md:w-6 md:h-6" />
+            </Link>
+            {/* Instagram */}
+            <Link
+              href={socialLinks.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer hover:text-gray-300 transition-colors"
+            >
+              <FaInstagram size={24} className="md:w-7 md:h-7" />
+            </Link>
+            {/* Facebook */}
+            <Link
+              href={socialLinks.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer hover:text-gray-300 transition-colors"
+            >
+              <FaFacebook size={22} className="md:w-6 md:h-6" />
+            </Link>
+            {/* YouTube */}
+            <Link
+              href={socialLinks.youtube}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer hover:text-gray-300 transition-colors"
+            >
+              <FaYoutube size={26} className="md:w-8 md:h-8" />
+            </Link>
+            {/* Twitter/X */}
+            <Link
+              href={socialLinks.twitter}
+              target="_blank"
+              rel="noopener noreferrer"
               className="cursor-pointer group"
             >
               <div className="w-5 h-5 md:w-6 md:h-6 transition-opacity group-hover:opacity-60">
@@ -54,33 +124,11 @@ const Footer = ({ props }) => {
                 />
               </div>
             </Link>
-            <Link
-              href={props.link_facebook}
-              target="_blank"
-              className="cursor-pointer hover:text-gray-300 transition-colors"
-            >
-              <FaFacebook size={22} className="md:w-6 md:h-6" />
-            </Link>
-            <Link
-              href={props.link_instagram}
-              target="_blank"
-              className="cursor-pointer hover:text-gray-300 transition-colors"
-            >
-              <FaInstagram size={24} className="md:w-7 md:h-7" />
-            </Link>
-            <Link
-              href={props.link_youtube}
-              target="_blank"
-              className="cursor-pointer hover:text-gray-300 transition-colors"
-            >
-              <FaYoutube size={26} className="md:w-8 md:h-8" />
-            </Link>
           </div>
         </div>
-
         <div className="mt-8 md:mt-12 text-center sm:text-center md:text-left">
           <p className="text-xs sm:text-sm">
-            Copyright © 2025 Colegio de Odontólogos de Venezuela J-00041277-4
+            Copyright © {new Date().getFullYear()} Colegio de Odontólogos de Venezuela J-00041277-4
           </p>
         </div>
       </div>

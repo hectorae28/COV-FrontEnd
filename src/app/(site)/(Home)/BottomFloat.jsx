@@ -1,18 +1,31 @@
 import { fetchDatosAdicionales } from "@/api/endpoints/landingPage";
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 const BottomFloat = () => {
   const [showWhatsappText, setShowWhatsappText] = useState(false);
   const [showInstagramText, setShowInstagramText] = useState(false);
-  const [whatsappLink, setWhatsappLink] = useState("");
-  const [instagramLink, setInstagramLink] = useState("https://www.instagram.com/elcovorg");
+  const [whatsappLink, setWhatsappLink] = useState("https://wa.me/584149165829");
+  const [instagramLink, setInstagramLink] = useState("https://www.instagram.com/elcovorg?igsh=Z2k0cGRjY3V3OTAw");
 
   useEffect(() => {
     const loadData = async () => {
-      const data = await fetchDatosAdicionales("?search=link_whatsapp");
-      setWhatsappLink(data.data[0]);
+      try {
+        const data = await fetchDatosAdicionales("?search=link_whatsapp");
+        if (data?.data?.[0]) {
+          // Verificamos si el resultado tiene una propiedad value o es directamente la URL
+          if (typeof data.data[0] === 'object' && data.data[0].value) {
+            setWhatsappLink(data.data[0].value);
+          } else if (typeof data.data[0] === 'string') {
+            setWhatsappLink(data.data[0]);
+          }
+          // Si el resultado no coincide con ninguno, mantenemos el valor predeterminado
+        }
+      } catch (error) {
+        console.error("Error loading WhatsApp link:", error);
+        // Mantenemos el enlace predeterminado en caso de error
+      }
     };
     loadData();
   }, []);

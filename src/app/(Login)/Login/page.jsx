@@ -222,7 +222,7 @@ export default function LoginScreen() {
                   transition={{ duration: 0.8, delay: 1 }}
                 >
                   {/* Redes Sociales con orden actualizado */}
-                  <div className="flex justify-center items-center space-x-4 sm:space-x-6 mb-2 sm:mb-4">
+                  <div className="flex justify-center items-center space-x-4 sm:space-x-6 mb-2 sm:mb-4 ">
                     <a
                       href={socialLinks.whatsapp}
                       target="_blank"
