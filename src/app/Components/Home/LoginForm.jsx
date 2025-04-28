@@ -32,6 +32,8 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
 
       } else if (result.error === "Invalid credentials") {
         setError("Credenciales inválidas. Por favor, verifique su email y/o contraseña.");
+      }else if( result.error === "Ya existe una sesión activa para este usuario.") {
+        setError("Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente.");
       }else {
         setError("Ocurrió un error inesperado. Intenta nuevamente.");
       }

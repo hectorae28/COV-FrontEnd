@@ -41,6 +41,20 @@ export const authOptions = {
         strategy: "jwt",
     },
     callbacks: {
+        async signOut({ token }) {
+            try {
+                await fetch(`${process.env.NEXT_PUBLIC_BACK_HOST}/api/v1/usuario/logout/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token.access}`,
+                    },
+                });
+                console.log("Sesión cerrada en el backend");
+            } catch (error) {
+                console.error("Error al cerrar sesión en el backend:", error);
+            }
+        },
         async signIn({ user, account, profile, email, credentials }) {
             if (user?.error) {
                 return `${process.env.NEXTAUTH_URL}/Login?error=${encodeURIComponent(user.error)}`;
@@ -80,8 +94,9 @@ export const authOptions = {
         },
     },
     pages: {
-        signIn: "/login",
+        signIn: "/Login",
         error: "/Login",
+        signOut: "/Login",
     },
     secret: process.env.NEXTAUTH_SECRET,
 }

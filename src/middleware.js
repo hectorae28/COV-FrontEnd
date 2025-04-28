@@ -7,37 +7,31 @@ export const config = {
 };
 
 export async function middleware(request) {
-    // Extrae el token desde la cookie
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     const url = request.nextUrl.clone();
 
-    // Si no hay sesión, vas al login
     if (!token) {
         url.pathname = '/Login';
         return NextResponse.redirect(url);
     }
 
-    // “Colegiados” solo pueden entrar a /Colegiado
-    if (url.pathname.startsWith('/Colegiado') && token.role !== 'Colegiados') {
-        url.pathname = '/unauthorized';
+    if (url.pathname.startsWith('/Colegiado') && (token.role !== 'Colegiados'  && token.role !== 'Admin')) {
+        url.pathname = '/NotColegiado';
         return NextResponse.redirect(url);
     }
-    if (url.pathname.startsWith('/Login') && (token.role === 'Colegiados' || token.role === 'Personal_Administrativo')) {
-        if (token.role === 'Colegiados') {
+    if (url.pathname.startsWith('/PanelContro') && (token.role !== 'Personal_Administrativo' && token.role !== 'Admin')) {
+        url.pathname = '/notfound';
+        return NextResponse.redirect(url);
+    }
+    if (url.pathname.startsWith('/Login') && (token.role === 'Colegiados' || token.role === 'Personal_Administrativo' || token.role === 'Admin')) {
+        if (token.role === 'Colegiados' || token.role === 'Admin') {
             url.pathname = '/Colegiado';
-        } else if (token.role === 'Personal_Administrativo') {
+        } else if (token.role === 'Personal_Administrativo'|| token.role === 'Admin') {
             url.pathname = '/PanelControl';
         } else {
             url.pathname = '/Login';
         }
         return NextResponse.redirect(url);
     }
-
-    // “Personal_Administrativo” solo pueden entrar a /PanelControl
-    if (url.pathname.startsWith('/PanelContro') && token.role !== 'Personal_Administrativo') {
-        url.pathname = '/unauthorized';
-        return NextResponse.redirect(url);
-    }
-    // Todo OK: continuar con la petición
     return NextResponse.next();
 }

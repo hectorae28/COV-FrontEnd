@@ -3,13 +3,38 @@
 import { useState, useRef, useEffect } from "react";
 import { AccountCircle } from "@mui/icons-material";
 import { signOut } from "next-auth/react";
+import api from "@/api/api";
 
-export default function ProfileDropdown({ userInfo }) {
+export default function ProfileDropdown({ userInfo, session }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
+  };
+  const handleSingOut = () => {
+    api.get("/usuario/csrf/").then((csrf) => {
+      console.log("CSRF Token:", csrf.data);
+      api
+        .post(
+          "/usuario/logout",
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${session.user.access}`,
+              "X-CSRFToken": csrf.data,
+            },
+          }
+        )
+        .then(() => {
+          console.log("Logout successful");
+          //signOut(session);
+        })
+        .catch((error) => {
+          //signOut(session);
+          console.error("Logout error:", error);
+        });
+    });
   };
 
   useEffect(() => {
@@ -44,7 +69,7 @@ export default function ProfileDropdown({ userInfo }) {
           </div>
 
           <div
-            onClick={() => signOut()}
+            onClick={handleSingOut}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-100 transition-colors border-t border-gray-200 w-full cursor-pointer"
           >
             Cerrar sesión
