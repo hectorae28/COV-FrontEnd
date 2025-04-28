@@ -109,45 +109,20 @@ export default function PanelAdmin({ onClose, isClosing }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setErrorMessage("");
-    
-    const formData = new FormData(formRef.current);
-    const username = formData.get("email");
-    const password = formData.get("password");
-    
-    // Validation
-    if (!username || !password) {
-      setErrorMessage("Por favor, complete todos los campos");
-      setIsLoading(false);
-      return;
-    }
-    
-    try {
-      // Pass the full username/email without splitting
-      const result = await signIn("credentials", {
-        username: username, // Don't split the email
-        password: password,
-        redirect: false,
-      });
-      
-      if (result?.error) {
-        console.error("Error al iniciar sesión:", result.error);
-        // Display user-friendly error message
-        if (result.error === "CredentialsSignin") {
-          setErrorMessage("Usuario o contraseña incorrectos. Por favor, verifique sus credenciales.");
-        } else {
-          setErrorMessage("Error al iniciar sesión. Por favor, intente de nuevo más tarde.");
-        }
-      } else {
-        console.log("Inicio de sesión exitoso:", result);
-        router.push("/PanelControl");
-      }
-    } catch (error) {
-      console.error("Error en el proceso de inicio de sesión:", error);
-      setErrorMessage("Error de conexión. Por favor, intente de nuevo más tarde.");
-    } finally {
-      setIsLoading(false);
+    const Form = new FormData(formRef.current);
+    console.log({
+      Form,
+    });
+    const result = await signIn("credentials", {
+      username: Form.get("email").split("@")[0],
+      password: Form.get("password"),
+      redirect: false,
+    });
+    if (result?.error) {
+      console.error("Error al iniciar sesión:", result.error);
+    } else {
+      console.log("Inicio de sesión exitoso:", result);
+      router.push("/PanelControl");
     }
   };
 
