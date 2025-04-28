@@ -9,7 +9,6 @@ import { useState, useRef, useEffect } from "react";
 import Alert from "@/app/Components/Alert"
 
 export default function LoginForm({ onForgotPassword, onRegister }) {
-  const [rememberMe, setRememberMe] = useState(false);
   const searchParams = useSearchParams();
   const [error, setError] = useState(searchParams.get("error"));
   const router = useRouter();
@@ -49,7 +48,6 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
     <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
       {error && (
         <Alert type="alert">{error}</Alert>
-
       )}
       <div className="mb-6">
         <div className="relative">
@@ -79,7 +77,7 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
         </div>
       </div>
 
-      {/* Remember me checkbox */}
+      {/* Remember me checkbox
       <div className="flex items-center mb-8 ml-8">
         <div
           className="relative w-5 h-5 mr-3 cursor-pointer"
@@ -99,7 +97,7 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
         >
           Recordarme
         </label>
-      </div>
+      </div> */}
 
       {/* Login button */}
       <motion.button

@@ -17,10 +17,8 @@ export default function Home() {
   const [showSolvencyWarning, setShowSolvencyWarning] = useState(false); // Estado para la advertencia
   const [showTabs, setShowTabs] = useState(true); // Estado para mostrar/ocultar pestañas
   const [userInfo, setUser_info] = useState(null);
-  const [isFetch, setIsFetch] = useState(false)
   const { data: session, status } = useSession();
   const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
-  console.log("Estado de la sesión:", session);
   // Datos de solvencia
 
 
@@ -30,7 +28,7 @@ export default function Home() {
     const checkSolvencyStatus = () => {
       const today = new Date();
       const [day, month, year] = solvencyInfo.date.split("-").map(Number);
-      const solvencyDate = new Date(year, month - 1, day); 
+      const solvencyDate = new Date(year, month - 1, day);
 
       const warningDate = new Date(solvencyDate);
       warningDate.setDate(warningDate.getDate() - 14);

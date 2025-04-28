@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { AccountCircle } from "@mui/icons-material";
 import { signOut } from "next-auth/react";
 import api from "@/api/api";
+import axios from "axios";
 
 export default function ProfileDropdown({ userInfo, session }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,28 +14,23 @@ export default function ProfileDropdown({ userInfo, session }) {
     setIsOpen(!isOpen);
   };
   const handleSingOut = () => {
-    api.get("/usuario/csrf/").then((csrf) => {
-      console.log("CSRF Token:", csrf.data);
-      api
-        .post(
-          "/usuario/logout",
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${session.user.access}`,
-              "X-CSRFToken": csrf.data,
-            },
-          }
+      axios.request({
+        method: 'POST',
+        url: process.env.NEXT_PUBLIC_BACK_HOST+'/api/v1/usuario/logout/',
+        headers: {
+          Accept: '*/*',
+          Authorization: 'Bearer ' + session?.user?.access,
+        },
+        data: {}
+      }
         )
         .then(() => {
           console.log("Logout successful");
-          //signOut(session);
+          signOut(session);
         })
         .catch((error) => {
-          //signOut(session);
           console.error("Logout error:", error);
         });
-    });
   };
 
   useEffect(() => {
@@ -59,7 +55,7 @@ export default function ProfileDropdown({ userInfo, session }) {
         <AccountCircle fontSize="medium" />
       </div>
 
-      {isOpen && (
+      {isOpen && userInfo && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg pt-1 z-10 border border-gray-200">
           <div className="px-4 py-3 border-b border-gray-200 cursor-pointer">
             <p className="text-sm font-medium text-gray-900">
