@@ -1,5 +1,4 @@
 "use client"
-
 import { motion } from "framer-motion"
 import { Phone, MapPin, Clock, Award, GraduationCap, Sparkles } from "lucide-react"
 
@@ -31,8 +30,8 @@ export default function InfoSection({ direction, isClosing }) {
             className={`absolute ${direction === "left"
                 ? "right-[-200] pr-[5%] md:pr-[10%] lg:pr-[15%]"
                 : "left-[-200] pl-[5%] md:pl-[10%] lg:pl-[15%]"
-                } top-0 bottom-0 w-[45%] md:w-[50%] lg:w-[60%] 
-                hidden lg:flex flex-col justify-center items-center`}
+                } top-0 bottom-0 w-[45%] md:w-[50%] lg:w-[60%]
+                 hidden lg:flex flex-col justify-center items-center`}
         >
             <div className="w-full max-w-4xl space-y-6">
                 {/* Professional Highlights */}
@@ -44,30 +43,32 @@ export default function InfoSection({ direction, isClosing }) {
                     <div className="grid grid-cols-2 gap-6">
                         {[
                             {
-                                icon: <GraduationCap className="text-[#41023B]" size={32} />,
+                                icon: <GraduationCap className="text-[#41023B] group-hover:text-white transition-colors" size={32} />,
                                 title: "Actualización Continua",
                                 description: "Programas de educación especializada para odontólogos."
                             },
                             {
-                                icon: <Sparkles className="text-[#41023B]" size={32} />,
+                                icon: <Sparkles className="text-[#41023B] group-hover:text-white transition-colors" size={32} />,
                                 title: "Recursos Académicos",
                                 description: "Acceso a publicaciones científicas exclusivas."
                             }
                         ].map((item, index) => (
                             <motion.div
                                 key={index}
-                                className="bg-white/10 rounded-2xl p-6 flex items-center space-x-5 border border-white/10 shadow-xl"
+                                className="group bg-white/10 rounded-2xl p-6 flex items-center space-x-5 border border-white/10 shadow-xl"
                                 whileHover={{
                                     scale: 1.03,
-                                    backgroundColor: "#f8e4f3", // Lighter shade of purple/pink
                                     transition: { duration: 0.2 }
                                 }}
                             >
-                                {item.icon}
-                                <div>
-                                    <h4 className="text-xl font-semibold text-black mb-2">{item.title}</h4>
-                                    <p className="text-gray-700">{item.description}</p>
+                                <div className="group-hover:text-white transition-colors">
+                                    {item.icon}
                                 </div>
+                                <div>
+                                    <h4 className="text-xl font-semibold text-black mb-2 group-hover:text-white transition-colors">{item.title}</h4>
+                                    <p className="text-gray-700 group-hover:text-white transition-colors">{item.description}</p>
+                                </div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
                             </motion.div>
                         ))}
                     </div>
@@ -94,20 +95,20 @@ export default function InfoSection({ direction, isClosing }) {
                         ].map((event, index) => (
                             <motion.div
                                 key={index}
-                                className="bg-white/10 rounded-2xl p-6 flex justify-between items-center border border-white/10 shadow-xl"
+                                className="group bg-white/10 rounded-2xl p-6 flex justify-between items-center border border-white/10 shadow-xl relative overflow-hidden"
                                 whileHover={{
                                     scale: 1.03,
-                                    backgroundColor: "#f8e4f3", // Lighter shade of purple/pink
                                     transition: { duration: 0.2 }
                                 }}
                             >
                                 <div>
                                     <div className="flex items-center mb-2">
-                                        <h4 className="text-xl font-semibold text-black mr-4">{event.title}</h4>
+                                        <h4 className="text-xl font-semibold text-black mr-4 group-hover:text-white transition-colors">{event.title}</h4>
                                     </div>
-                                    <p className="text-gray-700">{event.description}</p>
+                                    <p className="text-gray-700 group-hover:text-white transition-colors">{event.description}</p>
                                 </div>
-                                <div className="text-gray-700 font-medium">{event.date}</div>
+                                <div className="text-gray-700 font-medium group-hover:text-white transition-colors">{event.date}</div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
                             </motion.div>
                         ))}
                     </div>
@@ -150,7 +151,7 @@ export default function InfoSection({ direction, isClosing }) {
                                         href={url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="bg-[#41023B] p-3 rounded-full hover:bg-[#D7008A] transition-all"
+                                        className="bg-gradient-to-r from-[#D7008A] to-[#41023B] p-3 rounded-full transition-all"
                                         whileHover={{
                                             scale: 1.1,
                                             transition: { duration: 0.2 }

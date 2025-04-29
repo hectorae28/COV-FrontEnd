@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, CheckCircle, UserPlus, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
-// Importaciones de componentes
+// Import components and data store
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import DocsRequirements from "@/app/(Registro)/DocsRequirements";
 import InfoColegiado from "@/app/(Registro)/InfoColg";
@@ -11,12 +11,16 @@ import InfoContacto from "@/app/(Registro)/InfoCont";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
 import InfoPersonal from "@/app/(Registro)/InfoPers";
 import PagosColg from "@/app/Components/PagosModal";
+import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
 
 export default function RegistroColegiados({
   isAdmin = true,
   onClose,
   onRegistroExitoso,
 }) {
+  // Get methods from Zustand store
+  const addColegiadoPendiente = ListaColegiadosData(state => state.addColegiadoPendiente);
+
   // Estado para seguimiento de pasos
   const [pasoActual, setPasoActual] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([]);
@@ -126,7 +130,7 @@ export default function RegistroColegiados({
   const handleExonerarPagosChange = (e) => {
     const isChecked = e.target.checked;
     setExonerarPagos(isChecked);
-    
+
     // Si se activa exonerar pagos, desactivamos pagar luego
     if (isChecked) {
       setPagarLuego(false);
@@ -137,7 +141,7 @@ export default function RegistroColegiados({
   const handlePagarLuegoChange = (e) => {
     const isChecked = e.target.checked;
     setPagarLuego(isChecked);
-    
+
     // Si se activa pagar luego, desactivamos exonerar pagos
     if (isChecked) {
       setExonerarPagos(false);
@@ -145,47 +149,143 @@ export default function RegistroColegiados({
   };
 
   // Función para manejar la finalización del registro
-  // Función para manejar la finalización del registro
-const handlePaymentComplete = async () => {
-  setIsSubmitting(true);
+  const handlePaymentComplete = async () => {
+    setIsSubmitting(true);
 
-  try {
-    // Simulando envío de datos al servidor
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Preparar los datos para el nuevo colegiado pendiente
+      const nombre = `${formData.firstName} ${formData.lastName}`;
 
-    const nombre = `${formData.firstName} ${formData.lastName}`;
+      // Convertir datos del formulario al formato esperado por ListaColegiadosData
+      const nuevoPendiente = {
+        id: `p-${Date.now()}`,
+        nombre: nombre,
+        cedula: `${formData.nationality}-${formData.identityCard}`,
+        email: formData.email,
+        telefono: formData.phoneNumber,
+        fechaSolicitud: new Date().toLocaleDateString(),
+        documentosCompletos: true,
 
-    // Creamos objeto con los datos necesarios para el listado
-    const nuevoColegiado = {
-      id: `COL-${Date.now()}`,
-      nombre: nombre,
-      cedula: formData.identityCard,
-      numeroRegistro:
-        formData.mainRegistrationNumber ||
-        `ODV-${Math.floor(1000 + Math.random() * 9000)}`,
-      email: formData.email,
-      telefono: formData.phoneNumber,
-      fechaRegistro: new Date().toLocaleDateString(),
-      estado: "Activo",
-      solvente: exonerarPagos, // Solvente si está exonerado
-      especialidad: formData.especialidad || "Odontología general",
-      exoneradoPagos: exonerarPagos,
-      pendientePago: pagarLuego, // Nuevo campo para indicar pago pendiente
-    };
+        // Detailed data
+        persona: {
+          nombre: formData.firstName,
+          segundo_nombre: "",
+          primer_apellido: formData.lastName,
+          segundo_apellido: "",
+          genero: formData.gender === "M" ? "M" : "F",
+          tipo_identificacion: formData.nationality,
+          identificacion: formData.identityCard,
+          correo: formData.email,
+          id_adicional: "",
+          telefono_movil: formData.phoneNumber,
+          telefono_de_habitacion: formData.homePhone || "",
+          fecha_de_nacimiento: formData.birthDate,
+          estado_civil: formData.maritalStatus,
+          direccion: {
+            referencia: formData.address,
+            estado: formData.state
+          },
+          user: null
+        },
+        instituto_bachillerato: formData.graduateInstitute,
+        universidad: formData.universityTitle,
+        fecha_egreso_universidad: formData.titleIssuanceDate,
+        num_registro_principal: formData.mainRegistrationNumber,
+        fecha_registro_principal: formData.mainRegistrationDate,
+        num_mpps: formData.mppsRegistrationNumber,
+        fecha_mpps: formData.mppsRegistrationDate,
+        instituciones: [
+          formData.institutionName ? {
+            nombre: formData.institutionName,
+            cargo: formData.professionalField,
+            direccion: formData.institutionAddress,
+            telefono: formData.institutionPhone,
+          } : null,
+          formData.clinicName ? {
+            nombre: formData.clinicName,
+            cargo: formData.professionalField,
+            direccion: formData.clinicAddress,
+            telefono: formData.clinicPhone,
+          } : null
+        ].filter(Boolean), // Remove null values
 
-    // Llamamos a la función de registro exitoso del componente padre
-    if (typeof onRegistroExitoso === 'function') {
-      onRegistroExitoso(nuevoColegiado);
+        // Files (using provided data or empty strings)
+        file_ci: formData.ci?.name || "",
+        file_rif: formData.rif?.name || "",
+        file_fondo_negro: formData.titulo?.name || "",
+        file_mpps: formData.mpps?.name || "",
+
+        // Add observation about payment status
+        observaciones: exonerarPagos
+          ? "Colegiado exonerado de pagos por administración"
+          : pagarLuego
+            ? "Pago pendiente. Se debe procesar posteriormente."
+            : "Solicita inscripción en el Colegio de Odontólogos de Venezuela. Pago procesado.",
+
+        // Convert document objects to the expected format for the store
+        documentos: [
+          {
+            id: "file_ci",
+            nombre: "Cédula de identidad",
+            descripcion: "Copia escaneada por ambos lados",
+            archivo: formData.ci?.name || "",
+            requerido: true,
+          },
+          {
+            id: "file_rif",
+            nombre: "RIF",
+            descripcion: "Registro de Información Fiscal",
+            archivo: formData.rif?.name || "",
+            requerido: true,
+          },
+          {
+            id: "file_fondo_negro",
+            nombre: "Título universitario fondo negro",
+            descripcion: "Título de Odontólogo con fondo negro",
+            archivo: formData.titulo?.name || "",
+            requerido: true,
+          },
+          {
+            id: "file_mpps",
+            nombre: "Registro MPPS",
+            descripcion: "Registro del Ministerio del Poder Popular para la Salud",
+            archivo: formData.mpps?.name || "",
+            requerido: true,
+          },
+          {
+            id: "comprobante_pago",
+            nombre: "Comprobante de pago",
+            descripcion: "Comprobante de pago de inscripción",
+            archivo: "comprobante_pago.pdf",
+            requerido: true,
+          }
+        ]
+      };
+
+      // Add the pending member to the central store
+      addColegiadoPendiente(nuevoPendiente);
+
+      // Clean up files from formData to avoid circular references
+      const cleanNuevoPendiente = { ...nuevoPendiente };
+      delete cleanNuevoPendiente.ci;
+      delete cleanNuevoPendiente.rif;
+      delete cleanNuevoPendiente.titulo;
+      delete cleanNuevoPendiente.mpps;
+
+      // Llamamos a la función de registro exitoso del componente padre
+      if (typeof onRegistroExitoso === 'function') {
+        onRegistroExitoso(cleanNuevoPendiente);
+      }
+
+      // Avanzamos al paso de confirmación
+      setPasoActual(7);
+    } catch (error) {
+      console.error("Error al registrar:", error);
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    // Avanzamos al paso de confirmación
-    setPasoActual(7);
-  } catch (error) {
-    console.error("Error al registrar:", error);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
   useEffect(() => {
     const LoadData = async () => {
       try {
@@ -234,63 +334,63 @@ const handlePaymentComplete = async () => {
             onInputChange={handleDocumentosChange}
           />
         );
-        case 6:
-          return (
-            <div className="space-y-6">
-              {!exonerarPagos && !pagarLuego && (
-                <PagosColg
-                  props={{
-                    handlePaymentComplete,
-                    tazaBcv,
-                    costoInscripcion,
-                    metodoPago,
-                  }}
-                />
-              )}
-              
-              {isAdmin && (
-                <div className="flex flex-col space-y-4 mt-6">                
-                  {!pagarLuego && (
-                    <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
-                      <label className="flex items-center space-x-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={exonerarPagos}
-                          onChange={handleExonerarPagosChange}
-                          className="h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
-                        />
-                        <p className="text-md text-gray-800">
-                          <span className="text-[#41023B] font-bold text-lg">
-                            Exonerar pagos:
-                          </span>{" "}
-                          Al habilitar esta opción, el colegiado quedará registrado como solvente sin necesidad de realizar un pago.
-                        </p>
-                      </label>
-                    </div>
-                  )}
-                  
-                  {!exonerarPagos && (
-                    <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
-                      <label className="flex items-center space-x-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={pagarLuego}
-                          onChange={handlePagarLuegoChange}
-                          className="h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
-                        />
-                        <p className="text-md text-gray-800">
-                          <span className="text-[#41023B] font-bold text-lg">
-                            Pagar luego:
-                          </span>{" "}
-                          Al habilitar esta opción, el colegiado quedará registrado con pago pendiente y podrá completarlo posteriormente.
-                        </p>
-                      </label>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
+      case 6:
+        return (
+          <div className="space-y-6">
+            {!exonerarPagos && !pagarLuego && (
+              <PagosColg
+                props={{
+                  handlePaymentComplete,
+                  tazaBcv,
+                  costoInscripcion,
+                  metodoPago,
+                }}
+              />
+            )}
+
+            {isAdmin && (
+              <div className="flex flex-col space-y-4 mt-6">
+                {!pagarLuego && (
+                  <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={exonerarPagos}
+                        onChange={handleExonerarPagosChange}
+                        className="h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
+                      />
+                      <p className="text-md text-gray-800">
+                        <span className="text-[#41023B] font-bold text-lg">
+                          Exonerar pagos:
+                        </span>{" "}
+                        Al habilitar esta opción, el colegiado quedará registrado como solvente sin necesidad de realizar un pago.
+                      </p>
+                    </label>
+                  </div>
+                )}
+
+                {!exonerarPagos && (
+                  <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pagarLuego}
+                        onChange={handlePagarLuegoChange}
+                        className="h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
+                      />
+                      <p className="text-md text-gray-800">
+                        <span className="text-[#41023B] font-bold text-lg">
+                          Pagar luego:
+                        </span>{" "}
+                        Al habilitar esta opción, el colegiado quedará registrado con pago pendiente y podrá completarlo posteriormente.
+                      </p>
+                    </label>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
       case 7:
         return (
           <div className="text-center py-8">
@@ -406,13 +506,12 @@ const handlePaymentComplete = async () => {
                   <div className="flex flex-col items-center">
                     <div
                       className={`w-10 h-10 flex items-center justify-center rounded-full 
-                    ${
-                      completedSteps.includes(paso)
-                        ? "bg-[#41023B] text-white"
-                        : pasoActual === paso
-                        ? "bg-[#D7008A] text-white"
-                        : "bg-gray-200 text-gray-600"
-                    }`}
+                    ${completedSteps.includes(paso)
+                          ? "bg-[#41023B] text-white"
+                          : pasoActual === paso
+                            ? "bg-[#D7008A] text-white"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
                     >
                       {completedSteps.includes(paso) ? (
                         <CheckCircle size={18} />
@@ -428,11 +527,10 @@ const handlePaymentComplete = async () => {
 
                   {index < 4 && (
                     <div
-                      className={`h-1 flex-1 mx-1 ${
-                        completedSteps.includes(paso)
-                          ? "bg-[#41023B]"
-                          : "bg-gray-200"
-                      }`}
+                      className={`h-1 flex-1 mx-1 ${completedSteps.includes(paso)
+                        ? "bg-[#41023B]"
+                        : "bg-gray-200"
+                        }`}
                     ></div>
                   )}
                 </React.Fragment>

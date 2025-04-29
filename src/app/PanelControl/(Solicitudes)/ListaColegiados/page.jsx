@@ -6,75 +6,33 @@ import RegistroColegiados from "@/Components/Solicitudes/ListaColegiados/Registr
 import { motion } from "framer-motion"
 import { CheckCircle, ChevronRight, PlusCircle, Search, XCircle } from "lucide-react"
 import { useEffect, useState } from "react"
+import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 
 export default function ListaColegiados() {
-    // Estados para manejar los datos
-    const [colegiados, setColegiados] = useState([])
-    const [colegiadosPendientes, setColegiadosPendientes] = useState([])
+    // Use Zustand store directly
+    const colegiados = ListaColegiadosData(state => state.colegiados)
+    const colegiadosPendientes = ListaColegiadosData(state => state.colegiadosPendientes)
+    const addColegiado = ListaColegiadosData(state => state.addColegiado)
+    const addColegiadoPendiente = ListaColegiadosData(state => state.addColegiadoPendiente)
+    const removeColegiadoPendiente = ListaColegiadosData(state => state.removeColegiadoPendiente)
+    const getColegiadoById = ListaColegiadosData(state => state.getColegiado)
+    const getPendienteById = ListaColegiadosData(state => state.getColegiadoPendiente)
+    const approveRegistration = ListaColegiadosData(state => state.approveRegistration)
+
+    // Local UI state
     const [isLoading, setIsLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
     const [showRegistro, setShowRegistro] = useState(false)
-
-    // Estados para la navegación interna
     const [vistaActual, setVistaActual] = useState("lista") // lista, detalleColegiado, detallePendiente
     const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null)
     const [tabActivo, setTabActivo] = useState("pendientes") // Cambiado a pendientes como default
-    const [filtroSolvencia, setFiltroSolvencia] = useState("todos") //
+    const [filtroSolvencia, setFiltroSolvencia] = useState("todos")
 
-    // Simulación de datos - en producción se reemplazaría por llamadas a API
+    // Initialize loading state
     useEffect(() => {
-        // Simulando carga de datos con un pequeño retraso
+        // Just to simulate loading, in a real app this might not be needed
+        // since Zustand store is already initialized
         setTimeout(() => {
-            setColegiados([
-                {
-                    id: "1",
-                    nombre: "María González",
-                    cedula: "V-12345678",
-                    numeroRegistro: "ODV-1234",
-                    email: "maria.gonzalez@mail.com",
-                    telefono: "+58 412-1234567",
-                    fechaRegistro: "12/04/2023",
-                    estado: "Activo",
-                    solvente: true,
-                    especialidad: "Ortodoncia"
-                },
-                {
-                    id: "2",
-                    nombre: "Juan Pérez",
-                    cedula: "V-23456789",
-                    numeroRegistro: "ODV-2345",
-                    email: "juan.perez@mail.com",
-                    telefono: "+58 414-7654321",
-                    fechaRegistro: "15/05/2023",
-                    estado: "Activo",
-                    solvente: false,
-                    especialidad: "Endodoncia"
-                },
-                // Más colegiados aquí...
-            ])
-
-            setColegiadosPendientes([
-                {
-                    id: "p1",
-                    nombre: "Carlos Ramírez",
-                    cedula: "V-34567890",
-                    email: "carlos.ramirez@mail.com",
-                    telefono: "+58 416-7777777",
-                    fechaSolicitud: "10/04/2024",
-                    documentosCompletos: true
-                },
-                {
-                    id: "p2",
-                    nombre: "Ana López",
-                    cedula: "V-45678901",
-                    email: "ana.lopez@mail.com",
-                    telefono: "+58 424-8888888",
-                    fechaSolicitud: "11/04/2024",
-                    documentosCompletos: false
-                },
-                // Más colegiados pendientes aquí...
-            ])
-
             setIsLoading(false)
         }, 1000)
     }, [])
@@ -117,63 +75,62 @@ export default function ListaColegiados() {
 
     // Función para manejar el registro exitoso de un nuevo colegiado
     const handleRegistroExitoso = (nuevoColegiado) => {
-        // Verificar si el colegiado está exonerado o tiene número de registro
-        if (nuevoColegiado.exoneradoPagos || nuevoColegiado.numeroRegistro) {
-            // Agregar al listado de colegiados completos
-            setColegiados(prev => [...prev, {
-                ...nuevoColegiado,
-                id: nuevoColegiado.id || `col-${Date.now()}`,
-                solvente: nuevoColegiado.exoneradoPagos ? true : false,
-                estado: "Activo",
-                fechaRegistro: new Date().toLocaleDateString()
-            }]);
+        // Agregar a la lista central de pendientes
+        addColegiadoPendiente(nuevoColegiado)
 
-            // Si estamos viendo la pestaña de pendientes, cambiar a registrados
-            if (tabActivo === "pendientes") {
-                setTabActivo("registrados");
-            }
-        } else {
-            // Agregar al listado de colegiados pendientes
-            setColegiadosPendientes(prev => [...prev, {
-                ...nuevoColegiado,
-                id: nuevoColegiado.id || `pend-${Date.now()}`,
-                documentosCompletos: true,
-                fechaSolicitud: new Date().toLocaleDateString()
-            }]);
-
-            // Si estamos viendo la pestaña de registrados, cambiar a pendientes
-            if (tabActivo === "registrados") {
-                setTabActivo("pendientes");
-            }
+        // Si estamos viendo la pestaña de registrados, cambiar a pendientes
+        if (tabActivo === "registrados") {
+            setTabActivo("pendientes")
         }
-    };
+    }
 
     const handleAprobarPendiente = (colegiadoAprobado) => {
-        // Agregar el colegiado aprobado a la lista de colegiados
-        setColegiados(prev => [...prev, colegiadoAprobado]);
+        // Si recibimos el objeto completo, lo usamos
+        if (typeof colegiadoAprobado === 'object' && colegiadoAprobado !== null) {
+            // Agregar el colegiado aprobado a la lista central
+            addColegiado(colegiadoAprobado)
 
-        // Eliminar el colegiado de la lista de pendientes
-        setColegiadosPendientes(prev => prev.filter(colegiado => colegiado.id !== colegiadoAprobado.id));
+            // Eliminar el pendiente de la lista central
+            removeColegiadoPendiente(colegiadoSeleccionadoId)
+        }
+        // O podemos usar la función approveRegistration directamente
+        else if (colegiadoSeleccionadoId) {
+            // Con este approach, pasaríamos los datos de registro
+            const datosRegistro = colegiadoAprobado || {}
+            approveRegistration(colegiadoSeleccionadoId, datosRegistro)
+        }
 
         // Cambiar a la pestaña de registrados
-        setTabActivo("registrados");
-    };
+        setTabActivo("registrados")
+
+        // Volver a la vista de lista
+        setVistaActual("lista")
+        setColegiadoSeleccionadoId(null)
+    }
 
     // Renderizado condicional basado en la vista actual
     if (vistaActual === "detalleColegiado") {
+        // Encontrar el colegiado correcto desde los datos centralizados
+        const colegiadoActual = getColegiadoById(colegiadoSeleccionadoId)
+
         return (
             <DetalleColegiado
                 params={{ id: colegiadoSeleccionadoId }}
                 onVolver={volverALista}
+                colegiado={colegiadoActual}
             />
         )
     }
 
     if (vistaActual === "detallePendiente") {
+        // Encontrar el pendiente correcto desde los datos centralizados
+        const pendienteActual = getPendienteById(colegiadoSeleccionadoId)
+
         return (
             <DetallePendiente
                 params={{ id: colegiadoSeleccionadoId }}
-                onVolver={volverALista}
+                onVolver={handleAprobarPendiente}
+                pendiente={pendienteActual}
             />
         )
     }
@@ -237,8 +194,8 @@ export default function ListaColegiados() {
                 <nav className="flex gap-8">
                     <button
                         className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${tabActivo === "pendientes"
-                                ? 'border-[#C40180] text-[#C40180]'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? 'border-[#C40180] text-[#C40180]'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
                             } transition-colors`}
                         onClick={() => setTabActivo("pendientes")}
                     >
@@ -246,8 +203,8 @@ export default function ListaColegiados() {
                     </button>
                     <button
                         className={`py-4 px-1 cursor-pointer font-medium text-sm sm:text-base border-b-2 ${tabActivo === "registrados"
-                                ? "border-[#C40180] text-[#C40180]"
-                                : "border-transparent text-gray-500 hover:text-gray-700"
+                            ? "border-[#C40180] text-[#C40180]"
+                            : "border-transparent text-gray-500 hover:text-gray-700"
                             } transition-colors`}
                         onClick={() => setTabActivo("registrados")}
                     >
@@ -261,8 +218,8 @@ export default function ListaColegiados() {
                 <div className="mb-6 flex flex-wrap gap-3">
                     <button
                         className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "todos"
-                                ? "bg-purple-100 text-purple-800"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            ? "bg-purple-100 text-purple-800"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
                         onClick={() => setFiltroSolvencia("todos")}
                     >
@@ -270,8 +227,8 @@ export default function ListaColegiados() {
                     </button>
                     <button
                         className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "solventes"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
                         onClick={() => setFiltroSolvencia("solventes")}
                     >
@@ -279,8 +236,8 @@ export default function ListaColegiados() {
                     </button>
                     <button
                         className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "No Solventes"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
                         onClick={() => setFiltroSolvencia("No Solventes")}
                     >
@@ -346,8 +303,8 @@ export default function ListaColegiados() {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colegiado.solvente
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-red-100 text-red-800'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-red-100 text-red-800'
                                                             }`}>
                                                             {colegiado.solvente ? 'Solvente' : 'No Solvente'}
                                                         </span>
@@ -411,8 +368,8 @@ export default function ListaColegiados() {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
                                                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${colegiado.documentosCompletos
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-yellow-100 text-yellow-800'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-yellow-100 text-yellow-800'
                                                             }`}>
                                                             {colegiado.documentosCompletos
                                                                 ? <><CheckCircle size={12} /> Completos</>
@@ -444,7 +401,7 @@ export default function ListaColegiados() {
                 <RegistroColegiados
                     isAdmin={true}
                     onClose={() => setShowRegistro(false)}
-                    onRegistroExitoso={handleRegistroExitoso} // Pasa la función al modal
+                    onRegistroExitoso={handleRegistroExitoso}
                 />
             )}
         </div>

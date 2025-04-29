@@ -1,21 +1,40 @@
 "use client"
-import { useState, useEffect } from "react"
+
+import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 import {
-  User, Phone, Mail, MapPin, Calendar, School, Award, FileText,
-  CreditCard, CheckCircle, AlertCircle, Book, MessageSquare, FileBox,
-  PlusCircle, BarChart3, ChevronLeft, X, Eye, Upload, Briefcase
+  AlertCircle,
+  Award,
+  BarChart3,
+  Book,
+  Briefcase,
+  Calendar,
+  CheckCircle,
+  ChevronLeft,
+  CreditCard,
+  FileBox,
+  FileText,
+  Mail, MapPin,
+  MessageSquare,
+  Phone,
+  PlusCircle,
+  User,
+  X
 } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import NuevaSolicitudModal from "./NuevaSolicitudModal"
-import TablaInscripciones from "./TablaInscripciones"
-import TablaPagos from "./TablaPagos"
-import TablaSolicitudes from "./TablaSolicitudes"
-import EstadisticasUsuario from "./EstadisticasUsuario"
 
-export default function DetalleColegiado({ params, onVolver }) {
+export default function DetalleColegiado({ params, onVolver, colegiado: providedColegiado }) {
   // Obtenemos el ID desde los parámetros de la URL
   const colegiadoId = params?.id || "1"
 
+  // Get functions from the store
+  const getColegiado = ListaColegiadosData(state => state.getColegiado)
+  const getDocumentos = ListaColegiadosData(state => state.getDocumentos)
+  const marcarTituloEntregado = ListaColegiadosData(state => state.marcarTituloEntregado)
+  const addSolicitud = ListaColegiadosData(state => state.addSolicitud)
+
+  // Use provided colegiado or fetch from store if not provided
   const [colegiado, setColegiado] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [tabActivo, setTabActivo] = useState("informacion") // informacion, pagos, inscripciones, solicitudes, carnet, documentos, chats
@@ -29,114 +48,26 @@ export default function DetalleColegiado({ params, onVolver }) {
   const [mostrarConfirmacionEliminar, setMostrarConfirmacionEliminar] = useState(false)
   const [documentoAEliminar, setDocumentoAEliminar] = useState(null)
 
-  // Simulación de obtención de datos
+  // Cargar datos desde la fuente centralizada
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        // En un caso real, aquí se haría la llamada a la API
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        setIsLoading(true)
 
-        // Datos de ejemplo según la estructura proporcionada
-        setColegiado({
-          id: colegiadoId,
-          nombre: "María González",
-          numeroCOV: "1234",
-          solvente: true,
-          carnetVigente: true,
-          carnetVencimiento: "12/04/2025",
-          tituloEntregado: false,
-          persona: {
-            nombre: "María",
-            segundo_nombre: "Alejandra",
-            primer_apellido: "González",
-            segundo_apellido: "Rodríguez",
-            genero: "F",
-            tipo_identificacion: "V",
-            identificacion: "12345678",
-            correo: "maria.gonzalez@mail.com",
-            id_adicional: "RIF-12345678-9",
-            telefono_movil: "+58 412-1234567",
-            telefono_de_habitacion: "+58 212-5555555",
-            fecha_de_nacimiento: "1985-03-15",
-            estado_civil: "Casada",
-            direccion: {
-              referencia: "Av. Libertador, Edificio Centro, Apto 5-B",
-              estado: "Caracas"
-            },
-            user: null
-          },
-          instituto_bachillerato: "Liceo Andrés Bello",
-          universidad: "Universidad Central de Venezuela",
-          fecha_egreso_universidad: "2010-07-15",
-          num_registro_principal: "12345",
-          fecha_registro_principal: "2010-08-20",
-          num_mpps: "MP-789",
-          fecha_mpps: "2010-09-10",
-          instituciones: [
-            {
-              nombre: "Hospital Universitario de Caracas",
-              cargo: "Odontólogo",
-              direccion: "Av. Los Ilustres, Ciudad Universitaria",
-              telefono: "+58 212-6060606",
-            },
-            {
-              nombre: "Clínica Dental Sonrisas",
-              cargo: "Ortodoncista",
-              direccion: "Av. Francisco de Miranda, Centro Plaza, Torre A",
-              telefono: "+58 212-9090909",
-            }
-          ],
-          file_ci: "cedula_maria_gonzalez.jpg",
-          file_rif: "rif_maria_gonzalez.pdf",
-          file_fondo_negro: "titulo_fondo_negro_maria_gonzalez.pdf",
-          file_mpps: "registro_mpps_maria_gonzalez.pdf",
-          estadisticas: {
-            solicitudesMes: 2,
-            inscripcionesMes: 1,
-            asistenciaEventos: 5,
-            pagosPendientes: 0,
-            ultimoAcceso: "Hace 3 días"
-          }
-        })
+        // Usar el colegiado proporcionado o buscarlo en el store
+        let colegiadoData = providedColegiado
 
-        // Inicializar documentos basados en los archivos del colegiado
-        setDocumentos([
-          {
-            id: "file_ci",
-            nombre: "Cédula de identidad",
-            descripcion: "Copia escaneada por ambos lados",
-            archivo: "cedula_maria_gonzalez.jpg",
-            requerido: true,
-          },
-          {
-            id: "file_rif",
-            nombre: "RIF",
-            descripcion: "Registro de Información Fiscal",
-            archivo: "rif_maria_gonzalez.pdf",
-            requerido: true,
-          },
-          {
-            id: "file_fondo_negro",
-            nombre: "Título universitario fondo negro",
-            descripcion: "Título de Odontólogo con fondo negro",
-            archivo: "titulo_fondo_negro_maria_gonzalez.pdf",
-            requerido: true,
-          },
-          {
-            id: "file_mpps",
-            nombre: "Registro MPPS",
-            descripcion: "Registro del Ministerio del Poder Popular para la Salud",
-            archivo: "registro_mpps_maria_gonzalez.pdf",
-            requerido: true,
-          },
-          {
-            id: "comprobante_pago",
-            nombre: "Comprobante de pago",
-            descripcion: "Comprobante de pago de inscripción",
-            archivo: "pago_maria_gonzalez.pdf",
-            requerido: true,
-          },
-        ]);
+        if (!colegiadoData) {
+          colegiadoData = getColegiado(colegiadoId)
+        }
+
+        if (colegiadoData) {
+          setColegiado(colegiadoData)
+
+          // Cargar los documentos
+          const documentosData = getDocumentos(colegiadoId)
+          setDocumentos(documentosData)
+        }
 
         setIsLoading(false)
       } catch (error) {
@@ -145,8 +76,8 @@ export default function DetalleColegiado({ params, onVolver }) {
       }
     }
 
-    fetchData()
-  }, [colegiadoId])
+    loadData()
+  }, [colegiadoId, providedColegiado, getColegiado, getDocumentos])
 
   // Función para obtener las iniciales del nombre
   const obtenerIniciales = () => {
@@ -159,8 +90,8 @@ export default function DetalleColegiado({ params, onVolver }) {
   // Función para marcar que se entregó el título
   const handleConfirmarEntregaTitulo = async () => {
     try {
-      // Aquí iría la llamada a la API para actualizar
-      await new Promise(resolve => setTimeout(resolve, 800))
+      // Llamar a la función de actualización en el store
+      marcarTituloEntregado(colegiadoId, true)
 
       // Actualizar el estado local
       setColegiado(prev => ({
@@ -187,6 +118,21 @@ export default function DetalleColegiado({ params, onVolver }) {
   const handleReemplazarDocumento = (documento) => {
     // Aquí iría la lógica para reemplazar un documento
     alert(`Funcionalidad para reemplazar el documento: ${documento.nombre}`);
+  }
+
+  // Función para manejar la creación de una nueva solicitud
+  const handleNuevaSolicitud = (nuevaSolicitud) => {
+    // Añadir la solicitud al store
+    addSolicitud(colegiadoId, nuevaSolicitud)
+
+    // Cerrar el modal
+    setMostrarModalSolicitud(false)
+
+    // Si estamos en la pestaña de solicitudes, refrescar la vista
+    if (tabActivo === "solicitudes") {
+      // La tabla de solicitudes se actualiza automáticamente 
+      // ya que usa el mismo store
+    }
   }
 
   // Funciones auxiliares para formatear fechas
@@ -288,7 +234,7 @@ export default function DetalleColegiado({ params, onVolver }) {
             <div className="flex flex-col md:flex-row md:justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">{nombreCompleto}</h1>
-                <p className="text-sm text-gray-500">N° COV: {colegiado.numeroCOV}</p>
+                <p className="text-sm text-gray-500">N° COV: {colegiado.numeroRegistro}</p>
               </div>
 
               <div className="mt-4 md:mt-0 flex flex-wrap justify-center md:justify-end gap-2">
@@ -499,60 +445,60 @@ export default function DetalleColegiado({ params, onVolver }) {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-  {/* Primera columna: nombre, cédula, fecha de nacimiento */}
-  <div className="space-y-4">
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre completo</p>
-      <p className="font-medium text-gray-800">{nombreCompleto}</p>
-    </div>
+                  {/* Primera columna: nombre, cédula, fecha de nacimiento */}
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre completo</p>
+                      <p className="font-medium text-gray-800">{nombreCompleto}</p>
+                    </div>
 
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
-      <p className="font-medium text-gray-800">{colegiado.persona.tipo_identificacion}-{colegiado.persona.identificacion}</p>
-    </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
+                      <p className="font-medium text-gray-800">{colegiado.persona.tipo_identificacion}-{colegiado.persona.identificacion}</p>
+                    </div>
 
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</p>
-      <p className="font-medium text-gray-800">{formatearFecha(colegiado.persona.fecha_de_nacimiento)}</p>
-    </div>
-  </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</p>
+                      <p className="font-medium text-gray-800">{formatearFecha(colegiado.persona.fecha_de_nacimiento)}</p>
+                    </div>
+                  </div>
 
-  {/* Segunda columna: correo, número móvil, número de teléfono */}
-  <div className="space-y-4">
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
-      <p className="font-medium text-gray-800">{colegiado.persona.correo}</p>
-    </div>
+                  {/* Segunda columna: correo, número móvil, número de teléfono */}
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
+                      <p className="font-medium text-gray-800">{colegiado.persona.correo}</p>
+                    </div>
 
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono móvil</p>
-      <p className="font-medium text-gray-800">{colegiado.persona.telefono_movil}</p>
-    </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono móvil</p>
+                      <p className="font-medium text-gray-800">{colegiado.persona.telefono_movil}</p>
+                    </div>
 
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono de habitación</p>
-      <p className="font-medium text-gray-800">{colegiado.persona.telefono_de_habitacion || "No especificado"}</p>
-    </div>
-  </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono de habitación</p>
+                      <p className="font-medium text-gray-800">{colegiado.persona.telefono_de_habitacion || "No especificado"}</p>
+                    </div>
+                  </div>
 
-  {/* Tercera columna: estado civil, género, dirección */}
-  <div className="space-y-4">
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
-      <p className="font-medium text-gray-800">{colegiado.persona.estado_civil || "No especificado"}</p>
-    </div>
+                  {/* Tercera columna: estado civil, género, dirección */}
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
+                      <p className="font-medium text-gray-800">{colegiado.persona.estado_civil || "No especificado"}</p>
+                    </div>
 
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Género</p>
-      <p className="font-medium text-gray-800">{colegiado.persona.genero === 'M' ? 'Masculino' : colegiado.persona.genero === 'F' ? 'Femenino' : colegiado.persona.genero}</p>
-    </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Género</p>
+                      <p className="font-medium text-gray-800">{colegiado.persona.genero === 'M' ? 'Masculino' : colegiado.persona.genero === 'F' ? 'Femenino' : colegiado.persona.genero}</p>
+                    </div>
 
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
-      <p className="font-medium text-gray-800">{colegiado.persona.direccion.referencia}, {colegiado.persona.direccion.estado}</p>
-    </div>
-  </div>
-</div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
+                      <p className="font-medium text-gray-800">{colegiado.persona.direccion.referencia}, {colegiado.persona.direccion.estado}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Información académica */}
@@ -666,211 +612,6 @@ export default function DetalleColegiado({ params, onVolver }) {
               </div>
             </div>
           )}
-
-          {tabActivo === "pagos" && (
-            <TablaPagos colegiadoId={colegiado.id} />
-          )}
-
-          {tabActivo === "inscripciones" && (
-            <TablaInscripciones colegiadoId={colegiado.id} />
-          )}
-
-          {tabActivo === "solicitudes" && (
-            <TablaSolicitudes colegiadoId={colegiado.id} />
-          )}
-
-          {tabActivo === "carnet" && (
-            <div className="space-y-6">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">Carnet del colegiado</h3>
-                  <p className="text-sm text-gray-500 mt-1">Información del carnet vigente</p>
-                </div>
-
-                <div className="mt-4 md:mt-0">
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2">
-                    <PlusCircle size={18} />
-                    Renovar carnet
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-[#3C0064] to-[#5E0099] text-white p-6 rounded-lg shadow-md max-w-md mx-auto">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">Colegio de Odontólogos de Venezuela</h3>
-                    <p className="text-xs">Tarjeta de identificación profesional</p>
-                  </div>
-                  <div className="font-bold text-xl">ODV</div>
-                </div>
-
-                <div className="flex mt-4">
-                  <div className="mr-4">
-                    <div className="w-24 h-24 bg-gradient-to-br from-[#C40180] to-[#7D0053] rounded-md overflow-hidden flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white">
-                        {obtenerIniciales()}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col justify-between">
-                    <div>
-                      <p className="text-sm opacity-70">Nombre</p>
-                      <p className="font-semibold">{nombreCompleto}</p>
-
-                      <p className="text-sm opacity-70 mt-2">N° COV</p>
-                      <p className="font-semibold">{colegiado.numeroCOV}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm opacity-70 mt-2">Especialidad</p>
-                      <p className="font-semibold">{colegiado.universidad || "Odontología General"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <p className="text-xs opacity-70">Fecha de vencimiento</p>
-                  <p className="font-semibold">{colegiado.carnetVencimiento}</p>
-                </div>
-
-                <div className="mt-4 flex justify-between items-center">
-                  <div className="text-xs">ID: {colegiado.id}</div>
-                  <div className="h-8 w-20 bg-white bg-opacity-20 rounded flex items-center justify-center">
-                    <span className="text-xs font-mono">123456789</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-md mt-6">
-                <h4 className="font-medium text-gray-900 mb-2 text-center">Estado del carnet</h4>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Estado</p>
-                    <p className="font-medium text-green-600 flex items-center">
-                      <CheckCircle size={16} className="mr-1" />
-                      Vigente
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Fecha de emisión</p>
-                    <p className="font-medium">12/04/2023</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Fecha de vencimiento</p>
-                    <p className="font-medium">{colegiado.carnetVencimiento}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-3 justify-center">
-                <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2">
-                  <FileText size={18} />
-                  Descargar PDF
-                </button>
-
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2">
-                  <Mail size={18} />
-                  Enviar por correo
-                </button>
-              </div>
-            </div>
-          )}
-
-          {tabActivo === "documentos" && (
-            <div className="space-y-6">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-                <div className="flex items-center mb-5 md:mb-0 border-b md:border-b-0 pb-3 md:pb-0">
-                  <FileText size={20} className="text-[#C40180] mr-2" />
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">Documentos</h2>
-                    <p className="text-sm text-gray-500">Documentación del colegiado</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {documentos.map((documento) => (
-                  <div
-                    key={documento.id}
-                    className="border rounded-lg border-gray-200 hover:border-[#C40180] hover:shadow-md transition-all duration-200"
-                  >
-                    <div className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center mb-2">
-                            <div className="bg-[#F9E6F3] p-2 rounded-md mr-3">
-                              <FileText
-                                className="text-[#C40180]"
-                                size={20}
-                              />
-                            </div>
-                            <div>
-                              <h3 className="font-medium text-gray-900 flex items-center">
-                                {documento.nombre}
-                                {documento.requerido && <span className="text-red-500 ml-1">*</span>}
-                              </h3>
-                              <p className="text-xs text-gray-500">{documento.descripcion}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-1">
-                          <button
-                            onClick={() => handleVerDocumento(documento)}
-                            className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                            title="Ver documento"
-                          >
-                            <Eye size={18} />
-                          </button>
-
-                          <button
-                            onClick={() => handleReemplazarDocumento(documento)}
-                            className="text-orange-600 hover:bg-orange-50 p-2 rounded-full transition-colors"
-                            title="Reemplazar documento"
-                          >
-                            <Upload size={18} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {documentos.length === 0 && (
-                <div className="bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">
-                  <FileText size={40} className="text-gray-300 mb-3" />
-                  <p className="text-gray-500 text-center">No hay documentos disponibles</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {tabActivo === "chats" && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 text-center">Historial de comunicaciones</h3>
-                <p className="text-sm text-gray-500 mt-1 text-center">Chats y comunicaciones con el colegiado</p>
-              </div>
-
-              <div className="bg-gray-50 p-6 rounded-md text-center">
-                <MessageSquare size={40} className="text-gray-400 mx-auto mb-2" />
-                <h3 className="text-lg font-medium text-gray-700">No hay mensajes recientes</h3>
-                <p className="text-sm text-gray-500 mb-4">No se han registrado comunicaciones con este colegiado</p>
-                <button className="bg-[#C40180] text-white px-4 py-2 rounded-md hover:bg-[#590248] transition-colors">
-                  Iniciar conversación
-                </button>
-              </div>
-            </div>
-          )}
-
-          {tabActivo === "estadisticas" && (
-            <EstadisticasUsuario colegiado={colegiado} />
-          )}
         </div>
       </div>
 
@@ -949,10 +690,7 @@ export default function DetalleColegiado({ params, onVolver }) {
         <NuevaSolicitudModal
           colegiado={colegiado}
           onClose={() => setMostrarModalSolicitud(false)}
-          onSolicitudCreada={(nuevaSolicitud) => {
-            // Lógica para añadir la nueva solicitud
-            setMostrarModalSolicitud(false)
-          }}
+          onSolicitudCreada={handleNuevaSolicitud}
         />
       )}
     </div>

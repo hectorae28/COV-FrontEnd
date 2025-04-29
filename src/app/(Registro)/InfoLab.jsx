@@ -13,6 +13,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
           institutionName: formData.institutionName || "",
           institutionAddress: formData.institutionAddress || "",
           institutionPhone: formData.institutionPhone || "",
+          cargo: formData.cargo || "", // Añadido el campo cargo
         }
       ]
   );
@@ -20,7 +21,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
   // Format phone number - only adds + at beginning
   const formatPhone = (value) => {
     if (!value) return '+';
-
     // Remove all non-digit characters except the initial + if present
     if (value.startsWith('+')) {
       const digits = value.substring(1).replace(/\D/g, '');
@@ -37,19 +37,16 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
     if (field === "institutionPhone") {
       value = formatPhone(value);
     }
-
     const nuevosRegistros = [...registros];
     nuevosRegistros[index] = {
       ...nuevosRegistros[index],
       [field]: value
     };
     setRegistros(nuevosRegistros);
-
     // Actualizar los campos principales con el primer registro (para compatibilidad)
     if (index === 0) {
       onInputChange({ [field]: value });
     }
-
     // Actualizar el array completo de registros
     onInputChange({ laboralRegistros: nuevosRegistros });
   };
@@ -71,10 +68,10 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
         id: nuevoId,
         institutionName: "",
         institutionAddress: "",
-        institutionPhone: ""
+        institutionPhone: "",
+        cargo: "" // Añadido el campo cargo
       }
     ];
-
     setRegistros(nuevosRegistros);
     onInputChange({ laboralRegistros: nuevosRegistros });
   };
@@ -86,13 +83,13 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
       nuevosRegistros.splice(index, 1);
       setRegistros(nuevosRegistros);
       onInputChange({ laboralRegistros: nuevosRegistros });
-
       // Si se elimina el primer registro, actualizar los campos principales
       if (index === 0 && nuevosRegistros.length > 0) {
         onInputChange({
           institutionName: nuevosRegistros[0].institutionName,
           institutionAddress: nuevosRegistros[0].institutionAddress,
-          institutionPhone: nuevosRegistros[0].institutionPhone
+          institutionPhone: nuevosRegistros[0].institutionPhone,
+          cargo: nuevosRegistros[0].cargo // Añadido el campo cargo
         });
       }
     }
@@ -133,7 +130,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
               </button>
             )}
           </div>
-
           {/* Datos de la institución */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -155,21 +151,39 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
             </div>
             <div>
               <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-                Dirección de Institución
+                Cargo
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <input
                 type="text"
-                value={registro.institutionAddress}
-                onChange={(e) => handleRegistroChange(index, "institutionAddress", e.target.value)}
-                className={`w-full px-4 py-3 border ${isFieldEmpty(registro, "institutionAddress") ? "border-gray-200" : "border-gray-200"
+                value={registro.cargo}
+                onChange={(e) => handleRegistroChange(index, "cargo", e.target.value)}
+                className={`w-full px-4 py-3 border ${isFieldEmpty(registro, "cargo") ? "border-gray-200" : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                placeholder="Dirección completa de la institución"
+                placeholder="Cargo o posición que ocupa"
               />
-              {isFieldEmpty(registro, "institutionAddress") && (
+              {isFieldEmpty(registro, "cargo") && (
                 <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
               )}
             </div>
+          </div>
+
+          <div className="mt-3">
+            <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+              Dirección de Institución
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <input
+              type="text"
+              value={registro.institutionAddress}
+              onChange={(e) => handleRegistroChange(index, "institutionAddress", e.target.value)}
+              className={`w-full px-4 py-3 border ${isFieldEmpty(registro, "institutionAddress") ? "border-gray-200" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+              placeholder="Dirección completa de la institución"
+            />
+            {isFieldEmpty(registro, "institutionAddress") && (
+              <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+            )}
           </div>
 
           <div className="mt-3">
@@ -198,7 +212,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
           </div>
         </div>
       ))}
-
       {/* Botón para agregar nuevo registro */}
       <div className="flex justify-center">
         <button
@@ -210,7 +223,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
           Agregar otra institución
         </button>
       </div>
-
       {/* Explicación */}
       <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
         <h3 className="text-sm font-medium text-blue-800 mb-2">Información importante</h3>
