@@ -3,7 +3,14 @@
 import { useState } from "react"
 import { X, AlertCircle, FileText, CreditCard, Award, FileCheck } from "lucide-react"
 
+/**
+ * Modal para crear una nueva solicitud para un colegiado
+ * @param {Object} colegiado - Datos del colegiado
+ * @param {Function} onClose - Función para cerrar el modal
+ * @param {Function} onSolicitudCreada - Función para manejar la creación de la solicitud
+ */
 export default function NuevaSolicitudModal({ colegiado, onClose, onSolicitudCreada }) {
+  // Estados
   const [tipoSolicitud, setTipoSolicitud] = useState("")
   const [formData, setFormData] = useState({
     descripcion: "",
@@ -13,6 +20,7 @@ export default function NuevaSolicitudModal({ colegiado, onClose, onSolicitudCre
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Tipos de solicitud disponibles
   const tiposSolicitud = [
     { id: "constancia", nombre: "Constancia de inscripción", icon: FileText, costo: 20, color: "blue" },
     { id: "carnet", nombre: "Carnet nuevo o renovación", icon: CreditCard, costo: 30, color: "purple" },
@@ -20,6 +28,7 @@ export default function NuevaSolicitudModal({ colegiado, onClose, onSolicitudCre
     { id: "otros", nombre: "Otro tipo de solicitud", icon: FileCheck, costo: 0, color: "gray" }
   ]
 
+  // Manejador de cambios en el formulario
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData(prev => ({
@@ -36,6 +45,7 @@ export default function NuevaSolicitudModal({ colegiado, onClose, onSolicitudCre
     }
   }
 
+  // Manejador de envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault()
     
@@ -67,10 +77,11 @@ export default function NuevaSolicitudModal({ colegiado, onClose, onSolicitudCre
         estado: "Pendiente",
         descripcion: formData.descripcion || tipoSeleccionado.nombre,
         urgente: formData.urgente,
-        monto: tipoSeleccionado.costo,
+        monto: formData.monto ? parseFloat(formData.monto) : tipoSeleccionado.costo,
         colegiadoId: colegiado.id
       }
       
+      // Llamar a la función de callback para crear la solicitud
       onSolicitudCreada(nuevaSolicitud)
     } catch (error) {
       console.error("Error al crear solicitud:", error)
@@ -117,7 +128,7 @@ export default function NuevaSolicitudModal({ colegiado, onClose, onSolicitudCre
                   <div 
                     key={tipo.id}
                     className={`
-                      border rounded-md p-3 cursor-pointer transition-colors
+                      border rounded-md p-3 cursor-pointer transition-colors duration-200
                       ${tipoSolicitud === tipo.id 
                         ? `border-${tipo.color}-500 bg-${tipo.color}-50` 
                         : 'border-gray-200 hover:border-gray-300'

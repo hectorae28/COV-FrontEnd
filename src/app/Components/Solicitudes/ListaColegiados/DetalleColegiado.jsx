@@ -1,9 +1,8 @@
 "use client"
 
-import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 import {
   AlertCircle,
-  Award,
+  Eye,
   BarChart3,
   Book,
   Briefcase,
@@ -13,7 +12,8 @@ import {
   CreditCard,
   FileBox,
   FileText,
-  Mail, MapPin,
+  Mail,
+  MapPin,
   MessageSquare,
   Phone,
   PlusCircle,
@@ -22,139 +22,45 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 import NuevaSolicitudModal from "./NuevaSolicitudModal"
+import TablaPagos from "./TablaPagos"
+import TablaSolicitudes from "./TablaSolicitudes"
+import TablaInscripciones from "./TablaInscripciones"
+import EstadisticasUsuario from "./EstadisticasUsuario"
 
+/**
+ * Componente para visualizar y gestionar los detalles de un colegiado
+ * Permite ver toda la información personal, profesional y trámites
+ */
 export default function DetalleColegiado({ params, onVolver, colegiado: providedColegiado }) {
   // Obtenemos el ID desde los parámetros de la URL
   const colegiadoId = params?.id || "1"
 
-  // Get functions from the store
-  const getColegiado = ListaColegiadosData(state => state.getColegiado)
-  const getDocumentos = ListaColegiadosData(state => state.getDocumentos)
-  const marcarTituloEntregado = ListaColegiadosData(state => state.marcarTituloEntregado)
-  const addSolicitud = ListaColegiadosData(state => state.addSolicitud)
+  // Obtenemos funciones del store centralizado
+  const {
+    getColegiado,
+    getDocumentos,
+    marcarTituloEntregado,
+    addSolicitud
+  } = useDataListaColegiados()
 
-  // Use provided colegiado or fetch from store if not provided
+  // Estados locales
   const [colegiado, setColegiado] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [tabActivo, setTabActivo] = useState("informacion") // informacion, pagos, inscripciones, solicitudes, carnet, documentos, chats
+  const [tabActivo, setTabActivo] = useState("informacion")
   const [mostrarModalSolicitud, setMostrarModalSolicitud] = useState(false)
   const [tituloEntregado, setTituloEntregado] = useState(false)
   const [confirmarTitulo, setConfirmarTitulo] = useState(false)
-
-  // Estados para la gestión de documentos
   const [documentos, setDocumentos] = useState([])
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null)
-  const [mostrarConfirmacionEliminar, setMostrarConfirmacionEliminar] = useState(false)
-  const [documentoAEliminar, setDocumentoAEliminar] = useState(null)
 
-  // Cargar datos desde la fuente centralizada
+  // Cargar datos desde el store centralizado
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true)
 
-        // Datos de ejemplo según la estructura proporcionada
-        setColegiado({
-          id: colegiadoId,
-          nombre: "María González",
-          numeroCOV: "1234",
-          solvente: true,
-          carnetVigente: true,
-          carnetVencimiento: "12/04/2025",
-          tituloEntregado: false,
-          persona: {
-            nombre: "María",
-            segundo_nombre: "Alejandra",
-            primer_apellido: "González",
-            segundo_apellido: "Rodríguez",
-            genero: "F",
-            nacionalidad: "V",
-            identificacion: "12345678",
-            correo: "maria.gonzalez@mail.com",
-            id_adicional: "RIF-12345678-9",
-            telefono_movil: "+58 412-1234567",
-            telefono_de_habitacion: "+58 212-5555555",
-            fecha_de_nacimiento: "1985-03-15",
-            estado_civil: "Casada",
-            direccion: {
-              referencia: "Av. Libertador, Edificio Centro, Apto 5-B",
-              estado: "Caracas"
-            },
-            user: null
-          },
-          instituto_bachillerato: "Liceo Andrés Bello",
-          universidad: "Universidad Central de Venezuela",
-          fecha_egreso_universidad: "2010-07-15",
-          num_registro_principal: "12345",
-          fecha_registro_principal: "2010-08-20",
-          num_mpps: "MP-789",
-          fecha_mpps: "2010-09-10",
-          instituciones: [
-            {
-              nombre: "Hospital Universitario de Caracas",
-              cargo: "Odontólogo",
-              direccion: "Av. Los Ilustres, Ciudad Universitaria",
-              telefono: "+58 212-6060606",
-            },
-            {
-              nombre: "Clínica Dental Sonrisas",
-              cargo: "Ortodoncista",
-              direccion: "Av. Francisco de Miranda, Centro Plaza, Torre A",
-              telefono: "+58 212-9090909",
-            }
-          ],
-          file_ci: "cedula_maria_gonzalez.jpg",
-          file_rif: "rif_maria_gonzalez.pdf",
-          file_fondo_negro: "titulo_fondo_negro_maria_gonzalez.pdf",
-          file_mpps: "registro_mpps_maria_gonzalez.pdf",
-          estadisticas: {
-            solicitudesMes: 2,
-            inscripcionesMes: 1,
-            asistenciaEventos: 5,
-            pagosPendientes: 0,
-            ultimoAcceso: "Hace 3 días"
-          }
-        })
-
-        // Inicializar documentos basados en los archivos del colegiado
-        setDocumentos([
-          {
-            id: "file_ci",
-            nombre: "Cédula de identidad",
-            descripcion: "Copia escaneada por ambos lados",
-            archivo: "cedula_maria_gonzalez.jpg",
-            requerido: true,
-          },
-          {
-            id: "file_rif",
-            nombre: "RIF",
-            descripcion: "Registro de Información Fiscal",
-            archivo: "rif_maria_gonzalez.pdf",
-            requerido: true,
-          },
-          {
-            id: "file_fondo_negro",
-            nombre: "Título universitario fondo negro",
-            descripcion: "Título de Odontólogo con fondo negro",
-            archivo: "titulo_fondo_negro_maria_gonzalez.pdf",
-            requerido: true,
-          },
-          {
-            id: "file_mpps",
-            nombre: "Registro MPPS",
-            descripcion: "Registro del Ministerio del Poder Popular para la Salud",
-            archivo: "registro_mpps_maria_gonzalez.pdf",
-            requerido: true,
-          },
-          {
-            id: "comprobante_pago",
-            nombre: "Comprobante de pago",
-            descripcion: "Comprobante de pago de inscripción",
-            archivo: "pago_maria_gonzalez.pdf",
-            requerido: true,
-          },
-        ]);
         // Usar el colegiado proporcionado o buscarlo en el store
         let colegiadoData = providedColegiado
 
@@ -165,14 +71,14 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
         if (colegiadoData) {
           setColegiado(colegiadoData)
 
-          // Cargar los documentos
+          // Cargar documentos
           const documentosData = getDocumentos(colegiadoId)
           setDocumentos(documentosData)
         }
 
         setIsLoading(false)
       } catch (error) {
-        console.error("Error fetching colegiado data:", error)
+        console.error("Error al cargar datos del colegiado:", error)
         setIsLoading(false)
       }
     }
@@ -180,21 +86,21 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
     loadData()
   }, [colegiadoId, providedColegiado, getColegiado, getDocumentos])
 
-  // Función para obtener las iniciales del nombre
+  // Función para obtener iniciales del nombre
   const obtenerIniciales = () => {
-    if (!colegiado) return "CN";
+    if (!colegiado) return "CN"
 
-    const { nombre, primer_apellido } = colegiado.persona;
-    return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`;
+    const { nombre, primer_apellido } = colegiado.persona
+    return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`
   }
 
-  // Función para marcar que se entregó el título
+  // Función para confirmar entrega de título
   const handleConfirmarEntregaTitulo = async () => {
     try {
-      // Llamar a la función de actualización en el store
+      // Llamar a la función del store
       marcarTituloEntregado(colegiadoId, true)
 
-      // Actualizar el estado local
+      // Actualizar estado local
       setColegiado(prev => ({
         ...prev,
         tituloEntregado: true
@@ -203,43 +109,32 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
       setTituloEntregado(true)
       setConfirmarTitulo(false)
     } catch (error) {
-      console.error("Error al confirmar entrega del título:", error)
+      console.error("Error al confirmar entrega de título:", error)
     }
   }
 
   // Funciones para gestión de documentos
   const handleVerDocumento = (documento) => {
-    setDocumentoSeleccionado(documento);
+    setDocumentoSeleccionado(documento)
   }
 
   const handleCerrarVistaDocumento = () => {
-    setDocumentoSeleccionado(null);
+    setDocumentoSeleccionado(null)
   }
 
-  const handleReemplazarDocumento = (documento) => {
-    // Aquí iría la lógica para reemplazar un documento
-    alert(`Funcionalidad para reemplazar el documento: ${documento.nombre}`);
-  }
-
-  // Función para manejar la creación de una nueva solicitud
+  // Función para registrar nueva solicitud
   const handleNuevaSolicitud = (nuevaSolicitud) => {
     // Añadir la solicitud al store
     addSolicitud(colegiadoId, nuevaSolicitud)
 
     // Cerrar el modal
     setMostrarModalSolicitud(false)
-
-    // Si estamos en la pestaña de solicitudes, refrescar la vista
-    if (tabActivo === "solicitudes") {
-      // La tabla de solicitudes se actualiza automáticamente 
-      // ya que usa el mismo store
-    }
   }
 
-  // Funciones auxiliares para formatear fechas
+  // Función para formatear fechas
   const formatearFecha = (fechaISO) => {
-    if (!fechaISO) return "No especificada";
-    return new Date(fechaISO).toLocaleDateString('es-ES');
+    if (!fechaISO) return "No especificada"
+    return new Date(fechaISO).toLocaleDateString('es-ES')
   }
 
   if (isLoading) {
@@ -278,7 +173,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
   }
 
   // Para mostrar el nombre completo
-  const nombreCompleto = `${colegiado.persona.nombre} ${colegiado.persona.segundo_nombre || ''} ${colegiado.persona.primer_apellido} ${colegiado.persona.segundo_apellido || ''}`.trim();
+  const nombreCompleto = `${colegiado.persona.nombre} ${colegiado.persona.segundo_nombre || ''} ${colegiado.persona.primer_apellido} ${colegiado.persona.segundo_apellido || ''}`.trim()
 
   return (
     <div className="w-full px-4 md:px-10 py-10 md:py-28">
@@ -294,7 +189,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
           </button>
         ) : (
           <Link
-            href="/Colegiados"
+            href="/colegiados"
             className="text-md text-[#7D0053] hover:text-[#C40180] flex items-center"
           >
             <ChevronLeft size={20} className="mr-1" />
@@ -319,11 +214,11 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
         </div>
       )}
 
-      {/* Header con información principal - Rediseñado */}
+      {/* Header con información principal */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex flex-col items-center md:flex-row">
           <div className="md:w-1/5 flex justify-center items-center mb-8 md:mb-0">
-            {/* Iniciales en lugar de foto de perfil, igual que en DetallePendiente */}
+            {/* Iniciales en lugar de foto de perfil */}
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg shadow-black/40 bg-gradient-to-br from-[#C40180] to-[#7D0053] flex items-center justify-center">
               <span className="text-4xl font-bold text-white">
                 {obtenerIniciales()}
@@ -340,22 +235,20 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
 
               <div className="mt-4 md:mt-0 flex flex-wrap justify-center md:justify-end gap-2">
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colegiado.solvente ? 'bg-green-100 text-green-800 font-bold' : 'bg-red-100 text-red-800'
-                    }`}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colegiado.solvente ? 'bg-green-100 text-green-800 font-bold' : 'bg-red-100 text-red-800'}`}
                 >
                   {colegiado.solvente ? 'Solvente' : 'Insolvente'}
                 </span>
 
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colegiado.carnetVigente ? 'bg-purple-100 text-purple-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colegiado.carnetVigente ? 'bg-purple-100 text-purple-800' : 'bg-yellow-100 text-yellow-800'}`}
                 >
                   {colegiado.carnetVigente ? 'Carnet vigente' : 'Carnet vencido'}
                 </span>
               </div>
             </div>
 
-            {/* Reorganización del grid */}
+            {/* Grid de información de contacto */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Columna izquierda */}
               <div>
@@ -416,7 +309,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
         </div>
       </div>
 
-      {/* Tabs de navegación - Centrados */}
+      {/* Tabs de navegación */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
         <div className="border-b border-gray-200">
           <nav className="flex overflow-x-auto justify-center">
@@ -512,210 +405,397 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
 
         {/* Contenido según el tab activo */}
         <div className="p-6">
-          {tabActivo === "informacion" && (
-            <div className="space-y-6">
-              {/* Estado de solvencia */}
-              <div className="mt-8">
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <div className="flex justify-center">
-                    <div className="text-center">
-                      <p className="text-sm text-gray-500 mb-2">Estado de solvencia</p>
-                      <p className={`font-bold text-xl ${colegiado.solvente ? 'text-green-600' : 'text-red-600'} flex items-center justify-center`}>
-                        {colegiado.solvente ? (
-                          <>
-                            <CheckCircle size={20} className="mr-2" />
-                            Solvente
-                          </>
-                        ) : (
-                          <>
-                            <AlertCircle size={20} className="mr-2" />
-                            Insolvente
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Información personal */}
-              <div>
-                <div className="flex items-center mb-5 border-b pb-3">
-                  <User size={20} className="text-[#C40180] mr-2" />
-                  <h2 className="text-lg font-semibold text-gray-900">Información personal</h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Primera columna: nombre, cédula, fecha de nacimiento */}
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre completo</p>
-                      <p className="font-medium text-gray-800">{nombreCompleto}</p>
-                    </div>
-
-    <div className="bg-gray-50 p-3 rounded-md">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
-      <p className="font-medium text-gray-800">{colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}</p>
+        {tabActivo === "informacion" && (
+  <div className="space-y-6">
+    {/* Estado de solvencia */}
+    <div className="mt-8">
+      <div className="bg-gray-50 p-4 rounded-md">
+        <div className="flex justify-center">
+          <div className="text-center">
+            <p className="text-sm text-gray-500 mb-2">Estado de solvencia</p>
+            <p className={`font-bold text-xl ${colegiado.solvente ? 'text-green-600' : 'text-red-600'} flex items-center justify-center`}>
+              {colegiado.solvente ? (
+                <>
+                  <CheckCircle size={20} className="mr-2" />
+                  Solvente
+                </>
+              ) : (
+                <>
+                  <AlertCircle size={20} className="mr-2" />
+                  Insolvente
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.tipo_identificacion}-{colegiado.persona.identificacion}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</p>
-                      <p className="font-medium text-gray-800">{formatearFecha(colegiado.persona.fecha_de_nacimiento)}</p>
-                    </div>
-                  </div>
-
-                  {/* Segunda columna: correo, número móvil, número de teléfono */}
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.correo}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono móvil</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.telefono_movil}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono de habitación</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.telefono_de_habitacion || "No especificado"}</p>
-                    </div>
-                  </div>
-
-                  {/* Tercera columna: estado civil, género, dirección */}
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.estado_civil || "No especificado"}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Género</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.genero === 'M' ? 'Masculino' : colegiado.persona.genero === 'F' ? 'Femenino' : colegiado.persona.genero}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
-                      <p className="font-medium text-gray-800">{colegiado.persona.direccion.referencia}, {colegiado.persona.direccion.estado}</p>
-                    </div>
-                  </div>
+    
+    {/* Información personal */}
+    <div>
+      <div className="flex items-center mb-5 border-b pb-3">
+        <User size={20} className="text-[#C40180] mr-2" />
+        <h2 className="text-lg font-semibold text-gray-900">Información personal</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre completo</p>
+            <p className="font-medium text-gray-800">{nombreCompleto}</p>
+          </div>
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula</p>
+            <p className="font-medium text-gray-800">{colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}</p>
+          </div>
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</p>
+            <p className="font-medium text-gray-800">{formatearFecha(colegiado.persona.fecha_nacimiento)}</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
+            <p className="font-medium text-gray-800">{colegiado.persona.correo}</p>
+          </div>
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono</p>
+            <p className="font-medium text-gray-800">{colegiado.persona.telefono_movil}</p>
+          </div>
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
+            <p className="font-medium text-gray-800">{colegiado.persona.direccion.referencia}, {colegiado.persona.direccion.estado}</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Título entregado en oficina</p>
+            <p className={`font-medium flex items-center ${colegiado.tituloEntregado ? 'text-green-600' : 'text-yellow-600'}`}>
+              {colegiado.tituloEntregado ? (
+                <>
+                  <CheckCircle size={16} className="mr-1" />
+                  Sí, entregado
+                </>
+              ) : (
+                <>
+                  <AlertCircle size={16} className="mr-1" />
+                  No entregado
+                </>
+              )}
+            </p>
+          </div>
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro</p>
+            <p className="font-medium text-gray-800">{formatearFecha(colegiado.fecha_registro_principal)}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    {/* Información académica */}
+    <div className="mt-8">
+      <div className="flex items-center mb-5 border-b pb-3">
+        <Book size={20} className="text-[#C40180] mr-2" />
+        <h2 className="text-lg font-semibold text-gray-900">Información académica</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</p>
+          <p className="font-medium text-gray-800">{colegiado.universidad || "No especificada"}</p>
+        </div>
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Especialidad</p>
+          <p className="font-medium text-gray-800">{colegiado.especialidad || "No especificada"}</p>
+        </div>
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Año de graduación</p>
+          <p className="font-medium text-gray-800">{colegiado.anio_graduacion || "No especificado"}</p>
+        </div>
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha MPPS</p>
+          <p className="font-medium text-gray-800">{formatearFecha(colegiado.fecha_mpps)}</p>
+        </div>
+      </div>
+    </div>
+    
+    {/* Información profesional */}
+    <div className="mt-8">
+      <div className="flex items-center mb-5 border-b pb-3">
+        <Briefcase size={20} className="text-[#C40180] mr-2" />
+        <h2 className="text-lg font-semibold text-gray-900">Información profesional</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro</p>
+          <p className="font-medium text-gray-800">{colegiado.numeroRegistro}</p>
+        </div>
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Años de experiencia</p>
+          <p className="font-medium text-gray-800">{colegiado.anios_experiencia || "No especificado"}</p>
+        </div>
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado del carnet</p>
+          <p className={`font-medium flex items-center ${colegiado.carnetVigente ? 'text-green-600' : 'text-yellow-600'}`}>
+            {colegiado.carnetVigente ? (
+              <>
+                <CheckCircle size={16} className="mr-1" />
+                Vigente hasta {colegiado.carnetVencimiento}
+              </>
+            ) : (
+              <>
+                <AlertCircle size={16} className="mr-1" />
+                Vencido desde {colegiado.carnetVencimiento}
+              </>
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    {/* Instituciones donde trabaja */}
+    <div className="mt-8">
+      <div className="flex items-center mb-5 border-b pb-3">
+        <Briefcase size={20} className="text-[#C40180] mr-2" />
+        <h2 className="text-lg font-semibold text-gray-900">Instituciones donde trabaja</h2>
+      </div>
+      {colegiado.instituciones && colegiado.instituciones.length > 0 ? (
+        <div className="space-y-6">
+          {colegiado.instituciones.map((institucion, index) => (
+            <div key={index} className="bg-gray-50 p-4 rounded-md mb-4 last:mb-0">
+              <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200 flex items-center">
+                <Briefcase size={16} className="mr-2 text-[#C40180]" />
+                {institucion.nombre}
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cargo</p>
+                  <p className="font-medium text-gray-800">{institucion.cargo || "No especificado"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono</p>
+                  <p className="font-medium text-gray-800">{institucion.telefono || "No especificado"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
+                  <p className="font-medium text-gray-800">{institucion.direccion || "No especificada"}</p>
                 </div>
               </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-gray-50 p-4 rounded-md text-gray-500 italic flex items-center justify-center h-32">
+          <div className="text-center">
+            <Briefcase size={24} className="mx-auto mb-2 text-gray-400" />
+            No hay instituciones registradas
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
-              {/* Información académica */}
-              <div className="mt-8">
-                <div className="flex items-center mb-5 border-b pb-3">
-                  <Award size={20} className="text-[#C40180] mr-2" />
-                  <h2 className="text-lg font-semibold text-gray-900">Información académica y profesional</h2>
-                </div>
+          {/* Contenido de la pestaña de pagos */}
+          {tabActivo === "pagos" && (
+            <TablaPagos
+              colegiadoId={colegiadoId}
+            />
+          )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Primera columna */}
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Instituto de bachillerato</p>
-                      <p className="font-medium text-gray-800">{colegiado.instituto_bachillerato || "No especificado"}</p>
-                    </div>
+          {/* Contenido de la pestaña de inscripciones */}
+          {tabActivo === "inscripciones" && (
+            <TablaInscripciones
+              colegiadoId={colegiadoId}
+            />
+          )}
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</p>
-                      <p className="font-medium text-gray-800">{colegiado.universidad || "No especificado"}</p>
-                    </div>
+          {/* Contenido de la pestaña de solicitudes */}
+          {tabActivo === "solicitudes" && (
+            <TablaSolicitudes
+              colegiadoId={colegiadoId}
+            />
+          )}
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de egreso</p>
-                      <p className="font-medium text-gray-800">{formatearFecha(colegiado.fecha_egreso_universidad)}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro principal</p>
-                      <p className="font-medium text-gray-800">{colegiado.num_registro_principal || "No especificado"}</p>
-                    </div>
-                  </div>
-
-                  {/* Segunda columna */}
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro principal</p>
-                      <p className="font-medium text-gray-800">{formatearFecha(colegiado.fecha_registro_principal)}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número MPPS</p>
-                      <p className="font-medium text-gray-800">{colegiado.num_mpps || "No especificado"}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha MPPS</p>
-                      <p className="font-medium text-gray-800">{formatearFecha(colegiado.fecha_mpps)}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Título entregado en oficina</p>
-                      <p className={`font-medium flex items-center ${colegiado.tituloEntregado ? 'text-green-600' : 'text-yellow-600'}`}>
-                        {colegiado.tituloEntregado ? (
-                          <>
-                            <CheckCircle size={16} className="mr-1" />
-                            Sí, entregado
-                          </>
-                        ) : (
-                          <>
-                            <AlertCircle size={16} className="mr-1" />
-                            No entregado
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+          {/* Contenido de la pestaña de carnet */}
+          {tabActivo === "carnet" && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Carnet de colegiado</h3>
+                <p className="text-sm text-gray-500 mt-1">Información sobre el carnet del colegiado</p>
               </div>
 
-              {/* Instituciones donde trabaja */}
-              <div className="mt-8">
-                <div className="flex items-center mb-5 border-b pb-3">
-                  <Briefcase size={20} className="text-[#C40180] mr-2" />
-                  <h2 className="text-lg font-semibold text-gray-900">Instituciones donde trabaja</h2>
-                </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Vista previa del carnet */}
+                  <div className="md:w-1/2 flex justify-center">
+                    <div className="w-full max-w-md bg-gradient-to-r from-[#C40180] to-[#590248] rounded-xl shadow-lg overflow-hidden">
+                      <div className="p-6 text-white">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="text-xl font-bold">Colegio de Odontólogos</h4>
+                            <p className="text-sm opacity-80">de Venezuela</p>
+                          </div>
+                          <div className="bg-white/20 p-2 rounded-lg">
+                            <span className="text-sm font-semibold">N° {colegiado.numeroRegistro}</span>
+                          </div>
+                        </div>
 
-                {colegiado.instituciones && colegiado.instituciones.length > 0 ? (
-                  <div className="space-y-6">
-                    {colegiado.instituciones.map((institucion, index) => (
-                      <div key={index} className="bg-gray-50 p-4 rounded-md mb-4 last:mb-0">
-                        <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200 flex items-center">
-                          <Briefcase size={16} className="mr-2 text-[#C40180]" />
-                          {institucion.nombre}
-                        </h3>
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cargo</p>
-                            <p className="font-medium text-gray-800">{institucion.cargo || "No especificado"}</p>
+                        <div className="flex mt-8 items-center gap-4">
+                          <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center text-[#C40180] text-2xl font-bold">
+                            {obtenerIniciales()}
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono</p>
-                            <p className="font-medium text-gray-800">{institucion.telefono || "No especificado"}</p>
+                            <h5 className="font-bold text-lg">{nombreCompleto}</h5>
+                            <p className="text-white/80 text-sm">{colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}</p>
+                            <p className="text-white/80 text-sm">{colegiado.especialidad}</p>
                           </div>
+                        </div>
+
+                        <div className="mt-8 pt-4 border-t border-white/20 text-sm flex justify-between">
                           <div>
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
-                            <p className="font-medium text-gray-800">{institucion.direccion || "No especificada"}</p>
+                            <p className="opacity-70">Válido hasta:</p>
+                            <p className="font-semibold">{colegiado.carnetVencimiento}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="opacity-70">Emitido:</p>
+                            <p className="font-semibold">{formatearFecha(colegiado.fechaRegistro)}</p>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 p-4 rounded-md text-gray-500 italic flex items-center justify-center h-32">
-                    <div className="text-center">
-                      <Briefcase size={24} className="mx-auto mb-2 text-gray-400" />
-                      No hay instituciones registradas
                     </div>
                   </div>
-                )}
+
+                  {/* Información del carnet */}
+                  <div className="md:w-1/2">
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-lg font-medium text-gray-900">Estado del carnet</h4>
+                        <div className="mt-4">
+                          {colegiado.carnetVigente ? (
+                            <div className="bg-green-100 text-green-800 p-4 rounded-md flex items-center">
+                              <CheckCircle className="mr-2" size={20} />
+                              <div>
+                                <p className="font-medium">Carnet vigente</p>
+                                <p className="text-sm">El carnet está activo y es válido hasta {colegiado.carnetVencimiento}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-yellow-100 text-yellow-800 p-4 rounded-md flex items-center">
+                              <AlertCircle className="mr-2" size={20} />
+                              <div>
+                                <p className="font-medium">Carnet vencido</p>
+                                <p className="text-sm">El carnet venció el {colegiado.carnetVencimiento} y debe ser renovado</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 p-3 rounded-md">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro</p>
+                          <p className="font-medium text-gray-800">{colegiado.numeroRegistro}</p>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-md">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de emisión</p>
+                          <p className="font-medium text-gray-800">{formatearFecha(colegiado.fechaRegistro)}</p>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-md">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de vencimiento</p>
+                          <p className="font-medium text-gray-800">{colegiado.carnetVencimiento}</p>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-md">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Especialidad</p>
+                          <p className="font-medium text-gray-800">{colegiado.especialidad}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 mt-6">
+                        <button className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
+                          <CreditCard size={16} />
+                          <span>{colegiado.carnetVigente ? 'Descargar carnet' : 'Renovar carnet'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          )}
+
+          {/* Contenido de la pestaña de documentos */}
+          {tabActivo === "documentos" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Documentos</h3>
+                  <p className="text-sm text-gray-500 mt-1">Documentación del colegiado</p>
+                </div>
+                <button className="bg-[#C40180] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
+                  <PlusCircle size={16} />
+                  <span>Agregar documento</span>
+                </button>
+              </div>
+
+              {documentos && documentos.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {documentos.map((documento) => (
+                    <div
+                      key={documento.id}
+                      className="border rounded-lg border-gray-200 hover:border-[#C40180] hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center mb-2">
+                              <div className="bg-[#F9E6F3] p-2 rounded-md mr-3">
+                                <FileText
+                                  className="text-[#C40180]"
+                                  size={20}
+                                />
+                              </div>
+                              <div>
+                                <h3 className="font-medium text-gray-900 flex items-center">
+                                  {documento.nombre}
+                                  {documento.requerido && <span className="text-red-500 ml-1">*</span>}
+                                </h3>
+                                <p className="text-xs text-gray-500">{documento.descripcion}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleVerDocumento(documento)}
+                            className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                            title="Ver documento"
+                          >
+                            <Eye size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">
+                  <FileText size={40} className="text-gray-300 mb-3" />
+                  <p className="text-gray-500 text-center">No hay documentos disponibles</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Contenido de la pestaña de chats */}
+          {tabActivo === "chats" && (
+            <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg">
+              <MessageSquare size={48} className="text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-500">Sistema de chat</h3>
+              <p className="text-gray-400 mt-1">La funcionalidad de chat está en desarrollo</p>
+            </div>
+          )}
+
+          {/* Contenido de la pestaña de estadísticas */}
+          {tabActivo === "estadisticas" && (
+            <EstadisticasUsuario colegiado={colegiado} />
           )}
         </div>
       </div>

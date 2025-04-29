@@ -1,6 +1,6 @@
 export { default as AutoLogOut } from "./autoLogOut";
 export { default as BackgroundAnimation } from "./BackgroundAnimation";
-export { default as ClientLayout } from "./ClientLayout";
+export { default as ClientLayout } from "../PanelControl/(Home)/ClientLayout";
 export { default as DashboardLayout } from "./DashboardLayout";
 export { default as NavBar } from "./NavBar";
 export { default as Providers } from "./Provider";

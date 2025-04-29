@@ -1,144 +1,220 @@
 "use client"
-
-import DetalleColegiado from "@/Components/Solicitudes/ListaColegiados/DetalleColegiado"
-import DetallePendiente from "@/Components/Solicitudes/ListaColegiados/DetallePendiente"
-import RegistroColegiados from "@/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal"
 import { motion } from "framer-motion"
-import { CheckCircle, ChevronRight, PlusCircle, Search, XCircle } from "lucide-react"
+import { CheckCircle, ChevronRight, PlusCircle, Search, XCircle, X, ArrowUpDown } from "lucide-react"
 import { useEffect, useState } from "react"
-import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
+import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
+import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado"
+import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente"
+import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal"
 
-export default function ListaColegiados() {
-    // Use Zustand store directly
-    const colegiados = ListaColegiadosData(state => state.colegiados)
-    const colegiadosPendientes = ListaColegiadosData(state => state.colegiadosPendientes)
-    const addColegiado = ListaColegiadosData(state => state.addColegiado)
-    const addColegiadoPendiente = ListaColegiadosData(state => state.addColegiadoPendiente)
-    const removeColegiadoPendiente = ListaColegiadosData(state => state.removeColegiadoPendiente)
-    const getColegiadoById = ListaColegiadosData(state => state.getColegiado)
-    const getPendienteById = ListaColegiadosData(state => state.getColegiadoPendiente)
-    const approveRegistration = ListaColegiadosData(state => state.approveRegistration)
+/**
+ * Página principal de gestión de colegiados
+ * Muestra dos tablas: pendientes y registrados, con filtros y funciones de búsqueda
+ */
+export default function ListaColegiadosPage() {
+    // Estado del store de Zustand
+    const {
+        colegiados,
+        colegiadosPendientes,
+        addColegiadoPendiente,
+        addColegiado,
+        removeColegiadoPendiente,
+        getColegiado,
+        getColegiadoPendiente,
+        approveRegistration
+    } = useDataListaColegiados();
 
-    // Local UI state
-    const [isLoading, setIsLoading] = useState(true)
-    const [searchTerm, setSearchTerm] = useState("")
-    const [showRegistro, setShowRegistro] = useState(false)
-    const [vistaActual, setVistaActual] = useState("lista") // lista, detalleColegiado, detallePendiente
-    const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null)
-    const [tabActivo, setTabActivo] = useState("pendientes") // Cambiado a pendientes como default
-    const [filtroSolvencia, setFiltroSolvencia] = useState("todos")
+    // Estado local de UI
+    const [isLoading, setIsLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [showRegistro, setShowRegistro] = useState(false);
+    const [vistaActual, setVistaActual] = useState("lista"); // lista, detalleColegiado, detallePendiente
+    const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null);
+    const [tabActivo, setTabActivo] = useState("pendientes");
 
-    // Initialize loading state
+    // Filtros adicionales para colegiados registrados
+    const [filtroSolvencia, setFiltroSolvencia] = useState("todos");
+    const [filtroEspecialidad, setFiltroEspecialidad] = useState("todas");
+
+    // Filtros para pendientes
+    const [filtroFecha, setFiltroFecha] = useState("todas");
+    const [filtroDocumentos, setFiltroDocumentos] = useState("todos");
+    const [registroExitoso, setRegistroExitoso] = useState(false);
+    const [aprobacionExitosa, setAprobacionExitosa] = useState(false);
+
+    // Nuevos filtros de fecha para pendientes
+    const [fechaDesde, setFechaDesde] = useState("");
+    const [fechaHasta, setFechaHasta] = useState("");
+
+    // Estado para ordenamiento
+    const [ordenFecha, setOrdenFecha] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
+
+    // Simular carga inicial
     useEffect(() => {
-        // Just to simulate loading, in a real app this might not be needed
-        // since Zustand store is already initialized
-        setTimeout(() => {
-            setIsLoading(false)
-        }, 1000)
-    }, [])
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 800);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Filtrar colegiados basado en búsqueda y filtros
     const colegiadosFiltrados = colegiados.filter(colegiado => {
-        const matchesSearch = colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch =
+            colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
             colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase())
+            colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase());
 
-        if (filtroSolvencia === "todos") return matchesSearch
-        if (filtroSolvencia === "solventes") return matchesSearch && colegiado.solvente
-        if (filtroSolvencia === "No Solventes") return matchesSearch && !colegiado.solvente
+        // Filtrar por solvencia
+        const matchesSolvencia =
+            filtroSolvencia === "todos" ? true :
+                filtroSolvencia === "solventes" ? colegiado.solvente :
+                    !colegiado.solvente;
 
-        return matchesSearch
-    })
+        // Filtrar por especialidad
+        const matchesEspecialidad =
+            filtroEspecialidad === "todas" ? true :
+                colegiado.especialidad === filtroEspecialidad;
 
-    const colegiadosPendientesFiltrados = colegiadosPendientes.filter(colegiado =>
-        colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+        return matchesSearch && matchesSolvencia && matchesEspecialidad;
+    });
 
-    // Función para ver detalle de un colegiado
+    // Filtrar pendientes basado en búsqueda y filtros
+    const pendientesFiltrados = colegiadosPendientes
+        .filter(pendiente => {
+            // Búsqueda general
+            const matchesSearch =
+                pendiente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                pendiente.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                pendiente.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+            // Filtrar por completitud de documentos
+            const matchesDocumentos =
+                filtroDocumentos === "todos" ? true :
+                    filtroDocumentos === "completos" ? pendiente.documentosCompletos :
+                        !pendiente.documentosCompletos;
+
+            // Filtrar por fecha de solicitud (predefinidos)
+            const fechaSolicitudDate = new Date(pendiente.fechaSolicitud);
+            const hoy = new Date();
+            const unaSemanaAtras = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const unMesAtras = new Date(hoy.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+            const matchesFechaPredef =
+                filtroFecha === "todas" ? true :
+                    filtroFecha === "semana" ? fechaSolicitudDate >= unaSemanaAtras :
+                        filtroFecha === "mes" ? fechaSolicitudDate >= unMesAtras :
+                            true;
+
+            // Filtrar por rango de fechas personalizado
+            let matchesRangoFechas = true;
+            if (fechaDesde) {
+                const fechaDesdeObj = new Date(fechaDesde);
+                fechaDesdeObj.setHours(0, 0, 0, 0);
+                matchesRangoFechas = matchesRangoFechas && fechaSolicitudDate >= fechaDesdeObj;
+            }
+            if (fechaHasta) {
+                const fechaHastaObj = new Date(fechaHasta);
+                fechaHastaObj.setHours(23, 59, 59, 999);
+                matchesRangoFechas = matchesRangoFechas && fechaSolicitudDate <= fechaHastaObj;
+            }
+
+            return matchesSearch && matchesDocumentos && matchesFechaPredef && matchesRangoFechas;
+        })
+        // Ordenar por fecha
+        .sort((a, b) => {
+            const fechaA = new Date(a.fechaSolicitud);
+            const fechaB = new Date(b.fechaSolicitud);
+            return ordenFecha === "desc"
+                ? fechaB - fechaA  // Más nuevo primero
+                : fechaA - fechaB;  // Más viejo primero
+        });
+
+    // Handlers para navegación y acciones
     const verDetalleColegiado = (id) => {
-        setColegiadoSeleccionadoId(id)
-        setVistaActual("detalleColegiado")
-    }
+        setColegiadoSeleccionadoId(id);
+        setVistaActual("detalleColegiado");
+    };
 
-    // Función para ver detalle de un pendiente
     const verDetallePendiente = (id) => {
-        setColegiadoSeleccionadoId(id)
-        setVistaActual("detallePendiente")
-    }
+        setColegiadoSeleccionadoId(id);
+        setVistaActual("detallePendiente");
+    };
 
-    // Función para volver a la lista
     const volverALista = () => {
-        setVistaActual("lista")
-        setColegiadoSeleccionadoId(null)
-    }
+        setVistaActual("lista");
+        setColegiadoSeleccionadoId(null);
+    };
 
-    // Función para manejar el registro exitoso de un nuevo colegiado
+    // Manejador para el registro exitoso de un nuevo colegiado pendiente
     const handleRegistroExitoso = (nuevoColegiado) => {
-        // Agregar a la lista central de pendientes
-        addColegiadoPendiente(nuevoColegiado)
-
-        // Si estamos viendo la pestaña de registrados, cambiar a pendientes
+        // Agregar a la lista de pendientes
+        addColegiadoPendiente(nuevoColegiado);
+        // Cerrar el modal y mostrar mensaje de éxito
+        setShowRegistro(false);
+        setRegistroExitoso(true);
+        // Si estamos viendo registrados, cambiar a pendientes
         if (tabActivo === "registrados") {
-            setTabActivo("pendientes")
+            setTabActivo("pendientes");
         }
-    }
+        // Ocultar mensaje después de 3 segundos
+        setTimeout(() => {
+            setRegistroExitoso(false);
+        }, 3000);
+    };
 
+    // Manejador para la aprobación de un colegiado pendiente
     const handleAprobarPendiente = (colegiadoAprobado) => {
-        // Si recibimos el objeto completo, lo usamos
-        if (typeof colegiadoAprobado === 'object' && colegiadoAprobado !== null) {
-            // Agregar el colegiado aprobado a la lista central
-            addColegiado(colegiadoAprobado)
-
-            // Eliminar el pendiente de la lista central
-            removeColegiadoPendiente(colegiadoSeleccionadoId)
+        if (colegiadoAprobado && typeof colegiadoAprobado === 'object') {
+            // Si recibimos el objeto completo, lo añadimos directamente
+            addColegiado(colegiadoAprobado);
+            removeColegiadoPendiente(colegiadoSeleccionadoId);
+        } else {
+            // Aprobación a través de la función del store
+            approveRegistration(colegiadoSeleccionadoId, {});
         }
-        // O podemos usar la función approveRegistration directamente
-        else if (colegiadoSeleccionadoId) {
-            // Con este approach, pasaríamos los datos de registro
-            const datosRegistro = colegiadoAprobado || {}
-            approveRegistration(colegiadoSeleccionadoId, datosRegistro)
-        }
-
+        // Mostrar notificación de éxito
+        setAprobacionExitosa(true);
+        setTimeout(() => {
+            setAprobacionExitosa(false);
+        }, 3000);
         // Cambiar a la pestaña de registrados
-        setTabActivo("registrados")
-
+        setTabActivo("registrados");
         // Volver a la vista de lista
-        setVistaActual("lista")
-        setColegiadoSeleccionadoId(null)
-    }
+        volverALista();
+    };
 
-    // Renderizado condicional basado en la vista actual
+    // Alternar orden de fecha
+    const toggleOrdenFecha = () => {
+        setOrdenFecha(prev => prev === "desc" ? "asc" : "desc");
+    };
+
+    // Renderizar vista basada en el estado actual
     if (vistaActual === "detalleColegiado") {
-        // Encontrar el colegiado correcto desde los datos centralizados
-        const colegiadoActual = getColegiadoById(colegiadoSeleccionadoId)
-
+        const colegiadoActual = getColegiado(colegiadoSeleccionadoId);
         return (
             <DetalleColegiado
                 params={{ id: colegiadoSeleccionadoId }}
                 onVolver={volverALista}
                 colegiado={colegiadoActual}
             />
-        )
+        );
     }
 
     if (vistaActual === "detallePendiente") {
-        // Encontrar el pendiente correcto desde los datos centralizados
-        const pendienteActual = getPendienteById(colegiadoSeleccionadoId)
-
+        const pendienteActual = getColegiadoPendiente(colegiadoSeleccionadoId);
         return (
             <DetallePendiente
                 params={{ id: colegiadoSeleccionadoId }}
                 onVolver={handleAprobarPendiente}
                 pendiente={pendienteActual}
             />
-        )
+        );
     }
 
-    // Vista principal de lista
+    // Vista principal de la lista
     return (
         <div className="w-full px-4 md:px-10 py-10 md:py-12">
-            {/* Header Section */}
+            {/* Header con título */}
             <motion.div
                 initial={{ opacity: 0, y: -30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -163,7 +239,45 @@ export default function ListaColegiados() {
                 </motion.p>
             </motion.div>
 
-            {/* Barra de acciones: Búsqueda, filtros y botón de registro */}
+            {/* Notificaciones de éxito */}
+            {registroExitoso && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-green-100 text-green-800 p-4 rounded-md mb-6 flex items-start justify-between shadow-sm"
+                >
+                    <div className="flex items-center">
+                        <CheckCircle size={20} className="mr-2 flex-shrink-0" />
+                        <span>El colegiado ha sido registrado exitosamente y está pendiente de aprobación.</span>
+                    </div>
+                    <button
+                        onClick={() => setRegistroExitoso(false)}
+                        className="text-green-700 hover:bg-green-200 p-1 rounded-full transition-colors"
+                    >
+                        <X size={18} />
+                    </button>
+                </motion.div>
+            )}
+            {aprobacionExitosa && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-green-100 text-green-800 p-4 rounded-md mb-6 flex items-start justify-between shadow-sm"
+                >
+                    <div className="flex items-center">
+                        <CheckCircle size={20} className="mr-2 flex-shrink-0" />
+                        <span>La solicitud ha sido aprobada exitosamente. El colegiado ha sido registrado.</span>
+                    </div>
+                    <button
+                        onClick={() => setAprobacionExitosa(false)}
+                        className="text-green-700 hover:bg-green-200 p-1 rounded-full transition-colors"
+                    >
+                        <X size={18} />
+                    </button>
+                </motion.div>
+            )}
+
+            {/* Barra de acciones: búsqueda y botón de nuevo registro */}
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <div className="flex-1 w-full md:w-auto">
                     <div className="relative">
@@ -177,7 +291,6 @@ export default function ListaColegiados() {
                         <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                     </div>
                 </div>
-
                 <div className="flex gap-4 w-full md:w-auto">
                     <button
                         onClick={() => setShowRegistro(true)}
@@ -189,7 +302,7 @@ export default function ListaColegiados() {
                 </div>
             </div>
 
-            {/* Tabs para alternar entre colegiados registrados y pendientes */}
+            {/* Tabs para alternar entre colegiados y pendientes */}
             <div className="border-b border-gray-200 mb-6">
                 <nav className="flex gap-8">
                     <button
@@ -215,34 +328,168 @@ export default function ListaColegiados() {
 
             {/* Filtros adicionales para colegiados registrados */}
             {tabActivo === "registrados" && (
-                <div className="mb-6 flex flex-wrap gap-3">
-                    <button
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "todos"
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                        onClick={() => setFiltroSolvencia("todos")}
-                    >
-                        Todos
-                    </button>
-                    <button
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "solventes"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                        onClick={() => setFiltroSolvencia("solventes")}
-                    >
-                        Solventes
-                    </button>
-                    <button
-                        className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "No Solventes"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                        onClick={() => setFiltroSolvencia("No Solventes")}
-                    >
-                        No Solventes
-                    </button>
+                <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
+                    <div className="flex flex-wrap gap-3">
+                        <div>
+                            <p className="text-xs text-gray-500 mb-1">Estado de solvencia</p>
+                            <div className="flex gap-2">
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "todos"
+                                        ? "bg-purple-100 text-purple-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroSolvencia("todos")}
+                                >
+                                    Todos
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "solventes"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroSolvencia("solventes")}
+                                >
+                                    Solventes
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "insolventes"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroSolvencia("insolventes")}
+                                >
+                                    No Solventes
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-500 mb-1">Especialidad</p>
+                            <select
+                                value={filtroEspecialidad}
+                                onChange={(e) => setFiltroEspecialidad(e.target.value)}
+                                className="px-4 py-2 rounded-lg text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                                <option value="todas">Todas las especialidades</option>
+                                <option value="Odontología general">Odontología general</option>
+                                <option value="Ortodoncia">Ortodoncia</option>
+                                <option value="Endodoncia">Endodoncia</option>
+                                <option value="Periodoncia">Periodoncia</option>
+                                <option value="Odontopediatría">Odontopediatría</option>
+                                <option value="Cirugía maxilofacial">Cirugía maxilofacial</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Filtros para pendientes */}
+            {tabActivo === "pendientes" && (
+                <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
+                    <div className="flex flex-wrap gap-5">
+                        <div>
+                            <p className="text-xs text-gray-500 mb-1">Fecha de solicitud</p>
+                            <div className="flex gap-2">
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "todas"
+                                        ? "bg-purple-100 text-purple-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroFecha("todas")}
+                                >
+                                    Todas
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "semana"
+                                        ? "bg-blue-100 text-blue-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroFecha("semana")}
+                                >
+                                    Última semana
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "mes"
+                                        ? "bg-indigo-100 text-indigo-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroFecha("mes")}
+                                >
+                                    Último mes
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Nuevo filtro de rango de fechas */}
+                        <div>
+                            <div className="flex gap-2 items-center">
+                                <div>
+                                    <label className="text-xs text-gray-500 block mb-1">Desde</label>
+                                    <input
+                                        type="date"
+                                        value={fechaDesde}
+                                        onChange={(e) => setFechaDesde(e.target.value)}
+                                        className="px-2 py-1 border rounded text-sm w-full"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-500 block mb-1">Hasta</label>
+                                    <input
+                                        type="date"
+                                        value={fechaHasta}
+                                        onChange={(e) => setFechaHasta(e.target.value)}
+                                        className="px-2 py-1 border rounded text-sm w-full"
+                                    />
+                                </div>
+                                {(fechaDesde || fechaHasta) && (
+                                    <button
+                                        onClick={() => {
+                                            setFechaDesde("");
+                                            setFechaHasta("");
+                                        }}
+                                        className="mt-4 text-gray-500 hover:text-red-500"
+                                        title="Limpiar fechas"
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-gray-500 mb-1">Estado de documentos</p>
+                            <div className="flex gap-2">
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroDocumentos === "todos"
+                                        ? "bg-purple-100 text-purple-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroDocumentos("todos")}
+                                >
+                                    Todos
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroDocumentos === "completos"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroDocumentos("completos")}
+                                >
+                                    Completos
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroDocumentos === "incompletos"
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroDocumentos("incompletos")}
+                                >
+                                    Incompletos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -253,15 +500,20 @@ export default function ListaColegiados() {
                 </div>
             ) : (
                 <>
-                    {/* Lista de colegiados según el tab activo */}
+                    {/* Lista de colegiados o pendientes según el tab seleccionado */}
                     {tabActivo === "registrados" ? (
+                        // TABLA DE COLEGIADOS REGISTRADOS
                         <div>
                             {colegiadosFiltrados.length === 0 ? (
-                                <div className="text-center py-10 text-gray-500">
-                                    No se encontraron colegiados con los criterios de búsqueda
+                                <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
+                                    <div className="flex justify-center mb-4">
+                                        <Search size={48} className="text-gray-300" />
+                                    </div>
+                                    <h3 className="text-lg font-medium text-gray-500">No se encontraron colegiados</h3>
+                                    <p className="text-gray-400 mt-1">No hay registros que coincidan con tu búsqueda</p>
                                 </div>
                             ) : (
-                                <div className="bg-white rounded-lg shadow overflow-hidden">
+                                <div className="bg-white rounded-lg shadow-md overflow-hidden">
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
@@ -326,13 +578,18 @@ export default function ListaColegiados() {
                             )}
                         </div>
                     ) : (
+                        // TABLA DE COLEGIADOS PENDIENTES
                         <div>
-                            {colegiadosPendientesFiltrados.length === 0 ? (
-                                <div className="text-center py-10 text-gray-500">
-                                    No hay solicitudes pendientes de aprobación
+                            {pendientesFiltrados.length === 0 ? (
+                                <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
+                                    <div className="flex justify-center mb-4">
+                                        <CheckCircle size={48} className="text-gray-300" />
+                                    </div>
+                                    <h3 className="text-lg font-medium text-gray-500">No hay solicitudes pendientes</h3>
+                                    <p className="text-gray-400 mt-1">Todas las solicitudes han sido procesadas</p>
                                 </div>
                             ) : (
-                                <div className="bg-white rounded-lg shadow overflow-hidden">
+                                <div className="bg-white rounded-lg shadow-md overflow-hidden">
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
@@ -343,7 +600,16 @@ export default function ListaColegiados() {
                                                     Cédula
                                                 </th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                                    Fecha solicitud
+                                                    <button
+                                                        className="flex items-center justify-center gap-1 w-full"
+                                                        onClick={toggleOrdenFecha}
+                                                    >
+                                                        Fecha solicitud
+                                                        <ArrowUpDown
+                                                            size={14}
+                                                            className={`transition-transform ${ordenFecha === "desc" ? "text-purple-600" : "text-gray-400 rotate-180"}`}
+                                                        />
+                                                    </button>
                                                 </th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Documentos
@@ -354,31 +620,35 @@ export default function ListaColegiados() {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {colegiadosPendientesFiltrados.map((colegiado) => (
-                                                <tr key={colegiado.id} className="hover:bg-gray-50">
+                                            {pendientesFiltrados.map((pendiente) => (
+                                                <tr key={pendiente.id} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <div className="font-medium text-gray-900">{colegiado.nombre}</div>
-                                                        <div className="text-sm text-gray-500 md:hidden">{colegiado.cedula}</div>
+                                                        <div className="font-medium text-gray-900">{pendiente.nombre}</div>
+                                                        <div className="text-sm text-gray-500 md:hidden">{pendiente.cedula}</div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                                                        {colegiado.cedula}
+                                                        {pendiente.cedula}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                                        {colegiado.fechaSolicitud}
+                                                        {new Date(pendiente.fechaSolicitud).toLocaleDateString('es-ES', {
+                                                            year: 'numeric',
+                                                            month: '2-digit',
+                                                            day: '2-digit'
+                                                        })}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${colegiado.documentosCompletos
+                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${pendiente.documentosCompletos
                                                             ? 'bg-green-100 text-green-800'
                                                             : 'bg-yellow-100 text-yellow-800'
                                                             }`}>
-                                                            {colegiado.documentosCompletos
+                                                            {pendiente.documentosCompletos
                                                                 ? <><CheckCircle size={12} /> Completos</>
                                                                 : <><XCircle size={12} /> Incompletos</>}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                                         <button
-                                                            onClick={() => verDetallePendiente(colegiado.id)}
+                                                            onClick={() => verDetallePendiente(pendiente.id)}
                                                             className="text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto"
                                                         >
                                                             Revisar
@@ -396,7 +666,7 @@ export default function ListaColegiados() {
                 </>
             )}
 
-            {/* Componente para registrar nuevo colegiado */}
+            {/* Modal para registrar nuevo colegiado */}
             {showRegistro && (
                 <RegistroColegiados
                     isAdmin={true}
@@ -405,5 +675,5 @@ export default function ListaColegiados() {
                 />
             )}
         </div>
-    )
+    );
 }

@@ -1,16 +1,31 @@
 "use client"
 
-import { AlertCircle, CheckCircle, ChevronLeft, CreditCard, Download, FileText, Search } from "lucide-react"
+import { 
+  AlertCircle, 
+  CheckCircle, 
+  CreditCard, 
+  Download, 
+  FileText, 
+  Search, 
+  X 
+} from "lucide-react"
 import { useEffect, useState } from "react"
-import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
+import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 
-export default function TablaPagos({ colegiadoId, onVolver }) {
-  // Get data from ListaColegiadosData store
-  const getPagos = ListaColegiadosData(state => state.getPagos)
-  const addPago = ListaColegiadosData(state => state.addPago)
-  const colegiado = ListaColegiadosData(state => state.getColegiado(colegiadoId))
+/**
+ * Componente para visualizar y gestionar los pagos de un colegiado
+ * @param {string} colegiadoId - ID del colegiado
+ */
+export default function TablaPagos({ colegiadoId }) {
+  // Obtener funciones del store centralizado
+  const {
+    getPagos,
+    addPago,
+    getColegiado,
+    updateColegiado
+  } = useDataListaColegiados()
 
-  // Local state
+  // Estados locales
   const [pagos, setPagos] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -21,18 +36,18 @@ export default function TablaPagos({ colegiadoId, onVolver }) {
     monto: "",
     metodoPago: "Transferencia bancaria"
   })
+  const [pagoRegistrado, setPagoRegistrado] = useState(false)
 
-  // Load payments from the centralized store
+  // Cargar pagos del colegiado
   useEffect(() => {
     const fetchPagos = async () => {
       try {
-        // Simulating a bit of loading time
-        await new Promise(resolve => setTimeout(resolve, 500))
-
-        // Get payments for this colegiado from ListaColegiadosData
+        setIsLoading(true)
+        
+        // Obtener pagos desde el store centralizado
         const pagosColegiado = getPagos(colegiadoId)
         setPagos(pagosColegiado)
-
+        
         setIsLoading(false)
       } catch (error) {
         console.error("Error al cargar los pagos:", error)
@@ -43,40 +58,56 @@ export default function TablaPagos({ colegiadoId, onVolver }) {
     fetchPagos()
   }, [colegiadoId, getPagos])
 
-  // Function to register a new payment
-  const handleRegistrarPago = () => {
+  // Función para registrar un nuevo pago
+  const handleRegistrarPago = async () => {
+    // Validación de campos requeridos
     if (!nuevoPago.concepto || !nuevoPago.referencia || !nuevoPago.monto) {
       alert("Por favor complete todos los campos requeridos")
       return
     }
 
-    const pagoParaRegistrar = {
-      ...nuevoPago,
-      fecha: new Date().toLocaleDateString(),
-      estado: "Pagado",
-      monto: parseFloat(nuevoPago.monto),
-      comprobante: false
+    try {
+      // Simular procesamiento
+      await new Promise(resolve => setTimeout(resolve, 800))
+
+      const pagoParaRegistrar = {
+        ...nuevoPago,
+        fecha: new Date().toLocaleDateString(),
+        estado: "Pagado",
+        monto: parseFloat(nuevoPago.monto),
+        comprobante: false
+      }
+
+      // Añadir pago al store centralizado
+      addPago(colegiadoId, pagoParaRegistrar)
+
+      // Refrescar la lista de pagos
+      setPagos(getPagos(colegiadoId))
+
+      // Verificar si el pago hace que el colegiado sea solvente
+      const colegiado = getColegiado(colegiadoId)
+      if (colegiado && !colegiado.solvente && nuevoPago.concepto.toLowerCase().includes('cuota')) {
+        // Actualizar estado de solvencia
+        updateColegiado(colegiadoId, { solvente: true })
+      }
+
+      // Mostrar notificación de éxito
+      setPagoRegistrado(true)
+      setTimeout(() => setPagoRegistrado(false), 3000)
+
+      // Resetear formulario
+      setNuevoPago({
+        concepto: "",
+        referencia: "",
+        monto: "",
+        metodoPago: "Transferencia bancaria"
+      })
+
+      // Cerrar modal
+      setShowRegistroPago(false)
+    } catch (error) {
+      console.error("Error al registrar pago:", error)
     }
-
-    // Add payment to the centralized store
-    addPago(colegiadoId, pagoParaRegistrar)
-
-    // Update local state
-    setPagos([...pagos, {
-      id: `${colegiadoId}-${pagos.length + 1}`,
-      ...pagoParaRegistrar
-    }])
-
-    // Reset form
-    setNuevoPago({
-      concepto: "",
-      referencia: "",
-      monto: "",
-      metodoPago: "Transferencia bancaria"
-    })
-
-    // Close form
-    setShowRegistroPago(false)
   }
 
   // Filtrar pagos según el término de búsqueda
@@ -84,10 +115,11 @@ export default function TablaPagos({ colegiadoId, onVolver }) {
     pago.concepto.toLowerCase().includes(searchTerm.toLowerCase()) ||
     pago.referencia.toLowerCase().includes(searchTerm.toLowerCase()) ||
     pago.fecha.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pago.estado.toLowerCase().includes(searchTerm.toLowerCase())
+    pago.estado.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pago.metodoPago.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Calcular el total pagado y pendiente
+  // Calcular totales
   const totalPagado = pagos
     .filter(pago => pago.estado === "Pagado")
     .reduce((suma, pago) => suma + pago.monto, 0)
@@ -98,6 +130,22 @@ export default function TablaPagos({ colegiadoId, onVolver }) {
 
   return (
     <div className="space-y-6">
+      {/* Notificación de éxito */}
+      {pagoRegistrado && (
+        <div className="bg-green-100 text-green-800 p-4 rounded-md flex items-start justify-between">
+          <div className="flex items-center">
+            <CheckCircle size={20} className="mr-2 flex-shrink-0" />
+            <span>El pago ha sido registrado correctamente.</span>
+          </div>
+          <button
+            onClick={() => setPagoRegistrado(false)}
+            className="text-green-700"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row md:justify-between md:items-center">
         <div>
           <h3 className="text-lg font-medium text-gray-900">Pagos y cuotas</h3>
@@ -217,8 +265,8 @@ export default function TablaPagos({ colegiadoId, onVolver }) {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pago.estado === 'Pagado'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
                             }`}>
                             {pago.estado}
                           </span>
@@ -226,11 +274,17 @@ export default function TablaPagos({ colegiadoId, onVolver }) {
                         <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                           <div className="flex justify-center space-x-2">
                             {pago.comprobante && (
-                              <button className="text-blue-600 hover:text-blue-800">
+                              <button
+                                className="text-blue-600 hover:text-blue-800"
+                                title="Descargar comprobante"
+                              >
                                 <Download size={18} />
                               </button>
                             )}
-                            <button className="text-purple-600 hover:text-purple-800">
+                            <button
+                              className="text-purple-600 hover:text-purple-800"
+                              title="Ver detalles"
+                            >
                               <FileText size={18} />
                             </button>
                           </div>
@@ -262,8 +316,10 @@ export default function TablaPagos({ colegiadoId, onVolver }) {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Colegiado</label>
-                <p className="text-gray-700 font-medium">{colegiado?.nombre}</p>
-                <p className="text-sm text-gray-500">{colegiado?.numeroRegistro} · {colegiado?.cedula}</p>
+                <p className="text-gray-700 font-medium">{getColegiado(colegiadoId)?.nombre}</p>
+                <p className="text-sm text-gray-500">
+                  {getColegiado(colegiadoId)?.numeroRegistro} · {getColegiado(colegiadoId)?.cedula}
+                </p>
               </div>
 
               <div>
@@ -349,19 +405,6 @@ export default function TablaPagos({ colegiadoId, onVolver }) {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Botón para volver */}
-      {onVolver && (
-        <div className="mt-6">
-          <button
-            onClick={onVolver}
-            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2"
-          >
-            <ChevronLeft size={18} />
-            <span>Volver a la lista</span>
-          </button>
         </div>
       )}
     </div>

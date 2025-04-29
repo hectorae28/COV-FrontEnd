@@ -4,16 +4,22 @@ import { useState, useEffect } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { Activity, Clock, ArrowUp, ArrowDown } from "lucide-react"
 
+/**
+ * Componente para mostrar estadísticas y gráficos de un colegiado
+ * @param {Object} colegiado - Datos del colegiado
+ */
 export default function EstadisticasUsuario({ colegiado }) {
+  // Estados
   const [datosAsistencia, setDatosAsistencia] = useState([])
   const [datosPagos, setDatosPagos] = useState([])
   const [estadisticasGenerales, setEstadisticasGenerales] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // Inicializar datos
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        // Simulamos la carga con un setTimeout
+        // Simulamos la carga con un retardo
         await new Promise(resolve => setTimeout(resolve, 1000))
         
         // Datos simulados para el gráfico de asistencia
@@ -45,7 +51,7 @@ export default function EstadisticasUsuario({ colegiado }) {
           },
           {
             titulo: "Eventos asistidos",
-            valor: "5",
+            valor: colegiado.estadisticas?.asistenciaEventos || "5",
             descripcion: "en los últimos 6 meses",
             tendencia: "up",
             color: "blue"
@@ -59,10 +65,10 @@ export default function EstadisticasUsuario({ colegiado }) {
           },
           {
             titulo: "Estado de pagos",
-            valor: "100%",
-            descripcion: "solvente",
-            tendencia: "up",
-            color: "green"
+            valor: colegiado.solvente ? "100%" : "Pendiente",
+            descripcion: colegiado.solvente ? "solvente" : "pagos por realizar",
+            tendencia: colegiado.solvente ? "up" : "down",
+            color: colegiado.solvente ? "green" : "red"
           }
         ])
         
@@ -74,7 +80,7 @@ export default function EstadisticasUsuario({ colegiado }) {
     }
     
     cargarDatos()
-  }, [colegiado?.id])
+  }, [colegiado])
 
   // Colores para el gráfico de pie
   const COLORS = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d']
@@ -154,7 +160,7 @@ export default function EstadisticasUsuario({ colegiado }) {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [`$${value}`, "Monto"]} />
+                    <Tooltip formatter={(value) => [`${value}`, "Monto"]} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -171,8 +177,8 @@ export default function EstadisticasUsuario({ colegiado }) {
               <div>
                 <h4 className="text-base font-medium text-gray-900 mb-1">Análisis de actividad</h4>
                 <p className="text-sm text-gray-500">
-                  {colegiado.nombre} muestra un nivel de participación {colegiado.estadisticas.asistenciaEventos > 3 ? 'por encima del promedio' : 'normal'} en eventos del COV. 
-                  En los últimos 6 meses, ha asistido a {colegiado.estadisticas.asistenciaEventos} eventos y ha realizado {colegiado.estadisticas.solicitudesMes} solicitudes.
+                  {colegiado.nombre} muestra un nivel de participación {colegiado.estadisticas?.asistenciaEventos > 3 ? 'por encima del promedio' : 'normal'} en eventos del COV. 
+                  En los últimos 6 meses, ha asistido a {colegiado.estadisticas?.asistenciaEventos || "5"} eventos y ha realizado {colegiado.estadisticas?.solicitudesMes || "2"} solicitudes.
                   {colegiado.solvente 
                     ? ' Mantiene un excelente historial de pagos y está al día con todas sus obligaciones.'
                     : ' Presenta algunas obligaciones pendientes de pago que deben ser regularizadas.'}
@@ -181,9 +187,10 @@ export default function EstadisticasUsuario({ colegiado }) {
                 <div className="mt-4 bg-blue-50 text-blue-800 p-3 rounded-md text-sm">
                   <p className="font-medium">Recomendaciones</p>
                   <ul className="mt-1 list-disc pl-5 space-y-1">
-                    <li>Invitar a participar en el próximo congreso nacional (Mayo 2024)</li>
+                    <li>Invitar a participar en el próximo congreso nacional (Mayo 2025)</li>
                     <li>Recordar la renovación de su carnet que vence en {colegiado.carnetVencimiento}</li>
                     {!colegiado.tituloEntregado && <li>Solicitar la entrega del título original en la sede del COV</li>}
+                    {!colegiado.solvente && <li>Regularizar estado de solvencia con el pago de cuotas pendientes</li>}
                   </ul>
                 </div>
               </div>

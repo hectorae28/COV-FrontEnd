@@ -1,17 +1,19 @@
 "use client"
 
-import { Award, Book, Calendar, ChevronLeft, Download, MapPin, Search, Users } from "lucide-react"
+import { Award, Book, Calendar, Download, MapPin, Search, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 
-export default function TablaInscripciones({ colegiadoId, onVolver }) {
-  const [datosAsistencia, setDatosAsistencia] = useState([])
-  const [datosPagos, setDatosPagos] = useState([])
-  const [estadisticasGenerales, setEstadisticasGenerales] = useState([])
+/**
+ * Componente para visualizar las inscripciones a cursos y eventos de un colegiado
+ * @param {string} colegiadoId - ID del colegiado
+ */
+export default function TablaInscripciones({ colegiadoId }) {
+  // Estados locales
   const [inscripciones, setInscripciones] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
 
-  // Simulación de carga de datos
+  // Cargar datos de inscripciones (datos simulados)
   useEffect(() => {
     const fetchInscripciones = async () => {
       try {
@@ -150,7 +152,7 @@ export default function TablaInscripciones({ colegiadoId, onVolver }) {
         </div>
       </div>
       
-      {/* Tabla de inscripciones */}
+      {/* Lista de inscripciones */}
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
@@ -235,19 +237,6 @@ export default function TablaInscripciones({ colegiadoId, onVolver }) {
             </div>
           )}
         </>
-      )}
-      
-      {/* Botón para volver */}
-      {onVolver && (
-        <div className="mt-6">
-          <button
-            onClick={onVolver}
-            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2"
-          >
-            <ChevronLeft size={18} />
-            <span>Volver a la lista</span>
-          </button>
-        </div>
       )}
     </div>
   )

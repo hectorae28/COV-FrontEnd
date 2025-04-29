@@ -1,9 +1,13 @@
-// ListaColegiadosData.js
+// DataListaColegiados.js
 import { create } from 'zustand'
 
-// Custom store using Zustand for state management
-const ListaColegiadosData = create((set, get) => ({
-    // Main data collections
+/**
+ * Store centralizado para la gestión de colegiados
+ * Maneja todos los datos y operaciones relacionadas con colegiados
+ * registrados y pendientes de aprobación
+ */
+const useDataListaColegiados = create((set, get) => ({
+    // Colecciones principales de datos
     colegiados: [
         {
             id: "1",
@@ -17,14 +21,14 @@ const ListaColegiadosData = create((set, get) => ({
             solvente: true,
             especialidad: "Ortodoncia",
 
-            // Detailed data for the colegiado
+            // Datos detallados del colegiado
             persona: {
                 nombre: "María",
                 segundo_nombre: "Alejandra",
                 primer_apellido: "González",
                 segundo_apellido: "Rodríguez",
                 genero: "F",
-                tipo_identificacion: "V",
+                nacionalidad: "V",
                 identificacion: "12345678",
                 correo: "maria.gonzalez@mail.com",
                 id_adicional: "RIF-12345678-9",
@@ -64,7 +68,7 @@ const ListaColegiadosData = create((set, get) => ({
             file_fondo_negro: "titulo_fondo_negro_maria_gonzalez.pdf",
             file_mpps: "registro_mpps_maria_gonzalez.pdf",
             carnetVigente: true,
-            carnetVencimiento: "12/04/2025",
+            carnetVencimiento: "12/01/2025",
             tituloEntregado: false,
             estadisticas: {
                 solicitudesMes: 2,
@@ -93,30 +97,6 @@ const ListaColegiadosData = create((set, get) => ({
                     estado: "Pagado",
                     metodoPago: "Transferencia bancaria",
                     comprobante: true
-                }
-            ],
-            inscripciones: [
-                {
-                    id: "1-1",
-                    nombre: "Congreso Nacional de Odontología 2024",
-                    tipo: "Congreso",
-                    fecha: "05/03/2024 - 07/03/2024",
-                    lugar: "Hotel Eurobuilding, Caracas",
-                    estado: "Completado",
-                    certificado: true,
-                    ponentes: "Varios especialistas nacionales e internacionales",
-                    creditos: 30
-                },
-                {
-                    id: "1-2",
-                    nombre: "Taller de actualización en materiales dentales",
-                    tipo: "Taller",
-                    fecha: "20/03/2024",
-                    lugar: "Sede COV, Caracas",
-                    estado: "Completado",
-                    certificado: true,
-                    ponentes: "Dra. María González",
-                    creditos: 8
                 }
             ],
             solicitudes: [
@@ -167,13 +147,6 @@ const ListaColegiadosData = create((set, get) => ({
                     descripcion: "Registro del Ministerio del Poder Popular para la Salud",
                     archivo: "registro_mpps_maria_gonzalez.pdf",
                     requerido: true,
-                },
-                {
-                    id: "comprobante_pago",
-                    nombre: "Comprobante de pago",
-                    descripcion: "Comprobante de pago de inscripción",
-                    archivo: "pago_maria_gonzalez.pdf",
-                    requerido: true,
                 }
             ],
         },
@@ -196,7 +169,7 @@ const ListaColegiadosData = create((set, get) => ({
                 primer_apellido: "Pérez",
                 segundo_apellido: "Martínez",
                 genero: "M",
-                tipo_identificacion: "V",
+                nacionalidad: "V",
                 identificacion: "23456789",
                 correo: "juan.perez@mail.com",
                 id_adicional: "RIF-23456789-0",
@@ -261,19 +234,6 @@ const ListaColegiadosData = create((set, get) => ({
                     comprobante: false
                 }
             ],
-            inscripciones: [
-                {
-                    id: "2-1",
-                    nombre: "Curso avanzado de endodoncia",
-                    tipo: "Curso",
-                    fecha: "10/11/2023 - 12/11/2023",
-                    lugar: "Centro Especializado de Odontología, Caracas",
-                    estado: "Completado",
-                    certificado: true,
-                    ponentes: "Dr. Luis Mendoza, Dra. Carmen Jiménez",
-                    creditos: 15
-                }
-            ],
             solicitudes: [
                 {
                     id: "2-1",
@@ -328,14 +288,14 @@ const ListaColegiadosData = create((set, get) => ({
             fechaSolicitud: "10/04/2024",
             documentosCompletos: true,
 
-            // Detailed data
+            // Datos detallados
             persona: {
                 nombre: "Carlos",
                 segundo_nombre: "José",
                 primer_apellido: "Ramírez",
                 segundo_apellido: "Pérez",
                 genero: "M",
-                tipo_identificacion: "V",
+                nacionalidad: "V",
                 identificacion: "34567890",
                 correo: "carlos.ramirez@mail.com",
                 id_adicional: "",
@@ -423,7 +383,7 @@ const ListaColegiadosData = create((set, get) => ({
                 primer_apellido: "López",
                 segundo_apellido: "García",
                 genero: "F",
-                tipo_identificacion: "V",
+                nacionalidad: "V",
                 identificacion: "45678901",
                 correo: "ana.lopez@mail.com",
                 id_adicional: "",
@@ -496,26 +456,19 @@ const ListaColegiadosData = create((set, get) => ({
         }
     ],
 
-    // Fetch functions
+    // Funciones para obtener datos específicos
     getColegiado: (id) => {
-        const colegiado = get().colegiados.find(col => col.id === id);
-        return colegiado || null;
+        return get().colegiados.find(col => col.id === id) || null;
     },
 
     getColegiadoPendiente: (id) => {
-        const pendiente = get().colegiadosPendientes.find(pend => pend.id === id);
-        return pendiente || null;
+        return get().colegiadosPendientes.find(pend => pend.id === id) || null;
     },
 
-    // Get specialized arrays for each tab
+    // Funciones para obtener colecciones específicas de cada colegiado
     getPagos: (colegiadoId) => {
         const colegiado = get().getColegiado(colegiadoId);
         return colegiado ? colegiado.pagos : [];
-    },
-
-    getInscripciones: (colegiadoId) => {
-        const colegiado = get().getColegiado(colegiadoId);
-        return colegiado ? colegiado.inscripciones : [];
     },
 
     getSolicitudes: (colegiadoId) => {
@@ -533,40 +486,35 @@ const ListaColegiadosData = create((set, get) => ({
         return pendiente ? pendiente.documentos : [];
     },
 
-    // Modify functions
+    // Funciones para añadir nuevas entidades
     addColegiado: (nuevoColegiado) => {
         set(state => ({
             colegiados: [...state.colegiados, {
                 ...nuevoColegiado,
-                pagos: [],
-                inscripciones: [],
-                solicitudes: [],
+                pagos: nuevoColegiado.pagos || [],
+                solicitudes: nuevoColegiado.solicitudes || [],
                 documentos: nuevoColegiado.documentos || []
             }]
         }));
+        return nuevoColegiado;
     },
 
     addColegiadoPendiente: (nuevoPendiente) => {
         set(state => ({
             colegiadosPendientes: [...state.colegiadosPendientes, nuevoPendiente]
         }));
+        return nuevoPendiente;
     },
 
-    removeColegiadoPendiente: (id) => {
-        set(state => ({
-            colegiadosPendientes: state.colegiadosPendientes.filter(
-                pendiente => pendiente.id !== id
-            )
-        }));
-    },
-
-    // Update functions
+    // Funciones para actualizar entidades
     updateColegiado: (id, updatedData) => {
         set(state => ({
             colegiados: state.colegiados.map(colegiado =>
                 colegiado.id === id ? { ...colegiado, ...updatedData } : colegiado
             )
         }));
+
+        return get().getColegiado(id);
     },
 
     updateColegiadoPendiente: (id, updatedData) => {
@@ -575,17 +523,29 @@ const ListaColegiadosData = create((set, get) => ({
                 pendiente.id === id ? { ...pendiente, ...updatedData } : pendiente
             )
         }));
+
+        return get().getColegiadoPendiente(id);
     },
 
-    // Add specific data to a colegiado
+    // Funciones para eliminar entidades
+    removeColegiadoPendiente: (id) => {
+        set(state => ({
+            colegiadosPendientes: state.colegiadosPendientes.filter(
+                pendiente => pendiente.id !== id
+            )
+        }));
+    },
+
+    // Funciones para añadir elementos a las colecciones de un colegiado
     addPago: (colegiadoId, nuevoPago) => {
         set(state => ({
             colegiados: state.colegiados.map(colegiado => {
                 if (colegiado.id === colegiadoId) {
+                    const pagoId = `${colegiadoId}-${colegiado.pagos.length + 1}`;
                     return {
                         ...colegiado,
                         pagos: [...colegiado.pagos, {
-                            id: `${colegiadoId}-${colegiado.pagos.length + 1}`,
+                            id: pagoId,
                             ...nuevoPago
                         }]
                     };
@@ -593,33 +553,28 @@ const ListaColegiadosData = create((set, get) => ({
                 return colegiado;
             })
         }));
-    },
 
-    addInscripcion: (colegiadoId, nuevaInscripcion) => {
-        set(state => ({
-            colegiados: state.colegiados.map(colegiado => {
-                if (colegiado.id === colegiadoId) {
-                    return {
-                        ...colegiado,
-                        inscripciones: [...colegiado.inscripciones, {
-                            id: `${colegiadoId}-${colegiado.inscripciones.length + 1}`,
-                            ...nuevaInscripcion
-                        }]
-                    };
-                }
-                return colegiado;
-            })
-        }));
+        // Actualizar estado de solvencia si es necesario
+        const colegiado = get().getColegiado(colegiadoId);
+        if (colegiado && !colegiado.solvente &&
+            nuevoPago.concepto &&
+            nuevoPago.concepto.toLowerCase().includes('cuota') &&
+            nuevoPago.estado === 'Pagado') {
+            get().updateColegiado(colegiadoId, { solvente: true });
+        }
+
+        return get().getPagos(colegiadoId);
     },
 
     addSolicitud: (colegiadoId, nuevaSolicitud) => {
         set(state => ({
             colegiados: state.colegiados.map(colegiado => {
                 if (colegiado.id === colegiadoId) {
+                    const solicitudId = `${colegiadoId}-${colegiado.solicitudes.length + 1}`;
                     return {
                         ...colegiado,
                         solicitudes: [...colegiado.solicitudes, {
-                            id: `${colegiadoId}-${colegiado.solicitudes.length + 1}`,
+                            id: solicitudId,
                             ...nuevaSolicitud
                         }]
                     };
@@ -627,30 +582,32 @@ const ListaColegiadosData = create((set, get) => ({
                 return colegiado;
             })
         }));
+
+        return get().getSolicitudes(colegiadoId);
     },
 
-    // Handle registration approval
+    // Funciones para gestionar el registro de colegiados
     approveRegistration: (pendienteId, datosRegistro) => {
         const pendiente = get().getColegiadoPendiente(pendienteId);
+        if (!pendiente) return null;
 
-        if (!pendiente) return false;
-
-        // Create a new colegiado from pendiente data
+        // Crear un nombre completo con los datos disponibles
         const nombreCompleto = `${pendiente.persona.nombre} ${pendiente.persona.segundo_nombre || ''} ${pendiente.persona.primer_apellido} ${pendiente.persona.segundo_apellido || ''}`.trim();
 
+        // Crear el nuevo colegiado a partir de los datos del pendiente
         const nuevoColegiado = {
             id: `cov-${Date.now()}`,
             nombre: nombreCompleto,
-            cedula: `${pendiente.persona.tipo_identificacion}-${pendiente.persona.identificacion}`,
+            cedula: `${pendiente.persona.nacionalidad}-${pendiente.persona.identificacion}`,
             numeroRegistro: datosRegistro.num_cov || `ODV-${Math.floor(1000 + Math.random() * 9000)}`,
             email: pendiente.persona.correo,
             telefono: pendiente.persona.telefono_movil,
             fechaRegistro: new Date().toLocaleDateString(),
             estado: "Activo",
             solvente: true,
-            especialidad: datosRegistro.tipo_profesion || "Odontología general",
+            especialidad: datosRegistro.tipo_profesion || "Odontología General",
 
-            // Transfer detailed data
+            // Datos detallados
             persona: pendiente.persona,
             instituto_bachillerato: pendiente.instituto_bachillerato,
             universidad: pendiente.universidad,
@@ -659,26 +616,25 @@ const ListaColegiadosData = create((set, get) => ({
             fecha_registro_principal: pendiente.fecha_registro_principal,
             num_mpps: pendiente.num_mpps,
             fecha_mpps: pendiente.fecha_mpps,
-            instituciones: pendiente.instituciones,
+            instituciones: pendiente.instituciones || [],
 
-            // Files
+            // Archivos
             file_ci: pendiente.file_ci,
             file_rif: pendiente.file_rif,
             file_fondo_negro: pendiente.file_fondo_negro,
             file_mpps: pendiente.file_mpps,
 
-            // Default values
+            // Valores por defecto
             carnetVigente: true,
             carnetVencimiento: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toLocaleDateString(),
             tituloEntregado: false,
 
-            // Empty arrays for collections
+            // Colecciones
             pagos: [],
-            inscripciones: [],
             solicitudes: [],
             documentos: pendiente.documentos || [],
 
-            // Initial statistics
+            // Estadísticas iniciales
             estadisticas: {
                 solicitudesMes: 0,
                 inscripcionesMes: 0,
@@ -688,29 +644,17 @@ const ListaColegiadosData = create((set, get) => ({
             }
         };
 
-        // Add the new colegiado
+        // Añadir el colegiado y eliminar el pendiente
         get().addColegiado(nuevoColegiado);
-
-        // Remove the pending registration
         get().removeColegiadoPendiente(pendienteId);
 
         return nuevoColegiado;
     },
 
-    // Mark title as delivered
+    // Funciones específicas
     marcarTituloEntregado: (colegiadoId, entregado = true) => {
-        set(state => ({
-            colegiados: state.colegiados.map(colegiado => {
-                if (colegiado.id === colegiadoId) {
-                    return {
-                        ...colegiado,
-                        tituloEntregado: entregado
-                    };
-                }
-                return colegiado;
-            })
-        }));
+        return get().updateColegiado(colegiadoId, { tituloEntregado: entregado });
     }
 }));
 
-export default ListaColegiadosData;
+export default useDataListaColegiados;

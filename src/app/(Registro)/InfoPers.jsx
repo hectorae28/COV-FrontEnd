@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 export default function InfoPersonal({ formData, onInputChange, validationErrors }) {
   const [age, setAge] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
+  const [isAdult, setIsAdult] = useState(true); // Nueva variable para validar mayoría de edad
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     onInputChange({ [name]: value });
-
     // Special handling for birth date to calculate age
     if (name === "birthDate") {
       calculateAge(value);
@@ -18,27 +18,34 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
   const calculateAge = (birthDate) => {
     if (!birthDate) {
       setAge("");
+      setIsAdult(true); // Resetear la validación si no hay fecha
       return;
     }
-
     const today = new Date();
     const birthDateObj = new Date(birthDate);
     let calculatedAge = today.getFullYear() - birthDateObj.getFullYear();
     const monthDifference = today.getMonth() - birthDateObj.getMonth();
-
     if (
       monthDifference < 0 ||
       (monthDifference === 0 && today.getDate() < birthDateObj.getDate())
     ) {
       calculatedAge--;
     }
-
-    onInputChange({ age: calculatedAge.toString() });
+    
+    // Verificar si es mayor de edad
+    const isUserAdult = calculatedAge >= 18;
+    setIsAdult(isUserAdult);
+    
+    onInputChange({ 
+      age: calculatedAge.toString(),
+      // Si no es adulto, consideramos que el campo birthDate no es válido
+      birthDate: isUserAdult ? birthDate : "" 
+    });
+    
     setAge(calculatedAge.toString());
   };
 
-  // Validate form when formData changes - but don't call onInputChange here
-  // This is what was creating the infinite loop
+  // Validate form when formData changes
   useEffect(() => {
     const requiredFields = [
       "nationality",
@@ -51,12 +58,8 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       "gender",
       "maritalStatus"
     ];
-
     const isValid = requiredFields.every(field => formData[field] && formData[field].trim() !== "");
     setIsFormValid(isValid);
-
-    // REMOVE THIS LINE - it was causing the infinite loop:
-    // onInputChange({ isPersonalInfoValid: isValid });
   }, [formData]);
 
   // Checks if a field is empty to display the required message
@@ -106,25 +109,30 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-
         {/* Identity Card */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Número de Identificación
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="flex items-center">
+          <div className="flex items-center relative">
             {/* Select for V or E */}
             <select
               name="idType"
               value={formData.idType}
               onChange={handleChange}
-              className="h-full px-4 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700"
-              style={{ height: "48px" }} // Asegura que el select tenga la misma altura
+              className="h-full px-4 pr-10 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700 appearance-none"
+              style={{ height: "48px" }}
             >
               <option value="V">V</option>
               <option value="E">E</option>
             </select>
+            {/* Flecha personalizada */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-10">
+              <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path>
+              </svg>
+            </div>
             {/* Input for identity card */}
             <input
               type="text"
@@ -137,13 +145,14 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               }}
               className="w-full px-4 py-3 border border-gray-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
               placeholder="Ingrese su número de identificación"
-              style={{ height: "48px" }} // Asegura que el input tenga la misma altura
+              style={{ height: "48px" }}
             />
           </div>
-
+          {isFieldEmpty("identityCard") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* First Name */}
         <div>
@@ -164,7 +173,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-
         {/* Second Name */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -185,7 +193,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           )}
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* First Last Name */}
         <div>
@@ -206,7 +213,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-
         {/* Second Last Name */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -227,14 +233,14 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           )}
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Birth Date */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Fecha de Nacimiento
+            
+            {formData.age && formData.age > 0 && ` (Mayor de Edad)`}
             <span className="text-red-500 ml-1">*</span>
-            {formData.age && formData.age > 0 && ` (${formData.age} años)`}
           </label>
           <div className="relative">
             <input
@@ -242,15 +248,20 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               name="birthDate"
               value={formData.birthDate}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("birthDate") ? "border-gray-200" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
+              className={`w-full px-4 py-3 border ${
+                !isAdult && formData.birthDate ? "border-red-500" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
+              // Establecer fecha máxima para 18 años atrás
+              max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
             />
           </div>
           {isFieldEmpty("birthDate") && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
+          {!isAdult && formData.birthDate && (
+            <p className="mt-1 text-xs text-red-500">Debe ser mayor de edad (18 años o más)</p>
+          )}
         </div>
-
         {/* Gender */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -287,7 +298,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           )}
         </div>
       </div>
-
       {/* Marital Status as dropdown */}
       <div>
         <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -300,30 +310,31 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             value={formData.maritalStatus}
             onChange={handleChange}
             className={`w-full px-4 py-3 border ${isFieldEmpty("maritalStatus") ? "border-gray-200" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-          >
-            <option value="" disabled>
-              Seleccionar Estado Civil
-            </option>
-            <option value="soltero">Soltero</option>
-            <option value="casado">Casado</option>
-            <option value="divorciado">Divorciado</option>
-            <option value="viudo">Viudo</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <svg
-              className="fill-current h-4 w-4"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
-              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-            </svg>
+              <option value="" disabled>
+                Seleccionar Estado Civil
+              </option>
+              <option value="soltero">Soltero</option>
+              <option value="casado">Casado</option>
+              <option value="divorciado">Divorciado</option>
+              <option value="viudo">Viudo</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg
+                className="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
           </div>
+          {isFieldEmpty("maritalStatus") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
-        {isFieldEmpty("maritalStatus") && (
-          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-        )}
-      </div>
-    </motion.div>
-  );
-}
+      </motion.div>
+    );
+  }
+  

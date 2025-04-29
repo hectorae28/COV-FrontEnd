@@ -1,14 +1,15 @@
 "use client"
 
-import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 import { motion } from "framer-motion"
 import {
   AlertCircle,
-  Award, Briefcase,
+  Award,
+  Briefcase,
   Calendar,
   CheckCircle,
   ChevronLeft,
-  Clock, Download,
+  Clock,
+  Download,
   Eye,
   FileText,
   Mail,
@@ -19,18 +20,25 @@ import {
   XCircle
 } from "lucide-react"
 import { useEffect, useState } from "react"
+import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 
+/**
+ * Componente para visualizar y gestionar las solicitudes pendientes de aprobación
+ * Permite revisar datos, documentos y aprobar o rechazar solicitudes
+ */
 export default function DetallePendiente({ params, onVolver }) {
   // Obtenemos el ID desde los parámetros de la URL
   const pendienteId = params?.id || "p1"
 
-  // Get data from Zustand store 
-  const pendiente = ListaColegiadosData(state => state.getColegiadoPendiente(pendienteId))
-  const updateColegiadoPendiente = ListaColegiadosData(state => state.updateColegiadoPendiente)
-  const documentos = ListaColegiadosData(state => pendiente ? pendiente.documentos : [])
-  const approveRegistration = ListaColegiadosData(state => state.approveRegistration)
+  // Obtenemos funciones del store centralizado
+  const {
+    getColegiadoPendiente,
+    updateColegiadoPendiente,
+    approveRegistration
+  } = useDataListaColegiados()
 
-  // Local UI states
+  // Estados locales
+  const [pendiente, setPendiente] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
   const [mostrarRechazo, setMostrarRechazo] = useState(false)
@@ -38,202 +46,132 @@ export default function DetallePendiente({ params, onVolver }) {
   const [confirmacionExitosa, setConfirmacionExitosa] = useState(false)
   const [rechazoExitoso, setRechazoExitoso] = useState(false)
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null)
-  const [mostrarConfirmacionEliminar, setMostrarConfirmacionEliminar] = useState(false)
-  const [documentoAEliminar, setDocumentoAEliminar] = useState(null)
   const [documentosCompletos, setDocumentosCompletos] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [documentosRequeridos, setDocumentosRequeridos] = useState([])
 
+  // Estados para datos de registro
   const [datosRegistro, setDatosRegistro] = useState({
     libro: "",
     pagina: "",
     tipo_profesion: "",
     num_cov: ""
-  });
-  const [pasoModal, setPasoModal] = useState(1);
+  })
+  const [pasoModal, setPasoModal] = useState(1)
 
-  // Initialize and check data
+  // Cargar datos del pendiente
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Simulate loading with a delay
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        setIsLoading(true)
 
-        // Datos de ejemplo basados en la nueva estructura
-        setPendiente({
-          persona: {
-            nombre: "Carlos",
-            segundo_nombre: "José",
-            primer_apellido: "Ramírez",
-            segundo_apellido: "Pérez",
-            genero: "M",
-            nacionalidad: "V",
-            identificacion: "34567890",
-            correo: "carlos.ramirez@mail.com",
-            id_adicional: "",
-            telefono_movil: "+58 416-7777777",
-            telefono_de_habitacion: "+58 212-5555555",
-            fecha_de_nacimiento: "1988-05-12",
-            estado_civil: "Soltero",
-            direccion: {
-              referencia: "Av. Francisco de Miranda, Edificio Torre Europa, Piso 8",
-              estado: "Caracas"
-            },
-            user: null
-          },
-          instituto_bachillerato: "Liceo Andrés Bello",
-          universidad: "Universidad Central de Venezuela",
-          fecha_egreso_universidad: "2015-07-15",
-          num_registro_principal: "12345",
-          fecha_registro_principal: "2015-08-20",
-          num_mpps: "MP-789",
-          fecha_mpps: "2015-09-10",
-          instituciones: [
-            {
-              nombre: "Hospital Universitario de Caracas",
-              cargo: "Odontólogo",
-              direccion: "Av. Los Ilustres, Ciudad Universitaria",
-              telefono: "+58 212-6060606",
-            }
-          ],
-          file_ci: "cedula_carlos_ramirez.jpg",
-          file_rif: "rif_carlos_ramirez.pdf",
-          file_fondo_negro: "titulo_fondo_negro_carlos_ramirez.pdf",
-          file_mpps: "registro_mpps_carlos_ramirez.pdf",
-          observaciones: "Solicita inscripción en el Colegio de Odontólogos de Venezuela",
-          fecha_solicitud: "2024-04-10" // Fecha de solicitud
-        })
+        // Obtener datos del pendiente desde el store
+        const pendienteData = getColegiadoPendiente(pendienteId)
 
-        const nuevosDocumentosRequeridos = [
-          {
-            id: "file_ci",
-            nombre: "Cédula de identidad",
-            descripcion: "Copia escaneada por ambos lados",
-            archivo: "cedula_carlos_ramirez.jpg",
-            requerido: true,
-          },
-          {
-            id: "file_rif",
-            nombre: "RIF",
-            descripcion: "Registro de Información Fiscal",
-            archivo: "rif_carlos_ramirez.pdf",
-            requerido: true,
-          },
-          {
-            id: "file_fondo_negro",
-            nombre: "Título universitario fondo negro",
-            descripcion: "Título de Odontólogo con fondo negro",
-            archivo: "titulo_fondo_negro_carlos_ramirez.pdf",
-            requerido: true,
-          },
-          {
-            id: "file_mpps",
-            nombre: "Registro MPPS",
-            descripcion: "Registro del Ministerio del Poder Popular para la Salud",
-            archivo: "registro_mpps_carlos_ramirez.pdf",
-            requerido: true,
-          },
-          {
-            id: "comprobante_pago",
-            nombre: "Comprobante de pago",
-            descripcion: "Comprobante de pago de inscripción",
-            archivo: "pago_carlos_ramirez.pdf",
-            requerido: true,
-          },
-        ];
+        if (pendienteData) {
+          setPendiente(pendienteData)
 
-        // Establecer los documentos requeridos
-        setDocumentosRequeridos(nuevosDocumentosRequeridos);
+          // Verificar si los documentos están completos
+          if (pendienteData.documentos) {
+            setDocumentosRequeridos(pendienteData.documentos)
+            setDocumentosCompletos(verificarDocumentosCompletos(pendienteData.documentos))
+          }
+        }
 
-        // Verificar si los documentos están completos
-        setDocumentosCompletos(verificarDocumentosCompletos(nuevosDocumentosRequeridos));
-
-        setIsLoading(false);
+        setIsLoading(false)
       } catch (error) {
-        console.error("Error loading pending data:", error)
+        console.error("Error al cargar datos del pendiente:", error)
         setIsLoading(false)
       }
     }
 
     loadData()
-  }, [pendiente, documentos])
+  }, [pendienteId, getColegiadoPendiente])
 
-  // Function to calculate initials
+  // Función para obtener iniciales del nombre
   const obtenerIniciales = () => {
-    if (!pendiente) return "CN";
+    if (!pendiente) return "CN"
 
-    const { nombre, primer_apellido } = pendiente.persona;
-    return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`;
+    const { nombre, primer_apellido } = pendiente.persona
+    return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`
   }
 
+  // Funciones para gestión de documentos
   const handleVerDocumento = (documento) => {
-    setDocumentoSeleccionado(documento);
+    setDocumentoSeleccionado(documento)
   }
 
   const handleCerrarVistaDocumento = () => {
-    setDocumentoSeleccionado(null);
+    setDocumentoSeleccionado(null)
   }
 
   const handleReemplazarDocumento = (documento) => {
-    // Here you would implement the document replacement logic
-    alert(`Funcionalidad para reemplazar el documento: ${documento.nombre}`);
+    // Implementar lógica para reemplazar documento
+    alert(`Funcionalidad para reemplazar el documento: ${documento.nombre}`)
   }
 
-  const handleEliminarDocumento = (documento) => {
-    setDocumentoAEliminar(documento);
-    setMostrarConfirmacionEliminar(true);
+  // Función para verificar si todos los documentos requeridos están completos
+  const verificarDocumentosCompletos = (documentos) => {
+    if (!Array.isArray(documentos)) {
+      console.error("Error: Los documentos no son un array:", documentos)
+      return false
+    }
+
+    const documentosFaltantes = documentos.filter(
+      (doc) => doc.requerido && !doc.archivo
+    )
+    return documentosFaltantes.length === 0
   }
 
-  const confirmarEliminarDocumento = () => {
-    if (!documentoAEliminar) return;
-
-    // Create updated documents array without the document to be deleted
-    const nuevosDocumentos = documentos.filter(
-      (doc) => doc.id !== documentoAEliminar.id
-    );
-
-    // Update the pendiente in the store
-    updateColegiadoPendiente(pendienteId, {
-      documentos: nuevosDocumentos
-    });
-
-    // Update local state for document completeness
-    setDocumentosCompletos(verificarDocumentosCompletos(nuevosDocumentos));
-
-    // Close confirmation modal
-    setMostrarConfirmacionEliminar(false);
-    setDocumentoAEliminar(null);
+  // Funciones para el formulario de registro
+  const handleDatosRegistroChange = (e) => {
+    const { name, value } = e.target
+    setDatosRegistro(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
-  const handleSubirDocumento = () => {
-    // Implement upload document functionality
-    alert("Funcionalidad para subir documentos")
+  const avanzarPasoModal = () => {
+    // Validar campos del primer paso
+    if (!datosRegistro.libro || !datosRegistro.pagina || !datosRegistro.tipo_profesion || !datosRegistro.num_cov) {
+      alert("Por favor complete todos los campos requeridos para continuar")
+      return
+    }
+
+    setPasoModal(2)
   }
 
+  const retrocederPasoModal = () => {
+    setPasoModal(1)
+  }
+
+  // Función para aprobar solicitud
   const handleAprobarSolicitud = async () => {
     try {
-      if (isSubmitting) return;
-      setIsSubmitting(true);
+      if (isSubmitting) return
+      setIsSubmitting(true)
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Llamar a la función de aprobación del store
+      const colegiadoAprobado = approveRegistration(pendienteId, datosRegistro)
 
-      // Use the approveRegistration function from the store
-      const colegiadoAprobado = approveRegistration(pendienteId, datosRegistro);
+      // Mostrar confirmación
+      setConfirmacionExitosa(true)
+      setMostrarConfirmacion(false)
 
-      // Show success confirmation
-      setConfirmacionExitosa(true);
-      setMostrarConfirmacion(false);
-
-      // Return to the list after a delay, passing the approved member
+      // Volver a la lista después de un tiempo
       setTimeout(() => {
-        onVolver(colegiadoAprobado);
-      }, 2000);
+        if (onVolver) {
+          onVolver(colegiadoAprobado)
+        }
+      }, 2000)
     } catch (error) {
-      console.error("Error approving request:", error);
-      setIsSubmitting(false);
+      console.error("Error al aprobar solicitud:", error)
+      setIsSubmitting(false)
     }
   }
 
+  // Función para rechazar solicitud
   const handleRechazarSolicitud = async () => {
     try {
       if (!motivoRechazo.trim()) {
@@ -241,50 +179,25 @@ export default function DetallePendiente({ params, onVolver }) {
         return
       }
 
-      // Simulate API call
+      // Simular proceso de rechazo
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Show rejection success message
+      // Mostrar confirmación de rechazo
       setRechazoExitoso(true)
       setMostrarRechazo(false)
 
-      // Return to list after a delay
+      // Volver a la lista después de un tiempo
       setTimeout(() => {
-        onVolver()
+        if (onVolver) {
+          onVolver()
+        }
       }, 3000)
     } catch (error) {
-      console.error("Error rejecting request:", error)
+      console.error("Error al rechazar solicitud:", error)
     }
   }
 
-  const verificarDocumentosCompletos = (documentos) => {
-    if (!Array.isArray(documentos)) {
-      console.error("Error: Los documentos no son un array:", documentos);
-      return false;
-    }
-
-    const documentosFaltantes = documentos.filter(
-      (doc) => doc.requerido && !doc.archivo
-    );
-    return documentosFaltantes.length === 0;
-  }
-
-  const handleDatosRegistroChange = (e) => {
-    const { name, value } = e.target;
-    setDatosRegistro(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  }
-
-  const avanzarPasoModal = () => {
-    setPasoModal(2);
-  }
-
-  const retrocederPasoModal = () => {
-    setPasoModal(1);
-  }
-
+  // Estados de carga y error
   if (isLoading) {
     return (
       <div className="w-full px-4 md:px-10 py-10 md:py-12 flex justify-center items-center min-h-[70vh]">
@@ -310,9 +223,9 @@ export default function DetallePendiente({ params, onVolver }) {
     )
   }
 
-  // Format the name for display
-  const nombreCompleto = `${pendiente.persona.nombre} ${pendiente.persona.segundo_nombre || ''} ${pendiente.persona.primer_apellido} ${pendiente.persona.segundo_apellido || ''}`.trim();
-  const fechaSolicitud = pendiente.fechaSolicitud ? new Date(pendiente.fechaSolicitud).toLocaleDateString('es-ES') : "No especificada";
+  // Formato del nombre para mostrar
+  const nombreCompleto = `${pendiente.persona.nombre} ${pendiente.persona.segundo_nombre || ''} ${pendiente.persona.primer_apellido} ${pendiente.persona.segundo_apellido || ''}`.trim()
+  const fechaSolicitud = pendiente.fechaSolicitud || "No especificada"
 
   return (
     <div className="w-full px-4 md:px-10 py-10 md:py-28 bg-gray-50">
@@ -327,7 +240,7 @@ export default function DetallePendiente({ params, onVolver }) {
         </button>
       </div>
 
-      {/* Success notifications */}
+      {/* Notificaciones de éxito */}
       {confirmacionExitosa && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -366,117 +279,117 @@ export default function DetallePendiente({ params, onVolver }) {
         </motion.div>
       )}
 
-      {/* Header with basic information */}
+      {/* Header con información básica */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
       >
-        <div className="flex flex-col md:flex-row">
-          <div className="md:w-1/5 flex justify-center items-center mb-8 md:mb-0">
-            {/* Initials instead of profile photo */}
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg shadow-black/40 bg-gradient-to-br from-[#C40180] to-[#7D0053] flex items-center justify-center">
-              <span className="text-4xl font-bold text-white">
-                {obtenerIniciales()}
-              </span>
+          <div className="flex flex-col md:flex-row">
+            <div className="md:w-1/5 flex justify-center items-center mb-8 md:mb-0">
+              {/* Iniciales en lugar de foto de perfil */}
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg shadow-black/40 bg-gradient-to-br from-[#C40180] to-[#7D0053] flex items-center justify-center">
+                <span className="text-4xl font-bold text-white">
+                  {obtenerIniciales()}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="md:w-3/4">
-            <div className="flex flex-col md:flex-row md:justify-between mb-4">
-              <div className="md:ml-2">
-                <h1 className="text-2xl font-bold text-gray-800 mb-1">{nombreCompleto}</h1>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Clock size={14} className="mr-1" />
-                  <span>Solicitud pendiente desde {fechaSolicitud}</span>
+            <div className="md:w-3/4">
+              <div className="flex flex-col md:flex-row md:justify-between mb-4">
+                <div className="md:ml-2">
+                  <h1 className="text-2xl font-bold text-gray-800 mb-1">{nombreCompleto}</h1>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Clock size={14} className="mr-1" />
+                    <span>Solicitud pendiente desde {fechaSolicitud}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
+                  {/* Estados de la solicitud */}
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                    <Clock size={12} className="mr-1" />
+                    Pendiente de aprobación
+                  </span>
+
+                  {/* Estado de documentos */}
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${documentosCompletos
+                        ? "bg-green-100 text-green-800 border border-green-200"
+                        : "bg-red-100 text-red-800 border border-red-200"
+                      }`}
+                  >
+                    {documentosCompletos ? (
+                      <>
+                        <CheckCircle size={12} className="mr-1" />
+                        Documentación completa
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle size={12} className="mr-1" />
+                        Documentación incompleta
+                      </>
+                    )}
+                  </span>
                 </div>
               </div>
 
-              <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
-                {/* Pending approval status */}
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
-                  <Clock size={12} className="mr-1" />
-                  Pendiente de aprobación
-                </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6 mt-4">
+                <div className="flex items-center bg-gray-50 p-2 rounded-md">
+                  <Mail className="text-[#C40180] h-5 w-5 mr-2" />
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Correo electrónico</p>
+                    <p className="text-sm text-gray-700">{pendiente.persona.correo}</p>
+                  </div>
+                </div>
 
-                {/* Document status */}
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${documentosCompletos
-                    ? "bg-green-100 text-green-800 border border-green-200"
-                    : "bg-red-100 text-red-800 border border-red-200"
-                    }`}
+                <div className="flex items-center bg-gray-50 p-2 rounded-md">
+                  <Phone className="text-[#C40180] h-5 w-5 mr-2" />
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Teléfono</p>
+                    <p className="text-sm text-gray-700">{pendiente.persona.telefono_movil}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center bg-gray-50 p-2 rounded-md">
+                  <User className="text-[#C40180] h-5 w-5 mr-2" />
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Identificación</p>
+                    <p className="text-sm text-gray-700">{pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center bg-gray-50 p-2 rounded-md">
+                  <Calendar className="text-[#C40180] h-5 w-5 mr-2" />
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Fecha de solicitud</p>
+                    <p className="text-sm text-gray-700">{fechaSolicitud}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setMostrarConfirmacion(true)}
+                  className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-sm font-medium"
                 >
-                  {documentosCompletos ? (
-                    <>
-                      <CheckCircle size={12} className="mr-1" />
-                      Documentación completa
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle size={12} className="mr-1" />
-                      Documentación incompleta
-                    </>
-                  )}
-                </span>
+                  <CheckCircle size={18} />
+                  <span>Aprobar solicitud</span>
+                </button>
+
+                <button
+                  onClick={() => setMostrarRechazo(true)}
+                  className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-sm font-medium"
+                >
+                  <XCircle size={18} />
+                  <span>Rechazar solicitud</span>
+                </button>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6 mt-4">
-              <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                <Mail className="text-[#C40180] h-5 w-5 mr-2" />
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Correo electrónico</p>
-                  <p className="text-sm text-gray-700">{pendiente.persona.correo}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                <Phone className="text-[#C40180] h-5 w-5 mr-2" />
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Teléfono</p>
-                  <p className="text-sm text-gray-700">{pendiente.persona.telefono_movil}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                <User className="text-[#C40180] h-5 w-5 mr-2" />
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Identificación</p>
-                  <p className="text-sm text-gray-700">{pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                <Calendar className="text-[#C40180] h-5 w-5 mr-2" />
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Fecha de solicitud</p>
-                  <p className="text-sm text-gray-700">{fechaSolicitud}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => setMostrarConfirmacion(true)}
-                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-sm font-medium"
-              >
-                <CheckCircle size={18} />
-                <span>Aprobar solicitud</span>
-              </button>
-
-              <button
-                onClick={() => setMostrarRechazo(true)}
-                className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-sm font-medium"
-              >
-                <XCircle size={18} />
-                <span>Rechazar solicitud</span>
-              </button>
             </div>
           </div>
-        </div>
       </motion.div>
 
-      {/* Personal Information */}
+      {/* Información Personal */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -489,7 +402,7 @@ export default function DetallePendiente({ params, onVolver }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* First column: name, ID, birth date */}
+          {/* Primera columna: nombre, cédula, fecha de nacimiento */}
           <div className="space-y-4">
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre completo</p>
@@ -507,7 +420,7 @@ export default function DetallePendiente({ params, onVolver }) {
             </div>
           </div>
 
-          {/* Second column: email, mobile phone, home phone */}
+          {/* Segunda columna: correo, teléfono móvil, teléfono de casa */}
           <div className="space-y-4">
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
@@ -525,7 +438,7 @@ export default function DetallePendiente({ params, onVolver }) {
             </div>
           </div>
 
-          {/* Third column: marital status, gender, address */}
+          {/* Tercera columna: estado civil, género, dirección */}
           <div className="space-y-4">
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
@@ -545,9 +458,9 @@ export default function DetallePendiente({ params, onVolver }) {
         </div>
       </motion.div>
 
-      {/* Academic and Professional Information */}
+      {/* Información Académica y Profesional */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* Academic and professional information (takes 2/3 of the space) */}
+        {/* Información académica y profesional (2/3 del espacio) */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -560,7 +473,7 @@ export default function DetallePendiente({ params, onVolver }) {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* First column */}
+            {/* Primera columna */}
             <div className="space-y-4">
               <div className="bg-gray-50 p-3 rounded-md">
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Instituto de bachillerato</p>
@@ -583,7 +496,7 @@ export default function DetallePendiente({ params, onVolver }) {
               </div>
             </div>
 
-            {/* Second column */}
+            {/* Segunda columna */}
             <div className="space-y-4">
               <div className="bg-gray-50 p-3 rounded-md">
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro principal</p>
@@ -608,7 +521,7 @@ export default function DetallePendiente({ params, onVolver }) {
           </div>
         </motion.div>
 
-        {/* Institutions where they work (takes 1/3 of the space) */}
+        {/* Instituciones donde trabaja (1/3 del espacio) */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -656,7 +569,7 @@ export default function DetallePendiente({ params, onVolver }) {
         </motion.div>
       </div>
 
-      {/* Documents Section */}
+      {/* Sección de Documentos */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -674,7 +587,7 @@ export default function DetallePendiente({ params, onVolver }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {documentos && documentos.map((documento) => (
+          {documentosRequeridos && documentosRequeridos.map((documento) => (
             <div
               key={documento.id}
               className="border rounded-lg border-gray-200 hover:border-[#C40180] hover:shadow-md transition-all duration-200"
@@ -700,13 +613,15 @@ export default function DetallePendiente({ params, onVolver }) {
                   </div>
 
                   <div className="flex items-center space-x-1">
-                    <button
-                      onClick={() => handleVerDocumento(documento)}
-                      className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                      title="Ver documento"
-                    >
-                      <Eye size={18} />
-                    </button>
+                    {documento.archivo && (
+                      <button
+                        onClick={() => handleVerDocumento(documento)}
+                        className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                        title="Ver documento"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    )}
 
                     <button
                       onClick={() => handleReemplazarDocumento(documento)}
@@ -722,7 +637,7 @@ export default function DetallePendiente({ params, onVolver }) {
           ))}
         </div>
 
-        {documentos && documentos.length === 0 && (
+        {!documentosRequeridos || documentosRequeridos.length === 0 && (
           <div className="bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">
             <FileText size={40} className="text-gray-300 mb-3" />
             <p className="text-gray-500 text-center">No hay documentos disponibles</p>
@@ -730,7 +645,7 @@ export default function DetallePendiente({ params, onVolver }) {
         )}
       </motion.div>
 
-      {/* Approval confirmation modal */}
+      {/* Modal de aprobación - Dos pasos */}
       {mostrarConfirmacion && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <motion.div
@@ -739,7 +654,7 @@ export default function DetallePendiente({ params, onVolver }) {
             className="bg-white rounded-lg shadow-xl w-full max-w-xl overflow-hidden"
           >
             {pasoModal === 1 ? (
-              // Step 1: Registration form
+              // Paso 1: Formulario de registro
               <>
                 <div className="bg-[#7D0053]/10 p-4 border-b border-[#7D0053]">
                   <div className="flex items-center justify-center mb-2 text-[#7D0053]">
@@ -840,7 +755,7 @@ export default function DetallePendiente({ params, onVolver }) {
                 </div>
               </>
             ) : (
-              // Step 2: Confirmation
+              // Paso 2: Confirmación
               <>
                 <div className="bg-green-50 p-4 border-b border-green-100">
                   <div className="flex items-center justify-center mb-2 text-green-600">
@@ -899,7 +814,7 @@ export default function DetallePendiente({ params, onVolver }) {
         </div>
       )}
 
-      {/* Rejection modal */}
+      {/* Modal de rechazo */}
       {mostrarRechazo && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <motion.div
@@ -956,7 +871,7 @@ export default function DetallePendiente({ params, onVolver }) {
         </div>
       )}
 
-      {/* Document view modal */}
+      {/* Modal para ver documento */}
       {documentoSeleccionado && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <motion.div
@@ -980,13 +895,13 @@ export default function DetallePendiente({ params, onVolver }) {
             </div>
 
             <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-100">
-              {/* Document preview placeholder */}
+              {/* Vista previa del documento (placeholder) */}
               <div className="w-full h-full min-h-[400px] flex items-center justify-center bg-gray-200 rounded-lg">
                 <div className="text-center p-6">
                   <FileText size={64} className="mx-auto mb-4 text-gray-400" />
                   <p className="text-gray-500 font-medium">Vista previa no disponible para {documentoSeleccionado.nombre}</p>
                   <p className="text-sm text-gray-400 mt-2">Archivo: {documentoSeleccionado.archivo}</p>
-                  <button className="mt-6 bg-gradient-to-br from-[#C40180] to-[#7D0053] text-white px-5 py-2.5 rounded-md hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm font-medium flex items-center justify-center gap-2 mx-auto">
+                  <button className="mt-6 bg-gradient-to-br from-[#C40180] to-[#7D0053] text-white px-5 py-2.5 rounded-md hover:opacity-90 transition-all shadow-sm font-medium flex items-center justify-center gap-2 mx-auto">
                     <Download size={16} />
                     Descargar documento
                   </button>
@@ -994,32 +909,6 @@ export default function DetallePendiente({ params, onVolver }) {
               </div>
             </div>
           </motion.div>
-        </div>
-      )}
-
-      {/* Document deletion confirmation modal */}
-      {mostrarConfirmacionEliminar && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
-            <p className="text-gray-600 mb-6">
-              ¿Está seguro que desea eliminar el documento "{documentoAEliminar?.nombre}"? Esta acción no se puede deshacer.
-            </p>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={() => setMostrarConfirmacionEliminar(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmarEliminarDocumento}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
