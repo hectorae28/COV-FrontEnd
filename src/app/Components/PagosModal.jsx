@@ -21,12 +21,19 @@ const DEFAULT_METODOS = [
 ];
 
 export default function PagosColg({
-  onPaymentComplete,
-  costoInscripcion = DEFAULT_COSTO,
-  tazaBcv = DEFAULT_TAZA,
-  metodoPago = DEFAULT_METODOS,
-  handlePaymentComplete
+  //onPaymentComplete,
+  // costoInscripcion = DEFAULT_COSTO,
+  // tazaBcv = DEFAULT_TAZA,
+  // metodoPago = DEFAULT_METODOS,
+  // handlePaymentComplete
+  props
 }) {
+  const {
+    handlePaymentComplete,
+    tazaBcv,
+    costoInscripcion,
+    metodoPago,
+  } = props;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -49,25 +56,18 @@ export default function PagosColg({
   const paypalAmount = calculatePaypalFee(paymentAmount);
 
   const handleSubmit = async (e) => {
+    console.log("handleSubmit")
     e.preventDefault();
     setIsSubmitting(true);
+    handlePaymentComplete({
+      paymentDate,
+      referenceNumber,
+      paymentFile,
+      totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount,
+      metodo_de_pago: metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)
+    });
 
     // Simular procesamiento de pago
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Use the onPaymentComplete prop if handlePaymentComplete is not provided
-    const completeFn = handlePaymentComplete || onPaymentComplete;
-
-    if (typeof completeFn === 'function') {
-      completeFn({
-        paymentDate,
-        paymentMethod,
-        referenceNumber,
-        paymentFile,
-        totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount,
-        metodo_de_pago: metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)
-      });
-    }
 
     setIsSubmitting(false);
   };

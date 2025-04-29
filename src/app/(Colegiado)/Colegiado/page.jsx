@@ -24,8 +24,11 @@ export default function Home() {
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
+    console.log(status)
     if (status === "loading") return;
     const checkSolvencyStatus = () => {
+      console.log("Checking solvency status...");
+      if (!userInfo) return;
       const today = new Date();
       const [day, month, year] = solvencyInfo.date.split("-").map(Number);
       const solvencyDate = new Date(year, month - 1, day);
@@ -41,7 +44,7 @@ export default function Home() {
         setShowSolvencyWarning(false);
       }
     };
-    if (userInfo) {
+    if (userInfo&&status === "authenticated") {
       checkSolvencyStatus();
     }
 

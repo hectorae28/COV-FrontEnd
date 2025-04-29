@@ -106,6 +106,7 @@ const steps = [
 export default function RegistrationForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const initialState = {
+    tipo_profesion: "",
     nationality: "",
     identityCard: "",
     firstName: "",
@@ -265,7 +266,9 @@ export default function RegistrationForm() {
     totalAmount,
     metodo_de_pago,
   }) => {
+    console.log("Payment complete:")
     const Form = new FormData();
+    Form.append("tipo_profesion", formData.tipo_profesion);
     Form.append(
       "persona",
       JSON.stringify({
@@ -296,26 +299,23 @@ export default function RegistrationForm() {
     Form.append("fecha_mpps", formData.mppsRegistrationDate);
     Form.append(
       "instituciones",
-      JSON.stringify([
-        {
-          nombre: formData.institutionName,
-          cargo: formData.institutionName,
-          direccion: formData.institutionAddress,
-          telefono: formData.institutionPhone,
-        },
-        {
-          nombre: formData.clinicName,
-          cargo: formData.clinicName,
-          direccion: formData.clinicAddress,
-          telefono: formData.clinicPhone,
-        },
-      ])
+      JSON.stringify(formData.laboralRegistros.map((registro) => ({
+        nombre: registro.institutionName,
+        cargo: registro.institutionName, // Si "cargo" es igual a "institutionName"
+        direccion: registro.institutionAddress,
+        telefono: registro.institutionPhone,
+      })) ||[])
     );
     Form.append("file_ci", formData.ci || null);
     Form.append("file_rif", formData.rif || null);
     Form.append("file_fondo_negro", formData.titulo || null);
     Form.append("file_mpps", formData.mpps || null);
     Form.append("comprobante", paymentFile);
+    if(formData.tipo_profesion !== "odontologo"){
+      Form.append("Fondo_negro_credencial",formData.Fondo_negro_credencial)
+      Form.append("notas_curso",formData.notas_curso)
+      Form.append("fondo_negro_titulo_bachiller",formData.fondo_negro_titulo_bachiller)
+    }
     Form.append(
       "pago",
       JSON.stringify({
@@ -326,30 +326,31 @@ export default function RegistrationForm() {
       })
     );
     //setIsSubmitting(true);
+    console.log({formData})
     console.log("Form data:", Form);
-    // try {
-    //   const response = await api.post("usuario/register/", Form, {
-    //     headers: {
-    //       "Content-Type": "multipart/form-data",
-    //     },
-    //   });
-    //   if (response.status === 201) {
-    //     confetti({
-    //       particleCount: 100,
-    //       spread: 70,
-    //       origin: { y: 0.6 },
-    //     });
-    //     setShowPaymentScreen(false);
-    //     setIsComplete(true);
-    //   }
-    // } catch (error) {
-    //   console.error(
-    //     "Error al enviar los datos:",
-    //     error.response?.data || error
-    //   );
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+    try {
+      const response = await api.post("usuario/register/", Form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      if (response.status === 201) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+        setShowPaymentScreen(false);
+        setIsComplete(true);
+      }
+    } catch (error) {
+      console.error(
+        "Error al enviar los datos:",
+        error.response?.data || error
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const CurrentStepComponent = steps.find(
