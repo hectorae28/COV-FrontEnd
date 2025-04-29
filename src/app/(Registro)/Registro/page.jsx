@@ -78,6 +78,7 @@ export default function RegistrationForm() {
     age: "",
     maritalStatus: "",
     email: "",
+    countryCode: "+58",
     phoneNumber: "",
     homePhone: "",
     address: "",
@@ -178,10 +179,10 @@ export default function RegistrationForm() {
         nombre: formData.firstName,
         primer_apellido: formData.lastName,
         genero: formData.gender,
-        tipo_identificacion: formData.nationality,
-        identificacion: formData.identityCard,
+        nacionalidad: formData.nationality,
+        identificacion: `${formData.idType}-${formData.identityCard}`,
         correo: formData.email,
-        telefono_movil: formData.phoneNumber,
+        telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
         telefono_de_habitacion: formData.homePhone,
         fecha_de_nacimiento: formData.birthDate,
         estado_civil: formData.maritalStatus,
@@ -226,6 +227,7 @@ export default function RegistrationForm() {
       })
     );
     setIsSubmitting(true);
+    console.log("Form data:", Form);
     try {
       const response = await api.post("usuario/register/", Form, {
         headers: {

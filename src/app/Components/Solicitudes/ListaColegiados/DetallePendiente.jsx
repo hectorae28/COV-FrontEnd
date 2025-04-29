@@ -60,7 +60,7 @@ export default function DetallePendiente({ params, onVolver }) {
             primer_apellido: "Ramírez",
             segundo_apellido: "Pérez",
             genero: "M",
-            tipo_identificacion: "V",
+            nacionalidad: "V",
             identificacion: "34567890",
             correo: "carlos.ramirez@mail.com",
             id_adicional: "",
@@ -447,7 +447,7 @@ export default function DetallePendiente({ params, onVolver }) {
                 <User className="text-[#C40180] h-5 w-5 mr-2" />
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Identificación</p>
-                  <p className="text-sm text-gray-700">{pendiente.persona.tipo_identificacion}-{pendiente.persona.identificacion}</p>
+                  <p className="text-sm text-gray-700">{pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}</p>
                 </div>
               </div>
 
@@ -503,7 +503,7 @@ export default function DetallePendiente({ params, onVolver }) {
 
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
-              <p className="font-medium text-gray-800">{pendiente.persona.tipo_identificacion}-{pendiente.persona.identificacion}</p>
+              <p className="font-medium text-gray-800">{pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}</p>
             </div>
 
             <div className="bg-gray-50 p-3 rounded-md">

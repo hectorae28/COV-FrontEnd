@@ -51,7 +51,7 @@ export default function DetalleColegiado({ params, onVolver }) {
             primer_apellido: "González",
             segundo_apellido: "Rodríguez",
             genero: "F",
-            tipo_identificacion: "V",
+            nacionalidad: "V",
             identificacion: "12345678",
             correo: "maria.gonzalez@mail.com",
             id_adicional: "RIF-12345678-9",
@@ -315,7 +315,7 @@ export default function DetalleColegiado({ params, onVolver }) {
                 <div className="flex items-center justify-center md:justify-start">
                   <User className="text-gray-400 h-5 w-5 mr-2" />
                   <span className="text-gray-700">
-                    {colegiado.persona.tipo_identificacion}-{colegiado.persona.identificacion}
+                    {colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}
                   </span>
                 </div>
 
@@ -508,7 +508,7 @@ export default function DetalleColegiado({ params, onVolver }) {
 
     <div className="bg-gray-50 p-3 rounded-md">
       <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
-      <p className="font-medium text-gray-800">{colegiado.persona.tipo_identificacion}-{colegiado.persona.identificacion}</p>
+      <p className="font-medium text-gray-800">{colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}</p>
     </div>
 
     <div className="bg-gray-50 p-3 rounded-md">

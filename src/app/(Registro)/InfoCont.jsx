@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin } from "lucide-react";
+import phoneCodes from "@/app/Models/phoneCodes"; // Assuming you have a file with phone codes
 
 export default function InfoContacto({ formData, onInputChange }) {
   const handleChange = (e) => {
@@ -8,16 +9,37 @@ export default function InfoContacto({ formData, onInputChange }) {
     onInputChange({ [name]: value });
   };
 
+  console.log(phoneCodes[0])
+
   // Sample Venezuelan states
   const venezuelanStates = [
-    'Amazonas', 'Anzoátegui', 'Apure', 'Aragua', 'Barinas', 'Bolívar', 
-    'Carabobo', 'Cojedes', 'Delta Amacuro', 'Falcón', 'Guárico', 'Lara', 
-    'Mérida', 'Miranda', 'Monagas', 'Nueva Esparta', 'Portuguesa', 
-    'Sucre', 'Táchira', 'Trujillo', 'Vargas', 'Yaracuy', 'Zulia'
+    "Amazonas",
+    "Anzoátegui",
+    "Apure",
+    "Aragua",
+    "Barinas",
+    "Bolívar",
+    "Carabobo",
+    "Cojedes",
+    "Delta Amacuro",
+    "Falcón",
+    "Guárico",
+    "Lara",
+    "Mérida",
+    "Miranda",
+    "Monagas",
+    "Nueva Esparta",
+    "Portuguesa",
+    "Sucre",
+    "Táchira",
+    "Trujillo",
+    "Vargas",
+    "Yaracuy",
+    "Zulia",
   ];
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -29,7 +51,7 @@ export default function InfoContacto({ formData, onInputChange }) {
           Correo Electrónico
         </label>
         <div className="relative">
-          <input 
+          <input
             type="email"
             name="email"
             value={formData.email}
@@ -49,19 +71,34 @@ export default function InfoContacto({ formData, onInputChange }) {
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Número de Teléfono Móvil
           </label>
-          <div className="relative">
-            <input 
+          <div className="flex items-center">
+            {/* Select for country codes */}
+            <select
+              name="countryCode"
+              value={formData.countryCode}
+              onChange={handleChange}
+              className="px-2 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700"
+              style={{ height: "48px" }} // Asegura que el select tenga la misma altura
+            >
+              {phoneCodes.map((code, index) => (
+                <option key={index} value={code.codigo}>{code.codigo}</option>
+              ))}
+              {/* Agrega más códigos de país según sea necesario */}
+            </select>
+            {/* Input for phone number */}
+            <input
               type="tel"
               name="phoneNumber"
               value={formData.phoneNumber}
-              onChange={handleChange}
-              maxLength="11"
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl 
-              focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
-              placeholder="0412-1234567"
-              pattern="[0-9]{4}-[0-9]{7}"
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                handleChange({ target: { name: "phoneNumber", value } });
+              }}
+              maxLength={phoneCodes.find(c => c.codigo === formData.countryCode)?.longitud || 10}
+              className="w-full px-4 py-3 border border-gray-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+              placeholder="Ingrese su número de teléfono"
+              style={{ height: "48px" }} 
             />
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
         </div>
 
@@ -71,7 +108,7 @@ export default function InfoContacto({ formData, onInputChange }) {
             Teléfono de Habitación
           </label>
           <div className="relative">
-            <input 
+            <input
               type="tel"
               name="homePhone"
               value={formData.homePhone}
@@ -114,7 +151,7 @@ export default function InfoContacto({ formData, onInputChange }) {
             Estado
           </label>
           <div className="relative">
-            <select 
+            <select
               name="state"
               value={formData.state}
               onChange={handleChange}
@@ -130,7 +167,11 @@ export default function InfoContacto({ formData, onInputChange }) {
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <svg
+                className="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
               </svg>
             </div>
@@ -142,7 +183,7 @@ export default function InfoContacto({ formData, onInputChange }) {
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
             Ciudad
           </label>
-          <input 
+          <input
             type="text"
             name="city"
             value={formData.city}
