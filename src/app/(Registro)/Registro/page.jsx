@@ -325,31 +325,31 @@ export default function RegistrationForm() {
         monto: totalAmount,
       })
     );
-    setIsSubmitting(true);
+    //setIsSubmitting(true);
     console.log("Form data:", Form);
-    try {
-      const response = await api.post("usuario/register/", Form, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      if (response.status === 201) {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-        setShowPaymentScreen(false);
-        setIsComplete(true);
-      }
-    } catch (error) {
-      console.error(
-        "Error al enviar los datos:",
-        error.response?.data || error
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    // try {
+    //   const response = await api.post("usuario/register/", Form, {
+    //     headers: {
+    //       "Content-Type": "multipart/form-data",
+    //     },
+    //   });
+    //   if (response.status === 201) {
+    //     confetti({
+    //       particleCount: 100,
+    //       spread: 70,
+    //       origin: { y: 0.6 },
+    //     });
+    //     setShowPaymentScreen(false);
+    //     setIsComplete(true);
+    //   }
+    // } catch (error) {
+    //   console.error(
+    //     "Error al enviar los datos:",
+    //     error.response?.data || error
+    //   );
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
   };
 
   const CurrentStepComponent = steps.find(

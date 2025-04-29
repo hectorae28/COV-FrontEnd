@@ -5,11 +5,8 @@ import { Check, Clock, Lock, Mail, MapPin, Phone } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import Alert from "@/app/Components/Alert";
 import ForgotPasswordForm from "@/Components/Home/ForgotPasswordForm";
 
