@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { FileText, Download, CreditCard, CheckCircle, AlertCircle, Search, ChevronLeft } from "lucide-react"
+import { AlertCircle, CheckCircle, ChevronLeft, CreditCard, Download, FileText, Search } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function TablaPagos({ colegiadoId, onVolver }) {
   const [pagos, setPagos] = useState([])

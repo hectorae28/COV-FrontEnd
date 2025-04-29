@@ -1,11 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Lock, Mail, Check, Phone, MapPin, Clock } from "lucide-react";
-import Image from "next/image";
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { Check, Clock, Lock, Mail, MapPin, Phone } from "lucide-react";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 // ForgotPasswordForm component
 const ForgotPasswordForm = ({ onBackToLogin }) => {
@@ -16,23 +16,20 @@ const ForgotPasswordForm = ({ onBackToLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setMessage(null);
 
     try {
-      // Replace with your actual password reset logic
-      // For example: const response = await fetch('/api/reset-password', {...
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Aquí iría la lógica para enviar el correo de recuperación
+      // Simulamos un pequeño retraso para mostrar el spinner
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       setMessage({
         type: "success",
-        text: "Se ha enviado un enlace de recuperación a tu correo electrónico"
+        text: "Se ha enviado un correo con instrucciones para recuperar tu contraseña."
       });
     } catch (error) {
       setMessage({
         type: "error",
-        text: "Error al enviar el correo. Intenta de nuevo más tarde."
+        text: "Ocurrió un error al enviar el correo. Por favor, inténtalo más tarde."
       });
     } finally {
       setIsSubmitting(false);
@@ -109,20 +106,44 @@ export default function PanelAdmin({ onClose, isClosing }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const Form = new FormData(formRef.current);
-    console.log({
-      Form,
-    });
-    const result = await signIn("credentials", {
-      username: Form.get("email").split("@")[0],
-      password: Form.get("password"),
-      redirect: false,
-    });
-    if (result?.error) {
-      console.error("Error al iniciar sesión:", result.error);
-    } else {
-      console.log("Inicio de sesión exitoso:", result);
-      router.push("/PanelControl");
+
+    // Activar el spinner
+    setIsLoading(true);
+    // Borrar mensajes de error previos
+    setErrorMessage("");
+
+    try {
+      const Form = new FormData(formRef.current);
+      console.log("Iniciando sesión...");
+
+      // Simular un pequeño retraso para asegurar que el estado se actualice y el spinner sea visible
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const result = await signIn("credentials", {
+        username: Form.get("email").split("@")[0],
+        password: Form.get("password"),
+        redirect: false,
+      });
+
+      if (result?.error) {
+        console.error("Error al iniciar sesión:", result.error);
+        setErrorMessage("Credenciales incorrectas. Por favor, inténtalo de nuevo.");
+      } else {
+        console.log("Inicio de sesión exitoso:", result);
+        try {
+          router.push("/PanelControl");
+        } catch (error) {
+          console.error("Error de redirección:", error);
+          // Fallback en caso de error con router.push
+          window.location.href = "/PanelControl";
+        }
+      }
+    } catch (error) {
+      console.error("Error en el proceso de inicio de sesión:", error);
+      setErrorMessage("Ocurrió un error al intentar iniciar sesión. Por favor, inténtalo más tarde.");
+    } finally {
+      // Asegurarse de que isLoading vuelva a false cuando termine
+      setIsLoading(false);
     }
   };
 
@@ -209,7 +230,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
           </p>
 
           {currentView === "login" ? (
-            <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
+            <form onSubmit={handleSubmit} ref={formRef}>
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -280,9 +301,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
               <motion.button
                 type="submit"
                 disabled={isLoading}
-                className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
-                shadow-md hover:shadow-lg transition-all duration-300
-                focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50 disabled:opacity-70"
+                className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50 disabled:opacity-70"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -295,6 +314,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
                   "Iniciar Sesión"
                 )}
               </motion.button>
+
             </form>
           ) : (
             <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />

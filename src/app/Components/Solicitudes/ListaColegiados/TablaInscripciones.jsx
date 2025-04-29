@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
-import { Book, Calendar, Download, Search, MapPin, Users, Award, ChevronLeft } from "lucide-react"
+import { Award, Book, Calendar, ChevronLeft, Download, MapPin, Search, Users } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function TablaInscripciones({ colegiadoId, onVolver }) {
   const [datosAsistencia, setDatosAsistencia] = useState([])

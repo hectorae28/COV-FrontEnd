@@ -9,27 +9,43 @@ import { useState, useRef } from "react";
 export default function LoginForm({ onForgotPassword, onRegister }) {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const formRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage("");
+
     const Form = new FormData(formRef.current);
+
     try {
+      // Simular un pequeño retraso para asegurar que el estado se actualice y el spinner sea visible
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const result = await signIn("credentials", {
         username: Form.get("email").split("@")[0],
         password: Form.get("password"),
         redirect: false,
       });
+
       if (result?.error) {
         console.error("Error al iniciar sesión:", result.error);
+        setErrorMessage("Credenciales incorrectas. Por favor, inténtalo de nuevo.");
       } else {
         console.log("Inicio de sesión exitoso:", result);
-        router.push("/Colegiado");
+        try {
+          router.push("/Colegiado");
+        } catch (error) {
+          console.error("Error de redirección:", error);
+          // Fallback en caso de error con router.push
+          window.location.href = "/Colegiado";
+        }
       }
     } catch (error) {
       console.error("Error en el proceso de inicio de sesión:", error);
+      setErrorMessage("Ocurrió un error al intentar iniciar sesión. Por favor, inténtalo más tarde.");
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +81,13 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
         </div>
       </div>
 
+      {/* Error message display */}
+      {errorMessage && (
+        <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg">
+          {errorMessage}
+        </div>
+      )}
+
       {/* Remember me checkbox */}
       <div className="flex items-center mb-8 ml-8">
         <div
@@ -72,9 +95,8 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
           onClick={() => setRememberMe(!rememberMe)}
         >
           <div
-            className={`absolute inset-0 rounded border ${
-              rememberMe ? "bg-[#41023B] border-[#41023B]" : "border-gray-800"
-            }`}
+            className={`absolute inset-0 rounded border ${rememberMe ? "bg-[#41023B] border-[#41023B]" : "border-gray-800"
+              }`}
           >
             {rememberMe && <Check className="h-4 w-4 text-white" />}
           </div>
