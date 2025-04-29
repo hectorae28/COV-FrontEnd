@@ -2,57 +2,66 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Lock, Mail, Check } from "lucide-react";
-import { useState, useRef } from "react";
+import { Lock, Mail } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import Alert from "@/app/Components/Alert"
 
 export default function LoginForm({ onForgotPassword, onRegister }) {
-  const [rememberMe, setRememberMe] = useState(false);
+  const searchParams = useSearchParams();
+  const [error, setError] = useState(searchParams.get("error"));
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const formRef = useRef(null);
+  useEffect(() => {
+    setError(searchParams.get("error"));
+  },[])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMessage("");
-
-    const Form = new FormData(formRef.current);
-
-    try {
-      // Simular un pequeño retraso para asegurar que el estado se actualice y el spinner sea visible
-      await new Promise(resolve => setTimeout(resolve, 100));
-
+    setError("");
+    try{
+      const Form = new FormData(formRef.current);
       const result = await signIn("credentials", {
         username: Form.get("email").split("@")[0],
         password: Form.get("password"),
         redirect: false,
       });
-
-      if (result?.error) {
-        console.error("Error al iniciar sesión:", result.error);
-        setErrorMessage("Credenciales incorrectas. Por favor, inténtalo de nuevo.");
+      if (result.error) {
+        switch (result.error) {
+          case "Account is locked":
+          case "Account locked due to too many failed attempts":
+            setError("Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña.");
+            break;
+          case "Invalid credentials":
+            setError("Credenciales inválidas. Por favor, verifique su email y/o contraseña.");
+            break;
+          case "Ya existe una sesión activa para este usuario.":
+            setError("Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente.");
+            break;
+          default:
+            setError("Ocurrió un error inesperado. Intenta nuevamente.");
+        }      
       } else {
         console.log("Inicio de sesión exitoso:", result);
-        try {
-          router.push("/Colegiado");
-        } catch (error) {
-          console.error("Error de redirección:", error);
-          // Fallback en caso de error con router.push
-          window.location.href = "/Colegiado";
-        }
+        router.push("/Colegiado");
       }
-    } catch (error) {
-      console.error("Error en el proceso de inicio de sesión:", error);
-      setErrorMessage("Ocurrió un error al intentar iniciar sesión. Por favor, inténtalo más tarde.");
-    } finally {
+    }catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      setError("Ocurrió un error inesperado. Intenta nuevamente.");
+    }finally {
       setIsLoading(false);
     }
+
   };
 
   return (
     <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
+      {error && (
+        <Alert type="alert">{error}</Alert>
+      )}
       <div className="mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -79,34 +88,6 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
             placeholder="Contraseña"
           />
         </div>
-      </div>
-
-      {/* Error message display */}
-      {errorMessage && (
-        <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg">
-          {errorMessage}
-        </div>
-      )}
-
-      {/* Remember me checkbox */}
-      <div className="flex items-center mb-8 ml-8">
-        <div
-          className="relative w-5 h-5 mr-3 cursor-pointer"
-          onClick={() => setRememberMe(!rememberMe)}
-        >
-          <div
-            className={`absolute inset-0 rounded border ${rememberMe ? "bg-[#41023B] border-[#41023B]" : "border-gray-800"
-              }`}
-          >
-            {rememberMe && <Check className="h-4 w-4 text-white" />}
-          </div>
-        </div>
-        <label
-          className="text-gray-700 cursor-pointer"
-          onClick={() => setRememberMe(!rememberMe)}
-        >
-          Recordarme
-        </label>
       </div>
 
       {/* Login button */}

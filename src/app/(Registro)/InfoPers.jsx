@@ -89,8 +89,8 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               <option value="" disabled>
                 Seleccionar Nacionalidad
               </option>
-              <option value="cedula">Venezolana</option>
-              <option value="pasaporte">Extranjera</option>
+              <option value="venezolana">Venezolana</option>
+              <option value="extranjera">Extranjera</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
               <svg
@@ -113,18 +113,34 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             Número de Identificación
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <input
-            type="text"
-            name="identityCard"
-            value={formData.identityCard}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-gray-200" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-            placeholder="Ingrese su número de identificación"
-          />
-          {isFieldEmpty("identityCard") && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-          )}
+          <div className="flex items-center">
+            {/* Select for V or E */}
+            <select
+              name="idType"
+              value={formData.idType}
+              onChange={handleChange}
+              className="h-full px-4 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700"
+              style={{ height: "48px" }} // Asegura que el select tenga la misma altura
+            >
+              <option value="V">V</option>
+              <option value="E">E</option>
+            </select>
+            {/* Input for identity card */}
+            <input
+              type="text"
+              name="identityCard"
+              value={formData.identityCard}
+              maxLength={8}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                handleChange({ target: { name: "identityCard", value } });
+              }}
+              className="w-full px-4 py-3 border border-gray-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+              placeholder="Ingrese su número de identificación"
+              style={{ height: "48px" }} // Asegura que el input tenga la misma altura
+            />
+          </div>
+
         </div>
       </div>
 

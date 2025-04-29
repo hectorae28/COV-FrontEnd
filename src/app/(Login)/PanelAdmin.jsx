@@ -5,147 +5,67 @@ import { Check, Clock, Lock, Mail, MapPin, Phone } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-
-// ForgotPasswordForm component
-const ForgotPasswordForm = ({ onBackToLogin }) => {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      // Aquí iría la lógica para enviar el correo de recuperación
-      // Simulamos un pequeño retraso para mostrar el spinner
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      setMessage({
-        type: "success",
-        text: "Se ha enviado un correo con instrucciones para recuperar tu contraseña."
-      });
-    } catch (error) {
-      setMessage({
-        type: "error",
-        text: "Ocurrió un error al enviar el correo. Por favor, inténtalo más tarde."
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <div className="mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Mail className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
-            placeholder="Correo electrónico"
-            required
-          />
-        </div>
-      </div>
-
-      {message && (
-        <div
-          className={`mb-6 p-4 rounded-lg ${message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-            }`}
-        >
-          {message.text}
-        </div>
-      )}
-
-      <motion.button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
-        shadow-md hover:shadow-lg transition-all duration-300
-        focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50 disabled:opacity-70"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        {isSubmitting ? (
-          <div className="flex items-center justify-center">
-            <div className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-            <span>Enviando...</span>
-          </div>
-        ) : (
-          "Recuperar Contraseña"
-        )}
-      </motion.button>
-
-      <div className="mt-6 text-center">
-        <button
-          type="button"
-          onClick={onBackToLogin}
-          className="text-[#D7008A] hover:text-[#41023B] transition-colors duration-300"
-        >
-          Volver a Iniciar Sesión
-        </button>
-      </div>
-    </form>
-  );
-};
+import { useRef, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import Alert from "@/app/Components/Alert";
+import ForgotPasswordForm from "@/Components/Home/ForgotPasswordForm";
 
 export default function PanelAdmin({ onClose, isClosing }) {
-  const [rememberMe, setRememberMe] = useState(false);
   const [currentView, setCurrentView] = useState("login");
+  const searchParams = useSearchParams();
+  const [error, setError] = useState(searchParams.get("error"));
   const [showContact, setShowContact] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const formRef = useRef(null);
+  useEffect(() => {
+    setError(searchParams.get("error"));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Activar el spinner
     setIsLoading(true);
-    // Borrar mensajes de error previos
-    setErrorMessage("");
-
-    try {
+    setError("");
+    try{
       const Form = new FormData(formRef.current);
-      console.log("Iniciando sesión...");
-
-      // Simular un pequeño retraso para asegurar que el estado se actualice y el spinner sea visible
-      await new Promise(resolve => setTimeout(resolve, 100));
-
       const result = await signIn("credentials", {
         username: Form.get("email").split("@")[0],
         password: Form.get("password"),
         redirect: false,
       });
-
-      if (result?.error) {
-        console.error("Error al iniciar sesión:", result.error);
-        setErrorMessage("Credenciales incorrectas. Por favor, inténtalo de nuevo.");
+      if (result.error) {
+        if (
+          result.error === "Account is locked" ||
+          result.error === "Account locked due to too many failed attempts"
+        ) {
+          setError(
+            "Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña."
+          );
+        } else if (result.error === "Invalid credentials") {
+          setError(
+            "Credenciales inválidas. Por favor, verifique su email y/o contraseña."
+          );
+        } else if (
+          result.error === "Ya existe una sesión activa para este usuario."
+        ) {
+          setError(
+            "Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente."
+          );
+        } else {
+          setError("Ocurrió un error inesperado. Intenta nuevamente.");
+        }
       } else {
         console.log("Inicio de sesión exitoso:", result);
-        try {
-          router.push("/PanelControl");
-        } catch (error) {
-          console.error("Error de redirección:", error);
-          // Fallback en caso de error con router.push
-          window.location.href = "/PanelControl";
-        }
+        router.push("/PanelControl");
       }
     } catch (error) {
       console.error("Error en el proceso de inicio de sesión:", error);
-      setErrorMessage("Ocurrió un error al intentar iniciar sesión. Por favor, inténtalo más tarde.");
-    } finally {
-      // Asegurarse de que isLoading vuelva a false cuando termine
+      setError("Ocurrió un error al intentar iniciar sesión. Por favor, inténtalo más tarde.");
+    }finally{
       setIsLoading(false);
     }
-  };
+  }
+
 
   // Función para alternar la sección de contacto
   const toggleContactSection = () => {
@@ -221,16 +141,20 @@ export default function PanelAdmin({ onClose, isClosing }) {
           </div>
 
           <h2 className="text-center text-3xl font-bold text-[#41023B] mb-2">
-            {currentView === "login" ? "Panel de Administradores" : "Recuperar Contraseña"}
+            {currentView === "login"
+              ? "Panel de Administradores"
+              : "Recuperar Contraseña"}
+
           </h2>
           <p className="text-center text-gray-700 mb-10">
             {currentView === "login"
               ? "Acceso exclusivo para personal administrativo"
               : "Ingresa tu correo para recuperar tu contraseña"}
           </p>
+          {currentView === "login" && (
+            <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
+              {error && <Alert type="alert">{error}</Alert>}
 
-          {currentView === "login" ? (
-            <form onSubmit={handleSubmit} ref={formRef}>
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -258,50 +182,11 @@ export default function PanelAdmin({ onClose, isClosing }) {
                   />
                 </div>
               </div>
-
-              {/* Error message display */}
-              {errorMessage && (
-                <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg">
-                  {errorMessage}
-                </div>
-              )}
-
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center ml-8">
-                  <div
-                    className="relative w-5 h-5 mr-3 cursor-pointer"
-                    onClick={() => setRememberMe(!rememberMe)}
-                  >
-                    <div
-                      className={`absolute inset-0 rounded border ${rememberMe
-                        ? "bg-[#41023B] border-[#41023B]"
-                        : "border-gray-800"
-                        }`}
-                    >
-                      {rememberMe && <Check className="h-4 w-4 text-white" />}
-                    </div>
-                  </div>
-                  <label
-                    className="text-gray-700 cursor-pointer"
-                    onClick={() => setRememberMe(!rememberMe)}
-                  >
-                    Recordarme
-                  </label>
-                </div>
-
-                <button
-                  type="button"
-                  className="text-[#D7008A] hover:text-[#41023B] transition-colors duration-300 text-sm"
-                  onClick={() => setCurrentView("forgot-password")}
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
-              </div>
-
               <motion.button
                 type="submit"
-                disabled={isLoading}
-                className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50 disabled:opacity-70"
+                className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
+                shadow-md hover:shadow-lg transition-all duration-300
+                focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -314,13 +199,23 @@ export default function PanelAdmin({ onClose, isClosing }) {
                   "Iniciar Sesión"
                 )}
               </motion.button>
-
+              {/* Forgot password link */}
+              <div className="text-center mt-4">
+                <div
+                  className="text-[#D7008A] hover:underline text-sm cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentView("forgot-password");
+                  }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </div>
+              </div>
             </form>
-          ) : (
+          )}
+          {currentView === "forgot-password" && (
             <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
           )}
-
-          {/* Botón para mostrar la sección de contacto */}
           <div className="mt-6 text-center">
             <motion.button
               onClick={toggleContactSection}
@@ -369,7 +264,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
                 </div>
               </div>
             </motion.div>
-          )}
+            )}
         </div>
       </div>
     </motion.div>

@@ -118,6 +118,7 @@ export default function RegistrationForm() {
     age: "",
     maritalStatus: "",
     email: "",
+    countryCode: "+58",
     phoneNumber: "",
     homePhone: "",
     address: "",
@@ -277,10 +278,10 @@ export default function RegistrationForm() {
         segundo_apellido: formData.secondLastName,
         segundo_nombre: formData.secondName,
         genero: formData.gender,
-        tipo_identificacion: formData.nationality,
-        identificacion: formData.identityCard,
+        nacionalidad: formData.nationality,
+        identificacion: `${formData.idType}-${formData.identityCard}`,
         correo: formData.email,
-        telefono_movil: formData.phoneNumber,
+        telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
         telefono_de_habitacion: formData.homePhone,
         fecha_de_nacimiento: formData.birthDate,
         estado_civil: formData.maritalStatus,
@@ -324,30 +325,31 @@ export default function RegistrationForm() {
         monto: totalAmount,
       })
     );
-    setIsSubmitting(true);
-    try {
-      const response = await api.post("usuario/register/", Form, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      if (response.status === 201) {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-        setShowPaymentScreen(false);
-        setIsComplete(true);
-      }
-    } catch (error) {
-      console.error(
-        "Error al enviar los datos:",
-        error.response?.data || error
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    //setIsSubmitting(true);
+    console.log("Form data:", Form);
+    // try {
+    //   const response = await api.post("usuario/register/", Form, {
+    //     headers: {
+    //       "Content-Type": "multipart/form-data",
+    //     },
+    //   });
+    //   if (response.status === 201) {
+    //     confetti({
+    //       particleCount: 100,
+    //       spread: 70,
+    //       origin: { y: 0.6 },
+    //     });
+    //     setShowPaymentScreen(false);
+    //     setIsComplete(true);
+    //   }
+    // } catch (error) {
+    //   console.error(
+    //     "Error al enviar los datos:",
+    //     error.response?.data || error
+    //   );
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
   };
 
   const CurrentStepComponent = steps.find(

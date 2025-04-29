@@ -9,6 +9,7 @@ export default function DashboardLayout({
   isSolvent,
   userInfo,
   showSolvencyWarning,
+  session,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -48,6 +49,7 @@ export default function DashboardLayout({
           isSolvent={isSolvent}
           userInfo={userInfo}
           showSolvencyWarning={showSolvencyWarning}
+          session={session}
         />
         <main className="flex-1 overflow-y-auto pt-20">
           <div className="max-w-7xl mx-auto flex flex-col gap-8 py-10 px-4">

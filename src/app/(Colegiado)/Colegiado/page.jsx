@@ -19,12 +19,8 @@ export default function Home() {
   const [userInfo, setUser_info] = useState(null);
   const { data: session, status } = useSession();
   const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
-
   // Datos de solvencia
-  const solvencyInfo = {
-    date: session?.user.solvente,
-    amount: "7.00",
-  };
+
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
@@ -32,7 +28,7 @@ export default function Home() {
     const checkSolvencyStatus = () => {
       const today = new Date();
       const [day, month, year] = solvencyInfo.date.split("-").map(Number);
-      const solvencyDate = new Date(year, month - 1, day); // Meses en JS son 0-indexed
+      const solvencyDate = new Date(year, month - 1, day);
 
       const warningDate = new Date(solvencyDate);
       warningDate.setDate(warningDate.getDate() - 14);
@@ -45,8 +41,9 @@ export default function Home() {
         setShowSolvencyWarning(false);
       }
     };
-
-    checkSolvencyStatus();
+    if (userInfo) {
+      checkSolvencyStatus();
+    }
 
     const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas
 
@@ -58,8 +55,12 @@ export default function Home() {
         .catch((error) => console.log(error));
     }
     return () => clearInterval(intervalId);
-  }, [solvencyInfo.date, session, status]);
+  }, [ session, status]);
 
+  const solvencyInfo = {
+    date: userInfo?.solvente,
+    amount: "7.00",
+  };
   // Manejar clic en card
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {
@@ -86,6 +87,7 @@ export default function Home() {
       isSolvent={isSolvent}
       showSolvencyWarning={showSolvencyWarning}
       userInfo={userInfo}
+      session={session}
     >
       {/* Contenido principal sin pestañas cuando el usuario está completamente solvente */}
       {!showTabs ? (

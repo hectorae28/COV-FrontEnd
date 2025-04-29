@@ -54,6 +54,107 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
       try {
         setIsLoading(true)
 
+        // Datos de ejemplo según la estructura proporcionada
+        setColegiado({
+          id: colegiadoId,
+          nombre: "María González",
+          numeroCOV: "1234",
+          solvente: true,
+          carnetVigente: true,
+          carnetVencimiento: "12/04/2025",
+          tituloEntregado: false,
+          persona: {
+            nombre: "María",
+            segundo_nombre: "Alejandra",
+            primer_apellido: "González",
+            segundo_apellido: "Rodríguez",
+            genero: "F",
+            nacionalidad: "V",
+            identificacion: "12345678",
+            correo: "maria.gonzalez@mail.com",
+            id_adicional: "RIF-12345678-9",
+            telefono_movil: "+58 412-1234567",
+            telefono_de_habitacion: "+58 212-5555555",
+            fecha_de_nacimiento: "1985-03-15",
+            estado_civil: "Casada",
+            direccion: {
+              referencia: "Av. Libertador, Edificio Centro, Apto 5-B",
+              estado: "Caracas"
+            },
+            user: null
+          },
+          instituto_bachillerato: "Liceo Andrés Bello",
+          universidad: "Universidad Central de Venezuela",
+          fecha_egreso_universidad: "2010-07-15",
+          num_registro_principal: "12345",
+          fecha_registro_principal: "2010-08-20",
+          num_mpps: "MP-789",
+          fecha_mpps: "2010-09-10",
+          instituciones: [
+            {
+              nombre: "Hospital Universitario de Caracas",
+              cargo: "Odontólogo",
+              direccion: "Av. Los Ilustres, Ciudad Universitaria",
+              telefono: "+58 212-6060606",
+            },
+            {
+              nombre: "Clínica Dental Sonrisas",
+              cargo: "Ortodoncista",
+              direccion: "Av. Francisco de Miranda, Centro Plaza, Torre A",
+              telefono: "+58 212-9090909",
+            }
+          ],
+          file_ci: "cedula_maria_gonzalez.jpg",
+          file_rif: "rif_maria_gonzalez.pdf",
+          file_fondo_negro: "titulo_fondo_negro_maria_gonzalez.pdf",
+          file_mpps: "registro_mpps_maria_gonzalez.pdf",
+          estadisticas: {
+            solicitudesMes: 2,
+            inscripcionesMes: 1,
+            asistenciaEventos: 5,
+            pagosPendientes: 0,
+            ultimoAcceso: "Hace 3 días"
+          }
+        })
+
+        // Inicializar documentos basados en los archivos del colegiado
+        setDocumentos([
+          {
+            id: "file_ci",
+            nombre: "Cédula de identidad",
+            descripcion: "Copia escaneada por ambos lados",
+            archivo: "cedula_maria_gonzalez.jpg",
+            requerido: true,
+          },
+          {
+            id: "file_rif",
+            nombre: "RIF",
+            descripcion: "Registro de Información Fiscal",
+            archivo: "rif_maria_gonzalez.pdf",
+            requerido: true,
+          },
+          {
+            id: "file_fondo_negro",
+            nombre: "Título universitario fondo negro",
+            descripcion: "Título de Odontólogo con fondo negro",
+            archivo: "titulo_fondo_negro_maria_gonzalez.pdf",
+            requerido: true,
+          },
+          {
+            id: "file_mpps",
+            nombre: "Registro MPPS",
+            descripcion: "Registro del Ministerio del Poder Popular para la Salud",
+            archivo: "registro_mpps_maria_gonzalez.pdf",
+            requerido: true,
+          },
+          {
+            id: "comprobante_pago",
+            nombre: "Comprobante de pago",
+            descripcion: "Comprobante de pago de inscripción",
+            archivo: "pago_maria_gonzalez.pdf",
+            requerido: true,
+          },
+        ]);
         // Usar el colegiado proporcionado o buscarlo en el store
         let colegiadoData = providedColegiado
 
@@ -261,7 +362,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
                 <div className="flex items-center justify-center md:justify-start">
                   <User className="text-gray-400 h-5 w-5 mr-2" />
                   <span className="text-gray-700">
-                    {colegiado.persona.tipo_identificacion}-{colegiado.persona.identificacion}
+                    {colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}
                   </span>
                 </div>
 
@@ -452,6 +553,10 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
                       <p className="font-medium text-gray-800">{nombreCompleto}</p>
                     </div>
 
+    <div className="bg-gray-50 p-3 rounded-md">
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
+      <p className="font-medium text-gray-800">{colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}</p>
+    </div>
                     <div className="bg-gray-50 p-3 rounded-md">
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
                       <p className="font-medium text-gray-800">{colegiado.persona.tipo_identificacion}-{colegiado.persona.identificacion}</p>

@@ -1,65 +1,41 @@
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone } from "lucide-react";
-
+import { Mail, Phone, MapPin } from "lucide-react";
+import phoneCodes from "@/app/Models/phoneCodes"; // Assuming you have a file with phone codes
 export default function InfoContacto({ formData, onInputChange, validationErrors }) {
-  // Format phone number as user types - only adds + at beginning
-  const formatMobilePhone = (value) => {
-    if (!value) return '+';
-
-    // Remove all non-digit characters except the initial + if present
-    if (value.startsWith('+')) {
-      const digits = value.substring(1).replace(/\D/g, '');
-      return `+${digits}`;
-    } else {
-      const digits = value.replace(/\D/g, '');
-      return `+${digits}`;
-    }
-  };
-
-  const formatHomePhone = (value) => {
-    if (!value) return '';
-
-    // Remove all non-digit characters
-    const digits = value.replace(/\D/g, '');
-
-    // Format as XXXX XXX XXXX
-    if (digits.length <= 4) {
-      return digits;
-    } else if (digits.length <= 7) {
-      return `${digits.slice(0, 4)} ${digits.slice(4)}`;
-    } else {
-      return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 11)}`;
-    }
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    if (name === 'phoneNumber') {
-      onInputChange({ [name]: formatMobilePhone(value) });
-    } else if (name === 'homePhone') {
-      onInputChange({ [name]: formatHomePhone(value) });
-    } else {
-      onInputChange({ [name]: value });
-    }
+    onInputChange({ [name]: value });
   };
 
-  // Initialize mobile phone field with '+' when component mounts or when it's empty
-  const handleMobilePhoneFocus = (e) => {
-    if (!e.target.value) {
-      onInputChange({ 'phoneNumber': '+' });
-    }
-  };
 
-  // Sample Venezuelan states
+
   const venezuelanStates = [
-    'Amazonas', 'Anzoátegui', 'Apure', 'Aragua', 'Barinas', 'Bolívar',
-    'Carabobo', 'Cojedes', 'Delta Amacuro', 'Falcón', 'Guárico', 'Lara',
-    'Mérida', 'Miranda', 'Monagas', 'Nueva Esparta', 'Portuguesa',
-    'Sucre', 'Táchira', 'Trujillo', 'Vargas', 'Yaracuy', 'Zulia'
+    "Amazonas",
+    "Anzoátegui",
+    "Apure",
+    "Aragua",
+    "Barinas",
+    "Bolívar",
+    "Carabobo",
+    "Cojedes",
+    "Delta Amacuro",
+    "Falcón",
+    "Guárico",
+    "Lara",
+    "Mérida",
+    "Miranda",
+    "Monagas",
+    "Nueva Esparta",
+    "Portuguesa",
+    "Sucre",
+    "Táchira",
+    "Trujillo",
+    "Vargas",
+    "Yaracuy",
+    "Zulia",
   ];
 
-  // Checks if a field is empty to display the required message
   const isFieldEmpty = (fieldName) => {
     return (!formData[fieldName] || formData[fieldName].trim() === "" || (fieldName === 'phoneNumber' && formData[fieldName] === '+'));
   };
@@ -93,26 +69,37 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
           <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
         )}
       </div>
-      {/* Phone Numbers */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Mobile Phone */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Número de Teléfono Móvil
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="relative">
+          <div className="flex items-center">
+            <select
+              name="countryCode"
+              value={formData.countryCode}
+              onChange={handleChange}
+              className="px-2 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700"
+              style={{ height: "48px" }} 
+            >
+              {phoneCodes.map((code, index) => (
+                <option key={index} value={code.codigo}>{code.codigo}</option>
+              ))}
+            </select>
             <input
               type="tel"
               name="phoneNumber"
-              value={formData.phoneNumber || '+'}
-              onChange={handleChange}
-              onFocus={handleMobilePhoneFocus}
-              className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("phoneNumber") ? "border-gray-200" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-              placeholder="+584241986646"
+              value={formData.phoneNumber}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                handleChange({ target: { name: "phoneNumber", value } });
+              }}
+              maxLength={phoneCodes.find(c => c.codigo === formData.countryCode)?.longitud || 10}
+              className="w-full px-4 py-3 border border-gray-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+              placeholder="Ingrese su número de teléfono"
+              style={{ height: "48px" }} 
             />
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
           {isFieldEmpty("phoneNumber") && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
@@ -163,7 +150,11 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <svg
+                className="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
               </svg>
             </div>

@@ -58,12 +58,96 @@ export default function DetallePendiente({ params, onVolver }) {
         // Simulate loading with a delay
         await new Promise(resolve => setTimeout(resolve, 1000))
 
-        if (pendiente) {
-          // Check if documents are complete
-          setDocumentosCompletos(verificarDocumentosCompletos(documentos))
-        }
+        // Datos de ejemplo basados en la nueva estructura
+        setPendiente({
+          persona: {
+            nombre: "Carlos",
+            segundo_nombre: "José",
+            primer_apellido: "Ramírez",
+            segundo_apellido: "Pérez",
+            genero: "M",
+            nacionalidad: "V",
+            identificacion: "34567890",
+            correo: "carlos.ramirez@mail.com",
+            id_adicional: "",
+            telefono_movil: "+58 416-7777777",
+            telefono_de_habitacion: "+58 212-5555555",
+            fecha_de_nacimiento: "1988-05-12",
+            estado_civil: "Soltero",
+            direccion: {
+              referencia: "Av. Francisco de Miranda, Edificio Torre Europa, Piso 8",
+              estado: "Caracas"
+            },
+            user: null
+          },
+          instituto_bachillerato: "Liceo Andrés Bello",
+          universidad: "Universidad Central de Venezuela",
+          fecha_egreso_universidad: "2015-07-15",
+          num_registro_principal: "12345",
+          fecha_registro_principal: "2015-08-20",
+          num_mpps: "MP-789",
+          fecha_mpps: "2015-09-10",
+          instituciones: [
+            {
+              nombre: "Hospital Universitario de Caracas",
+              cargo: "Odontólogo",
+              direccion: "Av. Los Ilustres, Ciudad Universitaria",
+              telefono: "+58 212-6060606",
+            }
+          ],
+          file_ci: "cedula_carlos_ramirez.jpg",
+          file_rif: "rif_carlos_ramirez.pdf",
+          file_fondo_negro: "titulo_fondo_negro_carlos_ramirez.pdf",
+          file_mpps: "registro_mpps_carlos_ramirez.pdf",
+          observaciones: "Solicita inscripción en el Colegio de Odontólogos de Venezuela",
+          fecha_solicitud: "2024-04-10" // Fecha de solicitud
+        })
 
-        setIsLoading(false)
+        const nuevosDocumentosRequeridos = [
+          {
+            id: "file_ci",
+            nombre: "Cédula de identidad",
+            descripcion: "Copia escaneada por ambos lados",
+            archivo: "cedula_carlos_ramirez.jpg",
+            requerido: true,
+          },
+          {
+            id: "file_rif",
+            nombre: "RIF",
+            descripcion: "Registro de Información Fiscal",
+            archivo: "rif_carlos_ramirez.pdf",
+            requerido: true,
+          },
+          {
+            id: "file_fondo_negro",
+            nombre: "Título universitario fondo negro",
+            descripcion: "Título de Odontólogo con fondo negro",
+            archivo: "titulo_fondo_negro_carlos_ramirez.pdf",
+            requerido: true,
+          },
+          {
+            id: "file_mpps",
+            nombre: "Registro MPPS",
+            descripcion: "Registro del Ministerio del Poder Popular para la Salud",
+            archivo: "registro_mpps_carlos_ramirez.pdf",
+            requerido: true,
+          },
+          {
+            id: "comprobante_pago",
+            nombre: "Comprobante de pago",
+            descripcion: "Comprobante de pago de inscripción",
+            archivo: "pago_carlos_ramirez.pdf",
+            requerido: true,
+          },
+        ];
+
+        // Establecer los documentos requeridos
+        setDocumentosRequeridos(nuevosDocumentosRequeridos);
+
+        // Verificar si los documentos están completos
+        setDocumentosCompletos(verificarDocumentosCompletos(nuevosDocumentosRequeridos));
+
+        setIsLoading(false);
       } catch (error) {
         console.error("Error loading pending data:", error)
         setIsLoading(false)
@@ -358,7 +442,7 @@ export default function DetallePendiente({ params, onVolver }) {
                 <User className="text-[#C40180] h-5 w-5 mr-2" />
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Identificación</p>
-                  <p className="text-sm text-gray-700">{pendiente.persona.tipo_identificacion}-{pendiente.persona.identificacion}</p>
+                  <p className="text-sm text-gray-700">{pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}</p>
                 </div>
               </div>
 
@@ -414,7 +498,7 @@ export default function DetallePendiente({ params, onVolver }) {
 
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula de identidad</p>
-              <p className="font-medium text-gray-800">{pendiente.persona.tipo_identificacion}-{pendiente.persona.identificacion}</p>
+              <p className="font-medium text-gray-800">{pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}</p>
             </div>
 
             <div className="bg-gray-50 p-3 rounded-md">
