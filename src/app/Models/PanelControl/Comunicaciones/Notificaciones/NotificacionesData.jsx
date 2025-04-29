@@ -6,6 +6,7 @@ const notificacionesIniciales = [
   {
     id: "1",
     titulo: "Actualización de sistema",
+    asunto: "Mejoras y nuevas funcionalidades",
     contenido: "Se ha actualizado el sistema a la versión 2.0. Revisa las nuevas funcionalidades disponibles.",
     fecha: "2023-11-15T10:30:00",
     leida: false,
@@ -16,6 +17,7 @@ const notificacionesIniciales = [
   {
     id: "2",
     titulo: "Recordatorio de pago",
+    asunto: "Cuota anual próxima a vencer",
     contenido: "Tu cuota anual vence en 7 días. Por favor, realiza el pago antes del vencimiento para evitar recargos.",
     fecha: "2023-11-14T09:15:00",
     leida: true,
@@ -26,6 +28,7 @@ const notificacionesIniciales = [
   {
     id: "3",
     titulo: "Nuevo curso disponible",
+    asunto: "Oportunidad de formación profesional",
     contenido:
       "Se ha publicado un nuevo curso de 'Odontología Estética Avanzada'. Inscríbete ahora para obtener un 15% de descuento.",
     fecha: "2023-11-13T14:45:00",
@@ -37,6 +40,7 @@ const notificacionesIniciales = [
   {
     id: "4",
     titulo: "Mensaje nuevo",
+    asunto: "Comunicación interna",
     contenido: "Has recibido un nuevo mensaje de la Dra. María González sobre la próxima reunión del comité.",
     fecha: "2023-11-12T16:20:00",
     leida: false,
@@ -47,6 +51,7 @@ const notificacionesIniciales = [
   {
     id: "5",
     titulo: "Evento próximo",
+    asunto: "Congreso Nacional de Odontología",
     contenido:
       "Recuerda que el Congreso Nacional de Odontología comienza el próximo viernes. Ya puedes descargar el programa completo.",
     fecha: "2023-11-11T11:00:00",
@@ -58,6 +63,7 @@ const notificacionesIniciales = [
   {
     id: "6",
     titulo: "Solicitud aprobada",
+    asunto: "Certificación profesional",
     contenido: "Tu solicitud de certificación ha sido aprobada. Puedes descargar el certificado desde tu perfil.",
     fecha: "2023-11-10T13:30:00",
     leida: true,
@@ -68,6 +74,7 @@ const notificacionesIniciales = [
   {
     id: "7",
     titulo: "Actualización de normativa",
+    asunto: "Cambios en la práctica clínica",
     contenido:
       "Se ha publicado una actualización importante en la normativa de práctica clínica. Por favor, revisa los cambios.",
     fecha: "2023-11-09T10:45:00",
@@ -79,6 +86,7 @@ const notificacionesIniciales = [
   {
     id: "8",
     titulo: "Mantenimiento programado",
+    asunto: "Interrupción temporal de servicios",
     contenido: "El sistema estará en mantenimiento el domingo 19 de noviembre de 02:00 a 05:00 AM.",
     fecha: "2023-11-08T09:00:00",
     leida: true,
@@ -89,6 +97,7 @@ const notificacionesIniciales = [
   {
     id: "9",
     titulo: "Felicitaciones",
+    asunto: "Perfil profesional completo",
     contenido: "¡Felicidades por completar tu perfil profesional! Tu perfil ahora es visible para otros miembros.",
     fecha: "2023-11-07T15:20:00",
     leida: true,
@@ -99,6 +108,7 @@ const notificacionesIniciales = [
   {
     id: "10",
     titulo: "Encuesta de satisfacción",
+    asunto: "Mejora continua de servicios",
     contenido:
       "Nos gustaría conocer tu opinión sobre las nuevas funcionalidades. Por favor, completa esta breve encuesta.",
     fecha: "2025-11-06T14:10:00",
@@ -117,6 +127,7 @@ export const NotificacionesProvider = ({ children }) => {
   const [selectedNotificacion, setSelectedNotificacion] = useState(null)
   const [activeTab, setActiveTab] = useState("todas")
   const [searchQuery, setSearchQuery] = useState("")
+  const [asuntoFilter, setAsuntoFilter] = useState("")
   const [notificacionesVistasEnModal, setNotificacionesVistasEnModal] = useState([])
 
   // Cargar notificaciones al iniciar
@@ -130,7 +141,16 @@ export const NotificacionesProvider = ({ children }) => {
     setNotificaciones(notificacionesConEstadoCorregido)
   }, [])
 
-  // Filtrar notificaciones según la pestaña activa y búsqueda
+  // Obtener todos los asuntos únicos para el filtro
+  const getUniqueAsuntos = () => {
+    const asuntos = notificaciones
+      .filter(notif => !notif.eliminada || activeTab === "papelera")
+      .map(notif => notif.asunto)
+
+    return ["Todos", ...new Set(asuntos)].sort()
+  }
+
+  // Filtrar notificaciones según la pestaña activa, búsqueda y asunto
   const getFilteredNotificaciones = () => {
     return notificaciones
       .filter((notif) => {
@@ -146,7 +166,14 @@ export const NotificacionesProvider = ({ children }) => {
         // Filtrar por búsqueda
         if (!searchQuery) return true
         const query = searchQuery.toLowerCase()
-        return notif.titulo.toLowerCase().includes(query) || notif.contenido.toLowerCase().includes(query)
+        return notif.titulo.toLowerCase().includes(query) ||
+          notif.contenido.toLowerCase().includes(query) ||
+          notif.asunto.toLowerCase().includes(query)
+      })
+      .filter((notif) => {
+        // Filtrar por asunto
+        if (!asuntoFilter || asuntoFilter === "Todos") return true
+        return notif.asunto === asuntoFilter
       })
       .sort((a, b) => {
         // Ordenar por fecha (más reciente primero)
@@ -303,6 +330,9 @@ export const NotificacionesProvider = ({ children }) => {
     setActiveTab,
     searchQuery,
     setSearchQuery,
+    asuntoFilter,
+    setAsuntoFilter,
+    getUniqueAsuntos,
     getFilteredNotificaciones,
     getNotificacionesCounts,
     toggleLeidaNotificacion,
@@ -314,7 +344,6 @@ export const NotificacionesProvider = ({ children }) => {
     getNotificacionesRecientes,
     selectNotificacionById,
     getNotificacionesRecientes,
-
     marcarVistaEnModal,
   }
 

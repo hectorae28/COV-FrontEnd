@@ -41,6 +41,7 @@ export const authOptions = {
         strategy: "jwt",
     },
     callbacks: {
+<<<<<<< HEAD
         async signOut({ token }) {
             try {
                 await fetch(`${process.env.NEXT_PUBLIC_BACK_HOST}/api/v1/usuario/logout/`, {
@@ -55,6 +56,8 @@ export const authOptions = {
                 console.error("Error al cerrar sesión en el backend:", error);
             }
         },
+=======
+>>>>>>> Feta/Login/RevisionJhonatan
         async signIn({ user, account, profile, email, credentials }) {
             if (user?.error) {
                 return `${process.env.NEXTAUTH_URL}/Login?error=${encodeURIComponent(user.error)}`;

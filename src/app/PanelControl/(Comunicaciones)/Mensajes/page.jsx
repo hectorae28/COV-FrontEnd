@@ -1,6 +1,6 @@
 "use client"
 
-import { useMessages } from "@/app/Models/PanelControl/Comunicaciones/Mensajes/MensajesData"
+import { useMessages, asuntosPredefinidos } from "@/app/Models/PanelControl/Comunicaciones/Mensajes/MensajesData"
 import { Plus, Search, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { MessageList } from "../../../Components/Comunicaciones/Mensajes/MensagesLista"
@@ -11,6 +11,7 @@ import { ComposeModal } from "../../../Components/Comunicaciones/Mensajes/ModalC
 export default function MessagingPage() {
   const [activeTab, setActiveTab] = useState("recibidos")
   const [searchQuery, setSearchQuery] = useState("")
+  const [asuntoSeleccionado, setAsuntoSeleccionado] = useState("")
   const [showComposeModal, setShowComposeModal] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -27,7 +28,8 @@ export default function MessagingPage() {
     handleSendReply,
     handleSendNewMessage,
     markMessageAsRead,
-  } = useMessages(activeTab, searchQuery)
+    asuntosUsados,
+  } = useMessages(activeTab, searchQuery, asuntoSeleccionado)
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -50,6 +52,11 @@ export default function MessagingPage() {
     }
   }, [selectedMessage])
 
+  // Limpiar filtro de asunto al cambiar de pestaña
+  useEffect(() => {
+    setAsuntoSeleccionado("")
+  }, [activeTab])
+
   return (
     <div className="flex flex-col h-screen overflow-hidden pt-20">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-3 bg-white border-b shadow-sm z-20 flex-shrink-0">
@@ -63,6 +70,9 @@ export default function MessagingPage() {
             isMobile={isMobile}
             counts={messageCounts}
             selectedMessage={selectedMessage}
+            asuntos={asuntosUsados}
+            asuntoSeleccionado={asuntoSeleccionado}
+            onAsuntoChange={setAsuntoSeleccionado}
           />
         </div>
 
@@ -140,7 +150,11 @@ export default function MessagingPage() {
       </div>
       {/* Modal de composición de mensaje */}
       {showComposeModal && (
-        <ComposeModal onClose={() => setShowComposeModal(false)} onSendMessage={handleSendNewMessage} />
+        <ComposeModal
+          onClose={() => setShowComposeModal(false)}
+          onSendMessage={handleSendNewMessage}
+          asuntosPredefinidos={asuntosPredefinidos}
+        />
       )}
     </div>
   )

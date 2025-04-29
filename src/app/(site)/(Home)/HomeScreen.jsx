@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Presents from "./Presents";
 import Cards from "./Cards";
-import Noticias from "./Noticias";
+import Noticias from "./NoticiasModal";
 import Publications from "./Publications";
 import Sponser from "./Sponser";
 import { ParallaxProvider, Parallax } from "react-scroll-parallax";

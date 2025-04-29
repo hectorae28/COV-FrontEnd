@@ -11,6 +11,7 @@ import Alert from "@/app/Components/Alert"
 export default function LoginForm({ onForgotPassword, onRegister }) {
   const searchParams = useSearchParams();
   const [error, setError] = useState(searchParams.get("error"));
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
   useEffect(() => {
@@ -19,31 +20,41 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const Form = new FormData(formRef.current);
-    const result = await signIn("credentials", {
-      username: Form.get("email").split("@")[0],
-      password: Form.get("password"),
-      redirect: false,
-    });
-    if (result.error) {
-      switch (result.error) {
-        case "Account is locked":
-        case "Account locked due to too many failed attempts":
-          setError("Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña.");
-          break;
-        case "Invalid credentials":
-          setError("Credenciales inválidas. Por favor, verifique su email y/o contraseña.");
-          break;
-        case "Ya existe una sesión activa para este usuario.":
-          setError("Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente.");
-          break;
-        default:
-          setError("Ocurrió un error inesperado. Intenta nuevamente.");
-      }      
-    } else {
-      console.log("Inicio de sesión exitoso:", result);
-      router.push("/Colegiado");
+    setIsLoading(true);
+    setError("");
+    try{
+      const Form = new FormData(formRef.current);
+      const result = await signIn("credentials", {
+        username: Form.get("email").split("@")[0],
+        password: Form.get("password"),
+        redirect: false,
+      });
+      if (result.error) {
+        switch (result.error) {
+          case "Account is locked":
+          case "Account locked due to too many failed attempts":
+            setError("Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña.");
+            break;
+          case "Invalid credentials":
+            setError("Credenciales inválidas. Por favor, verifique su email y/o contraseña.");
+            break;
+          case "Ya existe una sesión activa para este usuario.":
+            setError("Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente.");
+            break;
+          default:
+            setError("Ocurrió un error inesperado. Intenta nuevamente.");
+        }      
+      } else {
+        console.log("Inicio de sesión exitoso:", result);
+        router.push("/Colegiado");
+      }
+    }catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      setError("Ocurrió un error inesperado. Intenta nuevamente.");
+    }finally {
+      setIsLoading(false);
     }
+
   };
 
   return (
@@ -82,13 +93,21 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
       {/* Login button */}
       <motion.button
         type="submit"
+        disabled={isLoading}
         className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
         shadow-md hover:shadow-lg transition-all duration-300
-        focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50"
+        focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50 disabled:opacity-70"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        Iniciar Sesión
+        {isLoading ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+            <span>Iniciando sesión...</span>
+          </div>
+        ) : (
+          "Iniciar Sesión"
+        )}
       </motion.button>
 
       {/* Forgot password link */}

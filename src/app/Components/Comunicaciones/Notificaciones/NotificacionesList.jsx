@@ -156,6 +156,10 @@ export function NotificacionesList({
                           <div className="font-medium truncate">{notificacion.titulo}</div>
                           <div className="text-xs text-gray-500 whitespace-nowrap ml-2">{formattedDate}</div>
                         </div>
+                        {/* Asunto de la notificación */}
+                        <div className="mt-1">
+                          <div className="text-xs bg-purple-100 text-purple-800 rounded-full inline-block truncate max-w-full font-medium">{notificacion.asunto}</div>
+                        </div>
                         <div className="mt-1">
                           <div className="text-sm text-gray-600 line-clamp-2">{notificacion.contenido}</div>
                         </div>

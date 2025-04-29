@@ -1,6 +1,5 @@
 "use client";
-
-import { AccountBalance, AccountCircle, Newspaper, Celebration, ChevronRight, ContactPage, DescriptionRounded, ExpandMore, FactCheck, Forum, Handshake, Home, House, Message, NoteAdd, Notifications, RequestQuote, Settings, Web, Assignment, Group, Assessment } from "@mui/icons-material";
+import { AccountBalance, AccountCircle, Assessment, Assignment, Celebration, ChevronRight, ContactPage, DescriptionRounded, ExpandMore, FactCheck, Forum, Group, Handshake, Home, House, Message, Newspaper, NoteAdd, Notifications, RequestQuote, Settings, Web } from "@mui/icons-material";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,9 +22,9 @@ const SidebarItem = ({ icon, text, active, onClick }) => {
   const activeClass = active
     ? "bg-white/10 text-white font-medium shadow-sm backdrop-blur-sm"
     : "bg-transparent text-white/70 hover:bg-[#41023B]/40 hover:text-white";
-    
+
   const className = `${baseClass} ${activeClass}`;
-    
+
   return (
     <div
       onClick={onClick}
@@ -41,12 +40,12 @@ const SidebarItem = ({ icon, text, active, onClick }) => {
 // Menu Section
 const MenuSection = ({ title, icon, children, isExpanded, onClick, isActive }) => {
   const baseClass = "flex items-center w-4/5 mx-auto px-4 py-3 rounded-lg transition-all duration-200";
-  const stateClass = isActive 
-    ? "bg-[#41023B]/80 text-white font-medium" 
+  const stateClass = isActive
+    ? "bg-[#41023B]/80 text-white font-medium"
     : "bg-transparent text-white/70 hover:bg-[#41023B]/40 hover:text-white";
-    
+
   const buttonClass = `${baseClass} ${stateClass}`;
-    
+
   return (
     <div className="mb-4">
       <button
@@ -87,10 +86,10 @@ const menuItems = [
       title: "Solicitudes",
       icon: <DescriptionRounded className="h-5 w-5" />,
       routes: [
-        { path: "PanelControl/ListaColegiados", title: "Lista de Colegiados", icon: <Assignment className="h-5 w-5" /> },
-        { path: "PanelControl/ListaEspecialistas", title: "Lista de Especialistas", icon: <FactCheck className="h-5 w-5" /> },
-        { path: "PanelControl/Solicitudes", title: "Solicitudes", icon: <NoteAdd className="h-5 w-5" /> },
-        { path: "PanelControl/Pagos", title: "Pagos", icon: <RequestQuote className="h-5 w-5" /> },
+        { path: "/PanelControl/ListaColegiados", title: "Lista de Colegiados", icon: <Assignment className="h-5 w-5" /> },
+        { path: "/PanelControl/ListaEspecialistas", title: "Lista de Especialistas", icon: <FactCheck className="h-5 w-5" /> },
+        { path: "/PanelControl/Solicitudes", title: "Solicitudes", icon: <NoteAdd className="h-5 w-5" /> },
+        { path: "/PanelControl/Pagos", title: "Pagos", icon: <RequestQuote className="h-5 w-5" /> },
       ],
     }
   },
@@ -100,8 +99,8 @@ const menuItems = [
       title: "Comunicaciones",
       icon: <Forum className="h-5 w-5" />,
       routes: [
-        { path: "PanelControl/Mensajes", title: "Mensajes", icon: <Message className="h-5 w-5" /> },
-        { path: "PanelControl/Notificaciones", title: "Notificaciones", icon: <Notifications className="h-5 w-5" /> },
+        { path: "/PanelControl/Mensajes", title: "Mensajes", icon: <Message className="h-5 w-5" /> },
+        { path: "/PanelControl/Notificaciones", title: "Notificaciones", icon: <Notifications className="h-5 w-5" /> },
       ],
     }
   },
@@ -110,7 +109,7 @@ const menuItems = [
     config: {
       title: "Cursos y Eventos",
       icon: <Celebration className="h-5 w-5" />,
-      path: "PanelControl/CursosEventos",
+      path: "/PanelControl/CursosEventos",
       isDirectNav: true
     }
   },
@@ -120,13 +119,13 @@ const menuItems = [
       title: "Página Web",
       icon: <Web className="h-5 w-5" />,
       routes: [
-        { path: "PanelControl/Inicio", title: "Inicio", icon: <House className="h-5 w-5" /> },
-        { path: "PanelControl/SobreCOV", title: "Sobre Nosotros", icon: <Handshake className="h-5 w-5" /> },
-        { path: "PanelControl/Noticias", title: "Noticias", icon: <Newspaper className="h-5 w-5" /> },
-        { path: "PanelControl/NuevaLey", title: "Nueva Ley", icon: <AccountBalance className="h-5 w-5" /> },
-        { path: "PanelControl/Eventos", title: "Eventos", icon: <Celebration className="h-5 w-5" /> },
-        { path: "PanelControl/Tramites", title: "Tramites", icon: <RequestQuote className="h-5 w-5" /> },
-        { path: "PanelControl/Contactenos", title: "Contactenos", icon: <ContactPage className="h-5 w-5" /> }
+        { path: "/PanelControl/Inicio", title: "Inicio", icon: <House className="h-5 w-5" /> },
+        { path: "/PanelControl/SobreCOV", title: "Sobre Nosotros", icon: <Handshake className="h-5 w-5" /> },
+        { path: "/PanelControl/Noticias", title: "Noticias", icon: <Newspaper className="h-5 w-5" /> },
+        { path: "/PanelControl/NuevaLey", title: "Nueva Ley", icon: <AccountBalance className="h-5 w-5" /> },
+        { path: "/PanelControl/Eventos", title: "Eventos", icon: <Celebration className="h-5 w-5" /> },
+        { path: "/PanelControl/Tramites", title: "Tramites", icon: <RequestQuote className="h-5 w-5" /> },
+        { path: "/PanelControl/Contactenos", title: "Contactenos", icon: <ContactPage className="h-5 w-5" /> }
       ],
     }
   },
@@ -135,7 +134,7 @@ const menuItems = [
     config: {
       title: "Estadisticas",
       icon: <Assessment className="h-5 w-5" />,
-      path: "PanelControl/Estadisticas",
+      path: "/PanelControl/Estadisticas",
       isDirectNav: true
     }
   },
@@ -145,8 +144,9 @@ const menuItems = [
       title: "Configuración",
       icon: <Settings className="h-5 w-5" />,
       routes: [
-        { path: "PanelControl/Usuarios", title: "Usuarios", icon: <AccountCircle className="h-5 w-5" /> },
-        { path: "PanelControl/Grupos", title: "Grupos", icon: <Group className="h-5 w-5" /> },
+        { path: "/PanelControl/Usuarios", title: "Usuarios", icon: <AccountCircle className="h-5 w-5" /> },
+        { path: "/PanelControl/Grupos", title: "Grupos", icon: <Group className="h-5 w-5" /> },
+        { path: "/PanelControl/MetodoPago", title: "Metodos de Pagos", icon: <RequestQuote className="h-5 w-5" /> },
       ],
     }
   }
@@ -159,9 +159,23 @@ export default function AppBar({ setSelectedTitle, setSidebarOpen }) {
   const router = useRouter();
   const pathname = usePathname();
   const [expandedSection, setExpandedSection] = useState(null);
-    
-  const isRouteActive = (route) => pathname === route || pathname.startsWith(`${route}/`);
-    
+
+  // Fixed isRouteActive function to properly check exact matches and subpaths
+  const isRouteActive = (route) => {
+    // Ensure both paths are normalized with leading slashes
+    const normalizedRoute = route.startsWith('/') ? route : `/${route}`;
+    const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
+
+    // For the home/panel control route, only match exactly to avoid matching all panel control subpaths
+    if (normalizedRoute === '/PanelControl') {
+      return normalizedPathname === '/PanelControl';
+    }
+
+    // For other routes, check if pathname exactly matches or is a subpath
+    return normalizedPathname === normalizedRoute ||
+      normalizedPathname.startsWith(`${normalizedRoute}/`);
+  };
+
   useEffect(() => {
     if (!setSelectedTitle) return;
     if (pathname === "/") {
@@ -171,28 +185,21 @@ export default function AppBar({ setSelectedTitle, setSidebarOpen }) {
       });
       return;
     }
-    if (pathname === "PanelControl/Mensajes") {
-      setSelectedTitle({
-        title: "Mensajes y Notificaciones",
-        icon: <Forum className="h-5 w-5" />,
-      });
-      return;
-    }
-    if (pathname === "PanelControl/CursosEventos") {
+    if (pathname === "/PanelControl/CursosEventos") {
       setSelectedTitle({
         title: "Cursos y Eventos",
         icon: <Celebration className="h-5 w-5" />,
       });
       return;
     }
-    if (pathname === "PanelControl/Estadisticas") {
+    if (pathname === "/PanelControl/Estadisticas") {
       setSelectedTitle({
         title: "Estadisticas",
         icon: <Assessment className="h-5 w-5" />,
       });
       return;
     }
-    
+
     const paginaWebRoutes = menuStructure["Página Web"].routes.map(r => r.path);
     if (paginaWebRoutes.some(route => pathname.startsWith(route))) {
       setSelectedTitle({
@@ -201,7 +208,7 @@ export default function AppBar({ setSelectedTitle, setSidebarOpen }) {
       });
       return;
     }
-        
+
     for (const section of Object.values(menuStructure)) {
       if (section.routes) {
         for (const route of section.routes) {
@@ -224,7 +231,7 @@ export default function AppBar({ setSelectedTitle, setSidebarOpen }) {
         break;
       }
     }
-  }, []);
+  }, [pathname]);
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);

@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Lock, Mail, Check } from "lucide-react";
+import { Check, Clock, Lock, Mail, MapPin, Phone } from "lucide-react";
+import { signIn } from "next-auth/react";
 import Image from "next/image";
-import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useRouter } from "next/navigation";
@@ -11,11 +13,12 @@ import { signIn } from "next-auth/react";
 import Alert from "@/app/Components/Alert";
 import ForgotPasswordForm from "@/Components/Home/ForgotPasswordForm";
 
-
 export default function PanelAdmin({ onClose, isClosing }) {
   const [currentView, setCurrentView] = useState("login");
   const searchParams = useSearchParams();
   const [error, setError] = useState(searchParams.get("error"));
+  const [showContact, setShowContact] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
   useEffect(() => {
@@ -24,38 +27,52 @@ export default function PanelAdmin({ onClose, isClosing }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const Form = new FormData(formRef.current);
-    const result = await signIn("credentials", {
-      username: Form.get("email").split("@")[0],
-      password: Form.get("password"),
-      redirect: false,
-    });
-    if (result.error) {
-      if (
-        result.error === "Account is locked" ||
-        result.error === "Account locked due to too many failed attempts"
-      ) {
-        setError(
-          "Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña."
-        );
-      } else if (result.error === "Invalid credentials") {
-        setError(
-          "Credenciales inválidas. Por favor, verifique su email y/o contraseña."
-        );
-      } else if (
-        result.error === "Ya existe una sesión activa para este usuario."
-      ) {
-        setError(
-          "Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente."
-        );
+    setIsLoading(true);
+    setError("");
+    try{
+      const Form = new FormData(formRef.current);
+      const result = await signIn("credentials", {
+        username: Form.get("email").split("@")[0],
+        password: Form.get("password"),
+        redirect: false,
+      });
+      if (result.error) {
+        if (
+          result.error === "Account is locked" ||
+          result.error === "Account locked due to too many failed attempts"
+        ) {
+          setError(
+            "Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña."
+          );
+        } else if (result.error === "Invalid credentials") {
+          setError(
+            "Credenciales inválidas. Por favor, verifique su email y/o contraseña."
+          );
+        } else if (
+          result.error === "Ya existe una sesión activa para este usuario."
+        ) {
+          setError(
+            "Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente."
+          );
+        } else {
+          setError("Ocurrió un error inesperado. Intenta nuevamente.");
+        }
       } else {
-        setError("Ocurrió un error inesperado. Intenta nuevamente.");
+        console.log("Inicio de sesión exitoso:", result);
+        router.push("/PanelControl");
       }
-      //setError("Error al iniciar sesión:", result);
-    } else {
-      console.log("Inicio de sesión exitoso:", result);
-      router.push("/PanelControl");
+    } catch (error) {
+      console.error("Error en el proceso de inicio de sesión:", error);
+      setError("Ocurrió un error al intentar iniciar sesión. Por favor, inténtalo más tarde.");
+    }finally{
+      setIsLoading(false);
     }
+  }
+
+
+  // Función para alternar la sección de contacto
+  const toggleContactSection = () => {
+    setShowContact(!showContact);
   };
 
   return (
@@ -130,6 +147,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
             {currentView === "login"
               ? "Panel de Administradores"
               : "Recuperar Contraseña"}
+
           </h2>
           <p className="text-center text-gray-700 mb-10">
             {currentView === "login"
@@ -139,6 +157,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
           {currentView === "login" && (
             <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
               {error && <Alert type="alert">{error}</Alert>}
+
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -166,7 +185,6 @@ export default function PanelAdmin({ onClose, isClosing }) {
                   />
                 </div>
               </div>
-
               <motion.button
                 type="submit"
                 className="cursor-pointer w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
@@ -175,7 +193,14 @@ export default function PanelAdmin({ onClose, isClosing }) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Iniciar Sesión
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>Iniciando Sesión...</span>
+                  </div>
+                ) : (
+                  "Iniciar Sesión"
+                )}
               </motion.button>
               {/* Forgot password link */}
               <div className="text-center mt-4">
@@ -194,6 +219,55 @@ export default function PanelAdmin({ onClose, isClosing }) {
           {currentView === "forgot-password" && (
             <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
           )}
+          <div className="mt-6 text-center">
+            <motion.button
+              onClick={toggleContactSection}
+              className="text-[#D7008A] font-medium hover:text-[#41023B] transition-colors duration-300 md:hidden"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {showContact ? "Ocultar contacto" : "Contáctanos"}
+            </motion.button>
+          </div>
+
+          {/* Sección de contacto (visible solo cuando showContact es true) */}
+          {showContact && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="mt-6 p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg"
+            >
+              <h3 className="text-xl font-bold text-[#41023B] mb-4 ">Contáctanos</h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 text-black">
+                  <Phone className="text-[#41023B]" size={20} />
+                  <a
+                    href="tel:+582127812267"
+                    className="hover:text-[#D7008A] transition-all"
+                  >
+                    (0212) 781-22 67
+                  </a>
+                </div>
+                <div className="flex items-center space-x-3 text-black">
+                  <MapPin className="text-[#41023B]" size={20} />
+                  <a
+                    href="https://maps.app.goo.gl/sj999zBBXoV4ouV39"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[#D7008A] transition-all"
+                  >
+                    Dirección en Google Maps
+                  </a>
+                </div>
+                <div className="flex items-center space-x-3 text-black">
+                  <Clock className="text-[#41023B]" size={20} />
+                  <span>Lun-Vie: 8:00 AM - 4:00 PM</span>
+                </div>
+              </div>
+            </motion.div>
+            )}
         </div>
       </div>
     </motion.div>

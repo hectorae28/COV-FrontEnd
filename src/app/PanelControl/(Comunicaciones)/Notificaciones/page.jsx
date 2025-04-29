@@ -1,7 +1,7 @@
 "use client"
 
 import { NotificacionesProvider, useNotificaciones } from "@/app/Models/PanelControl/Comunicaciones/Notificaciones/NotificacionesData"
-import { CheckCircle, Search, Trash2, X } from "lucide-react"
+import { CheckCircle, Filter, Search, Trash2, X } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { NotificacionDetail } from "../../../Components/Comunicaciones/Notificaciones/NotificacionDetail"
@@ -13,7 +13,8 @@ function NotificacionesPage() {
   const notificationId = searchParams.get("id")
   const [isMobile, setIsMobile] = useState(false)
   const [shouldProcessNotificationId, setShouldProcessNotificationId] = useState(true);
-  
+  const [showAsuntoDropdown, setShowAsuntoDropdown] = useState(false);
+
   const {
     selectedNotificacion,
     setSelectedNotificacion,
@@ -21,6 +22,9 @@ function NotificacionesPage() {
     setActiveTab,
     searchQuery,
     setSearchQuery,
+    asuntoFilter,
+    setAsuntoFilter,
+    getUniqueAsuntos,
     getFilteredNotificaciones,
     getNotificacionesCounts,
     toggleLeidaNotificacion,
@@ -31,9 +35,10 @@ function NotificacionesPage() {
     marcarTodasComoLeidas,
     selectNotificacionById,
   } = useNotificaciones()
-  
+
   const filteredNotificaciones = getFilteredNotificaciones()
   const counts = getNotificacionesCounts()
+  const uniqueAsuntos = getUniqueAsuntos()
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -60,6 +65,20 @@ function NotificacionesPage() {
     setShouldProcessNotificationId(true);
   }, [notificationId]);
 
+  // Cerrar el dropdown de asuntos al hacer clic fuera de él
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showAsuntoDropdown && !event.target.closest('.asunto-filter-container')) {
+        setShowAsuntoDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAsuntoDropdown]);
+
   const handleBackToList = () => {
     setSelectedNotificacion(null);
 
@@ -67,6 +86,15 @@ function NotificacionesPage() {
       const newUrl = window.location.pathname;
       window.history.replaceState(null, '', newUrl);
     }
+  }
+
+  const toggleAsuntoDropdown = () => {
+    setShowAsuntoDropdown(!showAsuntoDropdown);
+  }
+
+  const handleAsuntoSelect = (asunto) => {
+    setAsuntoFilter(asunto);
+    setShowAsuntoDropdown(false);
   }
 
   return (
@@ -98,6 +126,31 @@ function NotificacionesPage() {
                 >
                   <X className="h-4 w-4" />
                 </button>
+              )}
+            </div>
+            <div className="relative asunto-filter-container">
+              <button
+                onClick={toggleAsuntoDropdown}
+                className="flex items-center px-2 py-2 text-sm text-gray-700 rounded-md border hover:bg-gray-50"
+                aria-label="Filtrar por asunto"
+              >
+                <Filter className="h-4 w-4" />
+              </button>
+              {showAsuntoDropdown && (
+                <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                  <div className="py-1">
+                    {uniqueAsuntos.map((asunto) => (
+                      <button
+                        key={asunto}
+                        onClick={() => handleAsuntoSelect(asunto)}
+                        className={`w-full text-left px-4 py-2 text-sm ${asuntoFilter === asunto ? "bg-pink-50 text-[#D7008A]" : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                      >
+                        {asunto}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
             {activeTab === "papelera" ? (
@@ -143,6 +196,34 @@ function NotificacionesPage() {
                 </button>
               )}
             </div>
+
+            {/* Filtro de asunto en desktop */}
+            <div className="relative asunto-filter-container">
+              <button
+                onClick={toggleAsuntoDropdown}
+                className="flex items-center px-3 py-2 text-sm text-gray-700 rounded-md border hover:bg-gray-50"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                {asuntoFilter || "Filtrar por asunto"}
+              </button>
+              {showAsuntoDropdown && (
+                <div className="absolute right-0 mt-1 w-64 bg-white rounded-md shadow-lg z-50 max-h-64 overflow-y-auto">
+                  <div className="py-1">
+                    {uniqueAsuntos.map((asunto) => (
+                      <button
+                        key={asunto}
+                        onClick={() => handleAsuntoSelect(asunto)}
+                        className={`w-full text-left px-4 py-2 text-sm ${asuntoFilter === asunto ? "bg-pink-50 text-[#D7008A]" : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                      >
+                        {asunto}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {activeTab === "papelera" ? (
               <button
                 onClick={vaciarPapelera}

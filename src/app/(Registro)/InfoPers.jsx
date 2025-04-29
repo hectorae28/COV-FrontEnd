@@ -1,8 +1,9 @@
-import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
-export default function InfoPersonal({ formData, onInputChange }) {
+export default function InfoPersonal({ formData, onInputChange, validationErrors }) {
   const [age, setAge] = useState("");
+  const [isFormValid, setIsFormValid] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,6 +37,33 @@ export default function InfoPersonal({ formData, onInputChange }) {
     setAge(calculatedAge.toString());
   };
 
+  // Validate form when formData changes - but don't call onInputChange here
+  // This is what was creating the infinite loop
+  useEffect(() => {
+    const requiredFields = [
+      "nationality",
+      "identityCard",
+      "firstName",
+      "secondName",
+      "firstLastName",
+      "secondLastName",
+      "birthDate",
+      "gender",
+      "maritalStatus"
+    ];
+
+    const isValid = requiredFields.every(field => formData[field] && formData[field].trim() !== "");
+    setIsFormValid(isValid);
+
+    // REMOVE THIS LINE - it was causing the infinite loop:
+    // onInputChange({ isPersonalInfoValid: isValid });
+  }, [formData]);
+
+  // Checks if a field is empty to display the required message
+  const isFieldEmpty = (fieldName) => {
+    return (!formData[fieldName] || formData[fieldName].trim() === "");
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -46,17 +74,17 @@ export default function InfoPersonal({ formData, onInputChange }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Nationality */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B]">
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Nacionalidad
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="relative">
             <select
               name="nationality"
               value={formData.nationality}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-              focus:outline-none focus:ring-2 focus:ring-[#D7008A] 
-              appearance-none text-gray-700"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("nationality") ? "border-gray-200" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="" disabled>
                 Seleccionar Nacionalidad
@@ -74,12 +102,16 @@ export default function InfoPersonal({ formData, onInputChange }) {
               </svg>
             </div>
           </div>
+          {isFieldEmpty("nationality") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
 
         {/* Identity Card */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B]">
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Número de Identificación
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="flex items-center">
             {/* Select for V or E */}
@@ -108,64 +140,100 @@ export default function InfoPersonal({ formData, onInputChange }) {
               style={{ height: "48px" }} // Asegura que el input tenga la misma altura
             />
           </div>
+
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* First Name */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B]">
-            Nombre(s)
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Primer Nombre
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <input
             type="text"
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-            focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
-            placeholder="Ingrese su nombre"
+            className={`w-full px-4 py-3 border ${isFieldEmpty("firstName") ? "border-gray-200" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+            placeholder="Ingrese su primer nombre"
           />
+          {isFieldEmpty("firstName") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
 
-        {/* Last Name */}
+        {/* Second Name */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B]">
-            Apellido(s)
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Segundo Nombre
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <input
             type="text"
-            name="lastName"
-            value={formData.lastName}
+            name="secondName"
+            value={formData.secondName || ""}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-            focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
-            placeholder="Ingrese su apellido"
+            className={`w-full px-4 py-3 border ${isFieldEmpty("secondName") ? "border-gray-200" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+            placeholder="Ingrese su segundo nombre"
           />
+          {isFieldEmpty("secondName") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Birth Place */}
+        {/* First Last Name */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B]">
-            Lugar de Nacimiento
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Primer Apellido
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <input
             type="text"
-            name="birthPlace"
-            value={formData.birthPlace}
+            name="firstLastName"
+            value={formData.firstLastName || ""}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-            focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
-            placeholder="Ciudad / Estado"
+            className={`w-full px-4 py-3 border ${isFieldEmpty("firstLastName") ? "border-gray-200" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+            placeholder="Ingrese su primer apellido"
           />
+          {isFieldEmpty("firstLastName") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
 
+        {/* Second Last Name */}
+        <div>
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Segundo Apellido
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <input
+            type="text"
+            name="secondLastName"
+            value={formData.secondLastName || ""}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border ${isFieldEmpty("secondLastName") ? "border-gray-200" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+            placeholder="Ingrese su segundo apellido"
+          />
+          {isFieldEmpty("secondLastName") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Birth Date */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B]">
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Fecha de Nacimiento
+            <span className="text-red-500 ml-1">*</span>
             {formData.age && formData.age > 0 && ` (${formData.age} años)`}
           </label>
           <div className="relative">
@@ -174,29 +242,31 @@ export default function InfoPersonal({ formData, onInputChange }) {
               name="birthDate"
               value={formData.birthDate}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-              focus:outline-none focus:ring-2 focus:ring-[#D7008A] 
-              text-gray-700"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("birthDate") ? "border-gray-200" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
             />
           </div>
+          {isFieldEmpty("birthDate") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Gender */}
         <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B]">
-            Genero
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Género
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="relative">
             <select
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-              focus:outline-none focus:ring-2 focus:ring-[#D7008A] 
-              appearance-none text-gray-700"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("gender") ? "border-gray-200" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="" disabled>
-                Seleccionar Genero
+                Seleccionar Género
               </option>
               <option value="masculino">Masculino</option>
               <option value="femenino">Femenino</option>
@@ -212,32 +282,47 @@ export default function InfoPersonal({ formData, onInputChange }) {
               </svg>
             </div>
           </div>
+          {isFieldEmpty("gender") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
       </div>
 
-      {/* Marital Status */}
+      {/* Marital Status as dropdown */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-[#41023B]">
+        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Estado Civil
+          <span className="text-red-500 ml-1">*</span>
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {["Soltero", "Casado", "Divorciado", "Viudo"].map((status) => (
-            <label
-              key={status}
-              className="flex items-center space-x-2 cursor-pointer"
+        <div className="relative">
+          <select
+            name="maritalStatus"
+            value={formData.maritalStatus}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border ${isFieldEmpty("maritalStatus") ? "border-gray-200" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+          >
+            <option value="" disabled>
+              Seleccionar Estado Civil
+            </option>
+            <option value="soltero">Soltero</option>
+            <option value="casado">Casado</option>
+            <option value="divorciado">Divorciado</option>
+            <option value="viudo">Viudo</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg
+              className="fill-current h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
             >
-              <input
-                type="radio"
-                name="maritalStatus"
-                value={status.toLowerCase()}
-                checked={formData.maritalStatus === status.toLowerCase()}
-                onChange={handleChange}
-                className="text-[#D7008A] focus:ring-[#D7008A]"
-              />
-              <span className="text-gray-700">{status}</span>
-            </label>
-          ))}
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+            </svg>
+          </div>
         </div>
+        {isFieldEmpty("maritalStatus") && (
+          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+        )}
       </div>
     </motion.div>
   );

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import PagosColg from "@/app/Components/PagosModal";
 import { Info } from "lucide-react";
-import PagosColg from "../PagosModal";
+import { useState } from "react";
 
 export default function SolvenciaPago() {
   const [isSuccess, setIsSuccess] = useState(false);

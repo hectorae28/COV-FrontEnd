@@ -1,23 +1,27 @@
 "use client"
-
 import { fetchMe } from "@/api/endpoints/colegiado"
 import ProfileDropdown from "@/app/Components/PerfilDropdown"
 import { NotificacionesProvider } from "@/app/Models/PanelControl/Comunicaciones/Notificaciones/NotificacionesData"
-import { Lightbulb, Notifications } from "@mui/icons-material"
+import { Home, Lightbulb, Notifications } from "@mui/icons-material"
 import { Menu } from "lucide-react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { NotificacionesModal } from "../../Components/Comunicaciones/Notificaciones/NotificacionesModal"
 import RecomendacionesModal from "./RecomendacionesModal"
 
-export default function Barra({ onMenuClick, title = "Inicio", icon }) {
+export default function Barra({ onMenuClick, title: propTitle, icon: propIcon }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [showNotificaciones, setShowNotificaciones] = useState(false)
   const [showRecomendaciones, setShowRecomendaciones] = useState(false)
   const notificacionesButtonRef = useRef(null)
   const recomendacionesButtonRef = useRef(null)
-  
+
+  // Local state for title and icon to handle transitions
+  const [title, setTitle] = useState("Inicio")
+  const [icon, setIcon] = useState(<Home className="h-5 w-5" />)
+
   // Añadimos los estados para el perfil
   const [userInfo, setUser_info] = useState(null)
   const { data: session, status } = useSession()
@@ -32,6 +36,20 @@ export default function Barra({ onMenuClick, title = "Inicio", icon }) {
     }
   }, [session, status]);
 
+  // Update title and icon when props change or on path change
+  useEffect(() => {
+    // Check if we're on the home/inicio page
+    if (pathname === "/PanelControl") {
+      setTitle("Inicio")
+      setIcon(<Home className="h-5 w-5" />)
+    }
+    // Otherwise use the props passed from parent
+    else if (propTitle && propIcon) {
+      setTitle(propTitle)
+      setIcon(propIcon)
+    }
+  }, [pathname, propTitle, propIcon]);
+
   return (
     <>
       <div className="bg-white h-20 fixed top-0 right-0 left-0 lg:left-72 shadow-sm z-30 flex items-center justify-between px-6">
@@ -44,14 +62,12 @@ export default function Barra({ onMenuClick, title = "Inicio", icon }) {
           >
             <Menu size={30} />
           </button>
-
           {/* Título principal */}
           <div className="flex items-center">
             {icon && <span className="text-[#41023B] mr-2">{icon}</span>}
             <h1 className="text-sm md:text-xl font-bold ml-2 text-[#41023B]">{title}</h1>
           </div>
         </div>
-
         {/* Contenedor de solvencia e iconos */}
         <div className="flex items-center space-x-6 lg:mr-12">
           {/* Iconos */}
@@ -68,7 +84,7 @@ export default function Barra({ onMenuClick, title = "Inicio", icon }) {
                 <Lightbulb fontSize="medium" />
               </button>
             </div>
-            
+
             {/* Botón de Notificaciones */}
             <div className="relative">
               <button
@@ -83,13 +99,12 @@ export default function Barra({ onMenuClick, title = "Inicio", icon }) {
                 </NotificacionesProvider>
               </button>
             </div>
-            
+
             {/* Reemplazamos el botón de Usuario por el ProfileDropdown */}
             <ProfileDropdown userInfo={userInfo} />
           </div>
         </div>
       </div>
-
       {/* Modal de notificaciones */}
       <NotificacionesProvider>
         <NotificacionesModal
@@ -98,7 +113,7 @@ export default function Barra({ onMenuClick, title = "Inicio", icon }) {
           anchorRef={notificacionesButtonRef}
         />
       </NotificacionesProvider>
-      
+
       {/* Modal de recomendaciones */}
       <RecomendacionesModal
         isOpen={showRecomendaciones}
@@ -112,9 +127,7 @@ export default function Barra({ onMenuClick, title = "Inicio", icon }) {
 function NotificacionesBadge() {
   const { getNotificacionesCounts } = useNotificaciones()
   const counts = getNotificacionesCounts()
-
   if (counts.noLeidas === 0) return null
-
   return <span className="absolute -top-1 -right-1 bg-red-500 h-3 w-3 rounded-full"></span>
 }
 

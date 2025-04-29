@@ -11,20 +11,21 @@ import {
   GraduationCap,
   Phone,
   User,
+  AlertTriangle
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 // Import step components
+import api from "@/api/api";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import Head from "next/head";
+import PagosColg from "../../Components/PagosModal";
 import DocsRequirements from "../DocsRequirements";
 import InfoColegiado from "../InfoColg";
 import InfoContacto from "../InfoCont";
 import InfoLaboral from "../InfoLab";
 import InfoPersonal from "../InfoPers";
-import PagosColg from "../PagosColg";
-import Head from "next/head";
-import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import api from "@/api/api";
 
 const steps = [
   {
@@ -33,6 +34,17 @@ const steps = [
     description: "Datos básicos de identificación",
     icon: User,
     component: InfoPersonal,
+    requiredFields: [
+      "nationality",
+      "identityCard",
+      "firstName",
+      "secondName",
+      "firstLastName",
+      "secondLastName",
+      "birthDate",
+      "gender",
+      "maritalStatus"
+    ]
   },
   {
     id: 2,
@@ -40,6 +52,13 @@ const steps = [
     description: "Cómo podemos comunicarnos contigo",
     icon: Phone,
     component: InfoContacto,
+    requiredFields: [
+      "email",
+      "phoneNumber",
+      "address",
+      "city",
+      "state"
+    ]
   },
   {
     id: 3,
@@ -47,6 +66,15 @@ const steps = [
     description: "Datos de tu colegiatura profesional",
     icon: GraduationCap,
     component: InfoColegiado,
+    requiredFields: [
+      "graduateInstitute",
+      "universityTitle",
+      "mainRegistrationNumber",
+      "mainRegistrationDate",
+      "mppsRegistrationNumber",
+      "mppsRegistrationDate",
+      "titleIssuanceDate"
+    ]
   },
   {
     id: 4,
@@ -54,7 +82,11 @@ const steps = [
     description: "Tu experiencia y situación laboral actual",
     icon: Building,
     component: InfoLaboral,
-    requiredFields: ["selectedOption"],
+    requiredFields: [
+      "institutionName",
+      "institutionAddress",
+      "institutionPhone"
+    ]
   },
   {
     id: 5,
@@ -62,6 +94,12 @@ const steps = [
     description: "Documentos necesarios",
     icon: FilePlus,
     component: DocsRequirements,
+    requiredFields: [
+      "ci",
+      "rif",
+      "titulo",
+      "mpps"
+    ]
   },
 ];
 
@@ -71,7 +109,9 @@ export default function RegistrationForm() {
     nationality: "",
     identityCard: "",
     firstName: "",
-    lastName: "",
+    secondName: "",
+    firstLastName: "",
+    secondLastName: "",
     birthPlace: "",
     birthDate: "",
     gender: "",
@@ -83,6 +123,7 @@ export default function RegistrationForm() {
     homePhone: "",
     address: "",
     city: "",
+    state: "",
     collegeNumber: "",
     professionalField: "",
     institutionName: "",
@@ -99,11 +140,10 @@ export default function RegistrationForm() {
     mppsRegistrationNumber: "",
     mppsRegistrationDate: "",
     titleIssuanceDate: "",
-    state: "",
-    ci: {},
-    rif: {},
-    titulo: {},
-    mpps: {},
+    ci: null,
+    rif: null,
+    titulo: null,
+    mpps: null,
   };
   const [formData, setFormData] = useState(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,6 +153,11 @@ export default function RegistrationForm() {
   const [tazaBcv, setTazaBcv] = useState(0);
   const [costoInscripcion, setCostoInscripcion] = useState(0);
   const [metodoPago, setMetodoPago] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
+  useEffect(() => {
+    // Validar el paso actual cuando se montan los componentes o cuando cambia formData
+    validateStep(currentStep);
+  }, [formData, currentStep]);
 
   useEffect(() => {
     const LoadData = async () => {
@@ -134,16 +179,65 @@ export default function RegistrationForm() {
   }, []);
 
   const handleInputChange = (updates) => {
+    // Evitamos procesar actualizaciones isPersonalInfoValid
+    // Esta propiedad causaba bucles de renderizado
+    if (updates && updates.isPersonalInfoValid !== undefined) {
+      const { isPersonalInfoValid, ...rest } = updates;
+      updates = rest;
+    }
+
     setFormData((prevState) => ({
       ...prevState,
       ...updates,
     }));
+
+    // Clear validation errors for fields being updated
+    if (updates) {
+      const updatedFields = Object.keys(updates);
+      const newValidationErrors = { ...validationErrors };
+
+      updatedFields.forEach(field => {
+        if (newValidationErrors[field]) {
+          delete newValidationErrors[field];
+        }
+      });
+
+      setValidationErrors(newValidationErrors);
+    }
+  };
+
+  const validateStep = (stepIndex) => {
+    const step = steps[stepIndex - 1];
+    const errors = {};
+    let isValid = true;
+
+    if (step.requiredFields && step.requiredFields.length > 0) {
+      step.requiredFields.forEach(field => {
+        // Check for file fields (simplified check)
+        if (['ci', 'rif', 'titulo', 'mpps'].includes(field)) {
+          if (!formData[field]) {
+            errors[field] = true;
+            isValid = false;
+          }
+        }
+        // Check for other fields
+        else if (!formData[field] || (typeof formData[field] === 'string' && formData[field].trim() === '')) {
+          errors[field] = true;
+          isValid = false;
+        }
+      });
+    }
+
+    setValidationErrors(errors);
+    return isValid;
   };
 
   const nextStep = () => {
     if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-      window.scrollTo(0, 0);
+      if (validateStep(currentStep)) {
+        setCurrentStep(currentStep + 1);
+        window.scrollTo(0, 0);
+      }
     }
   };
 
@@ -156,8 +250,11 @@ export default function RegistrationForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isIntentionalSubmit) {
-      setShowPaymentScreen(true);
+
+    if (validateStep(currentStep)) {
+      if (isIntentionalSubmit) {
+        setShowPaymentScreen(true);
+      }
     }
   };
 
@@ -177,7 +274,9 @@ export default function RegistrationForm() {
           estado: 1,
         },
         nombre: formData.firstName,
-        primer_apellido: formData.lastName,
+        primer_apellido: formData.firstLastName,
+        segundo_apellido: formData.secondLastName,
+        segundo_nombre: formData.secondName,
         genero: formData.gender,
         nacionalidad: formData.nationality,
         identificacion: `${formData.idType}-${formData.identityCard}`,
@@ -248,6 +347,8 @@ export default function RegistrationForm() {
         "Error al enviar los datos:",
         error.response?.data || error
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -330,15 +431,15 @@ export default function RegistrationForm() {
                     {showPaymentScreen
                       ? "Registro de Pago"
                       : isComplete
-                      ? "Registro Exitoso"
-                      : "Registro de Nuevos Colegiados"}
+                        ? "Registro Exitoso"
+                        : "Registro de Nuevos Colegiados"}
                   </h1>
                   <p className="mt-3 text-white text-lg max-w-3xl mx-auto">
                     {showPaymentScreen
                       ? "Complete el pago para finalizar su registro"
                       : isComplete
-                      ? "¡Gracias por completar su registro y pago!"
-                      : "Complete el formulario en 5 sencillos pasos para unirse a nuestra comunidad profesional"}
+                        ? "¡Gracias por completar su registro y pago!"
+                        : "Complete el formulario en 5 sencillos pasos para unirse a nuestra comunidad profesional"}
                   </p>
                 </motion.div>
               </div>
@@ -363,48 +464,42 @@ export default function RegistrationForm() {
                           const isCompleted = step.id < currentStep;
                           const isCurrent = step.id === currentStep;
                           return (
-                            <button
+                            <div
                               key={step.id}
-                              onClick={() => setCurrentStep(step.id)}
                               className="flex flex-col items-center group z-10"
                             >
                               <div className="relative">
-                                <motion.div
-                                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                                    isCompleted
-                                      ? "bg-[#D7008A] border-transparent"
-                                      : isCurrent
+                                <div
+                                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isCompleted
+                                    ? "bg-[#D7008A] border-transparent"
+                                    : isCurrent
                                       ? "bg-white border-[#D7008A]"
                                       : "bg-white border-gray-400"
-                                  }`}
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.95 }}
+                                    }`}
                                 >
                                   {isCompleted ? (
                                     <Check className="w-6 h-6 text-white" />
                                   ) : (
                                     <StepIcon
-                                      className={`w-6 h-6 ${
-                                        isCurrent
-                                          ? "text-[#41023B]"
-                                          : "text-gray-400"
-                                      }`}
+                                      className={`w-6 h-6 ${isCurrent
+                                        ? "text-[#41023B]"
+                                        : "text-gray-400"
+                                        }`}
                                     />
                                   )}
-                                </motion.div>
+                                </div>
                               </div>
                               <span
-                                className={`mt-2 text-sm font-medium ${
-                                  isCompleted
-                                    ? "text-white"
-                                    : isCurrent
+                                className={`mt-2 text-sm font-medium ${isCompleted
+                                  ? "text-white"
+                                  : isCurrent
                                     ? "text-[#D7008A]"
                                     : "text-gray-300"
-                                } hidden sm:block`}
+                                  } hidden sm:block`}
                               >
                                 {step.title}
                               </span>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -477,6 +572,9 @@ export default function RegistrationForm() {
                             </div>
                           </div>
                         </div>
+
+                        {/* Eliminado el panel de errores con lista de campos */}
+
                         <div className="p-6">
                           <AnimatePresence mode="wait">
                             <motion.div
@@ -491,6 +589,7 @@ export default function RegistrationForm() {
                                 <CurrentStepComponent
                                   formData={formData}
                                   onInputChange={handleInputChange}
+                                  validationErrors={validationErrors}
                                 />
                               )}
                             </motion.div>
@@ -517,11 +616,12 @@ export default function RegistrationForm() {
                             <motion.button
                               type="button"
                               onClick={nextStep}
-                              className="flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
-                  rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90
-                  transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
+                              disabled={Object.keys(validationErrors).length > 0}
+                              className={`flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+                  rounded-xl text-base font-medium shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50
+                  ${Object.keys(validationErrors).length > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:opacity-90'}`}
+                              whileHover={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 1.02 }}
+                              whileTap={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 0.98 }}
                             >
                               Siguiente
                               <ChevronRight className="w-5 h-5 ml-2" />
@@ -530,11 +630,12 @@ export default function RegistrationForm() {
                             <motion.button
                               type="submit"
                               onClick={() => setIsIntentionalSubmit(true)}
+                              disabled={Object.keys(validationErrors).length > 0}
                               className={`flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
-                  rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90
-                  transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50`}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
+                  rounded-xl text-base font-medium shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50
+                  ${Object.keys(validationErrors).length > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:opacity-90'}`}
+                              whileHover={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 1.02 }}
+                              whileTap={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 0.98 }}
                             >
                               {isSubmitting ? (
                                 <>

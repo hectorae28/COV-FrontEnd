@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, ArrowLeft, ArrowRight, CheckCircle, UserPlus } from "lucide-react";
-import React from "react";
+import { ArrowLeft, ArrowRight, CheckCircle, UserPlus, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 // Importaciones de componentes
-import InfoPersonal from "@/app/(Registro)/InfoPers";
-import InfoContacto from "@/app/(Registro)/InfoCont";
-import InfoColegiado from "@/app/(Registro)/InfoColg";
-import InfoLaboral from "@/app/(Registro)/InfoLab";
-import DocsRequirements from "@/app/(Registro)/DocsRequirements";
-import PagosColg from "@/app/(Registro)/PagosColg";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import api from "@/api/api";
+import DocsRequirements from "@/app/(Registro)/DocsRequirements";
+import InfoColegiado from "@/app/(Registro)/InfoColg";
+import InfoContacto from "@/app/(Registro)/InfoCont";
+import InfoLaboral from "@/app/(Registro)/InfoLab";
+import InfoPersonal from "@/app/(Registro)/InfoPers";
+import PagosColg from "@/app/Components/PagosModal";
 
 export default function RegistroColegiados({
   isAdmin = true,
@@ -24,6 +22,7 @@ export default function RegistroColegiados({
   const [completedSteps, setCompletedSteps] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [exonerarPagos, setExonerarPagos] = useState(false);
+  const [pagarLuego, setPagarLuego] = useState(false);
   const [tazaBcv, setTazaBcv] = useState(0);
   const [costoInscripcion, setCostoInscripcion] = useState(0);
   const [metodoPago, setMetodoPago] = useState([]);
@@ -119,7 +118,30 @@ export default function RegistroColegiados({
     setPasoActual(1);
     setCompletedSteps([]);
     setExonerarPagos(false);
+    setPagarLuego(false);
     setFormData(initialState);
+  };
+
+  // Manejar cambio de exonerar pagos
+  const handleExonerarPagosChange = (e) => {
+    const isChecked = e.target.checked;
+    setExonerarPagos(isChecked);
+
+    // Si se activa exonerar pagos, desactivamos pagar luego
+    if (isChecked) {
+      setPagarLuego(false);
+    }
+  };
+
+  // Manejar cambio de pagar luego
+  const handlePagarLuegoChange = (e) => {
+    const isChecked = e.target.checked;
+    setPagarLuego(isChecked);
+
+    // Si se activa pagar luego, desactivamos exonerar pagos
+    if (isChecked) {
+      setExonerarPagos(false);
+    }
   };
 
   // Función para manejar la finalización del registro
@@ -147,6 +169,7 @@ export default function RegistroColegiados({
         solvente: exonerarPagos, // Solvente si está exonerado
         especialidad: formData.especialidad || "Odontología general",
         exoneradoPagos: exonerarPagos,
+        pendientePago: pagarLuego, // Nuevo campo para indicar pago pendiente
       };
 
       // Avanzamos al paso de confirmación
@@ -213,27 +236,7 @@ export default function RegistroColegiados({
       case 6:
         return (
           <div className="space-y-6">
-            {isAdmin && (
-              <div className="mb-6 p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={exonerarPagos}
-                    onChange={(e) => setExonerarPagos(e.target.checked)}
-                    className="h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
-                  />
-                  <p className="text-md text-gray-800">
-                    <span className="text-[#41023B] font-bold text-lg">
-                      Exonerar pagos:
-                    </span>{" "}
-                    Al habilitar esta opción, el colegiado quedará registrado
-                    como solvente sin necesidad de realizar un pago.
-                  </p>
-                </label>
-              </div>
-            )}
-
-            {!exonerarPagos && (
+            {!exonerarPagos && !pagarLuego && (
               <PagosColg
                 props={{
                   handlePaymentComplete,
@@ -242,6 +245,50 @@ export default function RegistroColegiados({
                   metodoPago,
                 }}
               />
+            )}
+
+            {isAdmin && (
+              <div className="flex flex-col space-y-4">
+                {!pagarLuego && (
+                  <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
+                    <label className="flex space-x-3 cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={exonerarPagos}
+                        onChange={handleExonerarPagosChange}
+                        className="cursor-pointer mr-4 h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
+                      />
+                      <p className="text-sm text-gray-800">
+                        <span className="text-[#41023B] font-bold text-md">
+                          Exonerar pagos:
+                        </span>{" "}
+                        Al habilitar esta opción, el colegiado quedará registrado
+                        como solvente sin necesidad de realizar un pago.
+                      </p>
+                      </label>
+                  </div>
+                )}
+
+                {!exonerarPagos && (
+                  <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
+                    <label className="flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={pagarLuego}
+                        onChange={handlePagarLuegoChange}
+                        className="cursor-pointer mr-4 h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
+                      />
+                      <p className="text-sm text-gray-800">
+                        <span className="text-[#41023B] font-bold text-md">
+                          Pagar luego:
+                        </span>{" "}
+                        Al habilitar esta opción, el colegiado quedará registrado
+                        con pago pendiente y podrá completarlo posteriormente.
+                      </p>
+                      </label>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         );
@@ -256,6 +303,11 @@ export default function RegistroColegiados({
             </h2>
             <p className="text-gray-800 mb-8">
               El colegiado ha sido registrado exitosamente en el sistema.
+              {pagarLuego && (
+                <span className="block mt-2 text-amber-600 font-medium">
+                  Nota: El colegiado tiene pendiente realizar el pago de inscripción.
+                </span>
+              )}
             </p>
             <button
               onClick={iniciarNuevoRegistro}
@@ -355,13 +407,12 @@ export default function RegistroColegiados({
                   <div className="flex flex-col items-center">
                     <div
                       className={`w-10 h-10 flex items-center justify-center rounded-full 
-                    ${
-                      completedSteps.includes(paso)
-                        ? "bg-[#41023B] text-white"
-                        : pasoActual === paso
-                        ? "bg-[#D7008A] text-white"
-                        : "bg-gray-200 text-gray-600"
-                    }`}
+                    ${completedSteps.includes(paso)
+                          ? "bg-[#41023B] text-white"
+                          : pasoActual === paso
+                            ? "bg-[#D7008A] text-white"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
                     >
                       {completedSteps.includes(paso) ? (
                         <CheckCircle size={18} />
@@ -377,11 +428,10 @@ export default function RegistroColegiados({
 
                   {index < 4 && (
                     <div
-                      className={`h-1 flex-1 mx-1 ${
-                        completedSteps.includes(paso)
+                      className={`h-1 flex-1 mx-1 ${completedSteps.includes(paso)
                           ? "bg-[#41023B]"
                           : "bg-gray-200"
-                      }`}
+                        }`}
                     ></div>
                   )}
                 </React.Fragment>
@@ -433,8 +483,8 @@ export default function RegistroColegiados({
           </div>
         )}
 
-        {/* Botón para la sección de pagos cuando hay exoneración */}
-        {pasoActual === 6 && exonerarPagos && (
+        {/* Botón para la sección de pagos cuando hay exoneración o pago posterior */}
+        {pasoActual === 6 && (exonerarPagos || pagarLuego) && (
           <div className="flex justify-center p-6 border-t bg-gray-100">
             <button
               type="button"

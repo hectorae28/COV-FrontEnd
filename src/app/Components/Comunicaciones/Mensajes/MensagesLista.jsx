@@ -130,6 +130,10 @@ export function MessageList({
                           <div className="font-medium truncate">{message.remitente}</div>
                           <div className="text-xs text-gray-500 whitespace-nowrap ml-2">{formattedDate}</div>
                         </div>
+                        {/* Mostrar el asunto del mensaje con prominencia */}
+                        <div className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full mt-1 inline-block truncate max-w-full">
+                          {message.asunto}
+                        </div>
                         <div className="flex items-center mt-1">
                           {lastMessage.isReply && (
                             <div className="mr-1 text-[#D7008A]">

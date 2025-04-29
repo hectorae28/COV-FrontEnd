@@ -214,21 +214,27 @@ export default function DetallePendiente({ params, onVolver }) {
     try {
       // Simular llamada a API para aprobar solicitud con los datos del registro
       await new Promise(resolve => setTimeout(resolve, 1000));
-
+  
       // Aquí se enviarían los datos del registro junto con la aprobación
       console.log("Datos de registro enviados:", datosRegistro);
-
-      // Mostrar mensaje de confirmación exitosa
-      setConfirmacionExitosa(true);
-      setMostrarConfirmacion(false);
-
-      // Restablecer el estado del modal para futuros usos
-      setPasoModal(1);
-
-      // Volver a la lista después de un tiempo
-      setTimeout(() => {
-        onVolver();
-      }, 3000);
+  
+      // Crear el colegiado aprobado
+      const colegiadoAprobado = {
+        id: `col-${Date.now()}`,
+        nombre: nombreCompleto,
+        cedula: pendiente.persona.tipo_identificacion + "-" + pendiente.persona.identificacion,
+        numeroRegistro: datosRegistro.num_cov,
+        email: pendiente.persona.correo,
+        telefono: pendiente.persona.telefono_movil,
+        fechaRegistro: new Date().toLocaleDateString(),
+        estado: "Activo",
+        solvente: true,
+        especialidad: datosRegistro.tipo_profesion,
+        // Otras propiedades necesarias
+      };
+  
+      // Llamar a la función onVolver con el colegiado aprobado
+      onVolver(colegiadoAprobado);
     } catch (error) {
       console.error("Error al aprobar solicitud:", error);
     }
