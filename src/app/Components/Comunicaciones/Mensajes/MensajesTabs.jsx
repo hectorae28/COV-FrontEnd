@@ -1,7 +1,7 @@
 "use client"
 
-import { AlertCircle, MessageCircle, Star, Trash2 } from "lucide-react"
-import { useEffect } from "react"
+import { AlertCircle, Filter, MessageCircle, Star, Trash2 } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export function MessageTabs({
   activeTab,
@@ -17,7 +17,11 @@ export function MessageTabs({
     archivados: 0,
   },
   selectedMessage,
+  asuntos = [], // Lista de asuntos disponibles
+  asuntoSeleccionado,
+  onAsuntoChange,
 }) {
+  const [showAsuntoFilter, setShowAsuntoFilter] = useState(false)
 
   useEffect(() => {
   }, [selectedMessage, isMobile])
@@ -60,20 +64,18 @@ export function MessageTabs({
                 id={`tab-${tab.id}`}
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`flex items-center justify-center gap-1 sm:gap-2 py-2 px-3 rounded-md transition-colors ${
-                  activeTab === tab.id
+                className={`flex items-center justify-center gap-1 sm:gap-2 py-2 px-3 rounded-md transition-colors ${activeTab === tab.id
                     ? "bg-white text-[#D7008A] shadow-sm"
                     : "text-gray-600 hover:bg-gray-200 hover:text-gray-900"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-center">
                   {tab.icon}
                   <span className="hidden xs:inline sm:inline ml-1">{tab.label}</span>
                 </div>
                 <span
-                  className={`ml-1 text-xs px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center ${
-                    tab.count > 0 ? "bg-gray-200 text-gray-700" : "bg-gray-100 text-gray-500"
-                  }`}
+                  className={`ml-1 text-xs px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center ${tab.count > 0 ? "bg-gray-200 text-gray-700" : "bg-gray-100 text-gray-500"
+                    }`}
                 >
                   {tab.count}
                 </span>
@@ -81,19 +83,72 @@ export function MessageTabs({
             ))}
           </div>
         </div>
-        {/* Barra de búsqueda solo en desktop */}
-        {!isMobile && (
-          <div className="relative w-full sm:w-auto sm:flex-1 sm:max-w-md">
-            <input
-              type="text"
-              placeholder="Buscar mensajes..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#D7008A] focus:outline-none"
-              aria-label="Campo de búsqueda"
-            />
+
+        {/* Filtros y búsqueda */}
+        <div className="flex gap-2 w-full sm:w-auto">
+          {/* Botón filtro por asunto */}
+          <div className="relative">
+            <button
+              onClick={() => setShowAsuntoFilter(!showAsuntoFilter)}
+              className="p-2 rounded-lg border hover:bg-gray-100 flex items-center gap-1"
+              title="Filtrar por asunto"
+            >
+              <Filter className="h-4 w-4 text-gray-600" />
+              <span className="text-sm hidden sm:inline">
+                {asuntoSeleccionado || "Filtrar por asunto"}
+              </span>
+            </button>
+
+            {/* Dropdown para filtrar por asunto */}
+            {showAsuntoFilter && (
+              <div className="absolute z-50 top-full right-0 mt-1 bg-white border rounded-lg shadow-lg w-64">
+                <div className="p-2 border-b">
+                  <div className="font-medium text-sm">Filtrar por asunto</div>
+                </div>
+                <div className="max-h-60 overflow-y-auto p-1">
+                  <button
+                    onClick={() => {
+                      onAsuntoChange("")
+                      setShowAsuntoFilter(false)
+                    }}
+                    className={`w-full text-left px-3 py-2 text-sm rounded-md ${!asuntoSeleccionado ? "bg-gray-100 font-medium" : "hover:bg-gray-50"
+                      }`}
+                  >
+                    Todos los asuntos
+                  </button>
+
+                  {asuntos.map((asunto) => (
+                    <button
+                      key={asunto}
+                      onClick={() => {
+                        onAsuntoChange(asunto)
+                        setShowAsuntoFilter(false)
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm rounded-md ${asuntoSeleccionado === asunto ? "bg-gray-100 font-medium" : "hover:bg-gray-50"
+                        }`}
+                    >
+                      {asunto}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Barra de búsqueda solo en desktop */}
+          {!isMobile && (
+            <div className="relative w-full sm:w-auto sm:flex-1 sm:max-w-md">
+              <input
+                type="text"
+                placeholder="Buscar mensajes..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#D7008A] focus:outline-none"
+                aria-label="Campo de búsqueda"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

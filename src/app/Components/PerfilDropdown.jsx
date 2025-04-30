@@ -2,31 +2,40 @@
 
 import { useState, useRef, useEffect } from "react";
 import { AccountCircle } from "@mui/icons-material";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import api from "@/api/api";
-import axios from "axios";
+import { fetchMe } from "@/api/endpoints/colegiado";
 
 export default function ProfileDropdown({ userInfo, session }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const { data: sessionData, status } = useSession();
 
+  useEffect(() => {
+    if(status === "loading") return;
+    if (sessionData) {
+          fetchMe(sessionData)
+            .then((response) => userInfo = response.data)
+            .catch((error) => console.log(error));
+        }
+  }, [sessionData]);
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
   const handleSingOut = () => {
-      axios.request({
-        method: 'POST',
-        url: process.env.NEXT_PUBLIC_BACK_HOST+'/api/v1/usuario/logout/',
+      api.post(
+        '/usuario/logout/',
+        {
         headers: {
           Accept: '*/*',
-          Authorization: 'Bearer ' + session?.user?.access,
+          Authorization: 'Bearer ' + sessionData?.user?.access,
         },
-        data: {}
+        data: {"username": sessionData?.user?.username},
       }
         )
         .then(() => {
           console.log("Logout successful");
-          signOut(session);
+          signOut(sessionData);
         })
         .catch((error) => {
           console.error("Logout error:", error);
@@ -34,6 +43,7 @@ export default function ProfileDropdown({ userInfo, session }) {
   };
 
   useEffect(() => {
+    if(status=="loading")return
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);

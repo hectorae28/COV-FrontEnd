@@ -60,7 +60,7 @@ export const authOptions = {
                 return `${process.env.NEXTAUTH_URL}/Login?error=${encodeURIComponent(user.error)}`;
             }
             return true;
-          },
+        },
         async jwt({ token, user }) {
             if (user) {
                 const userData = await fetchMe({

@@ -97,23 +97,23 @@ export function NotificacionesModal({ isOpen, onClose, anchorRef }) {
   }
 
   // Navegar a la página de notificaciones y abrir una específica
-const handleNotificacionClick = (notificacion) => {
-  if (!notificacion.leida) {
-    toggleLeidaNotificacion(notificacion.id);
-  }
-  marcarVistaEnModal(notificacion.id);
-  setNotificacionesVisibles((prev) => prev.filter((n) => n.id !== notificacion.id));
-  onClose();
-  
-  // Fix: Use absolute path starting with /
-  router.push(`/PanelControl/Notificaciones?id=${notificacion.id}`);
-}
+  const handleNotificacionClick = (notificacion) => {
+    if (!notificacion.leida) {
+      toggleLeidaNotificacion(notificacion.id);
+    }
+    marcarVistaEnModal(notificacion.id);
+    setNotificacionesVisibles((prev) => prev.filter((n) => n.id !== notificacion.id));
+    onClose();
 
-const handleVerTodasClick = () => {
-  onClose()
-  // Fix: Use absolute path starting with /
-  router.push("/PanelControl/Notificaciones")
-}
+    // Fix: Use absolute path starting with /
+    router.push(`/PanelControl/Notificaciones?id=${notificacion.id}`);
+  }
+
+  const handleVerTodasClick = () => {
+    onClose()
+    // Fix: Use absolute path starting with /
+    router.push("/PanelControl/Notificaciones")
+  }
 
   if (!isOpen) return null
 
@@ -155,6 +155,8 @@ const handleVerTodasClick = () => {
                           {formatRelativeDate(notificacion.fecha)}
                         </span>
                       </div>
+                      {/* Agregar asunto de la notificación en el modal */}
+                      <p className="text-xs text-gray-500 font-medium mt-1">{notificacion.asunto}</p>
                       <p className="text-sm text-gray-500 mt-1 line-clamp-2">{notificacion.contenido}</p>
                     </div>
                   </div>
@@ -212,6 +214,8 @@ const handleVerTodasClick = () => {
                           {formatRelativeDate(notificacion.fecha)}
                         </span>
                       </div>
+                      {/* Agregar asunto de la notificación en el modal */}
+                      <p className="text-xs text-gray-500 font-medium mt-1">{notificacion.asunto}</p>
                       <p className="text-sm text-gray-500 mt-1 line-clamp-2">{notificacion.contenido}</p>
                     </div>
                   </div>

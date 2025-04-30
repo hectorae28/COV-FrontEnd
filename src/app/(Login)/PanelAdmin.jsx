@@ -1,114 +1,21 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Lock, Mail, Check, Phone, MapPin, Clock } from "lucide-react";
-import Image from "next/image";
-import { useState, useRef, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-
-import { useRouter } from "next/navigation";
+import { Check, Clock, Lock, Mail, MapPin, Phone } from "lucide-react";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useRef, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Alert from "@/app/Components/Alert";
 import ForgotPasswordForm from "@/Components/Home/ForgotPasswordForm";
 
-
-// Add a ForgotPasswordForm component here, similar to what you have in Colegiados
-const ForgotPasswordForm = ({ onBackToLogin }) => {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage(null);
-
-    try {
-      // Replace with your actual password reset logic
-      // For example: const response = await fetch('/api/reset-password', {...
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setMessage({
-        type: "success",
-        text: "Se ha enviado un enlace de recuperación a tu correo electrónico"
-      });
-    } catch (error) {
-      setMessage({
-        type: "error",
-        text: "Error al enviar el correo. Intenta de nuevo más tarde."
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <div className="mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Mail className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-transparent shadow-sm"
-            placeholder="Correo electrónico"
-            required
-          />
-        </div>
-      </div>
-
-      {message && (
-        <div
-          className={`mb-6 p-4 rounded-lg ${message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-            }`}
-        >
-          {message.text}
-        </div>
-      )}
-
-      <motion.button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white py-4 px-6 rounded-xl text-lg font-medium
-        shadow-md hover:shadow-lg transition-all duration-300
-        focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-opacity-50 disabled:opacity-70"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        {isSubmitting ? (
-          <div className="flex items-center justify-center">
-            <div className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-            <span>Enviando...</span>
-          </div>
-        ) : (
-          "Recuperar Contraseña"
-        )}
-      </motion.button>
-
-      <div className="mt-6 text-center">
-        <button
-          type="button"
-          onClick={onBackToLogin}
-          className="text-[#D7008A] hover:text-[#41023B] transition-colors duration-300"
-        >
-          Volver a Iniciar Sesión
-        </button>
-      </div>
-    </form>
-  );
-};
-
 export default function PanelAdmin({ onClose, isClosing }) {
   const [currentView, setCurrentView] = useState("login");
-  const [showContact, setShowContact] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const [error, setError] = useState(searchParams.get("error"));
+  const [showContact, setShowContact] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
   useEffect(() => {
@@ -118,39 +25,47 @@ export default function PanelAdmin({ onClose, isClosing }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    const Form = new FormData(formRef.current);
-    const result = await signIn("credentials", {
-      username: Form.get("email").split("@")[0],
-      password: Form.get("password"),
-      redirect: false,
-    });
-    if (result.error) {
-      if (
-        result.error === "Account is locked" ||
-        result.error === "Account locked due to too many failed attempts"
-      ) {
-        setError(
-          "Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña."
-        );
-      } else if (result.error === "Invalid credentials") {
-        setError(
-          "Credenciales inválidas. Por favor, verifique su email y/o contraseña."
-        );
-      } else if (
-        result.error === "Ya existe una sesión activa para este usuario."
-      ) {
-        setError(
-          "Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente."
-        );
+    setError("");
+    try{
+      const Form = new FormData(formRef.current);
+      const result = await signIn("credentials", {
+        username: Form.get("email").split("@")[0],
+        password: Form.get("password"),
+        redirect: false,
+      });
+      if (result.error) {
+        if (
+          result.error === "Account is locked" ||
+          result.error === "Account locked due to too many failed attempts"
+        ) {
+          setError(
+            "Su cuenta está bloqueada. Contacta al administrador o recupere su contraseña."
+          );
+        } else if (result.error === "Invalid credentials") {
+          setError(
+            "Credenciales inválidas. Por favor, verifique su email y/o contraseña."
+          );
+        } else if (
+          result.error === "Ya existe una sesión activa para este usuario."
+        ) {
+          setError(
+            "Ya existe una sesión activa para este usuario. Por favor, cierra la sesión antes de iniciar sesión nuevamente."
+          );
+        } else {
+          setError("Ocurrió un error inesperado. Intenta nuevamente.");
+        }
       } else {
-        setError("Ocurrió un error inesperado. Intenta nuevamente.");
+        console.log("Inicio de sesión exitoso:", result);
+        router.push("/PanelControl");
       }
-      //setError("Error al iniciar sesión:", result);
-    } else {
-      console.log("Inicio de sesión exitoso:", result);
-      router.push("/PanelControl");
+    } catch (error) {
+      console.error("Error en el proceso de inicio de sesión:", error);
+      setError("Ocurrió un error al intentar iniciar sesión. Por favor, inténtalo más tarde.");
+    }finally{
+      setIsLoading(false);
     }
-  };
+  }
+
 
   // Función para alternar la sección de contacto
   const toggleContactSection = () => {
@@ -299,7 +214,6 @@ export default function PanelAdmin({ onClose, isClosing }) {
           {currentView === "forgot-password" && (
             <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
           )}
-          {/* Botón para mostrar la sección de contacto */}
           <div className="mt-6 text-center">
             <motion.button
               onClick={toggleContactSection}
@@ -348,7 +262,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
                 </div>
               </div>
             </motion.div>
-          )}
+            )}
         </div>
       </div>
     </motion.div>

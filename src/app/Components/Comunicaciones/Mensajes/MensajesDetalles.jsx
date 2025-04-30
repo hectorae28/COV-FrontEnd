@@ -140,23 +140,27 @@ export function MessageDetail({
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">{message.remitente}</h2>
+              {/* Mostrar el asunto como etiqueta destacada */}
+              {message.asunto && (
+                <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full mt-1">
+                  {message.asunto}
+                </span>
+              )}
             </div>
           </div>
         </div>
         <div className="flex">
           <button
-            className={`h-8 w-8 rounded-full flex items-center justify-center ${
-              message.favorito ? "text-yellow-500" : "text-gray-400"
-            } hover:bg-gray-100`}
+            className={`h-8 w-8 rounded-full flex items-center justify-center ${message.favorito ? "text-yellow-500" : "text-gray-400"
+              } hover:bg-gray-100`}
             onClick={() => onToggleFavorite(message.id)}
             title={message.favorito ? "Quitar de favoritos" : "Añadir a favoritos"}
           >
             <Star className="h-4 w-4" />
           </button>
           <button
-            className={`h-8 w-8 rounded-full flex items-center justify-center ${
-              message.importante ? "text-red-500" : "text-gray-400"
-            } hover:bg-gray-100`}
+            className={`h-8 w-8 rounded-full flex items-center justify-center ${message.importante ? "text-red-500" : "text-gray-400"
+              } hover:bg-gray-100`}
             onClick={() => onToggleImportant(message.id)}
             title={message.importante ? "Quitar importancia" : "Marcar como importante"}
           >
@@ -265,9 +269,8 @@ export function MessageDetail({
             </div>
             <button
               onClick={handleSendReply}
-              className={`h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white ${
-                !replyContent.trim() && !attachmentPreview && "opacity-50 cursor-not-allowed"
-              }`}
+              className={`h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white ${!replyContent.trim() && !attachmentPreview && "opacity-50 cursor-not-allowed"
+                }`}
               disabled={!replyContent.trim() && !attachmentPreview}
               title="Enviar mensaje"
             >

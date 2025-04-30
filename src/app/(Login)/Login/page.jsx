@@ -31,11 +31,21 @@ export default function LoginScreen() {
     twitter: "https://x.com/elcovorg"
   };
 
+  // Corregido para manejar adecuadamente la sesión y la redirección
   useEffect(() => {
-    if (status === "authenticated") {
-      router.push(authRouter[session.user.role]);
+    if (status === "authenticated" && session?.user?.role) {
+      const redirectPath = authRouter[session.user.role];
+      if (redirectPath) {
+        try {
+          router.push(redirectPath);
+        } catch (error) {
+          console.error("Error de redirección:", error);
+          // Fallback en caso de error con router.push
+          window.location.href = redirectPath;
+        }
+      }
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   const handleSignIn = (slideDirection) => {
     setDirection(slideDirection);
@@ -222,7 +232,7 @@ export default function LoginScreen() {
                   transition={{ duration: 0.8, delay: 1 }}
                 >
                   {/* Redes Sociales con orden actualizado */}
-                  <div className="flex justify-center items-center space-x-4 sm:space-x-6 mb-2 sm:mb-4">
+                  <div className="flex justify-center items-center space-x-4 sm:space-x-6 mb-2 sm:mb-4 ">
                     <a
                       href={socialLinks.whatsapp}
                       target="_blank"

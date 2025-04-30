@@ -1,13 +1,14 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
   Calendar,
-  Clock,
   ChevronRight,
+  Clock,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const Noticias = ({ props }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -17,15 +18,28 @@ const Noticias = ({ props }) => {
   const autoplayRef = useRef(null);
   const [screenSize, setScreenSize] = useState("lg");
   const newsItems = props;
+  const router = useRouter();
+  
   function separarFechaYHora(cadenaFecha) {
     const fechaCompleta = new Date(cadenaFecha);
     const fecha = fechaCompleta.toISOString().split("T")[0];
     const hora = fechaCompleta.toTimeString().split(" ")[0];
     return { fecha, hora };
   }
-  const handleDate = (date) => {
-    const { fecha, hora } = separarFechaYHora(date);
-    return `${fecha} ${hora}`;
+
+  // Función para navegar a la página de Noticias
+  // Ajustada para usar relativa o absoluta según sea necesario
+  const navigateToAllNews = () => {
+    // Si están en la misma carpeta, podemos intentar navegación relativa
+    // o verificar si necesita una ruta específica basada en la estructura de archivos
+    try {
+      // Intenta primero ir a la ruta exacta
+      router.push("/Noticias");
+    } catch (error) {
+      console.error("Error de navegación:", error);
+      // Alternativas si la navegación falla
+      window.location.href = "/Noticias"; // Navegación alternativa
+    }
   };
 
   useEffect(() => {
@@ -52,9 +66,8 @@ const Noticias = ({ props }) => {
     };
   }, []);
 
-  // Autoplay functionality - changed to 5 seconds
+  // Autoplay functionality
   useEffect(() => {
-    // Clear any existing interval first
     if (autoplayRef.current) {
       clearInterval(autoplayRef.current);
     }
@@ -64,7 +77,7 @@ const Noticias = ({ props }) => {
         setCurrentIndex((prevIndex) =>
           prevIndex === newsItems.length - 1 ? 0 : prevIndex + 1
         );
-      }, 5000); // Changed to 5 seconds
+      }, 5000);
     }
     return () => {
       if (autoplayRef.current) {
@@ -92,7 +105,6 @@ const Noticias = ({ props }) => {
     resetAutoplayTimer();
   };
 
-  // Reset autoplay timer when manually navigating
   const resetAutoplayTimer = () => {
     if (autoplayRef.current) {
       clearInterval(autoplayRef.current);
@@ -101,14 +113,21 @@ const Noticias = ({ props }) => {
           setCurrentIndex((prevIndex) =>
             prevIndex === newsItems.length - 1 ? 0 : prevIndex + 1
           );
-        }, 5000); // Changed to 5 seconds
+        }, 5000);
       }
     }
   };
 
-  // Handle pause/resume autoplay when hovering
   const handleMouseEnter = () => setAutoplay(false);
   const handleMouseLeave = () => setAutoplay(true);
+
+  // Función para navegar a la noticia individual
+  const navigateToSingleNews = () => {
+    const currentNews = newsItems[currentIndex];
+    if (currentNews?.id) {
+      router.push(`/Noticias/${currentNews.id}`);
+    }
+  };
 
   return (
     <section className="py-8 bg-[#F9F9F9]">
@@ -147,10 +166,10 @@ const Noticias = ({ props }) => {
 
         {/* Main Carousel Container with Side Navigation for MD and LG */}
         <div className="relative">
-          {/* Navigation Buttons for MD and LG screens - Outside at the middle sides */}
+          {/* Navigation Buttons for MD and LG screens */}
           <div className="hidden md:block">
             <motion.button
-              className=" cursor-pointer absolute left-[-100] top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-lg hover:bg-gray-50 transition-all border border-gray-200"
+              className="cursor-pointer absolute left-[-100] top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-lg hover:bg-gray-50 transition-all border border-gray-200"
               whileHover={{ scale: 1.1, x: -18 }}
               whileTap={{ scale: 0.95 }}
               onClick={prevSlide}
@@ -160,7 +179,7 @@ const Noticias = ({ props }) => {
             </motion.button>
 
             <motion.button
-              className=" cursor-pointer absolute right-[-100] top-1/2 -translate-y-1/2 translate-x-5 z-10 w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-lg hover:bg-gray-50 transition-all border border-gray-200"
+              className="cursor-pointer absolute right-[-100] top-1/2 -translate-y-1/2 translate-x-5 z-10 w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-lg hover:bg-gray-50 transition-all border border-gray-200"
               whileHover={{ scale: 1.1, x: 18 }}
               whileTap={{ scale: 0.95 }}
               onClick={nextSlide}
@@ -207,7 +226,7 @@ const Noticias = ({ props }) => {
 
                     {/* Content Section */}
                     <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between">
-                      {/* Date & Time Badge - Moved outside the image */}
+                      {/* Date & Time Badge */}
                       <div className="mb-4 flex items-center space-x-2 text-sm">
                         <div className="flex items-center text-[#C40180]">
                           <Calendar className="w-4 h-4 mr-1" />
@@ -238,11 +257,12 @@ const Noticias = ({ props }) => {
                         </p>
                       </div>
 
-                      {/* Read More Button - Now aligned to the right */}
+                      {/* Read More Button */}
                       <div className="mt-auto flex justify-end">
                         <motion.button
-                          className=" cursor-pointer flex items-center text-[#C40180] font-medium text-sm md:text-base group"
+                          className="cursor-pointer flex items-center text-[#C40180] font-medium text-sm md:text-base group"
                           whileHover={{ x: 5 }}
+                          onClick={navigateToSingleNews}
                         >
                           Leer más
                           <ChevronRight className="w-4 h-4 ml-1 group-hover:ml-2 transition-all" />
@@ -254,15 +274,15 @@ const Noticias = ({ props }) => {
               </AnimatePresence>
             </div>
 
-            {/* Progress Bar - Updated to 5 seconds */}
+            {/* Progress Bar */}
             <motion.div
               className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#C40180] to-[#590248]"
               initial={{ width: 0 }}
-              key={currentIndex} // Important: forces animation restart with each slide change
+              key={currentIndex}
               animate={{
                 width: "100%",
                 transition: {
-                  duration: 5, // Changed to 5 seconds to match autoplay
+                  duration: 5,
                   ease: "linear",
                 },
               }}
@@ -270,7 +290,7 @@ const Noticias = ({ props }) => {
           </div>
         </div>
 
-        {/* Navigation Controls for Mobile (SM) - Outside and below the carousel */}
+        {/* Navigation Controls for Mobile (SM) */}
         <div className="flex md:hidden justify-center items-center mt-6 space-x-4">
           <motion.button
             className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#C40180] shadow-md hover:bg-gray-50 transition-all border border-gray-200"
@@ -357,17 +377,23 @@ const Noticias = ({ props }) => {
           transition={{ delay: 0.5 }}
           viewport={{ once: true }}
         >
-          <motion.button
-            className="px-6 sm:px-8 py-2 sm:py-3 cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white text-sm sm:text-base font-medium rounded-full hover:shadow-lg transition-all duration-300 flex items-center mx-auto"
+          {/* Usando un elemento <a> como fallback en caso de que el router falle */}
+          <motion.a
+            href="/Noticias"
+            className="inline-flex items-center px-6 sm:px-8 py-2 sm:py-3 cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white text-sm sm:text-base font-medium rounded-full hover:shadow-lg transition-all duration-300 mx-auto"
             whileHover={{
               scale: 1.05,
               boxShadow: "0 10px 25px -5px rgba(196, 1, 128, 0.3)",
             }}
             whileTap={{ scale: 0.98 }}
+            onClick={(e) => {
+              e.preventDefault(); // Prevenir navegación normal de <a>
+              navigateToAllNews();
+            }}
           >
             Ver Todas las Noticias
             <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
-          </motion.button>
+          </motion.a>
         </motion.div>
       </div>
     </section>
