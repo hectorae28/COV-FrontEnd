@@ -1,39 +1,39 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { AccountCircle } from "@mui/icons-material";
-import { signOut } from "next-auth/react";
 import api from "@/api/api";
-import axios from "axios";
+import { AccountCircle } from "@mui/icons-material";
+import { signOut, useSession } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
 
 export default function ProfileDropdown({ userInfo, session }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  const { data: sessionData, status } = useSession();
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
   const handleSingOut = () => {
-      axios.request({
-        method: 'POST',
-        url: process.env.NEXT_PUBLIC_BACK_HOST+'/api/v1/usuario/logout/',
-        headers: {
-          Accept: '*/*',
-          Authorization: 'Bearer ' + session?.user?.access,
-        },
-        data: {}
-      }
-        )
-        .then(() => {
-          console.log("Logout successful");
-          signOut(session);
-        })
-        .catch((error) => {
-          console.error("Logout error:", error);
-        });
-  };
-
+    api.post(
+      '/usuario/logout/',
+      {
+      headers: {
+        Accept: '/',
+        Authorization: 'Bearer ' + sessionData?.user?.access,
+      },
+      data: {"username": sessionData?.user?.username},
+    }
+      )
+      .then(() => {
+        console.log("Logout successful");
+        signOut(session);
+      })
+      .catch((error) => {
+        console.error("Logout error:", error);
+      });
+};
   useEffect(() => {
+    if(status=="loading")return
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);

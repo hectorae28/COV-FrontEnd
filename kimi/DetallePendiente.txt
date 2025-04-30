@@ -149,31 +149,27 @@ export default function DetallePendiente({ params, onVolver }) {
   // Función para aprobar solicitud
   const handleAprobarSolicitud = async () => {
     try {
-      if (isSubmitting) return;
-      setIsSubmitting(true);
-  
+      if (isSubmitting) return
+      setIsSubmitting(true)
+
       // Llamar a la función de aprobación del store
-      const colegiadoAprobado = approveRegistration(pendienteId, datosRegistro);
-  
+      const colegiadoAprobado = approveRegistration(pendienteId, datosRegistro)
+
       // Mostrar confirmación
-      setConfirmacionExitosa(true);
-      setMostrarConfirmacion(false);
-  
-      // Volver a la lista después de un tiempo con el colegiado aprobado
+      setConfirmacionExitosa(true)
+      setMostrarConfirmacion(false)
+
+      // Volver a la lista después de un tiempo
       setTimeout(() => {
         if (onVolver) {
-          // Pasar el colegiado aprobado con una marca de aprobación explícita
-          onVolver({
-            aprobado: true,
-            colegiado: colegiadoAprobado
-          });
+          onVolver(colegiadoAprobado)
         }
-      }, 2000);
+      }, 2000)
     } catch (error) {
-      console.error("Error al aprobar solicitud:", error);
-      setIsSubmitting(false);
+      console.error("Error al aprobar solicitud:", error)
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // Función para rechazar solicitud
   const handleRechazarSolicitud = async () => {
@@ -210,6 +206,23 @@ export default function DetallePendiente({ params, onVolver }) {
     )
   }
 
+  if (!pendiente) {
+    return (
+      <div className="w-full px-4 md:px-10 py-10 md:py-12">
+        <div className="bg-red-50 text-red-700 p-4 rounded-md">
+          No se pudo encontrar la información de la solicitud pendiente.
+        </div>
+        <button
+          onClick={onVolver}
+          className="mt-4 inline-flex items-center text-[#C40180] hover:underline cursor-pointer"
+        >
+          <ChevronLeft size={20} className="mr-1" />
+          Volver a la lista de colegiados
+        </button>
+      </div>
+    )
+  }
+
   // Formato del nombre para mostrar
   const nombreCompleto = `${pendiente.persona.nombre} ${pendiente.persona.segundo_nombre || ''} ${pendiente.persona.primer_apellido} ${pendiente.persona.segundo_apellido || ''}`.trim()
   const fechaSolicitud = pendiente.fechaSolicitud || "No especificada"
@@ -218,13 +231,13 @@ export default function DetallePendiente({ params, onVolver }) {
     <div className="w-full px-4 md:px-10 py-10 md:py-28 bg-gray-50">
       {/* Breadcrumbs */}
       <div className="mb-6">
-      <button
-  onClick={() => onVolver({ aprobado: false })}
-  className="text-md text-[#590248] hover:text-[#C40180] flex items-center cursor-pointer transition-colors duration-200"
->
-  <ChevronLeft size={20} className="mr-1" />
-  Volver a la lista de colegiados
-</button>
+        <button
+          onClick={onVolver}
+          className="text-md text-[#590248] hover:text-[#C40180] flex items-center cursor-pointer transition-colors duration-200"
+        >
+          <ChevronLeft size={20} className="mr-1" />
+          Volver a la lista de colegiados
+        </button>
       </div>
 
       {/* Notificaciones de éxito */}

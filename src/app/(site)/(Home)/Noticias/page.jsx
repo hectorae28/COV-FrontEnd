@@ -2,8 +2,8 @@
 import newsItems from "@/app/Models/Home/NoticiasData";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Calendar, ChevronRight, Clock, Filter, Search } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // Componente para cada tarjeta de noticia
 const NewsCard = ({ news, index, onReadMore }) => {
@@ -161,7 +161,7 @@ const Noticias = () => {
 
   // Función para navegar a la página de detalle de la noticia
   const handleReadMore = (news) => {
-    router.push(`/Home/NoticiaDetalle/${news.id}`);
+    router.push(`/NoticiaDetalle/${news.id}`);
   };
 
   // Función para filtrar noticias

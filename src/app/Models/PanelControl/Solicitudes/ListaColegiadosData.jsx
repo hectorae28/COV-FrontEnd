@@ -1,5 +1,5 @@
 // DataListaColegiados.js
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 /**
  * Store centralizado para la gestión de colegiados
