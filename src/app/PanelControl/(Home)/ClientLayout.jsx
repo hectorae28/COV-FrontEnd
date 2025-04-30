@@ -2,8 +2,8 @@
 
 import { Montserrat } from "next/font/google";
 import { useState } from "react";
-import AppBar from "../PanelControl/Components/AppBar";
-import Barra from "../PanelControl/Components/Barra";
+import AppBar from "./AppBar";
+import Barra from "./Barra";
 import "../globals.css";
 
 const montserrat = Montserrat({

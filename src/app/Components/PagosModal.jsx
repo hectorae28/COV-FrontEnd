@@ -1,8 +1,8 @@
 "use client";
+import PayPalProvider from "@/utils/paypalProvider";
 import { motion } from "framer-motion";
 import { CreditCard, DollarSign } from "lucide-react";
 import { useState } from "react";
-import PayPalProvider from "@/app/Components/utils/paypalProvider";
 
 // Default values for props (in case they're not provided)
 const DEFAULT_COSTO = 75;
