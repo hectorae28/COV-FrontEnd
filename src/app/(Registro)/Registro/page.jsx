@@ -91,9 +91,6 @@ const steps = [
       "rif",
       "titulo",
       "mpps",
-      "Fondo_negro_credencial",
-      "notas_curso",
-      "fondo_negro_titulo_bachiller",
     ],
   },
 ];
@@ -308,7 +305,7 @@ export default function RegistrationForm() {
       JSON.stringify(
         formData.laboralRegistros.map((registro) => ({
           nombre: registro.institutionName,
-          cargo: registro.institutionName,
+          cargo: registro.cargo,
           direccion: registro.institutionAddress,
           telefono: registro.institutionPhone,
         })) || []

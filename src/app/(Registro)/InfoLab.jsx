@@ -16,50 +16,20 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
       ]
   );
 
-<<<<<<< HEAD
 
   const handleRegistroChange = (index, field, value) => {
 
-=======
-  // Format phone number - only adds + at beginning
-  const formatPhone = (value) => {
-    if (!value) return '+';
-    // Remove all non-digit characters except the initial + if present
-    if (value.startsWith('+')) {
-      const digits = value.substring(1).replace(/\D/g, '');
-      return `+${digits}`;
-    } else {
-      const digits = value.replace(/\D/g, '');
-      return `+${digits}`;
-    }
-  };
-
-  // Manejar cambios en un registro específico
-  const handleRegistroChange = (index, field, value) => {
-    // Si es el campo de teléfono, formatear el valor
-    if (field === "institutionPhone") {
-      value = formatPhone(value);
-    }
->>>>>>> dev
     const nuevosRegistros = [...registros];
     nuevosRegistros[index] = {
       ...nuevosRegistros[index],
       [field]: value
     };
     setRegistros(nuevosRegistros);
-<<<<<<< HEAD
 
     if (index === 0) {
       onInputChange({ [field]: value });
     }
 
-=======
-    // Actualizar los campos principales con el primer registro (para compatibilidad)
-    if (index === 0) {
-      onInputChange({ [field]: value });
-    }
-    // Actualizar el array completo de registros
->>>>>>> dev
     onInputChange({ laboralRegistros: nuevosRegistros });
   };
 
