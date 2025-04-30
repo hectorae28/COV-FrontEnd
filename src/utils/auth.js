@@ -54,6 +54,7 @@ export const authOptions = {
                 token.accessTokenExpires = Date.now() + user.access_expires_in * 1000;
                 token.role = userData?.data?.groups[0];
                 token.solvente = userData?.data?.solvente;
+                token.solvenciaStatus = userData?.data?.solvencia_status
                 return token;
             }
             if (Date.now() < token.accessTokenExpires) {
@@ -67,6 +68,7 @@ export const authOptions = {
             session.user.username = token.username;
             session.user.role = token.role;
             session.user.solvente = token.solvente;
+            session.user.solvenciaStatus = token.solvenciaStatus;
             return session;
         },
 
