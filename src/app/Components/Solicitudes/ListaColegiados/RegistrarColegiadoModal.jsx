@@ -12,13 +12,15 @@ import InfoLaboral from "@/app/(Registro)/InfoLab";
 import InfoPersonal from "@/app/(Registro)/InfoPers";
 import PagosColg from "@/app/Components/PagosModal";
 import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import { useSession } from "next-auth/react";
 
 export default function RegistroColegiados({
   isAdmin = true,
   onClose,
   onRegistroExitoso,
 }) {
-  // Get methods from Zustand store
+
+  const { data: session } = useSession();
   const addColegiadoPendiente = ListaColegiadosData(state => state.addColegiadoPendiente);
 
   // Estado para seguimiento de pasos
@@ -155,6 +157,7 @@ export default function RegistroColegiados({
     try {
       // Preparar los datos para el nuevo colegiado pendiente
       const nombre = `${formData.firstName} ${formData.lastName}`;
+      const fechaCreacion = new Date();
 
       // Convertir datos del formulario al formato esperado por ListaColegiadosData
       const nuevoPendiente = {
@@ -165,6 +168,13 @@ export default function RegistroColegiados({
         telefono: formData.phoneNumber,
         fechaSolicitud: new Date().toLocaleDateString(),
         documentosCompletos: true,
+
+        creador: session ? {
+          username: session.user?.username || 'admin',
+          email: session.user?.email || 'admin@cov.com',
+          fecha: fechaCreacion.toISOString(),
+          esAdmin: session.user?.role === 'admin' || isAdmin
+        } : null,
 
         // Detailed data
         persona: {

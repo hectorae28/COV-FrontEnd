@@ -1,5 +1,7 @@
 "use client"
 
+import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
+import SessionInfo from "@/Components/SessionInfo"
 import { motion } from "framer-motion"
 import {
   AlertCircle,
@@ -19,22 +21,20 @@ import {
   X,
   XCircle
 } from "lucide-react"
+import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 
-/**
- * Componente para visualizar y gestionar las solicitudes pendientes de aprobación
- * Permite revisar datos, documentos y aprobar o rechazar solicitudes
- */
 export default function DetallePendiente({ params, onVolver }) {
-  // Obtenemos el ID desde los parámetros de la URL
+
+  const { data: session } = useSession();
   const pendienteId = params?.id || "p1"
 
   // Obtenemos funciones del store centralizado
   const {
     getColegiadoPendiente,
     updateColegiadoPendiente,
-    approveRegistration
+    approveRegistration,
+    initSession
   } = useDataListaColegiados()
 
   // Estados locales
@@ -58,6 +58,12 @@ export default function DetallePendiente({ params, onVolver }) {
     num_cov: ""
   })
   const [pasoModal, setPasoModal] = useState(1)
+
+  useEffect(() => {
+    if (session) {
+      initSession(session);
+    }
+  }, [session, initSession]);
 
   // Cargar datos del pendiente
   useEffect(() => {
@@ -151,18 +157,22 @@ export default function DetallePendiente({ params, onVolver }) {
     try {
       if (isSubmitting) return;
       setIsSubmitting(true);
-  
+
+      // Asegurarnos de que la sesión esté inicializada
+      if (session) {
+        initSession(session);
+      }
+
       // Llamar a la función de aprobación del store
       const colegiadoAprobado = approveRegistration(pendienteId, datosRegistro);
-  
+
       // Mostrar confirmación
       setConfirmacionExitosa(true);
       setMostrarConfirmacion(false);
-  
+
       // Volver a la lista después de un tiempo con el colegiado aprobado
       setTimeout(() => {
         if (onVolver) {
-          // Pasar el colegiado aprobado con una marca de aprobación explícita
           onVolver({
             aprobado: true,
             colegiado: colegiadoAprobado
@@ -171,6 +181,7 @@ export default function DetallePendiente({ params, onVolver }) {
       }, 2000);
     } catch (error) {
       console.error("Error al aprobar solicitud:", error);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -218,13 +229,13 @@ export default function DetallePendiente({ params, onVolver }) {
     <div className="w-full px-4 md:px-10 py-10 md:py-28 bg-gray-50">
       {/* Breadcrumbs */}
       <div className="mb-6">
-      <button
-  onClick={() => onVolver({ aprobado: false })}
-  className="text-md text-[#590248] hover:text-[#C40180] flex items-center cursor-pointer transition-colors duration-200"
->
-  <ChevronLeft size={20} className="mr-1" />
-  Volver a la lista de colegiados
-</button>
+        <button
+          onClick={() => onVolver({ aprobado: false })}
+          className="text-md text-[#590248] hover:text-[#C40180] flex items-center cursor-pointer transition-colors duration-200"
+        >
+          <ChevronLeft size={20} className="mr-1" />
+          Volver a la lista de colegiados
+        </button>
       </div>
 
       {/* Notificaciones de éxito */}
@@ -272,108 +283,118 @@ export default function DetallePendiente({ params, onVolver }) {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
       >
-          <div className="flex flex-col md:flex-row">
-            <div className="md:w-1/5 flex justify-center items-center mb-8 md:mb-0">
-              {/* Iniciales en lugar de foto de perfil */}
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg shadow-black/40 bg-gradient-to-br from-[#C40180] to-[#7D0053] flex items-center justify-center">
-                <span className="text-4xl font-bold text-white">
-                  {obtenerIniciales()}
+        <div className="flex flex-col md:flex-row">
+          <div className="md:w-1/5 flex justify-center items-center mb-8 md:mb-0">
+            {/* Iniciales en lugar de foto de perfil */}
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg shadow-black/40 bg-gradient-to-br from-[#C40180] to-[#7D0053] flex items-center justify-center">
+              <span className="text-4xl font-bold text-white">
+                {obtenerIniciales()}
+              </span>
+            </div>
+          </div>
+
+          <div className="md:w-3/4">
+            <div className="flex flex-col md:flex-row md:justify-between mb-4">
+              <div className="md:ml-2">
+                <h1 className="text-2xl font-bold text-gray-800 mb-1">{nombreCompleto}</h1>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Clock size={14} className="mr-1" />
+                  <span>Solicitud pendiente desde {fechaSolicitud}</span>
+                </div>
+              </div>
+
+              <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
+                {/* Estados de la solicitud */}
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                  <Clock size={12} className="mr-1" />
+                  Pendiente de aprobación
+                </span>
+
+                {/* Estado de documentos */}
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${documentosCompletos
+                    ? "bg-green-100 text-green-800 border border-green-200"
+                    : "bg-red-100 text-red-800 border border-red-200"
+                    }`}
+                >
+                  {documentosCompletos ? (
+                    <>
+                      <CheckCircle size={12} className="mr-1" />
+                      Documentación completa
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle size={12} className="mr-1" />
+                      Documentación incompleta
+                    </>
+                  )}
                 </span>
               </div>
             </div>
 
-            <div className="md:w-3/4">
-              <div className="flex flex-col md:flex-row md:justify-between mb-4">
-                <div className="md:ml-2">
-                  <h1 className="text-2xl font-bold text-gray-800 mb-1">{nombreCompleto}</h1>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Clock size={14} className="mr-1" />
-                    <span>Solicitud pendiente desde {fechaSolicitud}</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
-                  {/* Estados de la solicitud */}
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
-                    <Clock size={12} className="mr-1" />
-                    Pendiente de aprobación
-                  </span>
-
-                  {/* Estado de documentos */}
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${documentosCompletos
-                        ? "bg-green-100 text-green-800 border border-green-200"
-                        : "bg-red-100 text-red-800 border border-red-200"
-                      }`}
-                  >
-                    {documentosCompletos ? (
-                      <>
-                        <CheckCircle size={12} className="mr-1" />
-                        Documentación completa
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle size={12} className="mr-1" />
-                        Documentación incompleta
-                      </>
-                    )}
-                  </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6 mt-4">
+              <div className="flex items-center bg-gray-50 p-2 rounded-md">
+                <Mail className="text-[#C40180] h-5 w-5 mr-2" />
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Correo electrónico</p>
+                  <p className="text-sm text-gray-700">{pendiente.persona.correo}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6 mt-4">
-                <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                  <Mail className="text-[#C40180] h-5 w-5 mr-2" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Correo electrónico</p>
-                    <p className="text-sm text-gray-700">{pendiente.persona.correo}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                  <Phone className="text-[#C40180] h-5 w-5 mr-2" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Teléfono</p>
-                    <p className="text-sm text-gray-700">{pendiente.persona.telefono_movil}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                  <User className="text-[#C40180] h-5 w-5 mr-2" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Identificación</p>
-                    <p className="text-sm text-gray-700">{pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                  <Calendar className="text-[#C40180] h-5 w-5 mr-2" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Fecha de solicitud</p>
-                    <p className="text-sm text-gray-700">{fechaSolicitud}</p>
-                  </div>
+              <div className="flex items-center bg-gray-50 p-2 rounded-md">
+                <Phone className="text-[#C40180] h-5 w-5 mr-2" />
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Teléfono</p>
+                  <p className="text-sm text-gray-700">{pendiente.persona.telefono_movil}</p>
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => setMostrarConfirmacion(true)}
-                  className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-sm font-medium"
-                >
-                  <CheckCircle size={18} />
-                  <span>Aprobar solicitud</span>
-                </button>
-
-                <button
-                  onClick={() => setMostrarRechazo(true)}
-                  className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-sm font-medium"
-                >
-                  <XCircle size={18} />
-                  <span>Rechazar solicitud</span>
-                </button>
+              <div className="flex items-center bg-gray-50 p-2 rounded-md">
+                <User className="text-[#C40180] h-5 w-5 mr-2" />
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Identificación</p>
+                  <p className="text-sm text-gray-700">{pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}</p>
+                </div>
               </div>
+
+              <div className="flex items-center bg-gray-50 p-2 rounded-md">
+                <Calendar className="text-[#C40180] h-5 w-5 mr-2" />
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Fecha de solicitud</p>
+                  <p className="text-sm text-gray-700">{fechaSolicitud}</p>
+                </div>
+              </div>
+
+              {/* Información del creador del registro */}
+              {pendiente.creador && (
+                <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4">
+                  <SessionInfo
+                    creador={pendiente.creador}
+                    variant="compact"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setMostrarConfirmacion(true)}
+                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-sm font-medium"
+              >
+                <CheckCircle size={18} />
+                <span>Aprobar solicitud</span>
+              </button>
+
+              <button
+                onClick={() => setMostrarRechazo(true)}
+                className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-sm font-medium"
+              >
+                <XCircle size={18} />
+                <span>Rechazar solicitud</span>
+              </button>
             </div>
           </div>
+        </div>
       </motion.div>
 
       {/* Información Personal */}
@@ -443,6 +464,23 @@ export default function DetallePendiente({ params, onVolver }) {
             </div>
           </div>
         </div>
+
+        {/* Agregar sección para información del creador al final */}
+        {pendiente.creador && (
+          <div className="mt-8 border-t pt-6">
+            <div className="flex items-center mb-5 border-b pb-3">
+              <Clock size={20} className="text-[#C40180] mr-2" />
+              <h2 className="text-lg font-semibold text-gray-900">Información del registro</h2>
+            </div>
+
+            <div className="bg-purple-50 p-4 rounded-md">
+              <SessionInfo
+                creador={pendiente.creador}
+                variant="full"
+              />
+            </div>
+          </div>
+        )}
       </motion.div>
 
       {/* Información Académica y Profesional */}

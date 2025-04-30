@@ -1,6 +1,6 @@
+import { fetchMe } from "@/api/endpoints/colegiado";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { fetchMe } from "@/api/endpoints/colegiado";
 
 
 export const authOptions = {
