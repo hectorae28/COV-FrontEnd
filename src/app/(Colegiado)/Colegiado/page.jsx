@@ -19,8 +19,8 @@ export default function Home() {
   const [userInfo, setUser_info] = useState(null);
   const { data: session, status } = useSession();
   const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
-
   // Datos de solvencia
+
   const solvencyInfo = {
     date: session?.user.solvente,
     amount: "7.00",
@@ -46,8 +46,9 @@ export default function Home() {
         setShowSolvencyWarning(false);
       }
     };
-
-    checkSolvencyStatus();
+    if (userInfo) {
+      checkSolvencyStatus();
+    }
 
     const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas
 
@@ -59,8 +60,7 @@ export default function Home() {
         .catch((error) => console.log(error));
     }
     return () => clearInterval(intervalId);
-  }, [solvencyInfo.date, session, status]);
-
+  }, [ session, status]);
   // Manejar clic en card
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {
@@ -87,6 +87,7 @@ export default function Home() {
       isSolvent={isSolvent}
       showSolvencyWarning={showSolvencyWarning}
       userInfo={userInfo}
+      session={session}
     >
       {/* Contenido principal sin pestañas cuando el usuario está completamente solvente */}
       {!showTabs ? (

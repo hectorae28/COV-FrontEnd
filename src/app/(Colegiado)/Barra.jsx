@@ -14,6 +14,7 @@ export default function Barra({
   isSolvent,
   userInfo,
   showSolvencyWarning,
+  session
 }) {
   return (
     <div className="bg-white h-20 fixed top-0 right-0 left-0 md:left-72 shadow-sm z-30 flex items-center justify-between px-18">
@@ -75,7 +76,7 @@ export default function Barra({
             <Notifications fontSize="medium" />
           </button>
 
-          <PerfilDropdown userInfo={userInfo} />
+          <PerfilDropdown userInfo={userInfo} session={session} />
         </div>
       </div>
     </div>
