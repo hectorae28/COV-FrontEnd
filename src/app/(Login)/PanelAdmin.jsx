@@ -144,7 +144,6 @@ export default function PanelAdmin({ onClose, isClosing }) {
             {currentView === "login"
               ? "Panel de Administradores"
               : "Recuperar Contraseña"}
-
           </h2>
           <p className="text-center text-gray-700 mb-10">
             {currentView === "login"
@@ -154,7 +153,6 @@ export default function PanelAdmin({ onClose, isClosing }) {
           {currentView === "login" && (
             <form onSubmit={(e) => handleSubmit(e)} ref={formRef}>
               {error && <Alert type="alert">{error}</Alert>}
-
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
