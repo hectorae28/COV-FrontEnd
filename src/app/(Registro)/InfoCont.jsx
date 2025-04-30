@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin } from "lucide-react";
-import phoneCodes from "@/app/Models/phoneCodes"; // Assuming you have a file with phone codes
+import phoneCodes from "@/app/Models/phoneCodes"; 
 
 // Datos de estados y ciudades de Venezuela
 const venezuelaData = {
