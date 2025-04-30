@@ -6,7 +6,7 @@ export default function DocsRequirements({ formData, onInputChange, validationEr
     ci: "",
     rif: "",
     titulo: "",
-    mpps: ""
+    mpps: "",
   });
 
   const handleFileChange = (e) => {
@@ -234,7 +234,7 @@ export default function DocsRequirements({ formData, onInputChange, validationEr
                 </label>
               </div>
               <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
-              {isFileEmpty("mpps") && (
+              {isFileEmpty("notas_curso") && (
                 <p className="mt-1 text-xs text-red-500">Este documento es obligatorio</p>
               )}
             </div>

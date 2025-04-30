@@ -25,7 +25,6 @@ export default function ProfileDropdown({ userInfo, session }) {
     setIsOpen(!isOpen);
   };
   const handleSingOut = () => {
-    console.log({sessionData,session});
       api.post(
         '/usuario/logout/',
         {
@@ -38,7 +37,7 @@ export default function ProfileDropdown({ userInfo, session }) {
         )
         .then(() => {
           console.log("Logout successful");
-          signOut(session);
+          signOut(sessionData);
         })
         .catch((error) => {
           console.error("Logout error:", error);

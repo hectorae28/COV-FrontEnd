@@ -37,7 +37,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
   ];
 
   const isFieldEmpty = (fieldName) => {
-    return (!formData[fieldName] || formData[fieldName].trim() === "" || (fieldName === 'phoneNumber' && formData[fieldName] === '+'));
+    return (!formData[fieldName] || formData[fieldName].trim() === "" );
   };
 
   return (
@@ -84,7 +84,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               style={{ height: "48px" }} 
             >
               {phoneCodes.map((code, index) => (
-                <option key={index} value={code.codigo}>{code.codigo}</option>
+                <option key={index} value={code.codigo}>&nbsp;&nbsp;&nbsp;&nbsp;{BanderaComponent({ countryCode: code.codigo_pais })} {code.codigo}</option>
               ))}
             </select>
             <input
@@ -104,9 +104,6 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
           {isFieldEmpty("phoneNumber") && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">
-            Debe ingresar el código de área seguido del número de servicio y número de teléfono. Ejemplo: 584241986646
-          </p>
         </div>
         {/* Home Phone */}
         <div>
@@ -208,3 +205,13 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
     </motion.div>
   );
 }
+function BanderaComponent({ countryCode }) {
+  // Convierte el código ISO (e.g. "VE") a sus puntos de código regionales
+  const base = 0x1F1E6; // punto de código de 'A'
+  const [first, second] = countryCode
+    .toUpperCase()
+    .split('')
+    .map(ch => base + (ch.charCodeAt(0) - 65));
+  return String.fromCodePoint(first, second); // e.g. "🇻🇪"
+}
+

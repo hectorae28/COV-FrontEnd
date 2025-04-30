@@ -2,7 +2,11 @@ import { motion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
 import { useState } from "react";
 
-export default function InfoColegiado({ formData, onInputChange, validationErrors }) {
+export default function InfoColegiado({
+  formData,
+  onInputChange,
+  validationErrors,
+}) {
   const [showTitleDateWarning, setShowTitleDateWarning] = useState(false);
 
   const handleChange = (e) => {
@@ -12,7 +16,7 @@ export default function InfoColegiado({ formData, onInputChange, validationError
 
   // Checks if a field is empty to display the required message
   const isFieldEmpty = (fieldName) => {
-    return (!formData[fieldName] || formData[fieldName].trim() === "");
+    return !formData[fieldName] || formData[fieldName].trim() === "";
   };
 
   return (
@@ -22,6 +26,40 @@ export default function InfoColegiado({ formData, onInputChange, validationError
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
+      <div>
+        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+          Profesion
+          <span className="text-red-500 ml-1">*</span>
+        </label>
+        <div className="relative">
+          <select
+            name="tipo_profesion"
+            value={formData.tipo_profesion}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border ${isFieldEmpty("tipo_profesion") ? "border-gray-200" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+          >
+            <option value="" disabled>
+              Profesion
+            </option>
+           <option value="tecnico">Tecnico</option>
+       <option value="odontologo">Odontologo</option>
+       <option value="higienista">Higienista</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg
+              className="fill-current h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+            </svg>
+          </div>
+        </div>
+        {isFieldEmpty("tipo_profesion") && (
+          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+        )}
+      </div>
       {/* Graduate Institute */}
       <div>
         <label className="mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -33,8 +71,11 @@ export default function InfoColegiado({ formData, onInputChange, validationError
           name="graduateInstitute"
           value={formData.graduateInstitute}
           onChange={handleChange}
-          className={`w-full px-4 py-3 border ${isFieldEmpty("graduateInstitute") ? "border-gray-200" : "border-gray-200"
-            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+          className={`w-full px-4 py-3 border ${
+            isFieldEmpty("graduateInstitute")
+              ? "border-gray-200"
+              : "border-gray-200"
+          } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
           placeholder="Nombre del instituto de graduación"
         />
         {isFieldEmpty("graduateInstitute") && (
@@ -53,8 +94,11 @@ export default function InfoColegiado({ formData, onInputChange, validationError
           name="universityTitle"
           value={formData.universityTitle}
           onChange={handleChange}
-          className={`w-full px-4 py-3 border ${isFieldEmpty("universityTitle") ? "border-gray-200" : "border-gray-200"
-            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+          className={`w-full px-4 py-3 border ${
+            isFieldEmpty("universityTitle")
+              ? "border-gray-200"
+              : "border-gray-200"
+          } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
           placeholder="Nombre completo de la universidad"
         />
         {isFieldEmpty("universityTitle") && (
@@ -63,45 +107,57 @@ export default function InfoColegiado({ formData, onInputChange, validationError
       </div>
 
       {/* Registration Number */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            Número de Registro Principal
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <input
-            type="text"
-            name="mainRegistrationNumber"
-            value={formData.mainRegistrationNumber}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("mainRegistrationNumber") ? "border-gray-200" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-            placeholder="Número de registro"
-          />
-          {isFieldEmpty("mainRegistrationNumber") && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-          )}
-        </div>
-        <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            Fecha de Registro Principal
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="relative">
+      {formData.tipo_profesion == "odontologo" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+              Número de Registro Principal
+              <span className="text-red-500 ml-1">*</span>
+            </label>
             <input
-              type="date"
-              name="mainRegistrationDate"
-              value={formData.mainRegistrationDate}
+              type="text"
+              name="mainRegistrationNumber"
+              value={formData.mainRegistrationNumber}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-gray-200" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
+              className={`w-full px-4 py-3 border ${
+                isFieldEmpty("mainRegistrationNumber")
+                  ? "border-gray-200"
+                  : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+              placeholder="Número de registro"
             />
+            {isFieldEmpty("mainRegistrationNumber") && (
+              <p className="mt-1 text-xs text-red-500">
+                Este campo es obligatorio
+              </p>
+            )}
           </div>
-          {isFieldEmpty("mainRegistrationDate") && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-          )}
+          <div>
+            <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+              Fecha de Registro Principal
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="date"
+                name="mainRegistrationDate"
+                value={formData.mainRegistrationDate}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 border ${
+                  isFieldEmpty("mainRegistrationDate")
+                    ? "border-gray-200"
+                    : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
+              />
+            </div>
+            {isFieldEmpty("mainRegistrationDate") && (
+              <p className="mt-1 text-xs text-red-500">
+                Este campo es obligatorio
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* M.P.P.S Registration */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -115,12 +171,17 @@ export default function InfoColegiado({ formData, onInputChange, validationError
             name="mppsRegistrationNumber"
             value={formData.mppsRegistrationNumber}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("mppsRegistrationNumber") ? "border-gray-200" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+            className={`w-full px-4 py-3 border ${
+              isFieldEmpty("mppsRegistrationNumber")
+                ? "border-gray-200"
+                : "border-gray-200"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
             placeholder="Número de registro M.P.P.S"
           />
           {isFieldEmpty("mppsRegistrationNumber") && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+            <p className="mt-1 text-xs text-red-500">
+              Este campo es obligatorio
+            </p>
           )}
         </div>
         <div>
@@ -134,12 +195,17 @@ export default function InfoColegiado({ formData, onInputChange, validationError
               name="mppsRegistrationDate"
               value={formData.mppsRegistrationDate}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("mppsRegistrationDate") ? "border-gray-200" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
+              className={`w-full px-4 py-3 border ${
+                isFieldEmpty("mppsRegistrationDate")
+                  ? "border-gray-200"
+                  : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
             />
           </div>
           {isFieldEmpty("mppsRegistrationDate") && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+            <p className="mt-1 text-xs text-red-500">
+              Este campo es obligatorio
+            </p>
           )}
         </div>
       </div>
@@ -158,8 +224,11 @@ export default function InfoColegiado({ formData, onInputChange, validationError
             onChange={handleChange}
             onFocus={() => setShowTitleDateWarning(true)}
             onBlur={() => setShowTitleDateWarning(false)}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-gray-200" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
+            className={`w-full px-4 py-3 border ${
+              isFieldEmpty("titleIssuanceDate")
+                ? "border-gray-200"
+                : "border-gray-200"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
           />
         </div>
         {isFieldEmpty("titleIssuanceDate") && (

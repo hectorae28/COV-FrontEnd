@@ -55,11 +55,8 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     const isValid = requiredFields.every(field => formData[field] && formData[field].trim() !== "");
     setIsFormValid(isValid);
 
-    // REMOVE THIS LINE - it was causing the infinite loop:
-    // onInputChange({ isPersonalInfoValid: isValid });
   }, [formData]);
 
-  // Checks if a field is empty to display the required message
   const isFieldEmpty = (fieldName) => {
     return (!formData[fieldName] || formData[fieldName].trim() === "");
   };
@@ -71,40 +68,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <div>
-        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-          Profesion
-          <span className="text-red-500 ml-1">*</span>
-        </label>
-        <div className="relative">
-          <select
-            name="tipo_profesion"
-            value={formData.tipo_profesion}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("tipo_profesion") ? "border-gray-200" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-          >
-            <option value="" disabled>
-              Profesion
-            </option>
-           <option value="tecnico">Tecnico</option>
-       <option value="odontologo">Odontologo</option>
-       <option value="higienista">Higienista</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <svg
-              className="fill-current h-4 w-4"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-            >
-              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-            </svg>
-          </div>
-        </div>
-        {isFieldEmpty("tipo_profesion") && (
-          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-        )}
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Nationality */}
         <div>
@@ -174,6 +137,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               style={{ height: "48px" }} // Asegura que el input tenga la misma altura
             />
           </div>
+          {isFieldEmpty("identityCard") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
 
         </div>
       </div>
