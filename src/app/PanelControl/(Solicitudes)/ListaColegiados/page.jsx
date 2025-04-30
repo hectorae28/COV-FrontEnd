@@ -33,12 +33,12 @@ export default function ListaColegiadosPage() {
     const [tabActivo, setTabActivo] = useState("pendientes");
 
     // Filtros adicionales para colegiados registrados
-    const [filtroSolvencia, setFiltroSolvencia] = useState("todos");
+    const [filtroEstado, setFiltroEstado] = useState("todos"); // Cambiado de filtroSolvencia a filtroEstado
     const [filtroEspecialidad, setFiltroEspecialidad] = useState("todas");
 
     // Filtros para pendientes
     const [filtroFecha, setFiltroFecha] = useState("todas");
-    const [filtroDocumentos, setFiltroDocumentos] = useState("todos");
+    const [filtroEstadoPendiente, setFiltroEstadoPendiente] = useState("todos"); // Cambiado de filtroPagosPendientes
     const [registroExitoso, setRegistroExitoso] = useState(false);
     const [aprobacionExitosa, setAprobacionExitosa] = useState(false);
 
@@ -64,19 +64,59 @@ export default function ListaColegiadosPage() {
             colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
             colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // Filtrar por solvencia
-        const matchesSolvencia =
-            filtroSolvencia === "todos" ? true :
-                filtroSolvencia === "solventes" ? colegiado.solvente :
-                    !colegiado.solvente;
+        // Filtrar por estado (solvencia y solicitudes)
+        const matchesEstado =
+            filtroEstado === "todos" ? true :
+                filtroEstado === "solventes" ? colegiado.solvente :
+                    filtroEstado === "insolventes" ? !colegiado.solvente :
+                        filtroEstado === "solicitudes" ? (colegiado.solicitudes && colegiado.solicitudes.length > 0) : false;
 
         // Filtrar por especialidad
         const matchesEspecialidad =
             filtroEspecialidad === "todas" ? true :
                 colegiado.especialidad === filtroEspecialidad;
 
-        return matchesSearch && matchesSolvencia && matchesEspecialidad;
+        return matchesSearch && matchesEstado && matchesEspecialidad;
     });
+
+    // Función auxiliar para convertir la fecha al formato Date
+    // Reemplaza la función parsearFecha actual con esta versión mejorada:
+    const parsearFecha = (fechaTexto) => {
+        if (!fechaTexto) return null;
+
+        // Intentar primero con formato MM/DD/AAAA
+        if (fechaTexto.includes('/')) {
+            const partes = fechaTexto.split('/');
+            if (partes.length === 3) {
+                // Formato MM/DD/AAAA
+                const mes = parseInt(partes[0]) - 1;  // Restar 1 al mes
+                const dia = parseInt(partes[1]);
+                const año = parseInt(partes[2]);
+                const fecha = new Date(año, mes, dia);
+                // Verificar si la fecha es válida
+                if (!isNaN(fecha.getTime())) {
+                    return fecha;
+                }
+            }
+        }
+
+        // Intentar con formato ISO (AAAA-MM-DD)
+        if (fechaTexto.includes('-')) {
+            const fecha = new Date(fechaTexto);
+            if (!isNaN(fecha.getTime())) {
+                return fecha;
+            }
+        }
+
+        // Último intento: analizar como string de fecha
+        const fecha = new Date(fechaTexto);
+        if (!isNaN(fecha.getTime())) {
+            return fecha;
+        }
+
+        return null;
+    };
+
 
     // Filtrar pendientes basado en búsqueda y filtros
     const pendientesFiltrados = colegiadosPendientes
@@ -87,23 +127,34 @@ export default function ListaColegiadosPage() {
                 pendiente.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 pendiente.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-            // Filtrar por completitud de documentos
-            const matchesDocumentos =
-                filtroDocumentos === "todos" ? true :
-                    filtroDocumentos === "completos" ? pendiente.documentosCompletos :
-                        !pendiente.documentosCompletos;
+            // Filtrar por estado (documentos completos, pagos pendientes)
+            const matchesEstadoPendiente =
+                filtroEstadoPendiente === "todos" ? true :
+                    filtroEstadoPendiente === "documentosCompletos" ? pendiente.documentosCompletos :
+                        filtroEstadoPendiente === "documentosIncompletos" ? !pendiente.documentosCompletos :
+                            filtroEstadoPendiente === "pagosPendientes" ? pendiente.pagosPendientes : false;
 
             // Filtrar por fecha de solicitud (predefinidos)
-            const fechaSolicitudDate = new Date(pendiente.fechaSolicitud);
-            const hoy = new Date();
-            const unaSemanaAtras = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
-            const unMesAtras = new Date(hoy.getTime() - 30 * 24 * 60 * 60 * 1000);
+            // Reemplaza la parte del filtro de fechas en pendientesFiltrados:
+            // Filtrar por fecha de solicitud (predefinidos)
+            const fechaSolicitudDate = parsearFecha(pendiente.fechaSolicitud);
+            if (!fechaSolicitudDate) return false; // Si no se puede parsear, filtrar
 
-            const matchesFechaPredef =
-                filtroFecha === "todas" ? true :
-                    filtroFecha === "semana" ? fechaSolicitudDate >= unaSemanaAtras :
-                        filtroFecha === "mes" ? fechaSolicitudDate >= unMesAtras :
-                            true;
+            const hoy = new Date();
+            const unaSemanaAtras = new Date();
+            unaSemanaAtras.setDate(hoy.getDate() - 7);
+
+            const unMesAtras = new Date();
+            unMesAtras.setDate(hoy.getDate() - 30);
+
+            let matchesFechaPredef = true;
+            if (filtroFecha !== "todas") {
+                if (filtroFecha === "semana") {
+                    matchesFechaPredef = fechaSolicitudDate >= unaSemanaAtras;
+                } else if (filtroFecha === "mes") {
+                    matchesFechaPredef = fechaSolicitudDate >= unMesAtras;
+                }
+            }
 
             // Filtrar por rango de fechas personalizado
             let matchesRangoFechas = true;
@@ -118,12 +169,16 @@ export default function ListaColegiadosPage() {
                 matchesRangoFechas = matchesRangoFechas && fechaSolicitudDate <= fechaHastaObj;
             }
 
-            return matchesSearch && matchesDocumentos && matchesFechaPredef && matchesRangoFechas;
+
+            return matchesSearch && matchesEstadoPendiente && matchesFechaPredef && matchesRangoFechas;
         })
         // Ordenar por fecha
         .sort((a, b) => {
-            const fechaA = new Date(a.fechaSolicitud);
-            const fechaB = new Date(b.fechaSolicitud);
+            const fechaA = parsearFecha(a.fechaSolicitud);
+            const fechaB = parsearFecha(b.fechaSolicitud);
+
+            if (!fechaA || !fechaB) return 0;
+
             return ordenFecha === "desc"
                 ? fechaB - fechaA  // Más nuevo primero
                 : fechaA - fechaB;  // Más viejo primero
@@ -158,18 +213,18 @@ export default function ListaColegiadosPage() {
     const handleAprobarPendiente = (resultado) => {
         // Siempre volver a la lista primero, para evitar problemas de estado
         volverALista();
-        
+
         // Comprobar si fue una aprobación exitosa
         if (resultado && resultado.aprobado === true) {
-          // Solo mostrar notificación si se aprobó
-          setAprobacionExitosa(true);
-          setTimeout(() => setAprobacionExitosa(false), 3000);
-          
-          // Cambiar al tab de registrados
-          setTabActivo("registrados");
+            // Solo mostrar notificación si se aprobó
+            setAprobacionExitosa(true);
+            setTimeout(() => setAprobacionExitosa(false), 3000);
+
+            // Cambiar al tab de registrados
+            setTabActivo("registrados");
 
         }
-      };
+    };
 
     // Alternar orden de fecha
     const toggleOrdenFecha = () => {
@@ -266,47 +321,46 @@ export default function ListaColegiadosPage() {
             )}
 
             {/* Barra de acciones: búsqueda y botón de nuevo registro */}
-<div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-    <div className="flex-1 w-full md:w-auto">
-        <div className="relative">
-            <input
-                type="text"
-                placeholder="Buscar por nombre, cédula o registro..."
-                className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-        </div>
-    </div>
-    <div className="flex gap-4 w-full md:w-auto">
-        <button
-            onClick={() => setShowRegistro(true)}
-            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
-        >
-            <PlusCircle size={20} />
-            <span>Registrar nuevo</span>
-        </button>
-    </div>
-</div>
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <div className="flex-1 w-full md:w-auto">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre, cédula o registro..."
+                            className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                    </div>
+                </div>
+                <div className="flex gap-4 w-full md:w-auto">
+                    <button
+                        onClick={() => setShowRegistro(true)}
+                        className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
+                    >
+                        <PlusCircle size={20} />
+                        <span>Registrar nuevo</span>
+                    </button>
+                </div>
+            </div>
 
             {/* Tabs para alternar entre colegiados y pendientes */}
             <div className="border-b border-gray-200 mb-6">
                 <nav className="flex gap-8">
-                <button
-    className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${
-        tabActivo === "pendientes"
-            ? 'border-[#C40180] text-[#C40180]'
-            : 'border-transparent text-gray-500 hover:text-gray-700'
-    } transition-colors`}
-    onClick={() => {
-        // Solo cambiar el tab, sin hacer cambios adicionales
-        setTabActivo("pendientes");
-        // No hacer nada más que mostrar el tab correcto
-    }}
->
-    Pendientes por aprobación ({colegiadosPendientes.length})
-</button>
+                    <button
+                        className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${tabActivo === "pendientes"
+                            ? 'border-[#C40180] text-[#C40180]'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            } transition-colors`}
+                        onClick={() => {
+                            // Solo cambiar el tab, sin hacer cambios adicionales
+                            setTabActivo("pendientes");
+                            // No hacer nada más que mostrar el tab correcto
+                        }}
+                    >
+                        Pendientes por aprobación ({colegiadosPendientes.length})
+                    </button>
                     <button
                         className={`py-4 px-1 cursor-pointer font-medium text-sm sm:text-base border-b-2 ${tabActivo === "registrados"
                             ? "border-[#C40180] text-[#C40180]"
@@ -325,34 +379,43 @@ export default function ListaColegiadosPage() {
                     <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
                     <div className="flex flex-wrap gap-3">
                         <div>
-                            <p className="text-xs text-gray-500 mb-1">Estado de solvencia</p>
+                            <p className="text-xs text-gray-500 mb-1">Estado</p>
                             <div className="flex gap-2">
                                 <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "todos"
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "todos"
                                         ? "bg-purple-100 text-purple-800"
                                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
-                                    onClick={() => setFiltroSolvencia("todos")}
+                                    onClick={() => setFiltroEstado("todos")}
                                 >
                                     Todos
                                 </button>
                                 <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "solventes"
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "solventes"
                                         ? "bg-green-100 text-green-800"
                                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
-                                    onClick={() => setFiltroSolvencia("solventes")}
+                                    onClick={() => setFiltroEstado("solventes")}
                                 >
                                     Solventes
                                 </button>
                                 <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "insolventes"
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "insolventes"
                                         ? "bg-red-100 text-red-800"
                                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
-                                    onClick={() => setFiltroSolvencia("insolventes")}
+                                    onClick={() => setFiltroEstado("insolventes")}
                                 >
                                     No Solventes
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "solicitudes"
+                                        ? "bg-blue-100 text-blue-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroEstado("solicitudes")}
+                                >
+                                    Solicitudes
                                 </button>
                             </div>
                         </div>
@@ -451,34 +514,43 @@ export default function ListaColegiadosPage() {
                         </div>
 
                         <div>
-                            <p className="text-xs text-gray-500 mb-1">Estado de documentos</p>
+                            <p className="text-xs text-gray-500 mb-1">Estado</p>
                             <div className="flex gap-2">
                                 <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroDocumentos === "todos"
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "todos"
                                         ? "bg-purple-100 text-purple-800"
                                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
-                                    onClick={() => setFiltroDocumentos("todos")}
+                                    onClick={() => setFiltroEstadoPendiente("todos")}
                                 >
                                     Todos
                                 </button>
                                 <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroDocumentos === "completos"
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "documentosCompletos"
                                         ? "bg-green-100 text-green-800"
                                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
-                                    onClick={() => setFiltroDocumentos("completos")}
+                                    onClick={() => setFiltroEstadoPendiente("documentosCompletos")}
                                 >
-                                    Completos
+                                    Documentos Completos
                                 </button>
                                 <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroDocumentos === "incompletos"
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "documentosIncompletos"
                                         ? "bg-yellow-100 text-yellow-800"
                                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
-                                    onClick={() => setFiltroDocumentos("incompletos")}
+                                    onClick={() => setFiltroEstadoPendiente("documentosIncompletos")}
                                 >
-                                    Incompletos
+                                    Documentos Incompletos
+                                </button>
+                                <button
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "pagosPendientes"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                    onClick={() => setFiltroEstadoPendiente("pagosPendientes")}
+                                >
+                                    Pagos Pendientes
                                 </button>
                             </div>
                         </div>
@@ -534,17 +606,16 @@ export default function ListaColegiadosPage() {
                                             {colegiadosFiltrados.map((colegiado) => (
                                                 <tr key={colegiado.id} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <div className="font-medium text-gray-900">{colegiado.nombre}</div>
-                                                        <div className="text-sm text-gray-500 md:hidden">{colegiado.cedula}</div>
+                                                        <div className="font-medium text-gray-900">{colegiado.nombre || "-"}</div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                                                        {colegiado.cedula}
+                                                        {colegiado.cedula || "-"}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                                        {colegiado.numeroRegistro}
+                                                        {colegiado.numeroRegistro || "-"}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
-                                                        {colegiado.especialidad}
+                                                        {colegiado.especialidad || "-"}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colegiado.solvente
@@ -553,6 +624,11 @@ export default function ListaColegiadosPage() {
                                                             }`}>
                                                             {colegiado.solvente ? 'Solvente' : 'No Solvente'}
                                                         </span>
+                                                        {colegiado.solicitudes && colegiado.solicitudes.length > 0 && (
+                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">
+                                                                Solicitudes
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                                         <button
@@ -565,6 +641,7 @@ export default function ListaColegiadosPage() {
                                                     </td>
                                                 </tr>
                                             ))}
+
                                         </tbody>
                                     </table>
                                 </div>
@@ -605,7 +682,7 @@ export default function ListaColegiadosPage() {
                                                     </button>
                                                 </th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Documentos
+                                                    Estado
                                                 </th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Acciones
@@ -623,21 +700,25 @@ export default function ListaColegiadosPage() {
                                                         {pendiente.cedula}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                                        {new Date(pendiente.fechaSolicitud).toLocaleDateString('es-ES', {
-                                                            year: 'numeric',
-                                                            month: '2-digit',
-                                                            day: '2-digit'
-                                                        })}
+                                                        {pendiente.fechaSolicitud}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${pendiente.documentosCompletos
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
-                                                            }`}>
-                                                            {pendiente.documentosCompletos
-                                                                ? <><CheckCircle size={12} /> Completos</>
-                                                                : <><XCircle size={12} /> Incompletos</>}
-                                                        </span>
+                                                        <div className="flex flex-col sm:flex-row gap-1 justify-center items-center">
+                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${pendiente.documentosCompletos
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-yellow-100 text-yellow-800'
+                                                                }`}>
+                                                                {pendiente.documentosCompletos
+                                                                    ? <><CheckCircle size={12} /> Documentos Completos</>
+                                                                    : <><XCircle size={12} /> Documentos Incompletos</>}
+                                                            </span>
+
+                                                            {pendiente.pagosPendientes && (
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
+                                                                    <XCircle size={12} /> Pagos Pendientes
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                                         <button
