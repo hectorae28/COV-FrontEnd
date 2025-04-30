@@ -11,22 +11,18 @@ const DEFAULT_METODOS = [
   {
     nombre: "Banco de Venezuela",
     datos_adicionales: { slug: "bdv" },
-    logo_url: "/assets/icons/BDV.png"
+    logo_url: "/assets/icons/BDV.png",
   },
   {
     nombre: "PayPal",
     datos_adicionales: { slug: "paypal" },
-    logo_url: "/assets/icons/Paypal.png"
-  }
+    logo_url: "/assets/icons/Paypal.png",
+  },
 ];
 
-export default function PagosColg({
-  onPaymentComplete,
-  costoInscripcion = DEFAULT_COSTO,
-  tazaBcv = DEFAULT_TAZA,
-  metodoPago = DEFAULT_METODOS,
-  handlePaymentComplete
-}) {
+export default function PagosColg({ props }) {
+  const { handlePaymentComplete, tazaBcv, costoInscripcion, metodoPago } =
+    props;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -49,25 +45,20 @@ export default function PagosColg({
   const paypalAmount = calculatePaypalFee(paymentAmount);
 
   const handleSubmit = async (e) => {
+    console.log("handleSubmit");
     e.preventDefault();
     setIsSubmitting(true);
+    handlePaymentComplete({
+      paymentDate,
+      referenceNumber,
+      paymentFile,
+      totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount,
+      metodo_de_pago: metodoPago.find(
+        (m) => m.datos_adicionales.slug === paymentMethod
+      ),
+    });
 
     // Simular procesamiento de pago
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Use the onPaymentComplete prop if handlePaymentComplete is not provided
-    const completeFn = handlePaymentComplete || onPaymentComplete;
-
-    if (typeof completeFn === 'function') {
-      completeFn({
-        paymentDate,
-        paymentMethod,
-        referenceNumber,
-        paymentFile,
-        totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount,
-        metodo_de_pago: metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)
-      });
-    }
 
     setIsSubmitting(false);
   };
@@ -132,16 +123,17 @@ export default function PagosColg({
           {metodoPago.map((metodo, index) => (
             <button
               key={index}
-              className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
+              className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${
+                metodo.datos_adicionales.slug === "bdv"
                   ? "bg-red-50 border-red-300 text-red-700"
                   : "bg-blue-50 border-blue-300 text-blue-700"
-                }`}
+              }`}
               onClick={() => setPaymentMethod(metodo.datos_adicionales.slug)}
             >
               <img
                 src={
                   metodo.logo_url
-                    ? metodo.logo_url.startsWith('/')
+                    ? metodo.logo_url.startsWith("/")
                       ? metodo.logo_url
                       : `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
                     : "/placeholder.svg"

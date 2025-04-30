@@ -11,7 +11,7 @@ import {
   GraduationCap,
   Phone,
   User,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -43,8 +43,8 @@ const steps = [
       "secondLastName",
       "birthDate",
       "gender",
-      "maritalStatus"
-    ]
+      "maritalStatus",
+    ],
   },
   {
     id: 2,
@@ -52,13 +52,7 @@ const steps = [
     description: "Cómo podemos comunicarnos contigo",
     icon: Phone,
     component: InfoContacto,
-    requiredFields: [
-      "email",
-      "phoneNumber",
-      "address",
-      "city",
-      "state"
-    ]
+    requiredFields: ["email", "phoneNumber", "address", "city", "state"],
   },
   {
     id: 3,
@@ -69,12 +63,10 @@ const steps = [
     requiredFields: [
       "graduateInstitute",
       "universityTitle",
-      "mainRegistrationNumber",
-      "mainRegistrationDate",
       "mppsRegistrationNumber",
       "mppsRegistrationDate",
-      "titleIssuanceDate"
-    ]
+      "titleIssuanceDate",
+    ],
   },
   {
     id: 4,
@@ -85,8 +77,8 @@ const steps = [
     requiredFields: [
       "institutionName",
       "institutionAddress",
-      "institutionPhone"
-    ]
+      "institutionPhone",
+    ],
   },
   {
     id: 5,
@@ -98,14 +90,17 @@ const steps = [
       "ci",
       "rif",
       "titulo",
-      "mpps"
-    ]
+      "mpps",
+    ],
   },
 ];
 
 export default function RegistrationForm() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [pagarLuego, setPagarLuego] = useState(false);
+
   const initialState = {
+    tipo_profesion: "",
     nationality: "",
     identityCard: "",
     firstName: "",
@@ -166,7 +161,7 @@ export default function RegistrationForm() {
         setTazaBcv(taza.data.rate);
         const costo = await fetchDataSolicitudes(
           "costo",
-          "?tipo_costo=1&es_vigente=true"
+          `?search=Inscripcion+${formData.tipo_profesion}&es_vigente=true`
         );
         setCostoInscripcion(Number(costo.data[0].monto_usd));
         const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
@@ -175,8 +170,10 @@ export default function RegistrationForm() {
         console.error("Error al obtener los datos:", error);
       }
     };
-    LoadData();
-  }, []);
+    if (formData.tipo_profesion.length > 0) {
+      LoadData();
+    }
+  }, [formData.tipo_profesion]);
 
   const handleInputChange = (updates) => {
     // Evitamos procesar actualizaciones isPersonalInfoValid
@@ -196,7 +193,7 @@ export default function RegistrationForm() {
       const updatedFields = Object.keys(updates);
       const newValidationErrors = { ...validationErrors };
 
-      updatedFields.forEach(field => {
+      updatedFields.forEach((field) => {
         if (newValidationErrors[field]) {
           delete newValidationErrors[field];
         }
@@ -212,16 +209,19 @@ export default function RegistrationForm() {
     let isValid = true;
 
     if (step.requiredFields && step.requiredFields.length > 0) {
-      step.requiredFields.forEach(field => {
+      step.requiredFields.forEach((field) => {
         // Check for file fields (simplified check)
-        if (['ci', 'rif', 'titulo', 'mpps'].includes(field)) {
+        if (["ci", "rif", "titulo", "mpps"].includes(field)) {
           if (!formData[field]) {
             errors[field] = true;
             isValid = false;
           }
         }
         // Check for other fields
-        else if (!formData[field] || (typeof formData[field] === 'string' && formData[field].trim() === '')) {
+        else if (
+          !formData[field] ||
+          (typeof formData[field] === "string" && formData[field].trim() === "")
+        ) {
           errors[field] = true;
           isValid = false;
         }
@@ -259,13 +259,17 @@ export default function RegistrationForm() {
   };
 
   const handlePaymentComplete = async ({
-    paymentDate,
-    referenceNumber,
-    paymentFile,
-    totalAmount,
-    metodo_de_pago,
+    paymentDate = null,
+    referenceNumber = null,
+    paymentFile = null,
+    totalAmount = null,
+    metodo_de_pago = null,
   }) => {
+    console.log("Payment complete:");
+    console.log({ formData });
+
     const Form = new FormData();
+    Form.append("tipo_profesion", formData.tipo_profesion);
     Form.append(
       "persona",
       JSON.stringify({
@@ -290,66 +294,75 @@ export default function RegistrationForm() {
     Form.append("instituto_bachillerato", formData.graduateInstitute);
     Form.append("universidad", formData.universityTitle);
     Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
-    Form.append("num_registro_principal", formData.mainRegistrationNumber);
-    Form.append("fecha_registro_principal", formData.mainRegistrationDate);
+    if(formData.tipo_profesion === "odontologo"){
+      Form.append("num_registro_principal",formData.mainRegistrationNumber);
+      Form.append("fecha_registro_principal",formData.mainRegistrationDate);
+    }
     Form.append("num_mpps", formData.mppsRegistrationNumber);
     Form.append("fecha_mpps", formData.mppsRegistrationDate);
     Form.append(
       "instituciones",
-      JSON.stringify([
-        {
-          nombre: formData.institutionName,
-          cargo: formData.institutionName,
-          direccion: formData.institutionAddress,
-          telefono: formData.institutionPhone,
-        },
-        {
-          nombre: formData.clinicName,
-          cargo: formData.clinicName,
-          direccion: formData.clinicAddress,
-          telefono: formData.clinicPhone,
-        },
-      ])
+      JSON.stringify(
+        formData.laboralRegistros.map((registro) => ({
+          nombre: registro.institutionName,
+          cargo: registro.cargo,
+          direccion: registro.institutionAddress,
+          telefono: registro.institutionPhone,
+        })) || []
+      )
     );
     Form.append("file_ci", formData.ci || null);
     Form.append("file_rif", formData.rif || null);
     Form.append("file_fondo_negro", formData.titulo || null);
     Form.append("file_mpps", formData.mpps || null);
     Form.append("comprobante", paymentFile);
-    Form.append(
-      "pago",
-      JSON.stringify({
-        fecha_pago: paymentDate,
-        metodo_de_pago: metodo_de_pago.id,
-        num_referencia: referenceNumber,
-        monto: totalAmount,
-      })
-    );
-    //setIsSubmitting(true);
+    if (
+      formData.tipo_profesion === "tecnico" ||
+      formData.tipo_profesion === "higienista"
+    ) {
+      Form.append("Fondo_negro_credencial", formData.Fondo_negro_credencial);
+      Form.append("notas_curso", formData.notas_curso);
+      Form.append(
+        "fondo_negro_titulo_bachiller",
+        formData.fondo_negro_titulo_bachiller
+      );
+    }
+    !pagarLuego
+      ? Form.append(
+          "pago",
+          JSON.stringify({
+            fecha_pago: paymentDate,
+            metodo_de_pago: metodo_de_pago.id,
+            num_referencia: referenceNumber,
+            monto: totalAmount,
+          })
+        )
+      : Form.append("pago", null);
     console.log("Form data:", Form);
-    // try {
-    //   const response = await api.post("usuario/register/", Form, {
-    //     headers: {
-    //       "Content-Type": "multipart/form-data",
-    //     },
-    //   });
-    //   if (response.status === 201) {
-    //     confetti({
-    //       particleCount: 100,
-    //       spread: 70,
-    //       origin: { y: 0.6 },
-    //     });
-    //     setShowPaymentScreen(false);
-    //     setIsComplete(true);
-    //   }
-    // } catch (error) {
-    //   console.error(
-    //     "Error al enviar los datos:",
-    //     error.response?.data || error
-    //   );
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+    setIsSubmitting(true);
+    try {
+      const response = await api.post("usuario/register/", Form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      if (response.status === 201) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+        setShowPaymentScreen(false);
+        setIsComplete(true);
+      }
+    } catch (error) {
+      console.error(
+        "Error al enviar los datos:",
+        error.response?.data || error
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const CurrentStepComponent = steps.find(
@@ -431,15 +444,15 @@ export default function RegistrationForm() {
                     {showPaymentScreen
                       ? "Registro de Pago"
                       : isComplete
-                        ? "Registro Exitoso"
-                        : "Registro de Nuevos Colegiados"}
+                      ? "Registro Exitoso"
+                      : "Registro de Nuevos Colegiados"}
                   </h1>
                   <p className="mt-3 text-white text-lg max-w-3xl mx-auto">
                     {showPaymentScreen
                       ? "Complete el pago para finalizar su registro"
                       : isComplete
-                        ? "¡Gracias por completar su registro y pago!"
-                        : "Complete el formulario en 5 sencillos pasos para unirse a nuestra comunidad profesional"}
+                      ? "¡Gracias por completar su registro y pago!"
+                      : "Complete el formulario en 5 sencillos pasos para unirse a nuestra comunidad profesional"}
                   </p>
                 </motion.div>
               </div>
@@ -470,32 +483,35 @@ export default function RegistrationForm() {
                             >
                               <div className="relative">
                                 <div
-                                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isCompleted
-                                    ? "bg-[#D7008A] border-transparent"
-                                    : isCurrent
+                                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                                    isCompleted
+                                      ? "bg-[#D7008A] border-transparent"
+                                      : isCurrent
                                       ? "bg-white border-[#D7008A]"
                                       : "bg-white border-gray-400"
-                                    }`}
+                                  }`}
                                 >
                                   {isCompleted ? (
                                     <Check className="w-6 h-6 text-white" />
                                   ) : (
                                     <StepIcon
-                                      className={`w-6 h-6 ${isCurrent
-                                        ? "text-[#41023B]"
-                                        : "text-gray-400"
-                                        }`}
+                                      className={`w-6 h-6 ${
+                                        isCurrent
+                                          ? "text-[#41023B]"
+                                          : "text-gray-400"
+                                      }`}
                                     />
                                   )}
                                 </div>
                               </div>
                               <span
-                                className={`mt-2 text-sm font-medium ${isCompleted
-                                  ? "text-white"
-                                  : isCurrent
+                                className={`mt-2 text-sm font-medium ${
+                                  isCompleted
+                                    ? "text-white"
+                                    : isCurrent
                                     ? "text-[#D7008A]"
                                     : "text-gray-300"
-                                  } hidden sm:block`}
+                                } hidden sm:block`}
                               >
                                 {step.title}
                               </span>
@@ -544,14 +560,76 @@ export default function RegistrationForm() {
                         transition={{ duration: 0.5 }}
                         className="relative z-10 p-8"
                       >
-                        <PagosColg
-                          props={{
-                            handlePaymentComplete,
-                            tazaBcv,
-                            costoInscripcion,
-                            metodoPago,
-                          }}
-                        />
+                        {!pagarLuego && (
+                          <PagosColg
+                            props={{
+                              handlePaymentComplete,
+                              tazaBcv,
+                              costoInscripcion,
+                              metodoPago,
+                            }}
+                          />
+                        )}
+                        <div className="flex flex-col space-y-4 mt-6">
+                          <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={pagarLuego}
+                                onChange={(e) =>
+                                  setPagarLuego(e.target.checked)
+                                }
+                                className="h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
+                              />
+                              <p className="text-md text-gray-800">
+                                <span className="text-[#41023B] font-bold text-lg">
+                                  Pagar luego:
+                                </span>{" "}
+                                Al habilitar esta opción, el colegiado quedará
+                                registrado con pago pendiente y podrá
+                                completarlo posteriormente.
+                              </p>
+                            </label>
+                          </div>
+                        </div>
+                        {pagarLuego && (
+                          <div className="flex justify-center p-6">
+                            <button
+                              type="button"
+                              onClick={handlePaymentComplete}
+                              disabled={isSubmitting}
+                              className="px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
+                            >
+                              {isSubmitting ? (
+                                <span className="flex items-center justify-center">
+                                  <svg
+                                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  Procesando...
+                                </span>
+                              ) : (
+                                "Completar Registro"
+                              )}
+                            </button>
+                          </div>
+                        )}
                       </motion.div>
                     ) : (
                       <form onSubmit={handleSubmit} className="relative z-10">
@@ -616,12 +694,28 @@ export default function RegistrationForm() {
                             <motion.button
                               type="button"
                               onClick={nextStep}
-                              disabled={Object.keys(validationErrors).length > 0}
+                              disabled={
+                                Object.keys(validationErrors).length > 0
+                              }
                               className={`flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
                   rounded-xl text-base font-medium shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50
-                  ${Object.keys(validationErrors).length > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:opacity-90'}`}
-                              whileHover={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 1.02 }}
-                              whileTap={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 0.98 }}
+                  ${
+                    Object.keys(validationErrors).length > 0
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:shadow-lg hover:opacity-90"
+                  }`}
+                              whileHover={{
+                                scale:
+                                  Object.keys(validationErrors).length > 0
+                                    ? 1
+                                    : 1.02,
+                              }}
+                              whileTap={{
+                                scale:
+                                  Object.keys(validationErrors).length > 0
+                                    ? 1
+                                    : 0.98,
+                              }}
                             >
                               Siguiente
                               <ChevronRight className="w-5 h-5 ml-2" />
@@ -630,12 +724,28 @@ export default function RegistrationForm() {
                             <motion.button
                               type="submit"
                               onClick={() => setIsIntentionalSubmit(true)}
-                              disabled={Object.keys(validationErrors).length > 0}
+                              disabled={
+                                Object.keys(validationErrors).length > 0
+                              }
                               className={`flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
                   rounded-xl text-base font-medium shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50
-                  ${Object.keys(validationErrors).length > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:opacity-90'}`}
-                              whileHover={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 1.02 }}
-                              whileTap={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 0.98 }}
+                  ${
+                    Object.keys(validationErrors).length > 0
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:shadow-lg hover:opacity-90"
+                  }`}
+                              whileHover={{
+                                scale:
+                                  Object.keys(validationErrors).length > 0
+                                    ? 1
+                                    : 1.02,
+                              }}
+                              whileTap={{
+                                scale:
+                                  Object.keys(validationErrors).length > 0
+                                    ? 1
+                                    : 0.98,
+                              }}
                             >
                               {isSubmitting ? (
                                 <>

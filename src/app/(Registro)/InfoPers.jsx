@@ -62,7 +62,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     setIsFormValid(isValid);
   }, [formData]);
 
-  // Checks if a field is empty to display the required message
   const isFieldEmpty = (fieldName) => {
     return (!formData[fieldName] || formData[fieldName].trim() === "");
   };
@@ -92,8 +91,8 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               <option value="" disabled>
                 Seleccionar Nacionalidad
               </option>
-              <option value="venezolana">Venezolana</option>
-              <option value="extranjera">Extranjera</option>
+              <option value="venezolano">Venezolana</option>
+              <option value="extranjero">Extranjera</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
               <svg

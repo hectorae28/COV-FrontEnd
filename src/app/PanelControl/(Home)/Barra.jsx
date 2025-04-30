@@ -101,7 +101,7 @@ export default function Barra({ onMenuClick, title: propTitle, icon: propIcon })
             </div>
 
             {/* Reemplazamos el botón de Usuario por el ProfileDropdown */}
-            <ProfileDropdown userInfo={userInfo} />
+            <ProfileDropdown userInfo={userInfo} session={session} />
           </div>
         </div>
       </div>

@@ -3,13 +3,11 @@ import { Plus, Trash2, Phone } from "lucide-react";
 import { useState } from "react";
 
 export default function InfoLaboral({ formData, onInputChange, validationErrors }) {
-  // Estado para manejar múltiples registros laborales
   const [registros, setRegistros] = useState(
     formData.laboralRegistros && formData.laboralRegistros.length > 0
       ? formData.laboralRegistros
       : [
         {
-          id: 1,
           institutionName: formData.institutionName || "",
           institutionAddress: formData.institutionAddress || "",
           institutionPhone: formData.institutionPhone || "",
@@ -18,40 +16,23 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
       ]
   );
 
-  // Format phone number - only adds + at beginning
-  const formatPhone = (value) => {
-    if (!value) return '+';
-    // Remove all non-digit characters except the initial + if present
-    if (value.startsWith('+')) {
-      const digits = value.substring(1).replace(/\D/g, '');
-      return `+${digits}`;
-    } else {
-      const digits = value.replace(/\D/g, '');
-      return `+${digits}`;
-    }
-  };
 
-  // Manejar cambios en un registro específico
   const handleRegistroChange = (index, field, value) => {
-    // Si es el campo de teléfono, formatear el valor
-    if (field === "institutionPhone") {
-      value = formatPhone(value);
-    }
+
     const nuevosRegistros = [...registros];
     nuevosRegistros[index] = {
       ...nuevosRegistros[index],
       [field]: value
     };
     setRegistros(nuevosRegistros);
-    // Actualizar los campos principales con el primer registro (para compatibilidad)
+
     if (index === 0) {
       onInputChange({ [field]: value });
     }
-    // Actualizar el array completo de registros
+
     onInputChange({ laboralRegistros: nuevosRegistros });
   };
 
-  // Inicializar el campo de teléfono con + cuando recibe foco
   const handlePhoneFocus = (index) => {
     const registro = registros[index];
     if (!registro.institutionPhone) {
@@ -59,13 +40,10 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
     }
   };
 
-  // Agregar un nuevo registro laboral
   const agregarRegistro = () => {
-    const nuevoId = registros.length > 0 ? Math.max(...registros.map(r => r.id)) + 1 : 1;
     const nuevosRegistros = [
       ...registros,
       {
-        id: nuevoId,
         institutionName: "",
         institutionAddress: "",
         institutionPhone: "",
@@ -112,7 +90,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
     >
       {registros.map((registro, index) => (
         <div
-          key={registro.id}
+          key={index}
           className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm relative"
         >
           {/* Título del registro */}
@@ -197,6 +175,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
                 value={registro.institutionPhone || ''}
                 onChange={(e) => handleRegistroChange(index, "institutionPhone", e.target.value)}
                 onFocus={() => handlePhoneFocus(index)}
+                maxLength={11}
                 className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty(registro, "institutionPhone") ? "border-gray-200" : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
                 placeholder="+584241234567"
