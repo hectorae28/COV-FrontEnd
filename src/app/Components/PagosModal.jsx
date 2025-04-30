@@ -3,7 +3,7 @@ import PayPalProvider from "@/utils/paypalProvider";
 import { motion } from "framer-motion";
 import { CreditCard, DollarSign } from "lucide-react";
 import { useState } from "react";
-import PaypalPaymentComponent from "@/app/Components/utils/PaypalPaymentComponent"
+import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent";
 
 // Default values for props (in case they're not provided)
 const DEFAULT_COSTO = 8;

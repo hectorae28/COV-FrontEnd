@@ -2,10 +2,60 @@
 
 import PagosColg from "@/app/Components/PagosModal";
 import { Info } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function SolvenciaPago() {
+  const initialState = {
+    tipo_profesion: "",
+    nationality: "",
+    identityCard: "",
+    firstName: "",
+    secondName: "",
+    firstLastName: "",
+    secondLastName: "",
+    birthPlace: "",
+    birthDate: "",
+    gender: "",
+    age: "",
+    maritalStatus: "",
+    email: "",
+    countryCode: "+58",
+    phoneNumber: "",
+    homePhone: "",
+    address: "",
+    city: "",
+    state: "",
+    collegeNumber: "",
+    professionalField: "",
+    institutionName: "",
+    institutionAddress: "",
+    institutionPhone: "",
+    clinicName: "",
+    clinicAddress: "",
+    clinicPhone: "",
+    selectedOption: "",
+    graduateInstitute: "",
+    universityTitle: "",
+    mainRegistrationNumber: "",
+    mainRegistrationDate: "",
+    mppsRegistrationNumber: "",
+    mppsRegistrationDate: "",
+    titleIssuanceDate: "",
+    ci: null,
+    rif: null,
+    titulo: null,
+    mpps: null,
+  };
+
   const [isSuccess, setIsSuccess] = useState(false);
+  const [formData, setFormData] = useState(initialState);
+  const [tasaBcv, setTasaBcv] = useState(0);
+  const [costoInscripcion, setCostoInscripcion] = useState(70);
+  const [metodoPago, setMetodoPago] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
+
+  
 
   const handlePaymentComplete = () => {
     setIsSuccess(true);
@@ -15,6 +65,27 @@ export default function SolvenciaPago() {
       setIsSuccess(false);
     }, 3000);
   };
+
+  useEffect(() => {
+      const LoadData = async () => {
+        try {
+          const tasa = await fetchDataSolicitudes("tasa-bcv");
+          setTasaBcv(tasa.data.rate);
+          const costo = await fetchDataSolicitudes(
+            "costo",
+            `?search=Inscripcion+${formData.tipo_profesion}&es_vigente=true`
+          );
+          setCostoInscripcion(Number(costo.data[0].monto_usd));
+          const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
+          setMetodoPago(Mpagos.data);
+        } catch (error) {
+          console.error("Error al obtener los datos:", error);
+        }
+      };
+      if (formData.tipo_profesion.length > 0) {
+        LoadData();
+      }
+    }, [formData.tipo_profesion]);
 
   return (
     <div className="space-y-6">
@@ -41,7 +112,14 @@ export default function SolvenciaPago() {
             </p>
           </div>
         ) : (
-          <PagosColg onPaymentComplete={handlePaymentComplete} />
+          <PagosColg
+                                      props={{
+                                        handlePaymentComplete,
+                                        tasaBcv,
+                                        costoInscripcion,
+                                        metodoPago,
+                                      }}
+                                    />
         )}
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
-import PaypalPaymentComponent from "@/app/Components/utils/PaypalPaymentComponent"
+import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent"
 import { CreditCard, DollarSign } from "lucide-react"
 import { useEffect, useState } from "react"
 
