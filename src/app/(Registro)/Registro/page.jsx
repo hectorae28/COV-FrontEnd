@@ -148,6 +148,7 @@ export default function RegistrationForm() {
   const [tazaBcv, setTazaBcv] = useState(0);
   const [costoInscripcion, setCostoInscripcion] = useState(0);
   const [metodoPago, setMetodoPago] = useState([]);
+  const [error, setError] = useState(null)
   const [validationErrors, setValidationErrors] = useState({});
   useEffect(() => {
     // Validar el paso actual cuando se montan los componentes o cuando cambia formData
@@ -167,6 +168,7 @@ export default function RegistrationForm() {
         const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
         setMetodoPago(Mpagos.data);
       } catch (error) {
+        setError("Ocurrió un error al cargar los datos, verifique su conexión a internet");
         console.error("Error al obtener los datos:", error);
       }
     };
@@ -308,6 +310,7 @@ export default function RegistrationForm() {
           cargo: registro.cargo,
           direccion: registro.institutionAddress,
           telefono: registro.institutionPhone,
+          tipo_institucion: registro.institutionType,
         })) || []
       )
     );
