@@ -1,14 +1,14 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
   Calendar,
-  Clock,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const Noticias = ({ props }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -26,10 +26,6 @@ const Noticias = ({ props }) => {
     const hora = fechaCompleta.toTimeString().split(" ")[0];
     return { fecha, hora };
   }
-  const handleDate = (date) => {
-    const { fecha, hora } = separarFechaYHora(date);
-    return `${fecha} ${hora}`;
-  };
 
   // Función para navegar a la página de Noticias
   // Ajustada para usar relativa o absoluta según sea necesario

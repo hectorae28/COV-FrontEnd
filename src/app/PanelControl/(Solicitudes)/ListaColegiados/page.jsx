@@ -1,679 +1,477 @@
-"use client"
-import { motion } from "framer-motion"
-import { CheckCircle, ChevronRight, PlusCircle, Search, XCircle, X, ArrowUpDown } from "lucide-react"
-import { useEffect, useState } from "react"
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
-import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado"
-import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente"
-import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal"
+"use client";
+import newsItems from "@/app/Models/Home/NoticiasData";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUpRight, Calendar, ChevronRight, Clock, Filter, Search, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
-/**
- * Página principal de gestión de colegiados
- * Muestra dos tablas: pendientes y registrados, con filtros y funciones de búsqueda
- */
-export default function ListaColegiadosPage() {
-    // Estado del store de Zustand
-    const {
-        colegiados,
-        colegiadosPendientes,
-        addColegiadoPendiente,
-        addColegiado,
-        removeColegiadoPendiente,
-        getColegiado,
-        getColegiadoPendiente,
-        approveRegistration
-    } = useDataListaColegiados();
+// Componente Modal para ver la noticia completa
+const NewsModal = ({ news, isOpen, onClose }) => {
+    if (!news) return null;
 
-    // Estado local de UI
-    const [isLoading, setIsLoading] = useState(true);
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+                    onClick={onClose}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        transition={{ type: "spring", damping: 25 }}
+                        className="bg-white rounded-xl overflow-hidden max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="relative">
+                            <img
+                                src={`${process.env.NEXT_PUBLIC_BACK_HOST}${news.imagen_portada_url || news.imageUrl}`}
+                                alt={news.titulo || news.title}
+                                className="w-full h-64 object-cover"
+                                onError={(e) => {
+                                    e.target.src = "";
+                                }}
+                            />
+                            <button
+                                onClick={onClose}
+                                className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
+                            >
+                                <X className="w-5 h-5 text-gray-800" />
+                            </button>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
+                                <h2 className="text-2xl md:text-3xl font-bold text-white">
+                                    {news.titulo || news.title}
+                                </h2>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            <div className="flex items-center space-x-4 text-sm mb-6">
+                                <div className="flex items-center text-[#C40180]">
+                                    <Calendar className="w-4 h-4 mr-1" />
+                                    <span className="font-medium">
+                                        {news.created_at
+                                            ? new Date(news.created_at).toLocaleDateString()
+                                            : news.date}
+                                    </span>
+                                </div>
+                                <div className="flex items-center text-[#C40180]">
+                                    <Clock className="w-4 h-4 mr-1" />
+                                    <span className="font-medium">
+                                        {news.created_at
+                                            ? new Date(news.created_at).toLocaleTimeString()
+                                            : news.time}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="prose max-w-none">
+                                <p className="text-gray-700 leading-relaxed">
+                                    {news.contenido || news.description}
+                                </p>
+                                {/* Aquí puedes agregar más contenido como imágenes adicionales, 
+                    párrafos, citas, etc. según la estructura de tus datos */}
+                            </div>
+
+                            {/* Puedes agregar aquí botones para compartir en redes sociales si lo deseas */}
+                            <div className="mt-8 pt-6 border-t border-gray-200">
+                                <h4 className="font-medium text-gray-800 mb-2">Compartir:</h4>
+                                <div className="flex space-x-3">
+                                    {/* Ejemplo de botones de redes sociales */}
+                                    <button className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600">
+                                        FB
+                                    </button>
+                                    <button className="p-2 bg-sky-400 text-white rounded-full hover:bg-sky-500">
+                                        TW
+                                    </button>
+                                    <button className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600">
+                                        WA
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+// Componente para cada tarjeta de noticia
+const NewsCard = ({ news, index, onReadMore }) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col"
+        >
+            <div className="relative overflow-hidden">
+                <img
+                    src={`${process.env.NEXT_PUBLIC_BACK_HOST}${news.imagen_portada_url || news.imageUrl}`}
+                    alt={news.titulo || news.title}
+                    className="w-full h-56 object-cover transition-transform duration-500 hover:scale-105"
+                    onError={(e) => {
+                        e.target.src = "";
+                    }}
+                />
+                <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full flex items-center space-x-2 text-xs">
+                    <Calendar className="w-3 h-3 text-[#C40180]" />
+                    <span>
+                        {news.created_at
+                            ? new Date(news.created_at).toLocaleDateString()
+                            : news.date}
+                    </span>
+                </div>
+            </div>
+
+            <div className="p-5 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-800 mb-3 line-clamp-2">
+                    {news.titulo || news.title}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
+                    {news.contenido || news.description}
+                </p>
+                <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100">
+                    <div className="flex items-center text-xs text-gray-500">
+                        <Clock className="w-3 h-3 mr-1" />
+                        <span>
+                            {news.created_at
+                                ? new Date(news.created_at).toLocaleTimeString()
+                                : news.time}
+                        </span>
+                    </div>
+                    <motion.button
+                        whileHover={{ x: 5 }}
+                        className="flex items-center text-sm font-medium text-[#C40180] group"
+                        onClick={() => onReadMore(news)}
+                    >
+                        Leer más
+                        <ChevronRight className="w-4 h-4 ml-1 group-hover:ml-2 transition-all" />
+                    </motion.button>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+// Componente de noticia destacada (para la primera noticia)
+const FeaturedNewsCard = ({ news, onReadMore }) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="col-span-1 md:col-span-2 bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100 mb-8"
+        >
+            <div className="flex flex-col md:flex-row">
+                <div className="md:w-1/2 relative">
+                    <img
+                        src={`${process.env.NEXT_PUBLIC_BACK_HOST}${news.imagen_portada_url || news.imageUrl}`}
+                        alt={news.titulo || news.title}
+                        className="w-full h-64 md:h-full object-cover"
+                        onError={(e) => {
+                            e.target.src = "";
+                        }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:bg-gradient-to-r" />
+                </div>
+
+                <div className="md:w-1/2 p-6 md:p-8 flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center space-x-2 text-sm mb-4">
+                            <div className="flex items-center text-[#C40180]">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                <span className="font-medium">
+                                    {news.created_at
+                                        ? new Date(news.created_at).toLocaleDateString()
+                                        : news.date}
+                                </span>
+                            </div>
+                            <span className="text-gray-400">|</span>
+                            <div className="flex items-center text-[#C40180]">
+                                <Clock className="w-4 h-4 mr-1" />
+                                <span className="font-medium">
+                                    {news.created_at
+                                        ? new Date(news.created_at).toLocaleTimeString()
+                                        : news.time}
+                                </span>
+                            </div>
+                        </div>
+
+                        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
+                            {news.titulo || news.title}
+                        </h2>
+
+                        <p className="text-gray-600 mb-6 line-clamp-4">
+                            {news.contenido || news.description}
+                        </p>
+                    </div>
+
+                    <motion.button
+                        whileHover={{ x: 5 }}
+                        onClick={() => onReadMore(news)}
+                        className="flex items-center text-[#C40180] font-medium group self-start px-4 py-2 border border-[#C40180] rounded-full hover:bg-[#C40180]/5 transition-colors"
+                    >
+                        Leer artículo completo
+                        <ArrowUpRight className="w-4 h-4 ml-2 group-hover:ml-3 transition-all" />
+                    </motion.button>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+// Componente principal de Noticias
+const Noticias = () => {
+    const [allNews, setAllNews] = useState([]);
+    const [filteredNews, setFilteredNews] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [showRegistro, setShowRegistro] = useState(false);
-    const [vistaActual, setVistaActual] = useState("lista"); // lista, detalleColegiado, detallePendiente
-    const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null);
-    const [tabActivo, setTabActivo] = useState("pendientes");
+    const [activeCategory, setActiveCategory] = useState("Todas");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedNews, setSelectedNews] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const newsPerPage = 9; // Máximo 9 noticias por página (sin contar la destacada)
 
-    // Filtros adicionales para colegiados registrados
-    const [filtroSolvencia, setFiltroSolvencia] = useState("todos");
-    const [filtroEspecialidad, setFiltroEspecialidad] = useState("todas");
+    // Categorías modificadas (eliminado "Eventos")
+    const categories = ["Todas", "Actualización", "Podcast", "Revista", "Conferencias"];
 
-    // Filtros para pendientes
-    const [filtroFecha, setFiltroFecha] = useState("todas");
-    const [filtroDocumentos, setFiltroDocumentos] = useState("todos");
-    const [registroExitoso, setRegistroExitoso] = useState(false);
-    const [aprobacionExitosa, setAprobacionExitosa] = useState(false);
-
-    // Nuevos filtros de fecha para pendientes
-    const [fechaDesde, setFechaDesde] = useState("");
-    const [fechaHasta, setFechaHasta] = useState("");
-
-    // Estado para ordenamiento
-    const [ordenFecha, setOrdenFecha] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
-
-    // Simular carga inicial
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 800);
-        return () => clearTimeout(timer);
+        // En un proyecto real, aquí se haría la llamada a la API
+        // por ahora usamos los datos de NoticiasData.jsx
+        setAllNews(newsItems);
+        setFilteredNews(newsItems);
     }, []);
 
-    // Filtrar colegiados basado en búsqueda y filtros
-    const colegiadosFiltrados = colegiados.filter(colegiado => {
-        const matchesSearch =
-            colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase());
-
-        // Filtrar por solvencia
-        const matchesSolvencia =
-            filtroSolvencia === "todos" ? true :
-                filtroSolvencia === "solventes" ? colegiado.solvente :
-                    !colegiado.solvente;
-
-        // Filtrar por especialidad
-        const matchesEspecialidad =
-            filtroEspecialidad === "todas" ? true :
-                colegiado.especialidad === filtroEspecialidad;
-
-        return matchesSearch && matchesSolvencia && matchesEspecialidad;
-    });
-
-    // Filtrar pendientes basado en búsqueda y filtros
-    const pendientesFiltrados = colegiadosPendientes
-        .filter(pendiente => {
-            // Búsqueda general
-            const matchesSearch =
-                pendiente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                pendiente.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                pendiente.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-            // Filtrar por completitud de documentos
-            const matchesDocumentos =
-                filtroDocumentos === "todos" ? true :
-                    filtroDocumentos === "completos" ? pendiente.documentosCompletos :
-                        !pendiente.documentosCompletos;
-
-            // Filtrar por fecha de solicitud (predefinidos)
-            const fechaSolicitudDate = new Date(pendiente.fechaSolicitud);
-            const hoy = new Date();
-            const unaSemanaAtras = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
-            const unMesAtras = new Date(hoy.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-            const matchesFechaPredef =
-                filtroFecha === "todas" ? true :
-                    filtroFecha === "semana" ? fechaSolicitudDate >= unaSemanaAtras :
-                        filtroFecha === "mes" ? fechaSolicitudDate >= unMesAtras :
-                            true;
-
-            // Filtrar por rango de fechas personalizado
-            let matchesRangoFechas = true;
-            if (fechaDesde) {
-                const fechaDesdeObj = new Date(fechaDesde);
-                fechaDesdeObj.setHours(0, 0, 0, 0);
-                matchesRangoFechas = matchesRangoFechas && fechaSolicitudDate >= fechaDesdeObj;
-            }
-            if (fechaHasta) {
-                const fechaHastaObj = new Date(fechaHasta);
-                fechaHastaObj.setHours(23, 59, 59, 999);
-                matchesRangoFechas = matchesRangoFechas && fechaSolicitudDate <= fechaHastaObj;
-            }
-
-            return matchesSearch && matchesDocumentos && matchesFechaPredef && matchesRangoFechas;
-        })
-        // Ordenar por fecha
-        .sort((a, b) => {
-            const fechaA = new Date(a.fechaSolicitud);
-            const fechaB = new Date(b.fechaSolicitud);
-            return ordenFecha === "desc"
-                ? fechaB - fechaA  // Más nuevo primero
-                : fechaA - fechaB;  // Más viejo primero
-        });
-
-    // Handlers para navegación y acciones
-    const verDetalleColegiado = (id) => {
-        setColegiadoSeleccionadoId(id);
-        setVistaActual("detalleColegiado");
+    // Función para abrir el modal con la noticia seleccionada
+    const handleReadMore = (news) => {
+        setSelectedNews(news);
+        setIsModalOpen(true);
+        // Opcional: deshabilitar el scroll del body cuando el modal está abierto
+        document.body.style.overflow = 'hidden';
     };
 
-    const verDetallePendiente = (id) => {
-        setColegiadoSeleccionadoId(id);
-        setVistaActual("detallePendiente");
+    // Función para cerrar el modal
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        // Restaurar el scroll del body
+        document.body.style.overflow = 'auto';
     };
 
-    const volverALista = () => {
-        setVistaActual("lista");
-        setColegiadoSeleccionadoId(null);
-    };
+    // Función para filtrar noticias
+    const handleFilter = (category) => {
+        setActiveCategory(category);
+        setCurrentPage(1); // Resetear a la primera página al cambiar filtros
 
-    // Manejador para el registro exitoso de un nuevo colegiado pendiente
-    const handleRegistroExitoso = (nuevoColegiado) => {
-        // Agregar a la lista de pendientes
-        addColegiadoPendiente(nuevoColegiado);
-        // Cerrar el modal y mostrar mensaje de éxito
-        setShowRegistro(false);
-        setRegistroExitoso(true);
-        // Si estamos viendo registrados, cambiar a pendientes
-        if (tabActivo === "registrados") {
-            setTabActivo("pendientes");
-        }
-        // Ocultar mensaje después de 3 segundos
-        setTimeout(() => {
-            setRegistroExitoso(false);
-        }, 3000);
-    };
-
-    // Manejador para la aprobación de un colegiado pendiente
-    const handleAprobarPendiente = (colegiadoAprobado) => {
-        if (colegiadoAprobado && typeof colegiadoAprobado === 'object') {
-            // Si recibimos el objeto completo, lo añadimos directamente
-            addColegiado(colegiadoAprobado);
-            removeColegiadoPendiente(colegiadoSeleccionadoId);
+        if (category === "Todas") {
+            setFilteredNews(allNews);
         } else {
-            // Aprobación a través de la función del store
-            approveRegistration(colegiadoSeleccionadoId, {});
+            // Aquí se implementaría la lógica real de filtrado por categoría
+            // Este es solo un ejemplo simulado basado en el título
+            const filtered = allNews.filter(news =>
+                (news.title || news.titulo).toLowerCase().includes(category.toLowerCase())
+            );
+            setFilteredNews(filtered.length > 0 ? filtered : allNews);
         }
-        // Mostrar notificación de éxito
-        setAprobacionExitosa(true);
-        setTimeout(() => {
-            setAprobacionExitosa(false);
-        }, 3000);
-        // Cambiar a la pestaña de registrados
-        setTabActivo("registrados");
-        // Volver a la vista de lista
-        volverALista();
     };
 
-    // Alternar orden de fecha
-    const toggleOrdenFecha = () => {
-        setOrdenFecha(prev => prev === "desc" ? "asc" : "desc");
+    // Función para buscar noticias
+    const handleSearch = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+        setCurrentPage(1); // Resetear a la primera página al buscar
+
+        if (value.trim() === "") {
+            handleFilter(activeCategory);
+            return;
+        }
+
+        const searched = allNews.filter(news =>
+            (news.title || news.titulo).toLowerCase().includes(value.toLowerCase()) ||
+            (news.description || news.contenido).toLowerCase().includes(value.toLowerCase())
+        );
+
+        setFilteredNews(searched);
     };
 
-    // Renderizar vista basada en el estado actual
-    if (vistaActual === "detalleColegiado") {
-        const colegiadoActual = getColegiado(colegiadoSeleccionadoId);
-        return (
-            <DetalleColegiado
-                params={{ id: colegiadoSeleccionadoId }}
-                onVolver={volverALista}
-                colegiado={colegiadoActual}
-            />
-        );
-    }
+    // Calcular noticias para la página actual
+    const indexOfLastNews = currentPage * newsPerPage;
+    const indexOfFirstNews = indexOfLastNews - newsPerPage;
+    const currentNews = filteredNews.slice(1).slice(indexOfFirstNews, indexOfLastNews);
 
-    if (vistaActual === "detallePendiente") {
-        const pendienteActual = getColegiadoPendiente(colegiadoSeleccionadoId);
-        return (
-            <DetallePendiente
-                params={{ id: colegiadoSeleccionadoId }}
-                onVolver={handleAprobarPendiente}
-                pendiente={pendienteActual}
-            />
-        );
-    }
+    // Calcular número total de páginas
+    const totalPages = Math.ceil((filteredNews.length - 1) / newsPerPage);
 
-    // Vista principal de la lista
+    // Animación para los elementos que aparecen
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
     return (
-        <div className="w-full px-4 md:px-10 py-10 md:py-12">
-            {/* Header con título */}
-            <motion.div
-                initial={{ opacity: 0, y: -30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
-                className="text-center mb-8 md:mb-10 mt-16 md:mt-22"
-            >
-                <motion.h1
-                    className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
-                >
-                    Lista de colegiados
-                </motion.h1>
-                <motion.p
-                    className="mt-4 max-w-full mx-auto text-gray-600 text-base md:text-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.7, delay: 0.4 }}
-                >
-                    Administre los colegiados registrados y apruebe nuevas solicitudes
-                </motion.p>
-            </motion.div>
-
-            {/* Notificaciones de éxito */}
-            {registroExitoso && (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-green-100 text-green-800 p-4 rounded-md mb-6 flex items-start justify-between shadow-sm"
-                >
-                    <div className="flex items-center">
-                        <CheckCircle size={20} className="mr-2 flex-shrink-0" />
-                        <span>El colegiado ha sido registrado exitosamente y está pendiente de aprobación.</span>
-                    </div>
-                    <button
-                        onClick={() => setRegistroExitoso(false)}
-                        className="text-green-700 hover:bg-green-200 p-1 rounded-full transition-colors"
+        <section className="bg-[#F9F9F9] py-34">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Encabezado de la página */}
+                <div className="text-center mb-12">
+                    <motion.h1
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
                     >
-                        <X size={18} />
-                    </button>
-                </motion.div>
-            )}
-            {aprobacionExitosa && (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-green-100 text-green-800 p-4 rounded-md mb-6 flex items-start justify-between shadow-sm"
-                >
-                    <div className="flex items-center">
-                        <CheckCircle size={20} className="mr-2 flex-shrink-0" />
-                        <span>La solicitud ha sido aprobada exitosamente. El colegiado ha sido registrado.</span>
-                    </div>
-                    <button
-                        onClick={() => setAprobacionExitosa(false)}
-                        className="text-green-700 hover:bg-green-200 p-1 rounded-full transition-colors"
-                    >
-                        <X size={18} />
-                    </button>
-                </motion.div>
-            )}
+                        Noticias y Actualizaciones
+                    </motion.h1>
 
-            {/* Barra de acciones: búsqueda y botón de nuevo registro */}
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <div className="flex-1 w-full md:w-auto">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Buscar por nombre, cédula o registro..."
-                            className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="mt-4 text-gray-600 max-w-2xl mx-auto"
+                    >
+                        Descubre las últimas noticias, eventos y actualizaciones importantes
+                        para la comunidad odontológica venezolana.
+                    </motion.p>
+                </div>
+
+                {/* Barra de búsqueda y filtros */}
+                <div className="mb-10">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        {/* Buscador */}
+                        <div className="relative w-full md:w-72">
+                            <input
+                                type="text"
+                                placeholder="Buscar noticias..."
+                                value={searchTerm}
+                                onChange={handleSearch}
+                                className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C40180]/50 focus:border-[#C40180]"
+                            />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        </div>
+
+                        {/* Filtros de categorías */}
+                        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                            {categories.map((category, index) => (
+                                <motion.button
+                                    key={index}
+                                    onClick={() => handleFilter(category)}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className={`px-4 py-1 rounded-full text-sm ${activeCategory === category
+                                            ? "bg-[#C40180] text-white"
+                                            : "bg-white text-gray-600 hover:bg-gray-100"
+                                        } transition-all`}
+                                >
+                                    {category}
+                                </motion.button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Contenido de noticias */}
+                {filteredNews.length > 0 ? (
+                    <>
+                        {/* Noticia destacada (primera noticia) */}
+                        <FeaturedNewsCard
+                            news={filteredNews[0]}
+                            onReadMore={handleReadMore}
                         />
-                        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                    </div>
-                </div>
-                <div className="flex gap-4 w-full md:w-auto">
-                    <button
-                        onClick={() => setShowRegistro(true)}
-                        className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
+
+                        {/* Cuadrícula de noticias */}
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                        >
+                            {currentNews.map((news, index) => (
+                                <NewsCard
+                                    key={news.id || index}
+                                    news={news}
+                                    index={index}
+                                    onReadMore={handleReadMore}
+                                />
+                            ))}
+                        </motion.div>
+
+                        {/* Paginación - Solo mostrar si hay más de 9 noticias (sin contar la destacada) */}
+                        {filteredNews.length > 10 && (
+                            <div className="mt-12 flex justify-center">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="flex space-x-2"
+                                >
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                        <button
+                                            key={page}
+                                            onClick={() => setCurrentPage(page)}
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${page === currentPage
+                                                    ? "bg-[#C40180] text-white"
+                                                    : "bg-white text-gray-600 hover:bg-gray-100"
+                                                }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    ))}
+                                    {currentPage < totalPages && (
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                            className="w-10 h-10 rounded-full flex items-center justify-center bg-white text-gray-600 hover:bg-gray-100 transition-all"
+                                        >
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </motion.div>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    // Estado vacío - no se encontraron noticias
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-20"
                     >
-                        <PlusCircle size={20} />
-                        <span>Registrar nuevo</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Tabs para alternar entre colegiados y pendientes */}
-            <div className="border-b border-gray-200 mb-6">
-                <nav className="flex gap-8">
-                    <button
-                        className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${tabActivo === "pendientes"
-                            ? 'border-[#C40180] text-[#C40180]'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                            } transition-colors`}
-                        onClick={() => setTabActivo("pendientes")}
-                    >
-                        Pendientes por aprobación ({colegiadosPendientes.length})
-                    </button>
-                    <button
-                        className={`py-4 px-1 cursor-pointer font-medium text-sm sm:text-base border-b-2 ${tabActivo === "registrados"
-                            ? "border-[#C40180] text-[#C40180]"
-                            : "border-transparent text-gray-500 hover:text-gray-700"
-                            } transition-colors`}
-                        onClick={() => setTabActivo("registrados")}
-                    >
-                        Colegiados registrados ({colegiados.length})
-                    </button>
-                </nav>
-            </div>
-
-            {/* Filtros adicionales para colegiados registrados */}
-            {tabActivo === "registrados" && (
-                <div className="mb-6">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
-                    <div className="flex flex-wrap gap-3">
-                        <div>
-                            <p className="text-xs text-gray-500 mb-1">Estado de solvencia</p>
-                            <div className="flex gap-2">
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "todos"
-                                        ? "bg-purple-100 text-purple-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroSolvencia("todos")}
-                                >
-                                    Todos
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "solventes"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroSolvencia("solventes")}
-                                >
-                                    Solventes
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroSolvencia === "insolventes"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroSolvencia("insolventes")}
-                                >
-                                    No Solventes
-                                </button>
-                            </div>
+                        <div className="text-gray-400 mb-4">
+                            <Filter className="w-16 h-16 mx-auto opacity-30" />
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-500 mb-1">Especialidad</p>
-                            <select
-                                value={filtroEspecialidad}
-                                onChange={(e) => setFiltroEspecialidad(e.target.value)}
-                                className="px-4 py-2 rounded-lg text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            >
-                                <option value="todas">Todas las especialidades</option>
-                                <option value="Odontología general">Odontología general</option>
-                                <option value="Ortodoncia">Ortodoncia</option>
-                                <option value="Endodoncia">Endodoncia</option>
-                                <option value="Periodoncia">Periodoncia</option>
-                                <option value="Odontopediatría">Odontopediatría</option>
-                                <option value="Cirugía maxilofacial">Cirugía maxilofacial</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        <h3 className="text-xl font-medium text-gray-700 mb-2">No se encontraron noticias</h3>
+                        <p className="text-gray-500">
+                            No hay resultados que coincidan con tu búsqueda. Intenta con otros términos o elimina los filtros.
+                        </p>
+                        <button
+                            onClick={() => {
+                                setSearchTerm("");
+                                setActiveCategory("Todas");
+                                setFilteredNews(allNews);
+                                setCurrentPage(1);
+                            }}
+                            className="mt-4 px-6 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-full hover:shadow-lg transition-all"
+                        >
+                            Ver todas las noticias
+                        </button>
+                    </motion.div>
+                )}
 
-            {/* Filtros para pendientes */}
-            {tabActivo === "pendientes" && (
-                <div className="mb-6">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
-                    <div className="flex flex-wrap gap-5">
-                        <div>
-                            <p className="text-xs text-gray-500 mb-1">Fecha de solicitud</p>
-                            <div className="flex gap-2">
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "todas"
-                                        ? "bg-purple-100 text-purple-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroFecha("todas")}
-                                >
-                                    Todas
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "semana"
-                                        ? "bg-blue-100 text-blue-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroFecha("semana")}
-                                >
-                                    Última semana
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "mes"
-                                        ? "bg-indigo-100 text-indigo-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroFecha("mes")}
-                                >
-                                    Último mes
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Nuevo filtro de rango de fechas */}
-                        <div>
-                            <div className="flex gap-2 items-center">
-                                <div>
-                                    <label className="text-xs text-gray-500 block mb-1">Desde</label>
-                                    <input
-                                        type="date"
-                                        value={fechaDesde}
-                                        onChange={(e) => setFechaDesde(e.target.value)}
-                                        className="px-2 py-1 border rounded text-sm w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500 block mb-1">Hasta</label>
-                                    <input
-                                        type="date"
-                                        value={fechaHasta}
-                                        onChange={(e) => setFechaHasta(e.target.value)}
-                                        className="px-2 py-1 border rounded text-sm w-full"
-                                    />
-                                </div>
-                                {(fechaDesde || fechaHasta) && (
-                                    <button
-                                        onClick={() => {
-                                            setFechaDesde("");
-                                            setFechaHasta("");
-                                        }}
-                                        className="mt-4 text-gray-500 hover:text-red-500"
-                                        title="Limpiar fechas"
-                                    >
-                                        <X size={18} />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        <div>
-                            <p className="text-xs text-gray-500 mb-1">Estado de documentos</p>
-                            <div className="flex gap-2">
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroDocumentos === "todos"
-                                        ? "bg-purple-100 text-purple-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroDocumentos("todos")}
-                                >
-                                    Todos
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroDocumentos === "completos"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroDocumentos("completos")}
-                                >
-                                    Completos
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroDocumentos === "incompletos"
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroDocumentos("incompletos")}
-                                >
-                                    Incompletos
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Estado de carga */}
-            {isLoading ? (
-                <div className="flex justify-center items-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
-                </div>
-            ) : (
-                <>
-                    {/* Lista de colegiados o pendientes según el tab seleccionado */}
-                    {tabActivo === "registrados" ? (
-                        // TABLA DE COLEGIADOS REGISTRADOS
-                        <div>
-                            {colegiadosFiltrados.length === 0 ? (
-                                <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
-                                    <div className="flex justify-center mb-4">
-                                        <Search size={48} className="text-gray-300" />
-                                    </div>
-                                    <h3 className="text-lg font-medium text-gray-500">No se encontraron colegiados</h3>
-                                    <p className="text-gray-400 mt-1">No hay registros que coincidan con tu búsqueda</p>
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Nombre
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                                    Cédula
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                                    N° Registro
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                                                    Especialidad
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Estado
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Acciones
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {colegiadosFiltrados.map((colegiado) => (
-                                                <tr key={colegiado.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <div className="font-medium text-gray-900">{colegiado.nombre}</div>
-                                                        <div className="text-sm text-gray-500 md:hidden">{colegiado.cedula}</div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                                                        {colegiado.cedula}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                                        {colegiado.numeroRegistro}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
-                                                        {colegiado.especialidad}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colegiado.solvente
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-red-100 text-red-800'
-                                                            }`}>
-                                                            {colegiado.solvente ? 'Solvente' : 'No Solvente'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                        <button
-                                                            onClick={() => verDetalleColegiado(colegiado.id)}
-                                                            className="text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto"
-                                                        >
-                                                            Ver detalles
-                                                            <ChevronRight size={16} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        // TABLA DE COLEGIADOS PENDIENTES
-                        <div>
-                            {pendientesFiltrados.length === 0 ? (
-                                <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
-                                    <div className="flex justify-center mb-4">
-                                        <CheckCircle size={48} className="text-gray-300" />
-                                    </div>
-                                    <h3 className="text-lg font-medium text-gray-500">No hay solicitudes pendientes</h3>
-                                    <p className="text-gray-400 mt-1">Todas las solicitudes han sido procesadas</p>
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Nombre
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                                    Cédula
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                                    <button
-                                                        className="flex items-center justify-center gap-1 w-full"
-                                                        onClick={toggleOrdenFecha}
-                                                    >
-                                                        Fecha solicitud
-                                                        <ArrowUpDown
-                                                            size={14}
-                                                            className={`transition-transform ${ordenFecha === "desc" ? "text-purple-600" : "text-gray-400 rotate-180"}`}
-                                                        />
-                                                    </button>
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Documentos
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Acciones
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {pendientesFiltrados.map((pendiente) => (
-                                                <tr key={pendiente.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <div className="font-medium text-gray-900">{pendiente.nombre}</div>
-                                                        <div className="text-sm text-gray-500 md:hidden">{pendiente.cedula}</div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                                                        {pendiente.cedula}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                                        {new Date(pendiente.fechaSolicitud).toLocaleDateString('es-ES', {
-                                                            year: 'numeric',
-                                                            month: '2-digit',
-                                                            day: '2-digit'
-                                                        })}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${pendiente.documentosCompletos
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
-                                                            }`}>
-                                                            {pendiente.documentosCompletos
-                                                                ? <><CheckCircle size={12} /> Completos</>
-                                                                : <><XCircle size={12} /> Incompletos</>}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                        <button
-                                                            onClick={() => verDetallePendiente(pendiente.id)}
-                                                            className="text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto"
-                                                        >
-                                                            Revisar
-                                                            <ChevronRight size={16} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </>
-            )}
-
-            {/* Modal para registrar nuevo colegiado */}
-            {showRegistro && (
-                <RegistroColegiados
-                    isAdmin={true}
-                    onClose={() => setShowRegistro(false)}
-                    onRegistroExitoso={handleRegistroExitoso}
+                {/* Modal para ver la noticia completa */}
+                <NewsModal
+                    news={selectedNews}
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
                 />
-            )}
-        </div>
+            </div>
+        </section>
     );
-}
+};
+
+export default Noticias;
