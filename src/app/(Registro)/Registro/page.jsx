@@ -169,7 +169,6 @@ export default function RegistrationForm() {
         setMetodoPago(Mpagos.data);
       } catch (error) {
         setError("Ocurrió un error al cargar los datos, verifique su conexión a internet");
-        console.error("Error al obtener los datos:", error);
       }
     };
     if (formData.tipo_profesion.length > 0) {
@@ -267,9 +266,6 @@ export default function RegistrationForm() {
     totalAmount = null,
     metodo_de_pago = null,
   }) => {
-    console.log("Payment complete:");
-    console.log({ formData });
-
     const Form = new FormData();
     Form.append("tipo_profesion", formData.tipo_profesion);
     Form.append(
@@ -341,7 +337,6 @@ export default function RegistrationForm() {
           })
         )
       : Form.append("pago", null);
-    console.log("Form data:", Form);
     setIsSubmitting(true);
     try {
       const response = await api.post("usuario/register/", Form, {

@@ -9,15 +9,15 @@ const api = axios.create({
     },
 });
 
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            // Token expirado o inválido
-            signOut({ callbackUrl: '/login' });
-        }
-        return Promise.reject(error);
-    }
-);
+// api.interceptors.response.use(
+//     (response) => response,
+//     (error) => {
+//         if (error.response?.status === 401) {
+//             // Token expirado o inválido
+//             signOut({ callbackUrl: '/Login' });
+//         }
+//         return Promise.reject(error);
+//     }
+// );
 
 export default api;

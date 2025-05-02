@@ -13,3 +13,16 @@ export const fetchMe = async (session) => {
         throw error;
     }
 }
+export const fetchDataUsuario = async (url,session=null, params = " ") => {
+    try {
+        const data = api.get(`usuario/${url}/${params}`,session&&{
+            headers: {
+                Authorization: `Bearer ${session?.user?.access}`,
+            },
+        })
+        return data;
+    } catch (error) {
+        console.error("Error fetching footer:", error);
+        throw error;
+    }
+}
