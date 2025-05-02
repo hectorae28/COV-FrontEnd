@@ -564,8 +564,7 @@ export default function RegistrationForm() {
                           <PagosColg
                             props={{
                               handlePaymentComplete,
-                              tasaBcv,
-                              costoInscripcion,
+                              costo: costoInscripcion,
                               metodoPago,
                             }}
                           />

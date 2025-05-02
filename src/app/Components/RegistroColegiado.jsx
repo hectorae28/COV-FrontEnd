@@ -240,8 +240,7 @@ export default function RegistroColegiados({
               <PagosColg
                 props={{
                   handlePaymentComplete,
-                  tazaBcv,
-                  costoInscripcion,
+                  costo: costoInscripcion,
                   metodoPago,
                 }}
               />

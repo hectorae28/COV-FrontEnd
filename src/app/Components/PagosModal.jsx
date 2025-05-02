@@ -1,13 +1,10 @@
 "use client";
-import PayPalProvider from "@/utils/paypalProvider";
 import { motion } from "framer-motion";
 import { CreditCard, DollarSign } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
-// Default values for props (in case they're not provided)
-const DEFAULT_COSTO = 8;
-const DEFAULT_TAZA = 36.55;
 const DEFAULT_METODOS = [
   {
     nombre: "Banco de Venezuela",
@@ -22,16 +19,31 @@ const DEFAULT_METODOS = [
 ];
 
 export default function PagosColg({ props }) {
-  const { handlePaymentComplete, tasaBcv, costoInscripcion, metodoPago } =
+  const { handlePaymentComplete, costo, metodoPago } =
     props;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
-  const [paymentAmount, setPaymentAmount] = useState(costoInscripcion);
+  const [paymentAmount, setPaymentAmount] = useState(costo);
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [montoEnBs, setMontoEnBs] = useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2)); // Add this state
+  const [montoEnBs, setMontoEnBs] = useState(0)//useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2)); // Add this state
+  const [tasaBCV, setTasaBCV] = useState(0)
+  
+  const getTasa = async () => {
+    try {
+      const tasa = await fetchDataSolicitudes("tasa-bcv");
+      setTasaBCV(tasa.data.rate);
+      setMontoEnBs((parseFloat(costo) * tasaBCV).toFixed(2))
+    } catch (error) {
+      console.log(`Ha ocurrido un error: ${error}`)
+    }
+  }
+
+  useEffect(() => {
+    getTasa();
+  }, [tasaBCV])
 
   // PayPal fee calculation
   const calculatePaypalFee = (amount) => {
@@ -74,7 +86,7 @@ export default function PagosColg({ props }) {
   };
 
   return (
-    <div className="w-full">
+    <div id="pagos-modal" className="w-full">
       <div className="mb-8 text-center">
         <h2 className="text-2xl font-bold text-[#41023B] mb-2">
           Registro de Pago
@@ -101,7 +113,7 @@ export default function PagosColg({ props }) {
           {/* Exchange rate */}
           <div className="bg-[#D7008A]/10 px-3 py-2 rounded-lg border border-[#D7008A]">
             <p className="text-sm font-bold text[#41023B]">
-              USD$ 1 = {tasaBcv} bs
+              USD$ 1 = {tasaBCV} bs
             </p>
           </div>
         </div>
@@ -110,7 +122,7 @@ export default function PagosColg({ props }) {
         <div className="text-center mb-8">
           <p className="text-lg text-gray-600">Monto a pagar:</p>
           <p className="text-4xl font-bold text-[#D7008A]">
-            USD$ {costoInscripcion}
+            USD$ {costo}
           </p>
           <p className="text-xl font-medium text-gray-700 mt-2">
             Monto en Bs: {montoEnBs}
@@ -371,8 +383,8 @@ export default function PagosColg({ props }) {
                       <div className="mt-4 flex justify-center">
                         {/* Replace PayPalProvider with PayPalPaymentComponent */}
                         <PaypalPaymentComponent
-                          totalPendiente={parseFloat(costoInscripcion)}
-                          exchangeRate={tasaBcv}
+                          totalPendiente={parseFloat(costo)}
+                          exchangeRate={tasaBCV}
                           onPaymentInfoChange={(info) => {
                             setPaymentAmount(info.montoPago);
                             setMontoEnBs(info.montoEnBs);

@@ -70,6 +70,7 @@ export default function SolvenciaPago() {
       const LoadData = async () => {
         try {
           const tasa = await fetchDataSolicitudes("tasa-bcv");
+          console.log(tasa)
           setTasaBcv(tasa.data.rate);
           const costo = await fetchDataSolicitudes(
             "costo",
@@ -113,13 +114,12 @@ export default function SolvenciaPago() {
           </div>
         ) : (
           <PagosColg
-                                      props={{
-                                        handlePaymentComplete,
-                                        tasaBcv,
-                                        costoInscripcion,
-                                        metodoPago,
-                                      }}
-                                    />
+            props={{
+              handlePaymentComplete,
+              costo: costoInscripcion,
+              metodoPago,
+            }}
+          />
         )}
       </div>
     </div>
