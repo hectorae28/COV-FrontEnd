@@ -180,7 +180,6 @@ export default function DocsRequirements({
           )}
         </div>
       </div>
-<<<<<<< HEAD
       {formData.tipo_profesion !=="odontologo"&&(
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -200,7 +199,7 @@ export default function DocsRequirements({
                 />
                 <label
                   htmlFor="Fondo_negro_credencial"
-                  className={`w-full px-4 py-3 border ${isFileEmpty("Fondo_negro_credencial") ? "border-gray-200" : "border-gray-200"
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("Fondo_negro_credencial") ? "border-gray-200" : "border-gray-200"
                     } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
                 >
                   <span className={`truncate ${!fileNames.Fondo_negro_credencial ? 'text-gray-400' : 'text-gray-800'}`}>
@@ -212,7 +211,7 @@ export default function DocsRequirements({
                 </label>
               </div>
               <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
-              {isFileEmpty("Fondo_negro_credencial") && (
+              {isFieldEmpty("Fondo_negro_credencial") && (
                 <p className="mt-1 text-xs text-red-500">Este documento es obligatorio</p>
               )}
             </div>
@@ -233,7 +232,7 @@ export default function DocsRequirements({
                 />
                 <label
                   htmlFor="notas_curso"
-                  className={`w-full px-4 py-3 border ${isFileEmpty("notas_curso") ? "border-gray-200" : "border-gray-200"
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("notas_curso") ? "border-gray-200" : "border-gray-200"
                     } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
                 >
                   <span className={`truncate ${!fileNames.notas_curso ? 'text-gray-400' : 'text-gray-800'}`}>
@@ -245,7 +244,7 @@ export default function DocsRequirements({
                 </label>
               </div>
               <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
-              {isFileEmpty("notas_curso") && (
+              {isFieldEmpty("notas_curso") && (
                 <p className="mt-1 text-xs text-red-500">Este documento es obligatorio</p>
               )}
             </div>
@@ -267,7 +266,7 @@ export default function DocsRequirements({
                 />
                 <label
                   htmlFor="fondo_negro_titulo_bachiller"
-                  className={`w-full px-4 py-3 border ${isFileEmpty("fondo_negro_titulo_bachiller") ? "border-gray-200" : "border-gray-200"
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("fondo_negro_titulo_bachiller") ? "border-gray-200" : "border-gray-200"
                     } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
                 >
                   <span className={`truncate ${!fileNames.fondo_negro_titulo_bachiller ? 'text-gray-400' : 'text-gray-800'}`}>
@@ -279,7 +278,7 @@ export default function DocsRequirements({
                 </label>
               </div>
               <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
-              {isFileEmpty("fondo_negro_titulo_bachiller") && (
+              {isFieldEmpty("fondo_negro_titulo_bachiller") && (
                 <p className="mt-1 text-xs text-red-500">Este documento es obligatorio</p>
               )}
             </div>
@@ -287,8 +286,6 @@ export default function DocsRequirements({
         </>
       )}
 
-=======
->>>>>>> Feat/ListaColegiados
       <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
         <h3 className="text-sm font-medium text-blue-800 mb-2">Información importante</h3>
         <p className="text-xs text-blue-600">
