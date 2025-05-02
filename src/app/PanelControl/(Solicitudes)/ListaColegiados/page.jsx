@@ -1,7 +1,7 @@
 "use client"
 import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado"
 import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente"
-import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal"
+import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado/RegistrarColegiadoModal"
 import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 import { motion } from "framer-motion"
 import { ArrowUpDown, CheckCircle, ChevronRight, PlusCircle, Search, X, XCircle } from "lucide-react"
@@ -46,8 +46,10 @@ export default function ListaColegiadosPage() {
     const [fechaDesde, setFechaDesde] = useState("");
     const [fechaHasta, setFechaHasta] = useState("");
 
-    // Estado para ordenamiento
+    // Estado para ordenamiento - Aseguramos que por defecto sea desc (más reciente primero)
     const [ordenFecha, setOrdenFecha] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
+    // Nuevo estado para ordenamiento de colegiados registrados
+    const [ordenFechaRegistrados, setOrdenFechaRegistrados] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
 
     // Simular carga inicial
     useEffect(() => {
@@ -56,28 +58,6 @@ export default function ListaColegiadosPage() {
         }, 800);
         return () => clearTimeout(timer);
     }, []);
-
-    // Filtrar colegiados basado en búsqueda y filtros
-    const colegiadosFiltrados = colegiados.filter(colegiado => {
-        const matchesSearch =
-            colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase());
-
-        // Filtrar por estado (solvencia y solicitudes)
-        const matchesEstado =
-            filtroEstado === "todos" ? true :
-                filtroEstado === "solventes" ? colegiado.solvente :
-                    filtroEstado === "insolventes" ? !colegiado.solvente :
-                        filtroEstado === "solicitudes" ? (colegiado.solicitudes && colegiado.solicitudes.length > 0) : false;
-
-        // Filtrar por especialidad
-        const matchesEspecialidad =
-            filtroEspecialidad === "todas" ? true :
-                colegiado.especialidad === filtroEspecialidad;
-
-        return matchesSearch && matchesEstado && matchesEspecialidad;
-    });
 
     // Función auxiliar para convertir la fecha al formato Date
     // Reemplaza la función parsearFecha actual con esta versión mejorada:
@@ -117,6 +97,39 @@ export default function ListaColegiadosPage() {
         return null;
     };
 
+    // Filtrar colegiados basado en búsqueda y filtros, y ordenar por fecha
+    const colegiadosFiltrados = colegiados
+        .filter(colegiado => {
+            const matchesSearch =
+                colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase());
+
+            // Filtrar por estado (solvencia y solicitudes)
+            const matchesEstado =
+                filtroEstado === "todos" ? true :
+                    filtroEstado === "solventes" ? colegiado.solvente :
+                        filtroEstado === "No Solvente" ? !colegiado.solvente :
+                            filtroEstado === "solicitudes" ? (colegiado.solicitudes && colegiado.solicitudes.length > 0) : false;
+
+            // Filtrar por especialidad
+            const matchesEspecialidad =
+                filtroEspecialidad === "todas" ? true :
+                    colegiado.especialidad === filtroEspecialidad;
+
+            return matchesSearch && matchesEstado && matchesEspecialidad;
+        })
+        // Ordenar por fecha de registro
+        .sort((a, b) => {
+            const fechaA = parsearFecha(a.fechaRegistro);
+            const fechaB = parsearFecha(b.fechaRegistro);
+
+            if (!fechaA || !fechaB) return 0;
+
+            return ordenFechaRegistrados === "desc"
+                ? fechaB - fechaA  // Más nuevo primero
+                : fechaA - fechaB;  // Más viejo primero
+        });
 
     // Filtrar pendientes basado en búsqueda y filtros
     const pendientesFiltrados = colegiadosPendientes
@@ -172,7 +185,7 @@ export default function ListaColegiadosPage() {
 
             return matchesSearch && matchesEstadoPendiente && matchesFechaPredef && matchesRangoFechas;
         })
-        // Ordenar por fecha
+        // Ordenar por fecha - asegurando que por defecto sea "desc" para que aparezcan primero los más recientes
         .sort((a, b) => {
             const fechaA = parsearFecha(a.fechaSolicitud);
             const fechaB = parsearFecha(b.fechaSolicitud);
@@ -226,9 +239,14 @@ export default function ListaColegiadosPage() {
         }
     };
 
-    // Alternar orden de fecha
+    // Alternar orden de fecha para pendientes
     const toggleOrdenFecha = () => {
         setOrdenFecha(prev => prev === "desc" ? "asc" : "desc");
+    };
+
+    // Alternar orden de fecha para colegiados registrados
+    const toggleOrdenFechaRegistrados = () => {
+        setOrdenFechaRegistrados(prev => prev === "desc" ? "asc" : "desc");
     };
 
     // Renderizar vista basada en el estado actual
@@ -400,11 +418,11 @@ export default function ListaColegiadosPage() {
                                     Solventes
                                 </button>
                                 <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "insolventes"
+                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "No Solvente"
                                         ? "bg-red-100 text-red-800"
                                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
-                                    onClick={() => setFiltroEstado("insolventes")}
+                                    onClick={() => setFiltroEstado("No Solvente")}
                                 >
                                     No Solventes
                                 </button>
@@ -526,15 +544,6 @@ export default function ListaColegiadosPage() {
                                     Todos
                                 </button>
                                 <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "documentosCompletos"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroEstadoPendiente("documentosCompletos")}
-                                >
-                                    Documentos Completos
-                                </button>
-                                <button
                                     className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "documentosIncompletos"
                                         ? "bg-yellow-100 text-yellow-800"
                                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -591,6 +600,18 @@ export default function ListaColegiadosPage() {
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                                                     N° Registro
                                                 </th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                                                    <button
+                                                        className="flex items-center justify-center gap-1 w-full"
+                                                        onClick={toggleOrdenFechaRegistrados}
+                                                    >
+                                                        Fecha Registro
+                                                        <ArrowUpDown
+                                                            size={14}
+                                                            className={`transition-transform ${ordenFechaRegistrados === "desc" ? "text-purple-600" : "text-gray-400 rotate-180"}`}
+                                                        />
+                                                    </button>
+                                                </th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                                                     Especialidad
                                                 </th>
@@ -613,6 +634,9 @@ export default function ListaColegiadosPage() {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
                                                         {colegiado.numeroRegistro || "-"}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
+                                                        {colegiado.fechaRegistro || "-"}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
                                                         {colegiado.especialidad || "-"}

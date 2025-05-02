@@ -1,13 +1,14 @@
-// DataListaColegiados.js
 import { create } from 'zustand';
 
-/**
- * Store centralizado para la gestión de colegiados
- * Maneja todos los datos y operaciones relacionadas con colegiados
- * registrados y pendientes de aprobación
- */
 const useDataListaColegiados = create((set, get) => ({
-    // Colecciones principales de datos
+
+    session: null, // Almacenar la sesión del usuario
+
+    // Función para inicializar la sesión
+    initSession: (sessionData) => {
+        set({ session: sessionData });
+    },
+
     colegiados: [
         {
             id: "1",
@@ -158,7 +159,7 @@ const useDataListaColegiados = create((set, get) => ({
             numeroRegistro: "ODV-2345",
             email: "juan.perez@mail.com",
             telefono: "+58 414-7654321",
-            fechaRegistro: "15/05/2025",
+            fechaRegistro: "01/05/2025",
             estado: "Activo",
             solvente: false,
             especialidad: "Endodoncia",
@@ -286,7 +287,7 @@ const useDataListaColegiados = create((set, get) => ({
             numeroRegistro: "ODV-3456",
             email: "laura.mendoza@mail.com",
             telefono: "+58 416-9876543",
-            fechaRegistro: "20/06/2025",
+            fechaRegistro: "02/06/2025",
             estado: "Activo",
             solvente: true,
             especialidad: "Odontopediatría",
@@ -706,21 +707,21 @@ const useDataListaColegiados = create((set, get) => ({
                     id: "file_ci",
                     nombre: "Cédula de identidad",
                     descripcion: "Copia escaneada por ambos lados",
-                    archivo: "cedula_ana_lopez.jpg",
+                    archivo: "cedula_sofia_martinez.jpg",
                     requerido: true,
                 },
                 {
                     id: "file_rif",
                     nombre: "RIF",
                     descripcion: "Registro de Información Fiscal",
-                    archivo: "rif_ana_lopez.pdf",
+                    archivo: "",
                     requerido: true,
                 },
                 {
                     id: "file_fondo_negro",
                     nombre: "Título universitario fondo negro",
                     descripcion: "Título de Odontólogo con fondo negro",
-                    archivo: "titulo_fondo_negro_ana_lopez.pdf",
+                    archivo: "",
                     requerido: true,
                 },
                 {
@@ -734,7 +735,7 @@ const useDataListaColegiados = create((set, get) => ({
                     id: "comprobante_pago",
                     nombre: "Comprobante de pago",
                     descripcion: "Comprobante de pago de inscripción",
-                    archivo: "",
+                    archivo: "pago_sofia_martinez.pdf",
                     requerido: true,
                 }
             ]
@@ -868,7 +869,7 @@ const useDataListaColegiados = create((set, get) => ({
                     id: "file_rif",
                     nombre: "RIF",
                     descripcion: "Registro de Información Fiscal",
-                    archivo: "",
+                    archivo: "rif_ana_lopez.pdf",
                     requerido: true,
                 },
                 {
@@ -1097,10 +1098,16 @@ const useDataListaColegiados = create((set, get) => ({
     // Funciones para gestionar el registro de colegiados
     approveRegistration: (pendienteId, datosRegistro) => {
         const pendiente = get().getColegiadoPendiente(pendienteId);
-        if (!pendiente) return null;
+        if (!pendiente) {
+            console.error("No se encontró el pendiente con ID:", pendienteId);
+            return null;
+        }
 
         // Crear un nombre completo con los datos disponibles
         const nombreCompleto = `${pendiente.persona.nombre} ${pendiente.persona.segundo_nombre || ''} ${pendiente.persona.primer_apellido} ${pendiente.persona.segundo_apellido || ''}`.trim();
+
+        // Obtener la sesión actual del store
+        const session = get().session;
 
         // Crear el nuevo colegiado a partir de los datos del pendiente
         const nuevoColegiado = {
@@ -1149,7 +1156,18 @@ const useDataListaColegiados = create((set, get) => ({
                 asistenciaEventos: 0,
                 pagosPendientes: 0,
                 ultimoAcceso: "Hoy"
-            }
+            },
+
+            // Información del creador original (del registro pendiente)
+            creador: pendiente.creador,
+
+            // Información de quien aprobó el registro
+            aprobadoPor: session ? {
+                username: session.user?.username || 'admin',
+                email: session.user?.email || 'admin@cov.com',
+                fecha: new Date().toISOString(),
+                esAdmin: session.user?.role === 'admin' || false
+            } : null
         };
 
         // Añadir el colegiado y eliminar el pendiente
@@ -1164,5 +1182,23 @@ const useDataListaColegiados = create((set, get) => ({
         return get().updateColegiado(colegiadoId, { tituloEntregado: entregado });
     }
 }));
+
+export const useDataListaColegiadosWithSession = () => {
+    const store = useDataListaColegiados();
+    const [sessionInitialized, setSessionInitialized] = useState(false);
+
+    useEffect(() => {
+        // En Next.js, debemos importar useSession aquí para evitar problemas con SSR
+        import('next-auth/react').then(({ useSession }) => {
+            const { data: session } = useSession();
+            if (session && !sessionInitialized) {
+                store.initSession(session);
+                setSessionInitialized(true);
+            }
+        });
+    }, [store, sessionInitialized]);
+
+    return store;
+};
 
 export default useDataListaColegiados;

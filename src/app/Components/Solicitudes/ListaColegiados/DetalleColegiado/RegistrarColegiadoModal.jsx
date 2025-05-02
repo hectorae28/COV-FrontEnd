@@ -13,15 +13,18 @@ import InfoPersonal from "@/app/(Registro)/InfoPers";
 import PagosColg from "@/app/Components/PagosModal";
 import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
 import api from "@/api/api";
+import { useSession } from "next-auth/react";
 
 export default function RegistroColegiados({
   isAdmin = true,
   onClose,
   onRegistroExitoso,
 }) {
-  const addColegiadoPendiente = ListaColegiadosData(
-    (state) => state.addColegiadoPendiente
-  );
+
+  const { data: session } = useSession();
+  const addColegiadoPendiente = ListaColegiadosData(state => state.addColegiadoPendiente);
+
+  // Estado para seguimiento de pasos
   const [pasoActual, setPasoActual] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
