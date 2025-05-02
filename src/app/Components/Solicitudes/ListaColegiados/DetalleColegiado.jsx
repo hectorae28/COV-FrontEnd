@@ -10,7 +10,6 @@ import {
   Calendar,
   CheckCircle,
   ChevronLeft,
-  Clock,
   CreditCard,
   Eye,
   FileBox,
@@ -26,11 +25,11 @@ import {
 import { useSession } from "next-auth/react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import NuevaSolicitudModal from "./CrearSolicitudModal"
-import EstadisticasUsuario from "./EstadisticasUsuario"
-import TablaInscripciones from "./TablaInscripciones"
-import TablaPagos from "./TablaPagos"
-import TablaSolicitudes from "./TablaSolicitudes"
+import NuevaSolicitudModal from "./DetalleColegiado/CrearSolicitudModal"
+import EstadisticasUsuario from "./DetalleColegiado/EstadisticasUsuario"
+import TablaInscripciones from "./DetalleColegiado/TablaInscripciones"
+import TablaPagos from "./DetalleColegiado/TablaPagos"
+import TablaSolicitudes from "./DetalleColegiado/TablaSolicitudes"
 
 export default function DetalleColegiado({ params, onVolver, colegiado: providedColegiado }) {
   // Obtenemos el ID desde los parámetros de la URL
@@ -237,7 +236,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colegiado.solvente ? 'bg-green-100 text-green-800 font-bold' : 'bg-red-100 text-red-800'}`}
                 >
-                  {colegiado.solvente ? 'Solvente' : 'Insolvente'}
+                  {colegiado.solvente ? 'Solvente' : 'No Solvente'}
                 </span>
 
                 <span
@@ -449,7 +448,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
                         ) : (
                           <>
                             <AlertCircle size={20} className="mr-2" />
-                            Insolvente
+                            No Solvente
                           </>
                         )}
                       </p>

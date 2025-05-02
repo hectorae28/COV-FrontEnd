@@ -1,7 +1,7 @@
 "use client"
 
+import { CheckCircle, ChevronRight, Clock, X } from "lucide-react"
 import { useState } from "react"
-import { X, CheckCircle, ChevronRight, Clock } from "lucide-react"
 // Importamos el componente actualizado para evitar errores
 import SeleccionarSolicitudesStep from "./StepsSeleccionarSolic"
 

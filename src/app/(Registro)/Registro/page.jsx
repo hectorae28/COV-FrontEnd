@@ -1,6 +1,5 @@
 "use client";
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation";
-import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Building,
@@ -10,14 +9,12 @@ import {
   FilePlus,
   GraduationCap,
   Phone,
-  User,
-  AlertTriangle
+  User
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 // Import step components
-import api from "@/api/api";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import Head from "next/head";
 import PagosColg from "../../Components/PagosModal";
@@ -38,9 +35,7 @@ const steps = [
       "nationality",
       "identityCard",
       "firstName",
-      "secondName",
       "firstLastName",
-      "secondLastName",
       "birthDate",
       "gender",
       "maritalStatus"
@@ -78,14 +73,15 @@ const steps = [
   },
   {
     id: 4,
-    title: "Información Laboral",
+    title: "Situación Laboral",
     description: "Tu experiencia y situación laboral actual",
     icon: Building,
     component: InfoLaboral,
     requiredFields: [
       "institutionName",
       "institutionAddress",
-      "institutionPhone"
+      "institutionPhone",
+      "cargo"
     ]
   },
   {
@@ -154,10 +150,14 @@ export default function RegistrationForm() {
   const [costoInscripcion, setCostoInscripcion] = useState(0);
   const [metodoPago, setMetodoPago] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  const [attemptedNext, setAttemptedNext] = useState(false);
+
   useEffect(() => {
-    // Validar el paso actual cuando se montan los componentes o cuando cambia formData
-    validateStep(currentStep);
-  }, [formData, currentStep]);
+    // Only validate when attempted next is true
+    if (attemptedNext) {
+      validateStep(currentStep);
+    }
+  }, [formData, currentStep, attemptedNext]);
 
   useEffect(() => {
     const LoadData = async () => {
@@ -211,6 +211,12 @@ export default function RegistrationForm() {
     const errors = {};
     let isValid = true;
 
+    // Si es el paso de información laboral (paso 4) y ha seleccionado "no labora",
+    // entonces saltamos la validación de los campos laborales
+    if (stepIndex === 4 && formData.workStatus === "noLabora") {
+      return true; // Validación exitosa, no hay errores
+    }
+
     if (step.requiredFields && step.requiredFields.length > 0) {
       step.requiredFields.forEach(field => {
         // Check for file fields (simplified check)
@@ -228,15 +234,35 @@ export default function RegistrationForm() {
       });
     }
 
-    setValidationErrors(errors);
+    // Solo establecer errores de validación si estamos validando activamente (después de hacer clic en el botón)
+    if (attemptedNext) {
+      setValidationErrors(errors);
+    }
+
     return isValid;
   };
 
   const nextStep = () => {
     if (currentStep < steps.length) {
-      if (validateStep(currentStep)) {
+      // For regular step navigation, only validate the current step without showing errors yet
+      const isValid = validateStep(currentStep);
+
+      if (isValid) {
         setCurrentStep(currentStep + 1);
         window.scrollTo(0, 0);
+        // Keep attemptedNext as false during normal navigation
+        setAttemptedNext(false);
+      } else {
+        // Only show validation errors if trying to move to next step and fields are invalid
+        setAttemptedNext(true);
+
+        // Scroll to first error
+        setTimeout(() => {
+          const firstErrorElement = document.querySelector('.border-red-500');
+          if (firstErrorElement) {
+            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
       }
     }
   };
@@ -245,16 +271,36 @@ export default function RegistrationForm() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
       window.scrollTo(0, 0);
+      // Reset attempted next when going back
+      setAttemptedNext(false);
     }
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (validateStep(currentStep)) {
+    // Activar la bandera para mostrar errores de validación SOLO cuando intentamos proceder a pagos
+    setAttemptedNext(true);
+
+    // Validar el paso actual
+    const isValid = validateStep(currentStep);
+
+    if (isValid) {
+      // Si todos los campos están completos, proceder
       if (isIntentionalSubmit) {
         setShowPaymentScreen(true);
+        // No necesitamos reiniciar attemptedNext aquí ya que queremos mantener
+        // los mensajes de error visibles si el usuario vuelve desde la pantalla de pagos
       }
+    } else {
+      // Si hay errores, hacer scroll al primer error
+      setTimeout(() => {
+        const firstErrorElement = document.querySelector('.border-red-500');
+        if (firstErrorElement) {
+          firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     }
   };
 
@@ -590,6 +636,9 @@ export default function RegistrationForm() {
                                   formData={formData}
                                   onInputChange={handleInputChange}
                                   validationErrors={validationErrors}
+                                  currentStep={currentStep} // Asegúrate de pasar currentStep como prop
+                                  attemptedNext={attemptedNext} // Asegúrate de pasar attemptedNext como prop
+                                  validateStep={validateStep}
                                 />
                               )}
                             </motion.div>
@@ -616,12 +665,10 @@ export default function RegistrationForm() {
                             <motion.button
                               type="button"
                               onClick={nextStep}
-                              disabled={Object.keys(validationErrors).length > 0}
-                              className={`flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
-                  rounded-xl text-base font-medium shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50
-                  ${Object.keys(validationErrors).length > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:opacity-90'}`}
-                              whileHover={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 1.02 }}
-                              whileTap={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 0.98 }}
+                              className="flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+                            rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                             >
                               Siguiente
                               <ChevronRight className="w-5 h-5 ml-2" />
@@ -630,12 +677,10 @@ export default function RegistrationForm() {
                             <motion.button
                               type="submit"
                               onClick={() => setIsIntentionalSubmit(true)}
-                              disabled={Object.keys(validationErrors).length > 0}
-                              className={`flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
-                  rounded-xl text-base font-medium shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50
-                  ${Object.keys(validationErrors).length > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:opacity-90'}`}
-                              whileHover={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 1.02 }}
-                              whileTap={{ scale: Object.keys(validationErrors).length > 0 ? 1 : 0.98 }}
+                              className="flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+  rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                             >
                               {isSubmitting ? (
                                 <>
