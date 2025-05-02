@@ -201,7 +201,7 @@ export default function ListaColegiadosPage() {
     };
 
     // Manejador para el registro exitoso de un nuevo colegiado pendiente
-    const handleRegistroExitoso = (nuevoColegiado) => {
+    const handleRegistroExitoso = () => {
         setShowRegistro(false);
         setRegistroExitoso(true);
         setTimeout(() => {
