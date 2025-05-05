@@ -28,14 +28,24 @@ export default function PagosColg({ props }) {
   const [paymentAmount, setPaymentAmount] = useState(costo);
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [montoEnBs, setMontoEnBs] = useState(0)//useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2)); // Add this state
-  const [tasaBCV, setTasaBCV] = useState(0)
+  const [montoEnBs, setMontoEnBs] = useState(0);//useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2)); // Add this state
+  const [tasaBCV, setTasaBCV] = useState(0);
+  const [metodoDePago, setMetodoDePago] = useState([]);
   
   const getTasa = async () => {
     try {
       const tasa = await fetchDataSolicitudes("tasa-bcv");
       setTasaBCV(tasa.data.rate);
-      setMontoEnBs((parseFloat(costo) * tasaBCV).toFixed(2))
+      setMontoEnBs((parseFloat(costo) * tasaBCV).toFixed(2));
+    } catch (error) {
+      console.log(`Ha ocurrido un error: ${error}`)
+    }
+  }
+
+  const getMetodosDePago = async () => {
+    try {
+      const metodos = await fetchDataSolicitudes("metodo-de-pago");
+      setMetodoDePago(metodos.data);
     } catch (error) {
       console.log(`Ha ocurrido un error: ${error}`)
     }
@@ -43,6 +53,7 @@ export default function PagosColg({ props }) {
 
   useEffect(() => {
     getTasa();
+    getMetodosDePago();
   }, [tasaBCV])
 
   // PayPal fee calculation
@@ -131,7 +142,7 @@ export default function PagosColg({ props }) {
 
         {/* Payment method selection buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
-          {metodoPago.map((metodo, index) => (
+          {metodoDePago.map((metodo, index) => (
             <button
               key={index}
               className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${
@@ -145,8 +156,8 @@ export default function PagosColg({ props }) {
                 src={
                   metodo.logo_url
                     ? metodo.logo_url.startsWith("/")
-                      ? metodo.logo_url
-                      : `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                      ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                      : metodo.logo_url
                     : "/placeholder.svg"
                 }
                 alt={metodo.nombre}

@@ -18,10 +18,10 @@ function useAutoLogout() {
       const timeout = expiresAt - Date.now();
 
       if (timeout <= 0) {
-        signOut({ callbackUrl: "/login" });
+        signOut({ callbackUrl: "/Login" });
       } else {
         const timer = setTimeout(
-          () => signOut(session,{ callbackUrl: "/login" }),
+          () => signOut(session,{ callbackUrl: "/Login" }),
           timeout
         );
         return () => clearTimeout(timer);

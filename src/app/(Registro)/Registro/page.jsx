@@ -165,6 +165,7 @@ export default function RegistrationForm() {
         );
         setCostoInscripcion(Number(costo.data[0].monto_usd));
         const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
+        console.log('EPA METODOS', Mpagos.data)
         setMetodoPago(Mpagos.data);
       } catch (error) {
         console.error("Error al obtener los datos:", error);

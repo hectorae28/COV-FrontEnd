@@ -89,7 +89,7 @@ export default function SolvenciaPago() {
     }, [formData.tipo_profesion]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="solicitudes-tab">
       {/* Mensaje de información en una sola línea horizontal */}
       <div className="bg-white p-4 rounded-xl shadow-md">
         <div className="flex items-center space-x-2 text-gray-700">

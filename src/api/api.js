@@ -14,7 +14,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Token expirado o inválido
-            signOut({ callbackUrl: '/login' });
+            signOut({ callbackUrl: '/Login' });
         }
         return Promise.reject(error);
     }
