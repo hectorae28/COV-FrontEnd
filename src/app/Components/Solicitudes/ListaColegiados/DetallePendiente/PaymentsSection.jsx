@@ -29,6 +29,24 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
         )
     }
 
+    // Función para validar archivo
+    const validarArchivo = (file) => {
+        // Validar tipo de archivo (PDF, JPG, PNG)
+        const validTypes = ["application/pdf", "image/jpeg", "image/png"]
+        if (!validTypes.includes(file.type)) {
+            setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.")
+            return false
+        }
+
+        // Validar tamaño (máximo 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError("El archivo es demasiado grande. El tamaño máximo es 5MB.")
+            return false
+        }
+
+        return true
+    }
+
     // Función para reemplazar documento
     const handleReemplazarDocumento = (documento) => {
         setDocumentoParaSubir(documento)
@@ -40,23 +58,12 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
     const handleFileChange = (e) => {
         const file = e.target.files[0]
         if (file) {
-            // Validar tipo de archivo (PDF, JPG, PNG)
-            const validTypes = ["application/pdf", "image/jpeg", "image/png"]
-            if (!validTypes.includes(file.type)) {
-                setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.")
+            if (validarArchivo(file)) {
+                setSelectedFile(file)
+                setError("")
+            } else {
                 setSelectedFile(null)
-                return
             }
-
-            // Validar tamaño (máximo 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                setError("El archivo es demasiado grande. El tamaño máximo es 5MB.")
-                setSelectedFile(null)
-                return
-            }
-
-            setSelectedFile(file)
-            setError("")
         }
     }
 
@@ -71,21 +78,10 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
 
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             const file = e.dataTransfer.files[0]
-            // Validar tipo de archivo (PDF, JPG, PNG)
-            const validTypes = ["application/pdf", "image/jpeg", "image/png"]
-            if (!validTypes.includes(file.type)) {
-                setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.")
-                return
+            if (validarArchivo(file)) {
+                setSelectedFile(file)
+                setError("")
             }
-
-            // Validar tamaño (máximo 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                setError("El archivo es demasiado grande. El tamaño máximo es 5MB.")
-                return
-            }
-
-            setSelectedFile(file)
-            setError("")
         }
     }
 
@@ -101,12 +97,6 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
         try {
             // Simulación de carga
             await new Promise((resolve) => setTimeout(resolve, 1500))
-
-            // En un entorno real, aquí se haría la carga al servidor
-            // const formData = new FormData();
-            // formData.append('file', selectedFile);
-            // formData.append('documentId', documentoParaSubir.id);
-            // const response = await fetch('/api/upload-document', { method: 'POST', body: formData });
 
             // Simular respuesta exitosa
             const uploadedFileUrl = URL.createObjectURL(selectedFile)
@@ -129,6 +119,97 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
         } finally {
             setIsUploading(false)
         }
+    }
+
+    // Componente de tarjeta de comprobante reutilizable
+    const ComprobanteCard = ({ documento }) => {
+        const exonerado = isExonerado(documento)
+        const tieneArchivo = !!documento.archivo
+
+        return (
+            <div
+                className={`border rounded-lg ${exonerado
+                    ? "border-green-200 bg-green-50"
+                    : tieneArchivo
+                        ? "border-gray-200 hover:border-[#C40180]"
+                        : "border-red-200 bg-red-50"
+                    } hover:shadow-md transition-all duration-200`}
+            >
+                <div className="p-4">
+                    <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                            <div className="flex items-center mb-2">
+                                <div
+                                    className={`${exonerado ? "bg-green-100" : tieneArchivo ? "bg-[#F9E6F3]" : "bg-red-100"} p-2 rounded-md mr-3`}
+                                >
+                                    {exonerado ? (
+                                        <CheckCircle className="text-green-500" size={20} />
+                                    ) : (
+                                        <CreditCard className={tieneArchivo ? "text-[#C40180]" : "text-red-500"} size={20} />
+                                    )}
+                                </div>
+                                <div>
+                                    <h3 className="font-medium text-gray-900 flex items-center">
+                                        {exonerado ? "Exoneración de Pago" : documento.nombre}
+                                        {documento.requerido && !exonerado && (
+                                            <span className="text-red-500 ml-1">*</span>
+                                        )}
+                                    </h3>
+                                    <p className="text-xs text-gray-500">
+                                        {exonerado ? "Pago exonerado administrativamente" : documento.descripcion}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Mensaje cuando no hay archivo */}
+                            {!tieneArchivo && !exonerado && (
+                                <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
+                                    <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
+                                    <span>
+                                        Falta comprobante.{" "}
+                                        {documento.requerido && "Este comprobante es requerido para completar el registro."}
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Mensaje cuando es un archivo exonerado */}
+                            {exonerado && (
+                                <div className="mt-2 flex items-start bg-green-100 p-2 rounded text-xs text-green-600">
+                                    <CheckCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
+                                    <span>Exonerado por administración</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center space-x-1">
+                            {tieneArchivo || exonerado ? (
+                                <button
+                                    onClick={() => handleVerDocumento(documento)}
+                                    className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                                    title="Ver comprobante"
+                                >
+                                    <Eye size={18} />
+                                </button>
+                            ) : (
+                                <span className="text-gray-400 p-2" title="No hay comprobante para ver">
+                                    <Eye size={18} />
+                                </span>
+                            )}
+
+                            {!exonerado && (
+                                <button
+                                    onClick={() => handleReemplazarDocumento(documento)}
+                                    className={`${tieneArchivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}
+                                    title={tieneArchivo ? "Reemplazar comprobante" : "Subir comprobante"}
+                                >
+                                    {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -189,90 +270,7 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {comprobantesPago && comprobantesPago.length > 0 && !pendiente?.exoneracionPagos?.fecha ? (
                     comprobantesPago.map((documento) => (
-                        <div
-                            key={documento.id}
-                            className={`border rounded-lg ${isExonerado(documento)
-                                    ? "border-green-200 bg-green-50"
-                                    : documento.archivo
-                                        ? "border-gray-200 hover:border-[#C40180]"
-                                        : "border-red-200 bg-red-50"
-                                } hover:shadow-md transition-all duration-200`}
-                        >
-                            <div className="p-4">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <div className="flex items-center mb-2">
-                                            <div
-                                                className={`${isExonerado(documento) ? "bg-green-100" : documento.archivo ? "bg-[#F9E6F3]" : "bg-red-100"
-                                                    } p-2 rounded-md mr-3`}
-                                            >
-                                                {isExonerado(documento) ? (
-                                                    <CheckCircle className="text-green-500" size={20} />
-                                                ) : (
-                                                    <CreditCard className={documento.archivo ? "text-[#C40180]" : "text-red-500"} size={20} />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <h3 className="font-medium text-gray-900 flex items-center">
-                                                    {isExonerado(documento) ? "Exoneración de Pago" : documento.nombre}
-                                                    {documento.requerido && !isExonerado(documento) && (
-                                                        <span className="text-red-500 ml-1">*</span>
-                                                    )}
-                                                </h3>
-                                                <p className="text-xs text-gray-500">
-                                                    {isExonerado(documento) ? "Pago exonerado administrativamente" : documento.descripcion}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Mensaje cuando no hay archivo */}
-                                        {!documento.archivo && !isExonerado(documento) && (
-                                            <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
-                                                <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
-                                                <span>
-                                                    Falta comprobante.{" "}
-                                                    {documento.requerido && "Este comprobante es requerido para completar el registro."}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {/* Mensaje cuando es un archivo exonerado */}
-                                        {isExonerado(documento) && (
-                                            <div className="mt-2 flex items-start bg-green-100 p-2 rounded text-xs text-green-600">
-                                                <CheckCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
-                                                <span>Exonerado por administración</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex items-center space-x-1">
-                                        {documento.archivo || isExonerado(documento) ? (
-                                            <button
-                                                onClick={() => handleVerDocumento(documento)}
-                                                className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                                                title="Ver comprobante"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                        ) : (
-                                            <span className="text-gray-400 p-2" title="No hay comprobante para ver">
-                                                <Eye size={18} />
-                                            </span>
-                                        )}
-
-                                        {!isExonerado(documento) && (
-                                            <button
-                                                onClick={() => handleReemplazarDocumento(documento)}
-                                                className={`${documento.archivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}
-                                                title={documento.archivo ? "Reemplazar comprobante" : "Subir comprobante"}
-                                            >
-                                                {documento.archivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <ComprobanteCard key={documento.id} documento={documento} />
                     ))
                 ) : !pendiente?.exoneracionPagos?.fecha ? (
                     <div className="col-span-2 bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">
@@ -282,7 +280,7 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
                 ) : null}
             </div>
 
-            {/* Modal para subir documentos */}
+            {/* Modal para subir documentos - similar al de DocumentsSection */}
             {documentoParaSubir && (
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                     <motion.div

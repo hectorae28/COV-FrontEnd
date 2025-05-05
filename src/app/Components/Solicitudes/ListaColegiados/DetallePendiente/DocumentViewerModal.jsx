@@ -139,7 +139,7 @@ export default function DocumentViewerModal({ documento, onClose, pendiente }) {
                         </p>
                     </div>
                     {documento.archivoUrl && !isExonerado && (
-                        <a
+                        <div
                             href={documento.archivoUrl}
                             download={documento.archivo || "documento"}
                             className="px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A00160] transition-colors flex items-center gap-2"
@@ -148,7 +148,7 @@ export default function DocumentViewerModal({ documento, onClose, pendiente }) {
                         >
                             <Download size={16} />
                             <span>Descargar</span>
-                        </a>
+                        </div>
                     )}
                 </div>
             </motion.div>

@@ -17,6 +17,24 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
             (doc) => !doc.id.includes("comprobante_pago") && !doc.nombre.toLowerCase().includes("comprobante"),
         ) || []
 
+    // Función para validar archivo
+    const validarArchivo = (file) => {
+        // Validar tipo de archivo (PDF, JPG, PNG)
+        const validTypes = ["application/pdf", "image/jpeg", "image/png"]
+        if (!validTypes.includes(file.type)) {
+            setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.")
+            return false
+        }
+
+        // Validar tamaño (máximo 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError("El archivo es demasiado grande. El tamaño máximo es 5MB.")
+            return false
+        }
+
+        return true
+    }
+
     // Función para reemplazar documento
     const handleReemplazarDocumento = (documento) => {
         setDocumentoParaSubir(documento)
@@ -28,23 +46,12 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
     const handleFileChange = (e) => {
         const file = e.target.files[0]
         if (file) {
-            // Validar tipo de archivo (PDF, JPG, PNG)
-            const validTypes = ["application/pdf", "image/jpeg", "image/png"]
-            if (!validTypes.includes(file.type)) {
-                setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.")
+            if (validarArchivo(file)) {
+                setSelectedFile(file)
+                setError("")
+            } else {
                 setSelectedFile(null)
-                return
             }
-
-            // Validar tamaño (máximo 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                setError("El archivo es demasiado grande. El tamaño máximo es 5MB.")
-                setSelectedFile(null)
-                return
-            }
-
-            setSelectedFile(file)
-            setError("")
         }
     }
 
@@ -59,21 +66,10 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             const file = e.dataTransfer.files[0]
-            // Validar tipo de archivo (PDF, JPG, PNG)
-            const validTypes = ["application/pdf", "image/jpeg", "image/png"]
-            if (!validTypes.includes(file.type)) {
-                setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.")
-                return
+            if (validarArchivo(file)) {
+                setSelectedFile(file)
+                setError("")
             }
-
-            // Validar tamaño (máximo 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                setError("El archivo es demasiado grande. El tamaño máximo es 5MB.")
-                return
-            }
-
-            setSelectedFile(file)
-            setError("")
         }
     }
 
@@ -89,12 +85,6 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
         try {
             // Simulación de carga
             await new Promise((resolve) => setTimeout(resolve, 1500))
-
-            // En un entorno real, aquí se haría la carga al servidor
-            // const formData = new FormData();
-            // formData.append('file', selectedFile);
-            // formData.append('documentId', documentoParaSubir.id);
-            // const response = await fetch('/api/upload-document', { method: 'POST', body: formData });
 
             // Simular respuesta exitosa
             const uploadedFileUrl = URL.createObjectURL(selectedFile)
@@ -119,6 +109,74 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
         }
     }
 
+    // Componente de tarjeta de documento reutilizable
+    const DocumentCard = ({ documento }) => {
+        const tieneArchivo = !!documento.archivo
+
+        return (
+            <div
+                className={`border rounded-lg ${tieneArchivo
+                    ? "border-gray-200 hover:border-[#C40180]"
+                    : "border-red-200 bg-red-50"
+                    } hover:shadow-md transition-all duration-200`}
+            >
+                <div className="p-4">
+                    <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                            <div className="flex items-center mb-2">
+                                <div className={`${tieneArchivo ? "bg-[#F9E6F3]" : "bg-red-100"} p-2 rounded-md mr-3`}>
+                                    <FileText className={tieneArchivo ? "text-[#C40180]" : "text-red-500"} size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="font-medium text-gray-900 flex items-center">
+                                        {documento.nombre}
+                                        {documento.requerido && <span className="text-red-500 ml-1">*</span>}
+                                    </h3>
+                                    <p className="text-xs text-gray-500">{documento.descripcion}</p>
+                                </div>
+                            </div>
+
+                            {/* Mensaje cuando no hay archivo */}
+                            {!tieneArchivo && (
+                                <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
+                                    <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
+                                    <span>
+                                        Falta documento.{" "}
+                                        {documento.requerido && "Este documento es requerido para completar el registro."}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center space-x-1">
+                            {tieneArchivo ? (
+                                <button
+                                    onClick={() => handleVerDocumento(documento)}
+                                    className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                                    title="Ver documento"
+                                >
+                                    <Eye size={18} />
+                                </button>
+                            ) : (
+                                <span className="text-gray-400 p-2" title="No hay documento para ver">
+                                    <Eye size={18} />
+                                </span>
+                            )}
+
+                            <button
+                                onClick={() => handleReemplazarDocumento(documento)}
+                                className={`${tieneArchivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}
+                                title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
+                            >
+                                {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -139,65 +197,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {documentosRegulares && documentosRegulares.length > 0 ? (
                     documentosRegulares.map((documento) => (
-                        <div
-                            key={documento.id}
-                            className={`border rounded-lg ${documento.archivo ? "border-gray-200 hover:border-[#C40180]" : "border-red-200 bg-red-50"
-                                } hover:shadow-md transition-all duration-200`}
-                        >
-                            <div className="p-4">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <div className="flex items-center mb-2">
-                                            <div className={`${documento.archivo ? "bg-[#F9E6F3]" : "bg-red-100"} p-2 rounded-md mr-3`}>
-                                                <FileText className={documento.archivo ? "text-[#C40180]" : "text-red-500"} size={20} />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-medium text-gray-900 flex items-center">
-                                                    {documento.nombre}
-                                                    {documento.requerido && <span className="text-red-500 ml-1">*</span>}
-                                                </h3>
-                                                <p className="text-xs text-gray-500">{documento.descripcion}</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Mensaje cuando no hay archivo */}
-                                        {!documento.archivo && (
-                                            <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
-                                                <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
-                                                <span>
-                                                    Falta documento.{" "}
-                                                    {documento.requerido && "Este documento es requerido para completar el registro."}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex items-center space-x-1">
-                                        {documento.archivo ? (
-                                            <button
-                                                onClick={() => handleVerDocumento(documento)}
-                                                className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                                                title="Ver documento"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                        ) : (
-                                            <span className="text-gray-400 p-2" title="No hay documento para ver">
-                                                <Eye size={18} />
-                                            </span>
-                                        )}
-
-                                        <button
-                                            onClick={() => handleReemplazarDocumento(documento)}
-                                            className={`${documento.archivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}
-                                            title={documento.archivo ? "Reemplazar documento" : "Subir documento"}
-                                        >
-                                            {documento.archivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <DocumentCard key={documento.id} documento={documento} />
                     ))
                 ) : (
                     <div className="col-span-2 bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">

@@ -1,19 +1,19 @@
 "use client"
 import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado"
-import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal"
 import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente"
+import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal"
 import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
 import { motion } from "framer-motion"
 import {
+    AlertTriangle,
     ArrowUpDown,
     CheckCircle,
     ChevronRight,
     PlusCircle,
     Search,
+    UserX,
     X,
     XCircle,
-    AlertTriangle,
-    UserX,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -828,7 +828,7 @@ export default function ListaColegiadosPage() {
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
                                                         <div className="flex flex-col sm:flex-row gap-1 justify-center items-center">
                                                             {pendiente.estado === "rechazada" ? (
-                                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                                                     <AlertTriangle size={12} /> Rechazada
                                                                 </span>
                                                             ) : pendiente.estado === "denegada" ? (
@@ -882,7 +882,7 @@ export default function ListaColegiadosPage() {
                 <RegistroColegiados
                     isAdmin={true}
                     onClose={() => setShowRegistro(false)}
-                    onRegistroExitoso={handleRegistroExitoso}
+                    onRegistroExitoso={handleRegistrVeoExitoso}
                 />
             )}
         </div>

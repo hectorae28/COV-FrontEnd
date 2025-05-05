@@ -1,5 +1,4 @@
 "use client";
-
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
@@ -8,12 +7,13 @@ import { Lock, Mail } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Alert from "@/app/Components/Alert"
 
-export default function LoginForm({ onForgotPassword, onRegister }) {
+export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount }) {
   const searchParams = useSearchParams();
   const [error, setError] = useState(searchParams.get("error"));
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
+
   useEffect(() => {
     setError(searchParams.get("error"));
   },[])
@@ -54,7 +54,6 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
     }finally {
       setIsLoading(false);
     }
-
   };
 
   return (
@@ -75,7 +74,6 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
           />
         </div>
       </div>
-
       <div className="mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -89,7 +87,6 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
           />
         </div>
       </div>
-
       {/* Login button */}
       <motion.button
         type="submit"
@@ -109,9 +106,9 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
           "Iniciar Sesión"
         )}
       </motion.button>
-
-      {/* Forgot password link */}
-      <div className="text-center mt-4">
+      
+      {/* Forgot password and Claim Account links */}
+      <div className="text-center mt-4 flex flex-col space-y-2">
         <a
           href="#"
           className="text-[#D7008A] hover:underline text-sm"
@@ -122,8 +119,19 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
         >
           ¿Olvidaste tu contraseña?
         </a>
+        
+        <a
+          href="#"
+          className="text-[#D7008A] hover:underline text-sm"
+          onClick={(e) => {
+            e.preventDefault();
+            onClaimAccount();
+          }}
+        >
+          ¿Ya Fuiste Registrado? Crea tu Nuevo Usuario
+        </a>
       </div>
-
+      
       {/* Register link */}
       <div className="text-center mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
         <p className="text-gray-700 mb-2">¿No tienes una cuenta?</p>

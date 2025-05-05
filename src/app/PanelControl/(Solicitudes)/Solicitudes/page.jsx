@@ -190,8 +190,8 @@ export default function ListaSolicitudes() {
             <div className="flex flex-wrap gap-2">
               <button
                 className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "todas"
-                    ? "bg-purple-100 text-purple-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-purple-100 text-purple-800"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 onClick={() => setFiltroEstado("todas")}
               >
@@ -199,8 +199,8 @@ export default function ListaSolicitudes() {
               </button>
               <button
                 className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "pendientes"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 onClick={() => setFiltroEstado("pendientes")}
               >
@@ -208,8 +208,8 @@ export default function ListaSolicitudes() {
               </button>
               <button
                 className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "aprobadas"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 onClick={() => setFiltroEstado("aprobadas")}
               >
@@ -218,8 +218,8 @@ export default function ListaSolicitudes() {
 
               <button
                 className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "rechazadas"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 onClick={() => setFiltroEstado("rechazadas")}
               >
@@ -233,8 +233,8 @@ export default function ListaSolicitudes() {
             <div className="flex flex-wrap gap-2">
               <button
                 className={`px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "todas"
-                    ? "bg-purple-100 text-purple-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-purple-100 text-purple-800"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 onClick={() => setFiltroCosto("todas")}
               >
@@ -242,8 +242,8 @@ export default function ListaSolicitudes() {
               </button>
               <button
                 className={`px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "conCosto"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 onClick={() => setFiltroCosto("conCosto")}
               >
@@ -251,8 +251,8 @@ export default function ListaSolicitudes() {
               </button>
               <button
                 className={`px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "sinCosto"
-                    ? "bg-teal-100 text-teal-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-teal-100 text-teal-800"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 onClick={() => setFiltroCosto("sinCosto")}
               >
@@ -329,12 +329,12 @@ export default function ListaSolicitudes() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${solicitud.estado === 'Pendiente'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : solicitud.estado === 'Aprobada'
-                              ? 'bg-green-100 text-green-800'
-                              : solicitud.estado === 'Exonerada'
-                                ? 'bg-teal-100 text-teal-800'
-                                : 'bg-red-100 text-red-800'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : solicitud.estado === 'Aprobada'
+                            ? 'bg-green-100 text-green-800'
+                            : solicitud.estado === 'Exonerada'
+                              ? 'bg-teal-100 text-teal-800'
+                              : 'bg-red-100 text-red-800'
                           }`}>
                           {solicitud.estado === 'Pendiente' && <Clock size={12} />}
                           {solicitud.estado === 'Aprobada' && <CheckCircle size={12} />}
@@ -372,8 +372,8 @@ export default function ListaSolicitudes() {
       {showModal && (
         <CrearSolicitudModal
           onClose={() => {
-            setShowModal(false)
-            setColegiadoSeleccionado(null)
+            setShowModal(false);
+            setColegiadoSeleccionado(null);
           }}
           onSolicitudCreada={handleSolicitudCreada}
           colegiados={colegiados}
