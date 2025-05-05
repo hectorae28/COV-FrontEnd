@@ -114,8 +114,8 @@ export default function PagosColg({ props }) {
                 src={
                   metodo.logo_url
                     ? metodo.logo_url.startsWith("/")
-                      ? metodo.logo_url
-                      : `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                      ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                      : metodo.logo_url
                     : "/placeholder.svg"
                 }
                 alt={metodo.nombre}

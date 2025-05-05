@@ -31,6 +31,7 @@ export default function RegistroColegiados({
   const [exonerarPagos, setExonerarPagos] = useState(false);
   const [pagarLuego, setPagarLuego] = useState(false);
   const [tasaBcv, setTasaBcv] = useState(0);
+  const [error, setError] = useState(null)
   const [costoInscripcion, setCostoInscripcion] = useState(0);
   const [metodoPago, setMetodoPago] = useState([]);
   const initialState = {

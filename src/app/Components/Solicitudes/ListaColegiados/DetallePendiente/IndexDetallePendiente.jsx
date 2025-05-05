@@ -18,13 +18,11 @@ import DocumentViewerModal from "./DocumentViewerModal ";
 export default function DetallePendiente({ params, onVolver }) {
     const { data: session } = useSession();
     const pendienteId = params?.id || "p1";
-
     // Obtenemos funciones del store centralizado
     const {
         getColegiadoPendiente,
         updateColegiadoPendiente,
         approveRegistration,
-        initSession
     } = useDataListaColegiados();
 
     // Estados locales
@@ -64,11 +62,11 @@ export default function DetallePendiente({ params, onVolver }) {
     });
     const [agregarInstitucion, setAgregarInstitucion] = useState(false);
 
-    useEffect(() => {
-        if (session) {
-            initSession(session);
-        }
-    }, [session, initSession]);
+    // useEffect(() => {
+    //     if (session) {
+    //         initSession(session);
+    //     }
+    // }, [session, initSession]);
 
     // Cargar datos del pendiente
     useEffect(() => {
@@ -151,9 +149,9 @@ export default function DetallePendiente({ params, onVolver }) {
             setIsSubmitting(true);
 
             // Asegurarnos de que la sesión esté inicializada
-            if (session) {
-                initSession(session);
-            }
+            // if (session) {
+            //     initSession(session);
+            // }
 
             // Guardar cambios pendientes antes de aprobar
             if (cambiosPendientes) {

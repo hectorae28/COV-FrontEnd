@@ -99,7 +99,7 @@ export default function AcademicInfoSection({
 
                         <div className="bg-gray-50 p-3 rounded-md">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.universidad || "No especificado"}</p>
+                            <p className="font-medium text-gray-800">{datosAcademicos?.universidad.titulo || "No especificado"}</p>
                         </div>
 
                         <div className="bg-gray-50 p-3 rounded-md">

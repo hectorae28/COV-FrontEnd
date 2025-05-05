@@ -6,16 +6,17 @@ import { signOut, useSession } from "next-auth/react";
 import api from "@/api/api";
 import { fetchMe } from "@/api/endpoints/colegiado";
 
-export default function ProfileDropdown({ userInfo, session }) {
+export default function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const { data: sessionData, status } = useSession();
+  const [userInfo, setUserInfo] = useState(null)
 
   useEffect(() => {
     if(status === "loading") return;
     if (sessionData) {
           fetchMe(sessionData)
-            .then((response) => userInfo = response.data)
+            .then((response) => setUserInfo(response.data))
             .catch((error) => console.log(error));
         }
   }, [sessionData]);

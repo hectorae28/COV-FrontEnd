@@ -1,777 +1,749 @@
-"use client"
-import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado"
-import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente"
-import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado/RegistrarColegiadoModal"
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
-import { motion } from "framer-motion"
-import { ArrowUpDown, CheckCircle, ChevronRight, PlusCircle, Search, X, XCircle } from "lucide-react"
-import { useEffect, useState } from "react"
+"use client";
+import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado";
+import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
+import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado/RegistrarColegiadoModal";
+import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import { motion } from "framer-motion";
+import Pagination from "@/Components/Paginations";
+import {
+  ArrowUpDown,
+  CheckCircle,
+  ChevronRight,
+  ChevronLeft,
+  PlusCircle,
+  Search,
+  X,
+  XCircle,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 /**
  * Página principal de gestión de colegiados
  * Muestra dos tablas: pendientes y registrados, con filtros y funciones de búsqueda
  */
 export default function ListaColegiadosPage() {
-    // Estado del store de Zustand
-    const {
-        colegiados,
-        colegiadosPendientes,
-        addColegiadoPendiente,
-        addColegiado,
-        removeColegiadoPendiente,
-        getColegiado,
-        getColegiadoPendiente,
-        approveRegistration
-    } = useDataListaColegiados();
+  // Estado del store de Zustand
+  const {
+    colegiados,
+    colegiadosPendientes,
+    colegiadosPendientesPagination,
+    fetchPendientes,
+    loading,
+    getColegiado,
+    getColegiadoPendiente,
+  } = useDataListaColegiados();
 
-    // Estado local de UI
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [showRegistro, setShowRegistro] = useState(false);
-    const [vistaActual, setVistaActual] = useState("lista"); // lista, detalleColegiado, detallePendiente
-    const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null);
-    const [tabActivo, setTabActivo] = useState("pendientes");
+  // Estado local de UI
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showRegistro, setShowRegistro] = useState(false);
+  const [vistaActual, setVistaActual] = useState("lista"); // lista, detalleColegiado, detallePendiente
+  const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null);
+  const [tabActivo, setTabActivo] = useState("pendientes");
 
-    // Filtros adicionales para colegiados registrados
-    const [filtroEstado, setFiltroEstado] = useState("todos"); // Cambiado de filtroSolvencia a filtroEstado
-    const [filtroEspecialidad, setFiltroEspecialidad] = useState("todas");
+  // Filtros adicionales para colegiados registrados
+  const [filtroEstado, setFiltroEstado] = useState("todos"); // Cambiado de filtroSolvencia a filtroEstado
+  const [filtroEspecialidad, setFiltroEspecialidad] = useState("todas");
 
-    // Filtros para pendientes
-    const [filtroFecha, setFiltroFecha] = useState("todas");
-    const [filtroEstadoPendiente, setFiltroEstadoPendiente] = useState("todos"); // Cambiado de filtroPagosPendientes
-    const [registroExitoso, setRegistroExitoso] = useState(false);
-    const [aprobacionExitosa, setAprobacionExitosa] = useState(false);
+  // Filtros para pendientes
+  const [filtroFecha, setFiltroFecha] = useState("todas");
+  const [filtroEstadoPendiente, setFiltroEstadoPendiente] = useState("todos"); // Cambiado de filtroPagosPendientes
+  const [registroExitoso, setRegistroExitoso] = useState(false);
+  const [aprobacionExitosa, setAprobacionExitosa] = useState(false);
 
-    // Nuevos filtros de fecha para pendientes
-    const [fechaDesde, setFechaDesde] = useState("");
-    const [fechaHasta, setFechaHasta] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-    // Estado para ordenamiento - Aseguramos que por defecto sea desc (más reciente primero)
-    const [ordenFecha, setOrdenFecha] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
-    // Nuevo estado para ordenamiento de colegiados registrados
-    const [ordenFechaRegistrados, setOrdenFechaRegistrados] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
+  // Nuevos filtros de fecha para pendientes
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
 
-    // Simular carga inicial
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 800);
-        return () => clearTimeout(timer);
-    }, []);
+  // Estado para ordenamiento - Aseguramos que por defecto sea desc (más reciente primero)
+  const [ordenFecha, setOrdenFecha] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
+  // Nuevo estado para ordenamiento de colegiados registrados
+  const [ordenFechaRegistrados, setOrdenFechaRegistrados] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
+  const [recordsPerPage, setRecordsPerPage] = useState(10);
 
-    // Función auxiliar para convertir la fecha al formato Date
-    // Reemplaza la función parsearFecha actual con esta versión mejorada:
-    const parsearFecha = (fechaTexto) => {
-        if (!fechaTexto) return null;
+  useEffect(() => {
+    const filtros = {};
 
-        // Intentar primero con formato MM/DD/AAAA
-        if (fechaTexto.includes('/')) {
-            const partes = fechaTexto.split('/');
-            if (partes.length === 3) {
-                // Formato MM/DD/AAAA
-                const mes = parseInt(partes[0]) - 1;  // Restar 1 al mes
-                const dia = parseInt(partes[1]);
-                const año = parseInt(partes[2]);
-                const fecha = new Date(año, mes, dia);
-                // Verificar si la fecha es válida
-                if (!isNaN(fecha.getTime())) {
-                    return fecha;
-                }
-            }
-        }
-
-        // Intentar con formato ISO (AAAA-MM-DD)
-        if (fechaTexto.includes('-')) {
-            const fecha = new Date(fechaTexto);
-            if (!isNaN(fecha.getTime())) {
-                return fecha;
-            }
-        }
-
-        // Último intento: analizar como string de fecha
-        const fecha = new Date(fechaTexto);
-        if (!isNaN(fecha.getTime())) {
-            return fecha;
-        }
-
-        return null;
-    };
-
-    // Filtrar colegiados basado en búsqueda y filtros, y ordenar por fecha
-    const colegiadosFiltrados = colegiados
-        .filter(colegiado => {
-            const matchesSearch =
-                colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase());
-
-            // Filtrar por estado (solvencia y solicitudes)
-            const matchesEstado =
-                filtroEstado === "todos" ? true :
-                    filtroEstado === "solventes" ? colegiado.solvente :
-                        filtroEstado === "No Solvente" ? !colegiado.solvente :
-                            filtroEstado === "solicitudes" ? (colegiado.solicitudes && colegiado.solicitudes.length > 0) : false;
-
-            // Filtrar por especialidad
-            const matchesEspecialidad =
-                filtroEspecialidad === "todas" ? true :
-                    colegiado.especialidad === filtroEspecialidad;
-
-            return matchesSearch && matchesEstado && matchesEspecialidad;
-        })
-        // Ordenar por fecha de registro
-        .sort((a, b) => {
-            const fechaA = parsearFecha(a.fechaRegistro);
-            const fechaB = parsearFecha(b.fechaRegistro);
-
-            if (!fechaA || !fechaB) return 0;
-
-            return ordenFechaRegistrados === "desc"
-                ? fechaB - fechaA  // Más nuevo primero
-                : fechaA - fechaB;  // Más viejo primero
-        });
-
-    // Filtrar pendientes basado en búsqueda y filtros
-    const pendientesFiltrados = colegiadosPendientes
-        .filter(pendiente => {
-            // Búsqueda general
-            const matchesSearch =
-                pendiente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                pendiente.cedula.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                pendiente.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-            // Filtrar por estado (documentos completos, pagos pendientes)
-            const matchesEstadoPendiente =
-                filtroEstadoPendiente === "todos" ? true :
-                    filtroEstadoPendiente === "documentosCompletos" ? pendiente.documentosCompletos :
-                        filtroEstadoPendiente === "documentosIncompletos" ? !pendiente.documentosCompletos :
-                            filtroEstadoPendiente === "pagosPendientes" ? pendiente.pagosPendientes : false;
-
-            // Filtrar por fecha de solicitud (predefinidos)
-            // Reemplaza la parte del filtro de fechas en pendientesFiltrados:
-            // Filtrar por fecha de solicitud (predefinidos)
-            const fechaSolicitudDate = parsearFecha(pendiente.fechaSolicitud);
-            if (!fechaSolicitudDate) return false; // Si no se puede parsear, filtrar
-
-            const hoy = new Date();
-            const unaSemanaAtras = new Date();
-            unaSemanaAtras.setDate(hoy.getDate() - 7);
-
-            const unMesAtras = new Date();
-            unMesAtras.setDate(hoy.getDate() - 30);
-
-            let matchesFechaPredef = true;
-            if (filtroFecha !== "todas") {
-                if (filtroFecha === "semana") {
-                    matchesFechaPredef = fechaSolicitudDate >= unaSemanaAtras;
-                } else if (filtroFecha === "mes") {
-                    matchesFechaPredef = fechaSolicitudDate >= unMesAtras;
-                }
-            }
-
-            // Filtrar por rango de fechas personalizado
-            let matchesRangoFechas = true;
-            if (fechaDesde) {
-                const fechaDesdeObj = new Date(fechaDesde);
-                fechaDesdeObj.setHours(0, 0, 0, 0);
-                matchesRangoFechas = matchesRangoFechas && fechaSolicitudDate >= fechaDesdeObj;
-            }
-            if (fechaHasta) {
-                const fechaHastaObj = new Date(fechaHasta);
-                fechaHastaObj.setHours(23, 59, 59, 999);
-                matchesRangoFechas = matchesRangoFechas && fechaSolicitudDate <= fechaHastaObj;
-            }
-
-
-            return matchesSearch && matchesEstadoPendiente && matchesFechaPredef && matchesRangoFechas;
-        })
-        // Ordenar por fecha - asegurando que por defecto sea "desc" para que aparezcan primero los más recientes
-        .sort((a, b) => {
-            const fechaA = parsearFecha(a.fechaSolicitud);
-            const fechaB = parsearFecha(b.fechaSolicitud);
-
-            if (!fechaA || !fechaB) return 0;
-
-            return ordenFecha === "desc"
-                ? fechaB - fechaA  // Más nuevo primero
-                : fechaA - fechaB;  // Más viejo primero
-        });
-
-    // Handlers para navegación y acciones
-    const verDetalleColegiado = (id) => {
-        setColegiadoSeleccionadoId(id);
-        setVistaActual("detalleColegiado");
-    };
-
-    const verDetallePendiente = (id) => {
-        setColegiadoSeleccionadoId(id);
-        setVistaActual("detallePendiente");
-    };
-
-    const volverALista = () => {
-        setVistaActual("lista");
-        setColegiadoSeleccionadoId(null);
-    };
-
-    // Manejador para el registro exitoso de un nuevo colegiado pendiente
-    const handleRegistroExitoso = () => {
-        setShowRegistro(false);
-        setRegistroExitoso(true);
-        setTimeout(() => {
-            setRegistroExitoso(false);
-        }, 3000);
-    };
-
-    // Manejador para la aprobación de un colegiado pendiente
-    const handleAprobarPendiente = (resultado) => {
-        // Siempre volver a la lista primero, para evitar problemas de estado
-        volverALista();
-
-        // Comprobar si fue una aprobación exitosa
-        if (resultado && resultado.aprobado === true) {
-            // Solo mostrar notificación si se aprobó
-            setAprobacionExitosa(true);
-            setTimeout(() => setAprobacionExitosa(false), 3000);
-
-            // Cambiar al tab de registrados
-            setTabActivo("registrados");
-
-        }
-    };
-
-    // Alternar orden de fecha para pendientes
-    const toggleOrdenFecha = () => {
-        setOrdenFecha(prev => prev === "desc" ? "asc" : "desc");
-    };
-
-    // Alternar orden de fecha para colegiados registrados
-    const toggleOrdenFechaRegistrados = () => {
-        setOrdenFechaRegistrados(prev => prev === "desc" ? "asc" : "desc");
-    };
-
-    // Renderizar vista basada en el estado actual
-    if (vistaActual === "detalleColegiado") {
-        const colegiadoActual = getColegiado(colegiadoSeleccionadoId);
-        return (
-            <DetalleColegiado
-                params={{ id: colegiadoSeleccionadoId }}
-                onVolver={volverALista}
-                colegiado={colegiadoActual}
-            />
-        );
+    if (filtroFecha !== "todas") {
+      if (filtroFecha === "semana") {
+        const unaSemanAtras = new Date();
+        unaSemanAtras.setDate(unaSemanAtras.getDate() - 7);
+        filtros.fecha_solicitud_desde = unaSemanAtras.toISOString().split('T')[0];
+      } else if (filtroFecha === "mes") {
+        const unMesAtras = new Date();
+        unMesAtras.setMonth(unMesAtras.getMonth() - 1);
+        filtros.fecha_solicitud_desde = unMesAtras.toISOString().split('T')[0];
+      }
     }
 
-    if (vistaActual === "detallePendiente") {
-        const pendienteActual = getColegiadoPendiente(colegiadoSeleccionadoId);
-        return (
-            <DetallePendiente
-                params={{ id: colegiadoSeleccionadoId }}
-                onVolver={handleAprobarPendiente}
-                pendiente={pendienteActual}
-            />
-        );
-    }
+    if (fechaDesde) filtros.fecha_solicitud_desde = fechaDesde;
+    if (fechaHasta) filtros.fecha_solicitud_hasta = fechaHasta;
 
-    // Vista principal de la lista
+    if (ordenFecha) {
+      filtros.ordering = ordenFecha === "desc" ? "-created_at" : "created_at";
+    }
+    if (filtroEstadoPendiente !== "todos") {
+      if (filtroEstadoPendiente === "documentosIncompletos") {
+        filtros.documentos_completos = "false";
+      } else if (filtroEstadoPendiente === "pagosPendientes") {
+        filtros.tiene_pago = "false";
+      }
+    }
+    fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros)
+  }, [currentPage, recordsPerPage, searchTerm, filtroEstadoPendiente, filtroFecha, fechaDesde, fechaHasta, ordenFecha]);
+
+  const verDetalleColegiado = (id) => {
+    setColegiadoSeleccionadoId(id);
+    setVistaActual("detalleColegiado");
+  };
+
+  const verDetallePendiente = (id) => {
+    setColegiadoSeleccionadoId(id);
+    setVistaActual("detallePendiente");
+  };
+
+  const volverALista = () => {
+    setVistaActual("lista");
+    setColegiadoSeleccionadoId(null);
+  };
+
+  // Manejador para el registro exitoso de un nuevo colegiado pendiente
+  const handleRegistroExitoso = () => {
+    setShowRegistro(false);
+    setRegistroExitoso(true);
+  };
+
+  // Manejador para la aprobación de un colegiado pendiente
+  const handleAprobarPendiente = (resultado) => {
+    // Siempre volver a la lista primero, para evitar problemas de estado
+    volverALista();
+
+    // Comprobar si fue una aprobación exitosa
+    if (resultado && resultado.aprobado === true) {
+      // Solo mostrar notificación si se aprobó
+      setAprobacionExitosa(true);
+      setTimeout(() => setAprobacionExitosa(false), 3000);
+
+      // Cambiar al tab de registrados
+      setTabActivo("registrados");
+    }
+  };
+
+  // Alternar orden de fecha para pendientes
+  const toggleOrdenFecha = () => {
+    setOrdenFecha((prev) => (prev === "desc" ? "asc" : "desc"));
+  };
+
+  // Alternar orden de fecha para colegiados registrados
+  const toggleOrdenFechaRegistrados = () => {
+    setOrdenFechaRegistrados((prev) => (prev === "desc" ? "asc" : "desc"));
+  };
+
+  // Renderizar vista basada en el estado actual
+  if (vistaActual === "detalleColegiado") {
+    const colegiadoActual = getColegiado(colegiadoSeleccionadoId);
     return (
-        <div className="w-full px-4 md:px-10 py-10 md:py-12">
-            {/* Header con título */}
-            <motion.div
-                initial={{ opacity: 0, y: -30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
-                className="text-center mb-8 md:mb-10 mt-16 md:mt-22"
-            >
-                <motion.h1
-                    className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
-                >
-                    Lista de colegiados
-                </motion.h1>
-                <motion.p
-                    className="mt-4 max-w-full mx-auto text-gray-600 text-base md:text-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.7, delay: 0.4 }}
-                >
-                    Administre los colegiados registrados y apruebe nuevas solicitudes
-                </motion.p>
-            </motion.div>
-
-            {/* Notificaciones de éxito */}
-            {registroExitoso && (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-green-100 text-green-800 p-4 rounded-md mb-6 flex items-start justify-between shadow-sm"
-                >
-                    <div className="flex items-center">
-                        <CheckCircle size={20} className="mr-2 flex-shrink-0" />
-                        <span>El colegiado ha sido registrado exitosamente y está pendiente de aprobación.</span>
-                    </div>
-                    <button
-                        onClick={() => setRegistroExitoso(false)}
-                        className="text-green-700 hover:bg-green-200 p-1 rounded-full transition-colors"
-                    >
-                        <X size={18} />
-                    </button>
-                </motion.div>
-            )}
-            {aprobacionExitosa && (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-green-100 text-green-800 p-4 rounded-md mb-6 flex items-start justify-between shadow-sm"
-                >
-                    <div className="flex items-center">
-                        <CheckCircle size={20} className="mr-2 flex-shrink-0" />
-                        <span>La solicitud ha sido aprobada exitosamente. El colegiado ha sido registrado.</span>
-                    </div>
-                    <button
-                        onClick={() => setAprobacionExitosa(false)}
-                        className="text-green-700 hover:bg-green-200 p-1 rounded-full transition-colors"
-                    >
-                        <X size={18} />
-                    </button>
-                </motion.div>
-            )}
-
-            {/* Barra de acciones: búsqueda y botón de nuevo registro */}
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <div className="flex-1 w-full md:w-auto">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Buscar por nombre, cédula o registro..."
-                            className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                    </div>
-                </div>
-                <div className="flex gap-4 w-full md:w-auto">
-                    <button
-                        onClick={() => setShowRegistro(true)}
-                        className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
-                    >
-                        <PlusCircle size={20} />
-                        <span>Registrar nuevo</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Tabs para alternar entre colegiados y pendientes */}
-            <div className="border-b border-gray-200 mb-6">
-                <nav className="flex gap-8">
-                    <button
-                        className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${tabActivo === "pendientes"
-                            ? 'border-[#C40180] text-[#C40180]'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                            } transition-colors`}
-                        onClick={() => {
-                            // Solo cambiar el tab, sin hacer cambios adicionales
-                            setTabActivo("pendientes");
-                            // No hacer nada más que mostrar el tab correcto
-                        }}
-                    >
-                        Pendientes por aprobación ({colegiadosPendientes.length})
-                    </button>
-                    <button
-                        className={`py-4 px-1 cursor-pointer font-medium text-sm sm:text-base border-b-2 ${tabActivo === "registrados"
-                            ? "border-[#C40180] text-[#C40180]"
-                            : "border-transparent text-gray-500 hover:text-gray-700"
-                            } transition-colors`}
-                        onClick={() => setTabActivo("registrados")}
-                    >
-                        Colegiados registrados ({colegiados.length})
-                    </button>
-                </nav>
-            </div>
-
-            {/* Filtros adicionales para colegiados registrados */}
-            {tabActivo === "registrados" && (
-                <div className="mb-6">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
-                    <div className="flex flex-wrap gap-3">
-                        <div>
-                            <p className="text-xs text-gray-500 mb-1">Estado</p>
-                            <div className="flex gap-2">
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "todos"
-                                        ? "bg-purple-100 text-purple-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroEstado("todos")}
-                                >
-                                    Todos
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "solventes"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroEstado("solventes")}
-                                >
-                                    Solventes
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "No Solvente"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroEstado("No Solvente")}
-                                >
-                                    No Solventes
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "solicitudes"
-                                        ? "bg-blue-100 text-blue-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroEstado("solicitudes")}
-                                >
-                                    Solicitudes
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-500 mb-1">Especialidad</p>
-                            <select
-                                value={filtroEspecialidad}
-                                onChange={(e) => setFiltroEspecialidad(e.target.value)}
-                                className="px-4 py-2 rounded-lg text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            >
-                                <option value="todas">Todas las especialidades</option>
-                                <option value="Odontología general">Odontología general</option>
-                                <option value="Ortodoncia">Ortodoncia</option>
-                                <option value="Endodoncia">Endodoncia</option>
-                                <option value="Periodoncia">Periodoncia</option>
-                                <option value="Odontopediatría">Odontopediatría</option>
-                                <option value="Cirugía maxilofacial">Cirugía maxilofacial</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Filtros para pendientes */}
-            {tabActivo === "pendientes" && (
-                <div className="mb-6">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
-                    <div className="flex flex-wrap gap-5">
-                        <div>
-                            <p className="text-xs text-gray-500 mb-1">Fecha de solicitud</p>
-                            <div className="flex gap-2">
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "todas"
-                                        ? "bg-purple-100 text-purple-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroFecha("todas")}
-                                >
-                                    Todas
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "semana"
-                                        ? "bg-blue-100 text-blue-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroFecha("semana")}
-                                >
-                                    Última semana
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "mes"
-                                        ? "bg-indigo-100 text-indigo-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroFecha("mes")}
-                                >
-                                    Último mes
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Nuevo filtro de rango de fechas */}
-                        <div>
-                            <div className="flex gap-2 items-center">
-                                <div>
-                                    <label className="text-xs text-gray-500 block mb-1">Desde</label>
-                                    <input
-                                        type="date"
-                                        value={fechaDesde}
-                                        onChange={(e) => setFechaDesde(e.target.value)}
-                                        className="px-2 py-1 border rounded text-sm w-full"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500 block mb-1">Hasta</label>
-                                    <input
-                                        type="date"
-                                        value={fechaHasta}
-                                        onChange={(e) => setFechaHasta(e.target.value)}
-                                        className="px-2 py-1 border rounded text-sm w-full"
-                                    />
-                                </div>
-                                {(fechaDesde || fechaHasta) && (
-                                    <button
-                                        onClick={() => {
-                                            setFechaDesde("");
-                                            setFechaHasta("");
-                                        }}
-                                        className="mt-4 text-gray-500 hover:text-red-500"
-                                        title="Limpiar fechas"
-                                    >
-                                        <X size={18} />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        <div>
-                            <p className="text-xs text-gray-500 mb-1">Estado</p>
-                            <div className="flex gap-2">
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "todos"
-                                        ? "bg-purple-100 text-purple-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroEstadoPendiente("todos")}
-                                >
-                                    Todos
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "documentosIncompletos"
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroEstadoPendiente("documentosIncompletos")}
-                                >
-                                    Documentos Incompletos
-                                </button>
-                                <button
-                                    className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "pagosPendientes"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        }`}
-                                    onClick={() => setFiltroEstadoPendiente("pagosPendientes")}
-                                >
-                                    Pagos Pendientes
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Estado de carga */}
-            {isLoading ? (
-                <div className="flex justify-center items-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
-                </div>
-            ) : (
-                <>
-                    {/* Lista de colegiados o pendientes según el tab seleccionado */}
-                    {tabActivo === "registrados" ? (
-                        // TABLA DE COLEGIADOS REGISTRADOS
-                        <div>
-                            {colegiadosFiltrados.length === 0 ? (
-                                <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
-                                    <div className="flex justify-center mb-4">
-                                        <Search size={48} className="text-gray-300" />
-                                    </div>
-                                    <h3 className="text-lg font-medium text-gray-500">No se encontraron colegiados</h3>
-                                    <p className="text-gray-400 mt-1">No hay registros que coincidan con tu búsqueda</p>
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Nombre
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                                    Cédula
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                                    N° Registro
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                                    <button
-                                                        className="flex items-center justify-center gap-1 w-full"
-                                                        onClick={toggleOrdenFechaRegistrados}
-                                                    >
-                                                        Fecha Registro
-                                                        <ArrowUpDown
-                                                            size={14}
-                                                            className={`transition-transform ${ordenFechaRegistrados === "desc" ? "text-purple-600" : "text-gray-400 rotate-180"}`}
-                                                        />
-                                                    </button>
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                                                    Especialidad
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Estado
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Acciones
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {colegiadosFiltrados.map((colegiado) => (
-                                                <tr key={colegiado.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <div className="font-medium text-gray-900">{colegiado.nombre || "-"}</div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                                                        {colegiado.cedula || "-"}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                                        {colegiado.numeroRegistro || "-"}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                                        {colegiado.fechaRegistro || "-"}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
-                                                        {colegiado.especialidad || "-"}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colegiado.solvente
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-red-100 text-red-800'
-                                                            }`}>
-                                                            {colegiado.solvente ? 'Solvente' : 'No Solvente'}
-                                                        </span>
-                                                        {colegiado.solicitudes && colegiado.solicitudes.length > 0 && (
-                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">
-                                                                Solicitudes
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                        <button
-                                                            onClick={() => verDetalleColegiado(colegiado.id)}
-                                                            className="text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto"
-                                                        >
-                                                            Ver detalles
-                                                            <ChevronRight size={16} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        // TABLA DE COLEGIADOS PENDIENTES
-                        <div>
-                            {pendientesFiltrados.length === 0 ? (
-                                <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
-                                    <div className="flex justify-center mb-4">
-                                        <CheckCircle size={48} className="text-gray-300" />
-                                    </div>
-                                    <h3 className="text-lg font-medium text-gray-500">No hay solicitudes pendientes</h3>
-                                    <p className="text-gray-400 mt-1">Todas las solicitudes han sido procesadas</p>
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Nombre
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                                    Cédula
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                                    <button
-                                                        className="flex items-center justify-center gap-1 w-full"
-                                                        onClick={toggleOrdenFecha}
-                                                    >
-                                                        Fecha solicitud
-                                                        <ArrowUpDown
-                                                            size={14}
-                                                            className={`transition-transform ${ordenFecha === "desc" ? "text-purple-600" : "text-gray-400 rotate-180"}`}
-                                                        />
-                                                    </button>
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Estado
-                                                </th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Acciones
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {pendientesFiltrados.map((pendiente) => (
-                                                <tr key={pendiente.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <div className="font-medium text-gray-900">{pendiente.nombre}</div>
-                                                        <div className="text-sm text-gray-500 md:hidden">{pendiente.cedula}</div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                                                        {pendiente.cedula}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                                        {pendiente.fechaSolicitud}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <div className="flex flex-col sm:flex-row gap-1 justify-center items-center">
-                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${pendiente.documentosCompletos
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-yellow-100 text-yellow-800'
-                                                                }`}>
-                                                                {pendiente.documentosCompletos
-                                                                    ? <><CheckCircle size={12} /> Documentos Completos</>
-                                                                    : <><XCircle size={12} /> Documentos Incompletos</>}
-                                                            </span>
-
-                                                            {pendiente.pagosPendientes && (
-                                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
-                                                                    <XCircle size={12} /> Pagos Pendientes
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                        <button
-                                                            onClick={() => verDetallePendiente(pendiente.id)}
-                                                            className="text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto"
-                                                        >
-                                                            Revisar
-                                                            <ChevronRight size={16} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </>
-            )}
-
-            {/* Modal para registrar nuevo colegiado */}
-            {showRegistro && (
-                <RegistroColegiados
-                    isAdmin={true}
-                    onClose={() => setShowRegistro(false)}
-                    onRegistroExitoso={handleRegistroExitoso}
-                />
-            )}
-        </div>
+      <DetalleColegiado
+        params={{ id: colegiadoSeleccionadoId }}
+        onVolver={volverALista}
+        colegiado={colegiadoActual}
+      />
     );
+  }
+
+  if (vistaActual === "detallePendiente") {
+    const pendienteActual = getColegiadoPendiente(colegiadoSeleccionadoId);
+    return (
+      <DetallePendiente
+        params={{ id: colegiadoSeleccionadoId }}
+        onVolver={handleAprobarPendiente}
+        pendiente={pendienteActual}
+      />
+    );
+  }
+
+  // Vista principal de la lista
+  return (
+    <div className="w-full px-4 md:px-10 py-10 md:py-12">
+      {/* Header con título */}
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="text-center mb-8 md:mb-10 mt-16 md:mt-22"
+      >
+        <motion.h1
+          className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            duration: 0.8,
+            delay: 0.2,
+            type: "spring",
+            stiffness: 100,
+          }}
+        >
+          Lista de colegiados
+        </motion.h1>
+        <motion.p
+          className="mt-4 max-w-full mx-auto text-gray-600 text-base md:text-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4 }}
+        >
+          Administre los colegiados registrados y apruebe nuevas solicitudes
+        </motion.p>
+      </motion.div>
+
+      {/* Notificaciones de éxito */}
+      {registroExitoso && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-green-100 text-green-800 p-4 rounded-md mb-6 flex items-start justify-between shadow-sm"
+        >
+          <div className="flex items-center">
+            <CheckCircle size={20} className="mr-2 flex-shrink-0" />
+            <span>
+              El colegiado ha sido registrado exitosamente y está pendiente de
+              aprobación.
+            </span>
+          </div>
+          <button
+            onClick={() => setRegistroExitoso(false)}
+            className="text-green-700 hover:bg-green-200 p-1 rounded-full transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </motion.div>
+      )}
+      {aprobacionExitosa && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-green-100 text-green-800 p-4 rounded-md mb-6 flex items-start justify-between shadow-sm"
+        >
+          <div className="flex items-center">
+            <CheckCircle size={20} className="mr-2 flex-shrink-0" />
+            <span>
+              La solicitud ha sido aprobada exitosamente. El colegiado ha sido
+              registrado.
+            </span>
+          </div>
+          <button
+            onClick={() => setAprobacionExitosa(false)}
+            className="text-green-700 hover:bg-green-200 p-1 rounded-full transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </motion.div>
+      )}
+
+      {/* Barra de acciones: búsqueda y botón de nuevo registro */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div className="flex-1 w-full md:w-auto">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar por nombre, cédula o registro..."
+              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+          </div>
+        </div>
+        <div className="flex gap-4 w-full md:w-auto">
+          <button
+            onClick={() => setShowRegistro(true)}
+            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
+          >
+            <PlusCircle size={20} />
+            <span>Registrar nuevo</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs para alternar entre colegiados y pendientes */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="flex gap-8">
+          <button
+            className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${tabActivo === "pendientes"
+              ? "border-[#C40180] text-[#C40180]"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+              } transition-colors`}
+            onClick={() => {
+              // Solo cambiar el tab, sin hacer cambios adicionales
+              setTabActivo("pendientes");
+              // No hacer nada más que mostrar el tab correcto
+            }}
+          >
+            Pendientes por aprobación ({colegiadosPendientes.length})
+          </button>
+          <button
+            className={`py-4 px-1 cursor-pointer font-medium text-sm sm:text-base border-b-2 ${tabActivo === "registrados"
+              ? "border-[#C40180] text-[#C40180]"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+              } transition-colors`}
+            onClick={() => setTabActivo("registrados")}
+          >
+            Colegiados registrados ({colegiados.length})
+          </button>
+        </nav>
+      </div>
+
+      {/* Filtros adicionales para colegiados registrados */}
+      {tabActivo === "registrados" && (
+        <div className="mb-6">
+          <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
+          <div className="flex flex-wrap gap-3">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Estado</p>
+              <div className="flex gap-2">
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "todos"
+                    ? "bg-purple-100 text-purple-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroEstado("todos")}
+                >
+                  Todos
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "solventes"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroEstado("solventes")}
+                >
+                  Solventes
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "No Solvente"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroEstado("No Solvente")}
+                >
+                  No Solventes
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "solicitudes"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroEstado("solicitudes")}
+                >
+                  Solicitudes
+                </button>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Especialidad</p>
+              <select
+                value={filtroEspecialidad}
+                onChange={(e) => setFiltroEspecialidad(e.target.value)}
+                className="px-4 py-2 rounded-lg text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="todas">Todas las especialidades</option>
+                <option value="Odontología general">Odontología general</option>
+                <option value="Ortodoncia">Ortodoncia</option>
+                <option value="Endodoncia">Endodoncia</option>
+                <option value="Periodoncia">Periodoncia</option>
+                <option value="Odontopediatría">Odontopediatría</option>
+                <option value="Cirugía maxilofacial">
+                  Cirugía maxilofacial
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filtros para pendientes */}
+      {tabActivo === "pendientes" && (
+        <div className="mb-6">
+          <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
+          <div className="flex flex-wrap gap-5">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Fecha de solicitud</p>
+              <div className="flex gap-2">
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "todas"
+                    ? "bg-purple-100 text-purple-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroFecha("todas")}
+                >
+                  Todas
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "semana"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroFecha("semana")}
+                >
+                  Última semana
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "mes"
+                    ? "bg-indigo-100 text-indigo-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroFecha("mes")}
+                >
+                  Último mes
+                </button>
+              </div>
+            </div>
+
+            {/* Nuevo filtro de rango de fechas */}
+            <div>
+              <div className="flex gap-2 items-center">
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">
+                    Desde
+                  </label>
+                  <input
+                    type="date"
+                    value={fechaDesde}
+                    onChange={(e) => setFechaDesde(e.target.value)}
+                    className="px-2 py-1 border rounded text-sm w-full"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">
+                    Hasta
+                  </label>
+                  <input
+                    type="date"
+                    value={fechaHasta}
+                    onChange={(e) => setFechaHasta(e.target.value)}
+                    className="px-2 py-1 border rounded text-sm w-full"
+                  />
+                </div>
+                {(fechaDesde || fechaHasta) && (
+                  <button
+                    onClick={() => {
+                      setFechaDesde("");
+                      setFechaHasta("");
+                    }}
+                    className="mt-4 text-gray-500 hover:text-red-500"
+                    title="Limpiar fechas"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Estado</p>
+              <div className="flex gap-2">
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "todos"
+                    ? "bg-purple-100 text-purple-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroEstadoPendiente("todos")}
+                >
+                  Todos
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "documentosIncompletos"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() =>
+                    setFiltroEstadoPendiente("documentosIncompletos")
+                  }
+                >
+                  Documentos Incompletos
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "pagosPendientes"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroEstadoPendiente("pagosPendientes")}
+                >
+                  Pagos Pendientes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Estado de carga */}
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
+        </div>
+      ) : (
+        <>
+          {/* Lista de colegiados o pendientes según el tab seleccionado */}
+          {tabActivo === "registrados" ? (
+            // TABLA DE COLEGIADOS REGISTRADOS
+            <div>
+              {colegiados.length === 0 ? (
+                <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex justify-center mb-4">
+                    <Search size={48} className="text-gray-300" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-500">
+                    No se encontraron colegiados
+                  </h3>
+                  <p className="text-gray-400 mt-1">
+                    No hay registros que coincidan con tu búsqueda
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Nombre
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                          Cédula
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                          N° Registro
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                          <button
+                            className="flex items-center justify-center gap-1 w-full"
+                            onClick={toggleOrdenFechaRegistrados}
+                          >
+                            Fecha Registro
+                            <ArrowUpDown
+                              size={14}
+                              className={`transition-transform ${ordenFechaRegistrados === "desc"
+                                ? "text-purple-600"
+                                : "text-gray-400 rotate-180"
+                                }`}
+                            />
+                          </button>
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                          Especialidad
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estado
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {colegiados.map((colegiado) => (
+                        <tr key={colegiado.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="font-medium text-gray-900">
+                              {colegiado.nombre || "-"}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
+                            {colegiado.cedula || "-"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
+                            {colegiado.numeroRegistro || "-"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
+                            {colegiado.fechaRegistro || "-"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
+                            {colegiado.especialidad || "-"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colegiado.solvente
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                                }`}
+                            >
+                              {colegiado.solvente ? "Solvente" : "No Solvente"}
+                            </span>
+                            {colegiado.solicitudes &&
+                              colegiado.solicitudes.length > 0 && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">
+                                  Solicitudes
+                                </span>
+                              )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                            <button
+                              onClick={() => verDetalleColegiado(colegiado.id)}
+                              className="text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto"
+                            >
+                              Ver detalles
+                              <ChevronRight size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : (
+            // TABLA DE COLEGIADOS PENDIENTES
+            <div>
+              {colegiadosPendientes.length === 0 ? (
+                <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex justify-center mb-4">
+                    <CheckCircle size={48} className="text-gray-300" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-500">
+                    No hay solicitudes pendientes
+                  </h3>
+                  <p className="text-gray-400 mt-1">
+                    Todas las solicitudes han sido procesadas
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Nombre
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                          Cédula
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                          <button
+                            className="flex items-center justify-center gap-1 w-full"
+                            onClick={toggleOrdenFecha}
+                          >
+                            Fecha solicitud
+                            <ArrowUpDown
+                              size={14}
+                              className={`transition-transform ${ordenFecha === "desc"
+                                ? "text-purple-600"
+                                : "text-gray-400 rotate-180"
+                                }`}
+                            />
+                          </button>
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estado
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {colegiadosPendientes.map((pendiente, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="font-medium text-gray-900">
+                              {pendiente.persona.nombre}
+                            </div>
+                            <div className="text-sm text-gray-500 md:hidden">
+                              {pendiente.persona.cedula}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
+                            {pendiente.persona.identificacion}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
+                            {pendiente.created_at
+                              ? (() => {
+                                const fecha = new Date(pendiente.created_at);
+                                const dia = String(fecha.getDate()).padStart(
+                                  2,
+                                  "0"
+                                );
+                                const mes = String(
+                                  fecha.getMonth() + 1
+                                ).padStart(2, "0"); // Los meses empiezan en 0
+                                const año = fecha.getFullYear();
+                                const horas = String(
+                                  fecha.getHours()
+                                ).padStart(2, "0");
+                                const minutos = String(
+                                  fecha.getMinutes()
+                                ).padStart(2, "0");
+                                const segundos = String(
+                                  fecha.getSeconds()
+                                ).padStart(2, "0");
+                                return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
+                              })()
+                              : "-"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="flex flex-col sm:flex-row gap-1 justify-center items-center">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${!pendiente.archivos_faltantes.tiene_faltantes
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                              >
+                                {!pendiente.archivos_faltantes.tiene_faltantes ? (
+                                  <>
+                                    <CheckCircle size={12} /> Documentos
+                                    Completos
+                                  </>
+                                ) : (
+                                  <>
+                                    <XCircle size={12} /> Documentos Incompletos
+                                  </>
+                                )}
+                              </span>
+
+                              {pendiente.pago === null && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
+                                  <XCircle size={12} /> Pagos Pendientes
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                            <button
+                              onClick={() => verDetallePendiente(pendiente.id)}
+                              className="text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto"
+                            >
+                              Revisar
+                              <ChevronRight size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil((colegiadosPendientesPagination.count || 0) / recordsPerPage)}
+                    onPageChange={setCurrentPage}
+                    onNextPage={() => setCurrentPage((prev) => prev + 1)}
+                    onPrevPage={() => setCurrentPage((prev) => prev - 1)}
+                    isNextDisabled={!colegiadosPendientesPagination.next}
+                    isPrevDisabled={!colegiadosPendientesPagination.previous}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Modal para registrar nuevo colegiado */}
+      {showRegistro && (
+        <RegistroColegiados
+          isAdmin={true}
+          onClose={() => setShowRegistro(false)}
+          onRegistroExitoso={handleRegistroExitoso}
+        />
+      )}
+    </div>
+  );
 }
