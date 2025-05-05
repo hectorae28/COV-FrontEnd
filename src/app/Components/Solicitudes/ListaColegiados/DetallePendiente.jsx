@@ -1,5 +1,5 @@
 // Import and re-export all components
-import DetallePendiente from './DetallePendiente/IndexDetallePendiente';
+import DetallePendiente from './DetallePendiente/DetallePendienteIndex';
 import PersonalInfoSection from './DetallePendiente/PersonalInfoSection ';
 import AcademicInfoSection from './DetallePendiente/AcademicInfoSection ';
 import InstitutionsSection from './DetallePendiente/InstitutionsSection ';

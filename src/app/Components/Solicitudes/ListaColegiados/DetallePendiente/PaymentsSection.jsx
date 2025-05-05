@@ -1,21 +1,33 @@
 "use client"
 
-import { FileText, Eye, RefreshCcw, AlertCircle, Upload, X } from "lucide-react"
+import { Eye, CreditCard, CheckCircle, AlertCircle, Upload, RefreshCcw, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useRef } from "react"
 
-export default function DocumentsSection({ documentosRequeridos, handleVerDocumento, updateDocumento }) {
+export default function PaymentsSection({ documentosRequeridos, handleVerDocumento, pendiente, updateDocumento }) {
     const [documentoParaSubir, setDocumentoParaSubir] = useState(null)
     const [selectedFile, setSelectedFile] = useState(null)
     const [isUploading, setIsUploading] = useState(false)
     const [error, setError] = useState("")
     const fileInputRef = useRef(null)
 
-    // Filtrar documentos para excluir comprobantes de pago
-    const documentosRegulares =
+    // Filtrar solo los comprobantes de pago
+    const comprobantesPago =
         documentosRequeridos?.filter(
-            (doc) => !doc.id.includes("comprobante_pago") && !doc.nombre.toLowerCase().includes("comprobante"),
+            (doc) => doc.id.includes("comprobante_pago") || doc.nombre.toLowerCase().includes("comprobante"),
         ) || []
+
+    // Función para determinar si un archivo está exonerado
+    const isExonerado = (documento) => {
+        return (
+            (documento && documento.archivo && documento.archivo.toLowerCase().includes("exonerado")) ||
+            (documento &&
+                documento.id.includes("comprobante_pago") &&
+                pendiente &&
+                pendiente.exoneracionPagos &&
+                pendiente.exoneracionPagos.fecha)
+        )
+    }
 
     // Función para reemplazar documento
     const handleReemplazarDocumento = (documento) => {
@@ -123,88 +135,151 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.6 }}
             className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
         >
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
                 <div className="flex items-center mb-5 md:mb-0 border-b md:border-b-0 pb-3 md:pb-0">
-                    <FileText size={20} className="text-[#C40180] mr-2" />
+                    <CreditCard size={20} className="text-[#C40180] mr-2" />
                     <div>
-                        <h2 className="text-lg font-semibold text-gray-900">Documentos</h2>
-                        <p className="text-sm text-gray-500">Documentación obligatoria del colegiado</p>
+                        <h2 className="text-lg font-semibold text-gray-900">Comprobantes de Pago</h2>
+                        <p className="text-sm text-gray-500">Comprobantes de inscripción y otros pagos</p>
                     </div>
                 </div>
             </div>
 
+            {pendiente && pendiente.exoneracionPagos && pendiente.exoneracionPagos.fecha && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-start">
+                            <CheckCircle size={20} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <div>
+                                <h3 className="font-medium text-green-800">Pagos exonerados</h3>
+                                <p className="text-sm text-green-700 mt-1">
+                                    Los pagos han sido exonerados el {new Date(pendiente.exoneracionPagos.fecha).toLocaleDateString()} por{" "}
+                                    {pendiente.exoneracionPagos.usuario
+                                        ? `${pendiente.exoneracionPagos.usuario.username || pendiente.exoneracionPagos.usuario.name || pendiente.exoneracionPagos.usuario.email}`
+                                        : "Administración COV"}
+                                </p>
+                                {pendiente.exoneracionPagos.motivo && (
+                                    <p className="text-xs text-green-600 mt-1">Motivo: {pendiente.exoneracionPagos.motivo}</p>
+                                )}
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => {
+                                // Crear un documento virtual para ver la exoneración
+                                const docExoneracion = {
+                                    id: "exoneracion_pago",
+                                    nombre: "Exoneración de Pago",
+                                    descripcion: "Documento de exoneración de pago",
+                                    archivo: "exonerado.pdf",
+                                }
+                                handleVerDocumento(docExoneracion)
+                            }}
+                            className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                            title="Ver detalles de exoneración"
+                        >
+                            <Eye size={18} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {documentosRegulares && documentosRegulares.length > 0 ? (
-                    documentosRegulares.map((documento) => (
+                {comprobantesPago && comprobantesPago.length > 0 && !pendiente?.exoneracionPagos?.fecha ? (
+                    comprobantesPago.map((documento) => (
                         <div
                             key={documento.id}
-                            className={`border rounded-lg ${documento.archivo ? "border-gray-200 hover:border-[#C40180]" : "border-red-200 bg-red-50"
+                            className={`border rounded-lg ${isExonerado(documento)
+                                    ? "border-green-200 bg-green-50"
+                                    : documento.archivo
+                                        ? "border-gray-200 hover:border-[#C40180]"
+                                        : "border-red-200 bg-red-50"
                                 } hover:shadow-md transition-all duration-200`}
                         >
                             <div className="p-4">
                                 <div className="flex justify-between items-start">
                                     <div className="flex-1">
                                         <div className="flex items-center mb-2">
-                                            <div className={`${documento.archivo ? "bg-[#F9E6F3]" : "bg-red-100"} p-2 rounded-md mr-3`}>
-                                                <FileText className={documento.archivo ? "text-[#C40180]" : "text-red-500"} size={20} />
+                                            <div
+                                                className={`${isExonerado(documento) ? "bg-green-100" : documento.archivo ? "bg-[#F9E6F3]" : "bg-red-100"
+                                                    } p-2 rounded-md mr-3`}
+                                            >
+                                                {isExonerado(documento) ? (
+                                                    <CheckCircle className="text-green-500" size={20} />
+                                                ) : (
+                                                    <CreditCard className={documento.archivo ? "text-[#C40180]" : "text-red-500"} size={20} />
+                                                )}
                                             </div>
                                             <div>
                                                 <h3 className="font-medium text-gray-900 flex items-center">
-                                                    {documento.nombre}
-                                                    {documento.requerido && <span className="text-red-500 ml-1">*</span>}
+                                                    {isExonerado(documento) ? "Exoneración de Pago" : documento.nombre}
+                                                    {documento.requerido && !isExonerado(documento) && (
+                                                        <span className="text-red-500 ml-1">*</span>
+                                                    )}
                                                 </h3>
-                                                <p className="text-xs text-gray-500">{documento.descripcion}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {isExonerado(documento) ? "Pago exonerado administrativamente" : documento.descripcion}
+                                                </p>
                                             </div>
                                         </div>
 
                                         {/* Mensaje cuando no hay archivo */}
-                                        {!documento.archivo && (
+                                        {!documento.archivo && !isExonerado(documento) && (
                                             <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
                                                 <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
                                                 <span>
-                                                    Falta documento.{" "}
-                                                    {documento.requerido && "Este documento es requerido para completar el registro."}
+                                                    Falta comprobante.{" "}
+                                                    {documento.requerido && "Este comprobante es requerido para completar el registro."}
                                                 </span>
+                                            </div>
+                                        )}
+
+                                        {/* Mensaje cuando es un archivo exonerado */}
+                                        {isExonerado(documento) && (
+                                            <div className="mt-2 flex items-start bg-green-100 p-2 rounded text-xs text-green-600">
+                                                <CheckCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
+                                                <span>Exonerado por administración</span>
                                             </div>
                                         )}
                                     </div>
 
                                     <div className="flex items-center space-x-1">
-                                        {documento.archivo ? (
+                                        {documento.archivo || isExonerado(documento) ? (
                                             <button
                                                 onClick={() => handleVerDocumento(documento)}
                                                 className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                                                title="Ver documento"
+                                                title="Ver comprobante"
                                             >
                                                 <Eye size={18} />
                                             </button>
                                         ) : (
-                                            <span className="text-gray-400 p-2" title="No hay documento para ver">
+                                            <span className="text-gray-400 p-2" title="No hay comprobante para ver">
                                                 <Eye size={18} />
                                             </span>
                                         )}
 
-                                        <button
-                                            onClick={() => handleReemplazarDocumento(documento)}
-                                            className={`${documento.archivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}
-                                            title={documento.archivo ? "Reemplazar documento" : "Subir documento"}
-                                        >
-                                            {documento.archivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
-                                        </button>
+                                        {!isExonerado(documento) && (
+                                            <button
+                                                onClick={() => handleReemplazarDocumento(documento)}
+                                                className={`${documento.archivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}
+                                                title={documento.archivo ? "Reemplazar comprobante" : "Subir comprobante"}
+                                            >
+                                                {documento.archivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ))
-                ) : (
+                ) : !pendiente?.exoneracionPagos?.fecha ? (
                     <div className="col-span-2 bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">
-                        <FileText size={40} className="text-gray-300 mb-3" />
-                        <p className="text-gray-500 text-center">No hay documentos configurados en el sistema</p>
+                        <CreditCard size={40} className="text-gray-300 mb-3" />
+                        <p className="text-gray-500 text-center">No hay comprobantes de pago registrados</p>
                     </div>
-                )}
+                ) : null}
             </div>
 
             {/* Modal para subir documentos */}
@@ -217,9 +292,9 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                     >
                         <div className="flex justify-between items-center p-4 border-b">
                             <div className="flex items-center">
-                                <FileText className="text-[#C40180] mr-2" size={20} />
+                                <CreditCard className="text-[#C40180] mr-2" size={20} />
                                 <h3 className="text-lg font-medium text-gray-900">
-                                    {documentoParaSubir.archivo ? "Actualizar documento" : "Subir documento"}
+                                    {documentoParaSubir.archivo ? "Actualizar comprobante" : "Subir comprobante"}
                                 </h3>
                             </div>
                             <button
@@ -296,7 +371,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                                     ) : (
                                         <>
                                             <Upload size={16} />
-                                            <span>{documentoParaSubir.archivo ? "Actualizar documento" : "Subir documento"}</span>
+                                            <span>{documentoParaSubir.archivo ? "Actualizar comprobante" : "Subir comprobante"}</span>
                                         </>
                                     )}
                                 </button>

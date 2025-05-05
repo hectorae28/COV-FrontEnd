@@ -570,7 +570,7 @@ const useDataListaColegiados = create((set, get) => ({
             email: "carlos.ramirez@mail.com",
             telefono: "+58 416-7777777",
             fechaSolicitud: "10/04/2025",
-            documentosCompletos: true,
+            documentosCompletos: false,
             pagosPendientes: false,
 
             // Datos detallados
@@ -747,8 +747,8 @@ const useDataListaColegiados = create((set, get) => ({
             cedula: "V-56789012",
             email: "pedro.blanco@mail.com",
             telefono: "+58 414-5555555",
-            fechaSolicitud: "05/04/2025", // Fecha anterior
-            documentosCompletos: true,
+            fechaSolicitud: "05/04/2025",
+            cumentosCompletos: true,
             pagosPendientes: false,
 
             persona: {
@@ -834,7 +834,7 @@ const useDataListaColegiados = create((set, get) => ({
             email: "sofia.martinez@mail.com",
             telefono: "+58 412-9999999",
             fechaSolicitud: "03/03/2025",
-            documentosCompletos: false,
+            cumentosCompletos: false,
             pagosPendientes: true,
 
             persona: {
@@ -1093,6 +1093,63 @@ const useDataListaColegiados = create((set, get) => ({
         }));
 
         return get().getSolicitudes(colegiadoId);
+    },
+
+    rejectRegistration: (pendienteId, motivo, user) => {
+        const colegiadosPendientes = get().colegiadosPendientes;
+        const pendienteIndex = colegiadosPendientes.findIndex(p => p.id === pendienteId);
+
+        if (pendienteIndex === -1) {
+            console.error("Pendiente no encontrado:", pendienteId);
+            return null;
+        }
+
+        const pendientesActualizados = [...colegiadosPendientes];
+
+        pendientesActualizados[pendienteIndex] = {
+            ...pendientesActualizados[pendienteIndex],
+            estado: 'rechazada',
+            motivoRechazo: motivo,
+            fechaRechazo: new Date().toLocaleDateString(),
+            rechazadoPor: user ? {
+                username: user.username || 'admin',
+                email: user.email || 'admin@cov.com',
+                fecha: new Date().toISOString(),
+                esAdmin: user.role === 'admin'
+            } : null
+        };
+
+        set({ colegiadosPendientes: pendientesActualizados });
+        return pendientesActualizados[pendienteIndex];
+    },
+
+    // Función para denegar solicitud (rechazo permanente)
+    denyRegistration: (pendienteId, motivo, user) => {
+        const colegiadosPendientes = get().colegiadosPendientes;
+        const pendienteIndex = colegiadosPendientes.findIndex(p => p.id === pendienteId);
+
+        if (pendienteIndex === -1) {
+            console.error("Pendiente no encontrado:", pendienteId);
+            return null;
+        }
+
+        const pendientesActualizados = [...colegiadosPendientes];
+
+        pendientesActualizados[pendienteIndex] = {
+            ...pendientesActualizados[pendienteIndex],
+            estado: 'denegada',
+            motivoDenegacion: motivo,
+            fechaDenegacion: new Date().toLocaleDateString(),
+            denegadoPor: user ? {
+                username: user.username || 'admin',
+                email: user.email || 'admin@cov.com',
+                fecha: new Date().toISOString(),
+                esAdmin: user.role === 'admin'
+            } : null
+        };
+
+        set({ colegiadosPendientes: pendientesActualizados });
+        return pendientesActualizados[pendienteIndex];
     },
 
     // Funciones para gestionar el registro de colegiados

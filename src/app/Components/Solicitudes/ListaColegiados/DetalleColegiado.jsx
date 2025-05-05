@@ -284,31 +284,31 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
                 </div>
               </div>
               <div className="flex space-x-8">
-              {/* Información del creador del registro */}
-              {colegiado.creador && (
-                <div className="mt-4">
-                  <SessionInfo
-                    creador={colegiado.creador}
-                    variant="compact"
-                    className="justify-center md:justify-start"
-                  />
-                </div>
-              )}
+                {/* Información del creador del registro */}
+                {colegiado.creador && (
+                  <div className="mt-4">
+                    <SessionInfo
+                      creador={colegiado.creador}
+                      variant="compact"
+                      className="justify-center md:justify-start"
+                    />
+                  </div>
+                )}
 
-              {/* Información de quien aprobó el registro */}
-              {colegiado.aprobadoPor && (
-                <div className="col-span-2 mt-4">
-                  <SessionInfo
-                    creador={{
-                      ...colegiado.aprobadoPor,
-                      esAdmin: colegiado.aprobadoPor.esAdmin || false,
-                      tipo: 'aprobado'
-                    }}
-                    variant="compact"
-                    className="justify-center md:justify-start"
-                  />
-                </div>
-              )}
+                {/* Información de quien aprobó el registro */}
+                {colegiado.aprobadoPor && (
+                  <div className="col-span-2 mt-4">
+                    <SessionInfo
+                      creador={{
+                        ...colegiado.aprobadoPor,
+                        esAdmin: colegiado.aprobadoPor.esAdmin || false,
+                        tipo: 'aprobado'
+                      }}
+                      variant="compact"
+                      className="justify-center md:justify-start"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -624,6 +624,8 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
           {tabActivo === "pagos" && (
             <TablaPagos
               colegiadoId={colegiadoId}
+              handleVerDocumento={handleVerDocumento}
+              documentos={documentos}
             />
           )}
 
@@ -756,50 +758,49 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
                   <h3 className="text-lg font-medium text-gray-900">Documentos</h3>
                   <p className="text-sm text-gray-500 mt-1">Documentación del colegiado</p>
                 </div>
-                <button className="bg-[#C40180] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
-                  <PlusCircle size={16} />
-                  <span>Agregar documento</span>
-                </button>
               </div>
 
               {documentos && documentos.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {documentos.map((documento) => (
-                    <div
-                      key={documento.id}
-                      className="border rounded-lg border-gray-200 hover:border-[#C40180] hover:shadow-md transition-all duration-200"
-                    >
-                      <div className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center mb-2">
-                              <div className="bg-[#F9E6F3] p-2 rounded-md mr-3">
-                                <FileText
-                                  className="text-[#C40180]"
-                                  size={20}
-                                />
-                              </div>
-                              <div>
-                                <h3 className="font-medium text-gray-900 flex items-center">
-                                  {documento.nombre}
-                                  {documento.requerido && <span className="text-red-500 ml-1">*</span>}
-                                </h3>
-                                <p className="text-xs text-gray-500">{documento.descripcion}</p>
+                  {/* Aquí es donde necesitas filtrar los documentos */}
+                  {documentos
+                    .filter(doc => !doc.id.includes('comprobante_pago') && !doc.nombre.toLowerCase().includes('comprobante'))
+                    .map((documento) => (
+                      <div
+                        key={documento.id}
+                        className="border rounded-lg border-gray-200 hover:border-[#C40180] hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center mb-2">
+                                <div className="bg-[#F9E6F3] p-2 rounded-md mr-3">
+                                  <FileText
+                                    className="text-[#C40180]"
+                                    size={20}
+                                  />
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-gray-900 flex items-center">
+                                    {documento.nombre}
+                                    {documento.requerido && <span className="text-red-500 ml-1">*</span>}
+                                  </h3>
+                                  <p className="text-xs text-gray-500">{documento.descripcion}</p>
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <button
-                            onClick={() => handleVerDocumento(documento)}
-                            className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                            title="Ver documento"
-                          >
-                            <Eye size={18} />
-                          </button>
+                            <button
+                              onClick={() => handleVerDocumento(documento)}
+                              className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                              title="Ver documento"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               ) : (
                 <div className="bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">

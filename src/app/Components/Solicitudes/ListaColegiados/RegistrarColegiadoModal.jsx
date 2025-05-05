@@ -64,10 +64,11 @@ export default function RegistroColegiados({
     mppsRegistrationDate: "",
     titleIssuanceDate: "",
     state: "",
-    ci: {},
-    rif: {},
-    titulo: {},
-    mpps: {},
+    ci: null,
+    rif: null,
+    titulo: null,
+    mpps: null,
+    documentos: {}
   };
 
   // Estado para los datos del formulario
@@ -83,6 +84,21 @@ export default function RegistroColegiados({
 
   // Función para manejar cambios en documentos
   const handleDocumentosChange = (docs) => {
+    // Actualizar directamente los campos individuales para archivos
+    if (docs.ci) {
+      setFormData(prev => ({ ...prev, ci: docs.ci }));
+    }
+    if (docs.rif) {
+      setFormData(prev => ({ ...prev, rif: docs.rif }));
+    }
+    if (docs.titulo) {
+      setFormData(prev => ({ ...prev, titulo: docs.titulo }));
+    }
+    if (docs.mpps) {
+      setFormData(prev => ({ ...prev, mpps: docs.mpps }));
+    }
+    
+    // También mantener la estructura de documentos para coherencia
     setFormData((prev) => ({
       ...prev,
       documentos: {
@@ -159,6 +175,19 @@ export default function RegistroColegiados({
       const nombre = `${formData.firstName} ${formData.lastName}`;
       const fechaCreacion = new Date();
 
+      // Verificar si los documentos están completos
+      const tieneDocumentosCompletos = 
+        formData.ci && formData.rif && formData.titulo && formData.mpps &&
+        formData.ci.name && formData.rif.name && formData.titulo.name && formData.mpps.name;
+
+      // Crear comprobante de pago apropiado según el estado
+      let comprobantePago = "";
+      if (exonerarPagos) {
+        comprobantePago = "exonerado.pdf";
+      } else if (!pagarLuego) {
+        comprobantePago = "comprobante_pago.pdf";
+      }
+
       // Convertir datos del formulario al formato esperado por ListaColegiadosData
       const nuevoPendiente = {
         id: `p-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -167,7 +196,8 @@ export default function RegistroColegiados({
         email: formData.email,
         telefono: formData.phoneNumber,
         fechaSolicitud: new Date().toLocaleDateString(),
-        documentosCompletos: true,
+        documentosCompletos: tieneDocumentosCompletos,
+        pagosPendientes: pagarLuego || !exonerarPagos,
 
         creador: session ? {
           username: session.user?.username || 'admin',
@@ -183,7 +213,7 @@ export default function RegistroColegiados({
           primer_apellido: formData.lastName,
           segundo_apellido: "",
           genero: formData.gender === "M" ? "M" : "F",
-          tipo_identificacion: formData.nationality,
+          nacionalidad: formData.nationality,
           identificacion: formData.identityCard,
           correo: formData.email,
           id_adicional: "",
@@ -192,7 +222,7 @@ export default function RegistroColegiados({
           fecha_de_nacimiento: formData.birthDate,
           estado_civil: formData.maritalStatus,
           direccion: {
-            referencia: formData.address,
+            completa: formData.address,
             estado: formData.state
           },
           user: null
@@ -219,18 +249,24 @@ export default function RegistroColegiados({
           } : null
         ].filter(Boolean), // Remove null values
 
-        // Files (using provided data or empty strings)
-        file_ci: formData.ci?.name || "",
-        file_rif: formData.rif?.name || "",
-        file_fondo_negro: formData.titulo?.name || "",
-        file_mpps: formData.mpps?.name || "",
-
         // Add observation about payment status
         observaciones: exonerarPagos
           ? "Colegiado exonerado de pagos por administración"
           : pagarLuego
             ? "Pago pendiente. Se debe procesar posteriormente."
             : "Solicita inscripción en el Colegio de Odontólogos de Venezuela. Pago procesado.",
+
+        // Files data - stored exactly as received
+        ci: formData.ci,
+        rif: formData.rif,
+        titulo: formData.titulo,
+        mpps: formData.mpps,
+
+        // File properties for compatibility
+        file_ci: formData.ci?.name || "",
+        file_rif: formData.rif?.name || "",
+        file_fondo_negro: formData.titulo?.name || "",
+        file_mpps: formData.mpps?.name || "",
 
         // Convert document objects to the expected format for the store
         documentos: [
@@ -266,8 +302,8 @@ export default function RegistroColegiados({
             id: "comprobante_pago",
             nombre: "Comprobante de pago",
             descripcion: "Comprobante de pago de inscripción",
-            archivo: "comprobante_pago.pdf",
-            requerido: true,
+            archivo: comprobantePago,
+            requerido: !exonerarPagos && !pagarLuego, // No es requerido si está exonerado o paga luego
           }
         ]
       };
@@ -415,6 +451,11 @@ export default function RegistroColegiados({
               {pagarLuego && (
                 <span className="block mt-2 text-amber-600 font-medium">
                   Nota: El colegiado tiene pendiente realizar el pago de inscripción.
+                </span>
+              )}
+              {exonerarPagos && (
+                <span className="block mt-2 text-green-600 font-medium">
+                  Nota: El colegiado ha sido exonerado del pago por administración.
                 </span>
               )}
             </p>

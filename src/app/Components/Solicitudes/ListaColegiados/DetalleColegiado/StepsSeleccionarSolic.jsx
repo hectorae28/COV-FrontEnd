@@ -1,50 +1,33 @@
 "use client"
-import { useState, useEffect } from "react"
-import {
-    FileText,
-    Search,
-    Check,
-    User,
-    FileCheck,
-    ShoppingCart,
-    Trash2,
-    Upload,
-} from "lucide-react"
 import { TIPOS_SOLICITUD } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
+import {
+    Check,
+    FileCheck,
+    FileText,
+    ShoppingCart,
+    Trash2
+} from "lucide-react"
+import { useState } from "react"
 
 export default function SeleccionarSolicitudesStep({
-    colegiados,
-    colegiadoPreseleccionado = null,
     onFinalizarSolicitud,
     onClose
 }) {
     // Estado inicial del formulario
     const [formData, setFormData] = useState({
-        colegiadoId: colegiadoPreseleccionado ? colegiadoPreseleccionado.id : "",
         urgente: false,
         descripcion: "",
     })
     const [documentosAdjuntos, setDocumentosAdjuntos] = useState({})
     const [errors, setErrors] = useState({})
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [searchTerm, setSearchTerm] = useState("")
-    const [showColegiadosList, setShowColegiadosList] = useState(false)
+
     // Estados para gestionar las funcionalidades
     const [tiposSeleccionados, setTiposSeleccionados] = useState([])
     // Modificado: Ahora guardamos un array de subtipos de constancia seleccionados
     const [subtiposConstanciaSeleccionados, setSubtiposConstanciaSeleccionados] = useState([])
     const [itemsCarrito, setItemsCarrito] = useState([])
     const [totalCarrito, setTotalCarrito] = useState(0)
-
-    // Si hay un colegiado preseleccionado, establecer el ID en el formulario
-    useEffect(() => {
-        if (colegiadoPreseleccionado) {
-            setFormData(prev => ({
-                ...prev,
-                colegiadoId: colegiadoPreseleccionado.id
-            }))
-        }
-    }, [colegiadoPreseleccionado])
 
     // Función para agregar un item al carrito
     const agregarAlCarrito = (tipo) => {
@@ -143,7 +126,6 @@ export default function SeleccionarSolicitudesStep({
         if (tipo === "Solvencia") {
             return;
         }
-        
         // Para Constancia, solo toggle de selección
         if (tipo === "Constancia") {
             // Si ya está seleccionada, la quitamos
@@ -256,40 +238,12 @@ export default function SeleccionarSolicitudesStep({
         }
     }
 
-    // Seleccionar un colegiado de la lista
-    const selectColegiado = (colegiado) => {
-        setFormData(prev => ({
-            ...prev,
-            colegiadoId: colegiado.id
-        }))
-        setShowColegiadosList(false)
-        setSearchTerm("")
-        // Limpiar error si existe
-        if (errors.colegiadoId) {
-            setErrors(prev => ({
-                ...prev,
-                colegiadoId: null
-            }))
-        }
-    }
-
-    // Filtrar colegiados por término de búsqueda
-    const colegiadosFiltrados = colegiados.filter(colegiado =>
-        colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (colegiado.cedula && colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (colegiado.numeroRegistro && colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-
-    // Obtener el colegiado seleccionado
-    const colegiadoSeleccionado = colegiados.find(c => c.id === formData.colegiadoId)
-
     // Verificar si todo está exonerado
     const todoExonerado = totalCarrito === 0
 
     // Validar el formulario antes de enviar
     const validarFormulario = () => {
         const nuevosErrores = {}
-        if (!formData.colegiadoId) nuevosErrores.colegiadoId = "Debe seleccionar un colegiado"
         if (itemsCarrito.length === 0) nuevosErrores.items = "Debe agregar al menos un tipo de solicitud"
         setErrors(nuevosErrores)
         return Object.keys(nuevosErrores).length === 0
@@ -321,8 +275,6 @@ export default function SeleccionarSolicitudesStep({
             const nuevaSolicitud = {
                 id: `sol-${Date.now()}`,
                 tipo: tipoMostrar,
-                colegiadoId: formData.colegiadoId,
-                colegiadoNombre: colegiadoSeleccionado?.nombre || "Colegiado",
                 fecha: new Date().toLocaleDateString(),
                 estado: todoExonerado ? "Exonerada" : "Pendiente",
                 descripcion: formData.descripcion || "Solicitud de servicios al Colegio",
@@ -347,87 +299,12 @@ export default function SeleccionarSolicitudesStep({
         }
     }
 
-    // Debug para verificar los colegiados disponibles
-    console.log("Colegiados disponibles:", colegiados);
-
     // Filtrar tipos de solicitud para excluir "Solvencia"
     const tiposSolicitudFiltrados = Object.keys(TIPOS_SOLICITUD).filter(tipo => tipo !== "Solvencia");
 
     return (
         <form onSubmit={handleSubmit}>
             <div className="p-6">
-                {/* Selección de colegiado */}
-                <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Colegiado <span className="text-red-500">*</span>
-                    </label>
-                    {errors.colegiadoId && (
-                        <div className="text-red-500 text-xs mb-2">
-                            {errors.colegiadoId}
-                        </div>
-                    )}
-                    <div className="relative">
-                        {colegiadoSeleccionado ? (
-                            <div className="flex items-center justify-between border rounded-lg p-3 mb-2">
-                                <div className="flex items-center">
-                                    <User size={20} className="text-gray-400 mr-2" />
-                                    <div>
-                                        <p className="font-medium">{colegiadoSeleccionado.nombre}</p>
-                                        <p className="text-xs text-gray-500">
-                                            {colegiadoSeleccionado.cedula} · {colegiadoSeleccionado.numeroRegistro}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setFormData(prev => ({ ...prev, colegiadoId: "" }));
-                                        setShowColegiadosList(true);
-                                    }}
-                                    className="text-[#C40180] text-sm hover:underline"
-                                >
-                                    Cambiar
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Buscar colegiado por nombre, cédula o registro..."
-                                    className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    value={searchTerm}
-                                    onChange={(e) => {
-                                        setSearchTerm(e.target.value);
-                                        setShowColegiadosList(true);
-                                    }}
-                                    onFocus={() => setShowColegiadosList(true)}
-                                />
-                                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                            </div>
-                        )}
-                        {/* Lista de colegiados */}
-                        {showColegiadosList && !colegiadoSeleccionado && (
-                            <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                                {colegiadosFiltrados.length === 0 ? (
-                                    <div className="p-3 text-sm text-gray-500">No se encontraron colegiados</div>
-                                ) : (
-                                    colegiadosFiltrados.map(colegiado => (
-                                        <div
-                                            key={colegiado.id}
-                                            className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
-                                            onClick={() => selectColegiado(colegiado)}
-                                        >
-                                            <p className="font-medium">{colegiado.nombre}</p>
-                                            <p className="text-xs text-gray-500">
-                                                {colegiado.cedula} · {colegiado.numeroRegistro}
-                                            </p>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
                 {/* Selección de tipos de solicitud */}
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -612,7 +489,7 @@ export default function SeleccionarSolicitudesStep({
                 {todoExonerado && itemsCarrito.length > 0 && (
                     <div className="mb-6 bg-green-50 border border-green-200 p-4 rounded-lg text-green-800">
                         <h3 className="font-medium flex items-center mb-2">
-                        <Check size={20} className="mr-2" />
+                            <Check size={20} className="mr-2" />
                             No se requiere comprobante de pago
                         </h3>
                         <p className="text-sm">

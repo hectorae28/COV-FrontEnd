@@ -1,5 +1,4 @@
 "use client"
-
 import { AlertCircle, CheckCircle, Clock, FileText, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
@@ -22,18 +21,17 @@ export default function TablaSolicitudes({ colegiadoId }) {
     const fetchSolicitudes = async () => {
       try {
         setIsLoading(true)
-        
+
         // Obtener solicitudes desde el store centralizado
         const solicitudesColegiado = getSolicitudes(colegiadoId)
         setSolicitudes(solicitudesColegiado)
-        
+
         setIsLoading(false)
       } catch (error) {
         console.error("Error al cargar las solicitudes:", error)
         setIsLoading(false)
       }
     }
-
     fetchSolicitudes()
   }, [colegiadoId, getSolicitudes])
 
@@ -58,10 +56,26 @@ export default function TablaSolicitudes({ colegiadoId }) {
         return "bg-blue-100 text-blue-800"
       case "Pendiente":
         return "bg-yellow-100 text-yellow-800"
+      case "Exonerada":
+        return "bg-teal-100 text-teal-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
+
+  // Función para mostrar el monto correctamente
+  const formatMonto = (monto) => {
+    // Verificar si monto existe y es un número
+    if (monto !== undefined && monto !== null && !isNaN(monto)) {
+      return `$${monto.toFixed(2)}`;
+    }
+    // Si es costo en lugar de monto
+    if (solicitud.costo !== undefined && solicitud.costo !== null && !isNaN(solicitud.costo)) {
+      return `$${solicitud.costo.toFixed(2)}`;
+    }
+    // Si no hay valor válido
+    return "$0.00";
+  };
 
   return (
     <div className="space-y-6">
@@ -70,7 +84,6 @@ export default function TablaSolicitudes({ colegiadoId }) {
           <h3 className="text-lg font-medium text-gray-900">Solicitudes</h3>
           <p className="text-sm text-gray-500 mt-1">Trámites y solicitudes realizadas por el colegiado</p>
         </div>
-
         <div className="mt-4 md:mt-0">
           <div className="relative">
             <input
@@ -91,12 +104,10 @@ export default function TablaSolicitudes({ colegiadoId }) {
           <p className="text-sm text-gray-500 mb-1">Total de solicitudes</p>
           <p className="text-xl font-semibold text-purple-600">{solicitudes.length}</p>
         </div>
-
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Pendientes o en proceso</p>
           <p className="text-xl font-semibold text-yellow-600">{solicitudesPendientes}</p>
         </div>
-
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Completadas</p>
           <p className="text-xl font-semibold text-green-600">{solicitudesCompletadas}</p>
@@ -128,15 +139,14 @@ export default function TablaSolicitudes({ colegiadoId }) {
                         <h4 className="text-lg font-medium text-gray-900">{solicitud.tipo}</h4>
                         <p className="text-sm text-gray-500 mt-1">{solicitud.descripcion}</p>
                       </div>
-
                       <div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoColor(solicitud.estado)}`}>
                           {solicitud.estado === "En proceso" && <Clock size={12} className="mr-1" />}
                           {solicitud.estado === "Completada" && <CheckCircle size={12} className="mr-1" />}
                           {solicitud.estado === "Pendiente" && <AlertCircle size={12} className="mr-1" />}
+                          {solicitud.estado === "Exonerada" && <CheckCircle size={12} className="mr-1" />}
                           {solicitud.estado}
                         </span>
-
                         {solicitud.urgente && (
                           <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             Urgente
@@ -144,18 +154,22 @@ export default function TablaSolicitudes({ colegiadoId }) {
                         )}
                       </div>
                     </div>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Fecha de solicitud</p>
                         <p className="text-sm font-medium">{solicitud.fecha}</p>
                       </div>
-
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Monto</p>
-                        <p className="text-sm font-medium">${solicitud.monto.toFixed(2)}</p>
+                        <p className="text-sm font-medium">
+                          {solicitud.monto !== undefined ?
+                            `$${solicitud.monto.toFixed(2)}` :
+                            (solicitud.costo !== undefined ?
+                              `$${solicitud.costo.toFixed(2)}` :
+                              "$0.00")
+                          }
+                        </p>
                       </div>
-
                       <div className="sm:col-span-2 md:col-span-1 flex justify-start sm:justify-end md:justify-start">
                         <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center">
                           <FileText size={16} className="mr-1" />

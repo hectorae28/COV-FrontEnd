@@ -57,6 +57,24 @@ export default function PersonalInfoSection({
             transition={{ delay: 0.1 }}
             className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
         >
+            
+            {/* Información del creador */}
+            {pendiente?.creador && (
+                <div className="pt-6 mb-8">
+                    <div className="flex items-center mb-5 border-b pb-3">
+                        <Clock size={20} className="text-[#C40180] mr-2" />
+                        <h2 className="text-lg font-semibold text-gray-900">Información del registro</h2>
+                    </div>
+
+                    <div className="bg-purple-50 p-4 rounded-md">
+                        <SessionInfo
+                            creador={pendiente.creador}
+                            variant="full"
+                        />
+                    </div>
+                </div>
+            )}
+
             <div className="flex items-center justify-between mb-5 border-b pb-3">
                 <div className="flex items-center">
                     <User size={20} className="text-[#C40180] mr-2" />
@@ -293,23 +311,6 @@ export default function PersonalInfoSection({
                                 />
                             </div>
                         </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Información del creador */}
-            {pendiente?.creador && (
-                <div className="mt-8 border-t pt-6">
-                    <div className="flex items-center mb-5 border-b pb-3">
-                        <Clock size={20} className="text-[#C40180] mr-2" />
-                        <h2 className="text-lg font-semibold text-gray-900">Información del registro</h2>
-                    </div>
-
-                    <div className="bg-purple-50 p-4 rounded-md">
-                        <SessionInfo
-                            creador={pendiente.creador}
-                            variant="full"
-                        />
                     </div>
                 </div>
             )}
