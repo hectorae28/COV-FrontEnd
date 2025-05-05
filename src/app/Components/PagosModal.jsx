@@ -19,8 +19,9 @@ const DEFAULT_METODOS = [
 ];
 
 export default function PagosColg({ props }) {
-  const { handlePaymentComplete, costo, metodoPago } =
+  const { handlePaymentComplete, costo } =
     props;
+    console.log(costo)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -28,7 +29,7 @@ export default function PagosColg({ props }) {
   const [paymentAmount, setPaymentAmount] = useState(costo);
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [montoEnBs, setMontoEnBs] = useState(0);//useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2)); // Add this state
+  const [montoEnBs, setMontoEnBs] = useState(0);
   const [tasaBCV, setTasaBCV] = useState(0);
   const [metodoDePago, setMetodoDePago] = useState([]);
   

@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function SolvenciaPago() {
-  const initialState = {
+  /*const initialState = {
     tipo_profesion: "",
     nationality: "",
     identityCard: "",
@@ -46,13 +46,11 @@ export default function SolvenciaPago() {
     rif: null,
     titulo: null,
     mpps: null,
-  };
+  };*/
 
   const [isSuccess, setIsSuccess] = useState(false);
-  const [formData, setFormData] = useState(initialState);
-  const [tasaBcv, setTasaBcv] = useState(0);
-  const [costoInscripcion, setCostoInscripcion] = useState(70);
-  const [metodoPago, setMetodoPago] = useState([]);
+  //const [formData, setFormData] = useState(initialState);
+  const [costoSolvencia, setCostoSolvencia] = useState(0);
   const [validationErrors, setValidationErrors] = useState({});
 
   
@@ -66,27 +64,23 @@ export default function SolvenciaPago() {
     }, 3000);
   };
 
-  useEffect(() => {
-      const LoadData = async () => {
-        try {
-          const tasa = await fetchDataSolicitudes("tasa-bcv");
-          console.log(tasa)
-          setTasaBcv(tasa.data.rate);
-          const costo = await fetchDataSolicitudes(
-            "costo",
-            `?search=Inscripcion+${formData.tipo_profesion}&es_vigente=true`
-          );
-          setCostoInscripcion(Number(costo.data[0].monto_usd));
-          const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
-          setMetodoPago(Mpagos.data);
-        } catch (error) {
-          console.error("Error al obtener los datos:", error);
-        }
-      };
-      if (formData.tipo_profesion.length > 0) {
-        LoadData();
-      }
-    }, [formData.tipo_profesion]);
+  const LoadData = async () => {
+    try {
+      const costo = await fetchDataSolicitudes(
+        "costo",
+        "?search=Solvencia"
+      );
+      setCostoSolvencia(Number(costo.data[0].monto_usd));
+    } catch (error) {
+      console.error("Error al obtener los datos:", error);
+    }
+  };
+
+  useEffect(() => {     
+
+    LoadData();
+      
+  }, [/*formData.tipo_profesion*/]);
 
   return (
     <div className="space-y-6" id="solicitudes-tab">
@@ -116,8 +110,7 @@ export default function SolvenciaPago() {
           <PagosColg
             props={{
               handlePaymentComplete,
-              costo: costoInscripcion,
-              metodoPago,
+              costo: costoSolvencia
             }}
           />
         )}

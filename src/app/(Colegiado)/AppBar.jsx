@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Description,
   EventNote,
@@ -11,9 +11,11 @@ import {
 } from "@mui/icons-material";
 
 export default function AppBar({ solvencyInfo }) {
+  console.log(solvencyInfo)
   const [selectedItem, setSelectedItem] = useState("Solicitudes");
   const fechaExpiracion = new Date(solvencyInfo);
   const isSolvente = fechaExpiracion >= new Date();
+  console.log(isSolvente)
 
   return (
     <div className="h-full w-full">
