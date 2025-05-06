@@ -340,11 +340,11 @@ export default function SeleccionarSolicitudesStep({
                 fechaCompletado: new Date().toLocaleDateString(),
                 // Información del creador
                 creador: {
-                    nombre: creadorInfo?.name || "Administrador",
-                    email: creadorInfo?.email || "admin@ejemplo.com",
-                    username: creadorInfo?.name,
-                    esAdmin: isAdmin,
-                    fecha: new Date().toISOString()
+                    username: creadorInfo?.name || "Usuario",
+                    email: creadorInfo?.email || "usuario@ejemplo.com",
+                    esAdmin: creadorInfo?.role === 'admin' || creadorInfo?.isAdmin || false,
+                    fecha: new Date().toISOString(),
+                    tipo: 'creado'
                 }
             }
             // Pasar la solicitud creada al componente padre

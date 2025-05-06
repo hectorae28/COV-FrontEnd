@@ -1,5 +1,5 @@
-import { CreditCard, Mail, MapPin, Phone, PlusCircle, User, Calendar, CheckCircle } from "lucide-react"
 import SessionInfo from "@/Components/SessionInfo"
+import { Calendar, CheckCircle, Mail, MapPin, Phone, PlusCircle, User } from "lucide-react"
 
 export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmarTitulo }) {
     // Función para obtener iniciales del nombre

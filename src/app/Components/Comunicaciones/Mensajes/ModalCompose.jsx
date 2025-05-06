@@ -4,11 +4,18 @@ import { AnimatePresence, motion } from "framer-motion"
 import { ChevronDown, ChevronLeft, MinusCircle, Paperclip, Send, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
-export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
+export function ComposeModal({
+  onClose,
+  onSendMessage,
+  asuntosPredefinidos,
+  destinatarioPreseleccionado = "",
+  colegiadoId = null,
+}) {
   const [message, setMessage] = useState({
-    destinatario: "",
+    destinatario: destinatarioPreseleccionado,
     asunto: "",
     contenido: "",
+    colegiadoId: colegiadoId,
   })
   const [attachments, setAttachments] = useState([])
   const [isMobile, setIsMobile] = useState(false)
@@ -27,7 +34,7 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
     "Denuncia Ética",
     "Eventos y Formación Continua",
     "Pago de Cuotas",
-    "Otro"
+    "Otro",
   ]
 
   useEffect(() => {
@@ -36,10 +43,10 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
     }
 
     checkMobile()
-    window.addEventListener('resize', checkMobile)
+    window.addEventListener("resize", checkMobile)
 
     return () => {
-      window.removeEventListener('resize', checkMobile)
+      window.removeEventListener("resize", checkMobile)
     }
   }, [])
 
@@ -49,14 +56,14 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
     const mockAttachment = {
       id: Date.now(),
       name: `Documento-${Math.floor(Math.random() * 1000)}.pdf`,
-      size: `${Math.floor(Math.random() * 5) + 1} MB`
+      size: `${Math.floor(Math.random() * 5) + 1} MB`,
     }
 
     setAttachments([...attachments, mockAttachment])
   }
 
   const handleRemoveAttachment = (id) => {
-    setAttachments(attachments.filter(att => att.id !== id))
+    setAttachments(attachments.filter((att) => att.id !== id))
   }
 
   const handleSend = () => {
@@ -64,7 +71,7 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
 
     onSendMessage({
       ...message,
-      attachments
+      attachments,
     })
     onClose()
   }
@@ -77,13 +84,13 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
   const mobileVariants = {
     hidden: { y: "100%", opacity: 1 },
     visible: { y: 0, opacity: 1 },
-    exit: { y: "100%", opacity: 1 }
+    exit: { y: "100%", opacity: 1 },
   }
 
   const desktopVariants = {
     hidden: { scale: 0.95, opacity: 0 },
     visible: { scale: 1, opacity: 1 },
-    exit: { scale: 0.95, opacity: 0 }
+    exit: { scale: 0.95, opacity: 0 },
   }
 
   return (
@@ -100,8 +107,9 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
           exit="exit"
           variants={isMobile ? mobileVariants : desktopVariants}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className={`bg-white shadow-lg w-full md:rounded-lg md:max-w-2xl max-h-[98vh] md:max-h-[90vh] flex flex-col overflow-hidden ${isMobile ? "rounded-t-xl h-[90vh]" : ""
-            }`}
+          className={`bg-white shadow-lg w-full md:rounded-lg md:max-w-2xl max-h-[98vh] md:max-h-[90vh] flex flex-col overflow-hidden ${
+            isMobile ? "rounded-t-xl h-[90vh]" : ""
+          }`}
         >
           {/* Encabezado */}
           <div className="flex justify-between items-center p-3 md:p-4 border-b bg-gradient-to-l from-[#D7008A] to-[#41023B]">
@@ -133,9 +141,7 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
           {/* Contenido del formulario */}
           <div className="overflow-y-auto p-3 md:p-4 flex-1">
             <div className="space-y-4">
-              {isMobile && (
-                <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-2" />
-              )}
+              {isMobile && <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-2" />}
 
               <div className="space-y-2">
                 <label htmlFor="destinatario" className="block text-sm font-medium text-gray-700">
@@ -147,6 +153,7 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
                   onChange={(e) => setMessage({ ...message, destinatario: e.target.value })}
                   placeholder="Nombre del destinatario"
                   className="w-full p-2 border rounded-md focus:ring-2 focus:ring-[#D7008A] focus:outline-none"
+                  disabled={!!destinatarioPreseleccionado}
                 />
               </div>
 
@@ -198,11 +205,9 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
               {/* Sección de archivos adjuntos */}
               {attachments.length > 0 && (
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Archivos adjuntos
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Archivos adjuntos</label>
                   <div className="space-y-2">
-                    {attachments.map(att => (
+                    {attachments.map((att) => (
                       <div key={att.id} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
                         <div className="flex items-center">
                           <Paperclip className="h-4 w-4 text-gray-400 " />
@@ -243,10 +248,11 @@ export function ComposeModal({ onClose, onSendMessage, asuntosPredefinidos }) {
                 </button>
                 <button
                   onClick={handleSend}
-                  className={`flex items-center px-4 py-2 rounded-md bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white ${!message.destinatario || !message.asunto || !message.contenido
+                  className={`flex items-center px-4 py-2 rounded-md bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white ${
+                    !message.destinatario || !message.asunto || !message.contenido
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:opacity-90"
-                    }`}
+                  }`}
                   disabled={!message.destinatario || !message.asunto || !message.contenido}
                 >
                   <Send className="mr-2 h-4 w-4" />
