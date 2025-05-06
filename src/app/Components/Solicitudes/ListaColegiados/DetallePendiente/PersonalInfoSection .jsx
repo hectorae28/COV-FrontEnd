@@ -5,15 +5,18 @@ import { motion } from "framer-motion";
 import SessionInfo from "@/Components/SessionInfo";
 
 export default function PersonalInfoSection({
-    pendiente,
-    datosPersonales,
-    setDatosPersonales,
-    editandoPersonal,
-    setEditandoPersonal,
-    updateColegiadoPendiente,
-    pendienteId,
-    setCambiosPendientes
+    props
 }) {
+    const {
+      pendiente,
+      datosPersonales,
+      setDatosPersonales,
+      editandoPersonal,
+      setEditandoPersonal,
+      updateColegiadoPendiente,
+      pendienteId,
+      setCambiosPendientes,
+    } = props;
     // Función para manejar cambios en datos personales
     const handleDatosPersonalesChange = (e) => {
         const { name, value } = e.target;
@@ -149,7 +152,7 @@ export default function PersonalInfoSection({
 
                         <div className="bg-gray-50 p-3 rounded-md">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
-                            <p className="font-medium text-gray-800">{datosPersonales?.direccion?.completa || "No especificada"}</p>
+                            <p className="font-medium text-gray-800">{datosPersonales?.direccion?.referencia || "No especificada"}</p>
                         </div>
                     </div>
 
@@ -162,7 +165,7 @@ export default function PersonalInfoSection({
 
                         <div className="bg-gray-50 p-3 rounded-md">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro</p>
-                            <p className="font-medium text-gray-800">{datosPersonales?.fecha_registro ? new Date(datosPersonales.fecha_registro).toLocaleDateString('es-ES') : "No especificada"}</p>
+                            <p className="font-medium text-gray-800">{datosPersonales?.fecha_registro_principal ? new Date(datosPersonales.fecha_registro_principal).toLocaleDateString('es-ES') : "No especificada"}</p>
                         </div>
                     </div>
                 </div>

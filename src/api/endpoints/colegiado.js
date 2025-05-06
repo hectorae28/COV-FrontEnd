@@ -26,3 +26,21 @@ export const fetchDataUsuario = async (url,session=null, params = " ") => {
         throw error;
     }
 }
+export const patchDataUsuario = async (url, body) => {
+    try {
+        const data = api.patch(`usuario/${url}/`,body)
+        return data;
+    } catch (error) {
+        console.error("Error fetching patchDataUsuario:", error);
+        throw error;
+    }
+}
+export const postDataUsuario = async (url, body) => {
+    try {
+        const data = api.post(`usuario/${url}/`,body)
+        return data;
+    } catch (error) {
+        console.error("Error fetching patchDataUsuario:", error);
+        throw error;
+    }
+}

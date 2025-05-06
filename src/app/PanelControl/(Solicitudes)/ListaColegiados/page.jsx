@@ -808,7 +808,12 @@ export default function ListaColegiadosPage() {
                                   </>
                                 )}
                               </span>
-                                  {pendiente.pago === null && (
+                                  {pendiente.pago === null && pendiente.pago_exonerado && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-1 sm:mt-0 sm:ml-2">
+                                      <XCircle size={12} /> Pagos Exonerado
+                                    </span>
+                                  )}
+                                  {pendiente.pago === null && !pendiente.pago_exonerado && (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
                                       <XCircle size={12} /> Pagos Pendientes
                                     </span>

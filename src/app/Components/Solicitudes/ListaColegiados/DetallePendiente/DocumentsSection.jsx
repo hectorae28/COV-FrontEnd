@@ -12,10 +12,8 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
     const fileInputRef = useRef(null)
 
     // Filtrar documentos para excluir comprobantes de pago
-    const documentosRegulares =
-        documentosRequeridos?.filter(
-            (doc) => !doc.id.includes("comprobante_pago") && !doc.nombre.toLowerCase().includes("comprobante"),
-        ) || []
+    const documentosRegulares =documentosRequeridos
+    console.log({documentosRegulares})
 
     // Función para validar archivo
     const validarArchivo = (file) => {
@@ -111,7 +109,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
     // Componente de tarjeta de documento reutilizable
     const DocumentCard = ({ documento }) => {
-        const tieneArchivo = !!documento.archivo
+        const tieneArchivo = !!documento
 
         return (
             <div
@@ -129,10 +127,10 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-gray-900 flex items-center">
-                                        {documento.nombre}
-                                        {documento.requerido && <span className="text-red-500 ml-1">*</span>}
+                                        {documento?.nombre}
+                                        {documento?.requerido && <span className="text-red-500 ml-1">*</span>}
                                     </h3>
-                                    <p className="text-xs text-gray-500">{documento.descripcion}</p>
+                                    <p className="text-xs text-gray-500">{documento?.descripcion}</p>
                                 </div>
                             </div>
 
@@ -142,7 +140,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                                     <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
                                     <span>
                                         Falta documento.{" "}
-                                        {documento.requerido && "Este documento es requerido para completar el registro."}
+                                        {documento?.requerido && "Este documento es requerido para completar el registro."}
                                     </span>
                                 </div>
                             )}
@@ -195,9 +193,9 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {documentosRegulares && documentosRegulares.length > 0 ? (
-                    documentosRegulares.map((documento) => (
-                        <DocumentCard key={documento.id} documento={documento} />
+                {documentosRegulares  ? (
+                    documentosRegulares.map((documento, index) => (
+                        <DocumentCard key={index} documento={documento} />
                     ))
                 ) : (
                     <div className="col-span-2 bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">

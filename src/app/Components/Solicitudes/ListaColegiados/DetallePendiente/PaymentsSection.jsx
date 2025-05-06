@@ -12,10 +12,7 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
     const fileInputRef = useRef(null)
 
     // Filtrar solo los comprobantes de pago
-    const comprobantesPago =
-        documentosRequeridos?.filter(
-            (doc) => doc.id.includes("comprobante_pago") || doc.nombre.toLowerCase().includes("comprobante"),
-        ) || []
+    const comprobantesPago = null
 
     // Función para determinar si un archivo está exonerado
     const isExonerado = (documento) => {

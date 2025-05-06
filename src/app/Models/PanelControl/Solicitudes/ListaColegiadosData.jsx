@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { colegiados } from "./SolicitudesData";
-import { fetchDataUsuario } from "@/api/endpoints/colegiado";
+import { fetchDataUsuario, patchDataUsuario,postDataUsuario } from "@/api/endpoints/colegiado";
 
 const useDataListaColegiados = create((set, get) => ({
   colegiados: [],
@@ -46,8 +46,9 @@ const useDataListaColegiados = create((set, get) => ({
   },
 
   // Funciones para obtener datos específicos
-  getColegiado: (id) => {
-    return get().colegiados.find((col) => col.id === id) || null;
+  getColegiado: async (id) => {
+    const res = await fetchDataUsuario(`register/${id}`);
+    return res.data
   },
 
   getColegiadoPendiente: (id) => {
@@ -109,12 +110,14 @@ const useDataListaColegiados = create((set, get) => ({
     return get().getColegiado(id);
   },
 
-  updateColegiadoPendiente: (id, updatedData) => {
+  updateColegiadoPendiente: async(id, updatedData) => {
     set((state) => ({
       colegiadosPendientes: state.colegiadosPendientes.map((pendiente) =>
         pendiente.id === id ? { ...pendiente, ...updatedData } : pendiente
       ),
     }));
+
+    const res = await patchDataUsuario(`register/${id}`,updatedData)
 
     return get().getColegiadoPendiente(id);
   },
@@ -190,7 +193,7 @@ const useDataListaColegiados = create((set, get) => ({
   },
 
   // Funciones para gestionar el registro de colegiados
-  approveRegistration: (pendienteId, datosRegistro) => {
+  approveRegistration: async (pendienteId, datosRegistro) => {
     const pendiente = get().getColegiadoPendiente(pendienteId);
     if (!pendiente) {
       console.error("No se encontró el pendiente con ID:", pendienteId);
@@ -198,87 +201,13 @@ const useDataListaColegiados = create((set, get) => ({
     }
 
     // Crear un nombre completo con los datos disponibles
-    const nombreCompleto = `${pendiente.persona.nombre} ${
-      pendiente.persona.segundo_nombre || ""
-    } ${pendiente.persona.primer_apellido} ${
-      pendiente.persona.segundo_apellido || ""
-    }`.trim();
-
-    // Obtener la sesión actual del store
-    const session = get().session;
-
-    // Crear el nuevo colegiado a partir de los datos del pendiente
-    const nuevoColegiado = {
-      id: `cov-${Date.now()}`,
-      nombre: nombreCompleto,
-      cedula: `${pendiente.persona.nacionalidad}-${pendiente.persona.identificacion}`,
-      numeroRegistro:
-        datosRegistro.num_cov ||
-        `ODV-${Math.floor(1000 + Math.random() * 9000)}`,
-      email: pendiente.persona.correo,
-      telefono: pendiente.persona.telefono_movil,
-      fechaRegistro: new Date().toLocaleDateString(),
-      estado: "Activo",
-      solvente: true,
-      especialidad: datosRegistro.tipo_profesion || "Odontología General",
-
-      // Datos detallados
-      persona: pendiente.persona,
-      instituto_bachillerato: pendiente.instituto_bachillerato,
-      universidad: pendiente.universidad,
-      fecha_egreso_universidad: pendiente.fecha_egreso_universidad,
-      num_registro_principal: pendiente.num_registro_principal,
-      fecha_registro_principal: pendiente.fecha_registro_principal,
-      num_mpps: pendiente.num_mpps,
-      fecha_mpps: pendiente.fecha_mpps,
-      instituciones: pendiente.instituciones || [],
-
-      // Archivos
-      file_ci: pendiente.file_ci,
-      file_rif: pendiente.file_rif,
-      file_fondo_negro: pendiente.file_fondo_negro,
-      file_mpps: pendiente.file_mpps,
-
-      // Valores por defecto
-      carnetVigente: true,
-      carnetVencimiento: new Date(
-        new Date().setFullYear(new Date().getFullYear() + 2)
-      ).toLocaleDateString(),
-      tituloEntregado: false,
-
-      // Colecciones
-      pagos: [],
-      solicitudes: [],
-      documentos: pendiente.documentos || [],
-
-      // Estadísticas iniciales
-      estadisticas: {
-        solicitudesMes: 0,
-        inscripcionesMes: 0,
-        asistenciaEventos: 0,
-        pagosPendientes: 0,
-        ultimoAcceso: "Hoy",
-      },
-
-      // Información del creador original (del registro pendiente)
-      creador: pendiente.creador,
-
-      // Información de quien aprobó el registro
-      aprobadoPor: session
-        ? {
-            username: session.user?.username || "admin",
-            email: session.user?.email || "admin@cov.com",
-            fecha: new Date().toISOString(),
-            esAdmin: session.user?.role === "admin" || false,
-          }
-        : null,
-    };
-
+   
+    const res = await postDataUsuario(`colegiado`,{...datosRegistro, recaudos_id:pendienteId})
     // Añadir el colegiado y eliminar el pendiente
-    get().addColegiado(nuevoColegiado);
+    get().addColegiado(res.data);
     get().removeColegiadoPendiente(pendienteId);
 
-    return nuevoColegiado;
+    return res;
   },
 
   // Funciones específicas

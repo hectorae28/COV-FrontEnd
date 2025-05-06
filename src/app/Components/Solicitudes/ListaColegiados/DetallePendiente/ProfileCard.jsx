@@ -16,19 +16,20 @@ import {
 } from "lucide-react"
 import SessionInfo from "@/Components/SessionInfo"
 
-export default function ProfileCard({
-    pendiente,
-    obtenerIniciales,
-    nombreCompleto,
-    fechaSolicitud,
-    documentosCompletos,
-    pagosPendientes,
-    setMostrarConfirmacion,
-    setMostrarRechazo,
-    setMostrarExoneracion,
-    isRechazada,
-    isDenegada,
-}) {
+export default function ProfileCard({props}) {
+    const {
+        pendiente,
+        obtenerIniciales,
+        nombreCompleto,
+        fechaSolicitud,
+        documentosCompletos,
+        pagosPendientes,
+        setMostrarConfirmacion,
+        setMostrarRechazo,
+        setMostrarExoneracion,
+        isRechazada,
+        isDenegada,
+    } = props
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}

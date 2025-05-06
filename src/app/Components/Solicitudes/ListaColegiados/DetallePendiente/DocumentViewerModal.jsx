@@ -12,7 +12,7 @@ export default function DocumentViewerModal({ documento, onClose, pendiente }) {
 
     // Determinar si es un comprobante de pago
     const isComprobantePago =
-        documento && (documento.id.includes("comprobante_pago") || documento.nombre.toLowerCase().includes("comprobante"))
+        documento && (documento?.id?.includes("comprobante_pago") || documento?.nombre?.toLowerCase().includes("comprobante"))
 
     // Obtener el usuario que autorizó la exoneración
     const usuarioExoneracion = pendiente?.exoneracionPagos?.usuario
