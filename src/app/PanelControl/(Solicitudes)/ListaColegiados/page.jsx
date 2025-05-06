@@ -1,22 +1,22 @@
-"use client"
-import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado"
-import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente"
-import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal"
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
-import Pagination from "@/Components/Paginations.jsx"
-import { motion } from "framer-motion"
+"use client";
+import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado";
+import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
+import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal";
+import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import Pagination from "@/Components/Paginations.jsx";
+import { motion } from "framer-motion";
 import {
-    AlertTriangle,
-    ArrowUpDown,
-    CheckCircle,
-    ChevronRight,
-    PlusCircle,
-    Search,
-    UserX,
-    X,
-    XCircle,
-} from "lucide-react"
-import { useEffect, useState } from "react"
+  AlertTriangle,
+  ArrowUpDown,
+  CheckCircle,
+  ChevronRight,
+  PlusCircle,
+  Search,
+  UserX,
+  X,
+  XCircle,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function ListaColegiadosPage() {
   // Estado del store de Zustand
@@ -44,6 +44,7 @@ export default function ListaColegiadosPage() {
   // Filtros para pendientes
   const [filtroFecha, setFiltroFecha] = useState("todas");
   const [filtroEstadoPendiente, setFiltroEstadoPendiente] = useState("todos"); // Cambiado de filtroPagosPendientes
+  const [filtroEtiqueta, setFiltroEtiqueta] = useState("todos")
   const [registroExitoso, setRegistroExitoso] = useState(false);
   const [aprobacionExitosa, setAprobacionExitosa] = useState(false);
 
@@ -66,11 +67,13 @@ export default function ListaColegiadosPage() {
       if (filtroFecha === "semana") {
         const unaSemanAtras = new Date();
         unaSemanAtras.setDate(unaSemanAtras.getDate() - 7);
-        filtros.fecha_solicitud_desde = unaSemanAtras.toISOString().split('T')[0];
+        filtros.fecha_solicitud_desde = unaSemanAtras
+          .toISOString()
+          .split("T")[0];
       } else if (filtroFecha === "mes") {
         const unMesAtras = new Date();
         unMesAtras.setMonth(unMesAtras.getMonth() - 1);
-        filtros.fecha_solicitud_desde = unMesAtras.toISOString().split('T')[0];
+        filtros.fecha_solicitud_desde = unMesAtras.toISOString().split("T")[0];
       }
     }
 
@@ -80,15 +83,35 @@ export default function ListaColegiadosPage() {
     if (ordenFecha) {
       filtros.ordering = ordenFecha === "desc" ? "-created_at" : "created_at";
     }
-    if (filtroEstadoPendiente !== "todos") {
-      if (filtroEstadoPendiente === "documentosIncompletos") {
+    if (filtroEtiqueta !== "todos") {
+      if (filtroEtiqueta === "documentosIncompletos") {
         filtros.documentos_completos = "false";
-      } else if (filtroEstadoPendiente === "pagosPendientes") {
+      } else if (filtroEtiqueta === "pagosPendientes") {
         filtros.tiene_pago = "false";
+      } else if(filtroEtiqueta === "pagosExonerados"){
+        filtros.pago_exonerado = "true"
       }
     }
-    fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros)
-  }, [currentPage, recordsPerPage, searchTerm, filtroEstadoPendiente, filtroFecha, fechaDesde, fechaHasta, ordenFecha]);
+    if(filtroEstado!=="todos"){
+      if(filtroEstado === "rechazados"){
+        filtros.status = "rechazados"
+      } else if(filtroEstado === "pendientes"){
+        filtroEstado.status = "revisando"
+      }
+    }
+    console.log({ currentPage, recordsPerPage, searchTerm, filtros });
+    fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros);
+  }, [
+    currentPage,
+    recordsPerPage,
+    searchTerm,
+    filtroEstadoPendiente,
+    filtroFecha,
+    fechaDesde,
+    fechaHasta,
+    ordenFecha,
+    filtroEtiqueta
+  ]);
 
   const verDetalleColegiado = (id) => {
     setColegiadoSeleccionadoId(id);
@@ -174,7 +197,12 @@ export default function ListaColegiadosPage() {
           className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
+          transition={{
+            duration: 0.8,
+            delay: 0.2,
+            type: "spring",
+            stiffness: 100,
+          }}
         >
           Lista de colegiados
         </motion.h1>
@@ -261,28 +289,35 @@ export default function ListaColegiadosPage() {
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex gap-6">
           <button
-            className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${tabActivo === "pendientes"
-              ? "border-[#C40180] text-[#C40180]"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-              } transition-colors`}
+            className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${
+              tabActivo === "pendientes"
+                ? "border-[#C40180] text-[#C40180]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            } transition-colors`}
             onClick={() => setTabActivo("pendientes")}
           >
-            Pendientes por aprobación ({colegiadosPendientes.filter(p => p.estado !== "denegada").length})
+            Pendientes por aprobación (
+            {colegiadosPendientes.filter((p) => p.estado !== "denegada").length}
+            )
           </button>
           <button
-            className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${tabActivo === "denegadas"
-              ? "border-[#C40180] text-[#C40180]"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-              } transition-colors`}
+            className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${
+              tabActivo === "denegadas"
+                ? "border-[#C40180] text-[#C40180]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            } transition-colors`}
             onClick={() => setTabActivo("denegadas")}
           >
-            Denegadas ({colegiadosPendientes.filter(p => p.estado === "denegada").length})
+            Denegadas (
+            {colegiadosPendientes.filter((p) => p.estado === "denegada").length}
+            )
           </button>
           <button
-            className={`py-4 px-1 cursor-pointer font-medium text-sm sm:text-base border-b-2 ${tabActivo === "registrados"
-              ? "border-[#C40180] text-[#C40180]"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-              } transition-colors`}
+            className={`py-4 px-1 cursor-pointer font-medium text-sm sm:text-base border-b-2 ${
+              tabActivo === "registrados"
+                ? "border-[#C40180] text-[#C40180]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            } transition-colors`}
             onClick={() => setTabActivo("registrados")}
           >
             Colegiados registrados ({colegiados.length})
@@ -300,37 +335,41 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Estado de solvencia</p>
               <div className="flex gap-2">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "todos"
-                    ? "bg-purple-100 text-purple-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEstado === "todos"
+                      ? "bg-purple-100 text-purple-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroEstado("todos")}
                 >
                   Todos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "solventes"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEstado === "solventes"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroEstado("solventes")}
                 >
                   Solventes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "No Solvente"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEstado === "No Solvente"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroEstado("No Solvente")}
                 >
                   No Solventes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "solicitudes"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEstado === "solicitudes"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroEstado("solicitudes")}
                 >
                   Con Solicitudes
@@ -351,7 +390,9 @@ export default function ListaColegiadosPage() {
                 <option value="Endodoncia">Endodoncia</option>
                 <option value="Periodoncia">Periodoncia</option>
                 <option value="Odontopediatría">Odontopediatría</option>
-                <option value="Cirugía maxilofacial">Cirugía maxilofacial</option>
+                <option value="Cirugía maxilofacial">
+                  Cirugía maxilofacial
+                </option>
               </select>
             </div>
           </div>
@@ -367,28 +408,31 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Fecha de solicitud</p>
               <div className="flex gap-2">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "todas"
-                    ? "bg-purple-100 text-purple-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroFecha === "todas"
+                      ? "bg-purple-100 text-purple-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroFecha("todas")}
                 >
                   Todas
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "semana"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroFecha === "semana"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroFecha("semana")}
                 >
                   Última semana
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroFecha === "mes"
-                    ? "bg-indigo-100 text-indigo-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroFecha === "mes"
+                      ? "bg-indigo-100 text-indigo-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroFecha("mes")}
                 >
                   Último mes
@@ -400,7 +444,9 @@ export default function ListaColegiadosPage() {
             <div>
               <div className="flex gap-2 items-center">
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">Desde</label>
+                  <label className="text-xs text-gray-500 block mb-1">
+                    Desde
+                  </label>
                   <input
                     type="date"
                     value={fechaDesde}
@@ -409,7 +455,9 @@ export default function ListaColegiadosPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">Hasta</label>
+                  <label className="text-xs text-gray-500 block mb-1">
+                    Hasta
+                  </label>
                   <input
                     type="date"
                     value={fechaHasta}
@@ -435,56 +483,79 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Estado</p>
               <div className="flex gap-2 flex-wrap">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "todos"
-                    ? "bg-purple-100 text-purple-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEstadoPendiente === "todos"
+                      ? "bg-purple-100 text-purple-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroEstadoPendiente("todos")}
                 >
                   Todos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "pendientes"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEstadoPendiente === "pendientes"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroEstadoPendiente("pendientes")}
                 >
                   Pendientes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "rechazados"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEstadoPendiente === "rechazados"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                   onClick={() => setFiltroEstadoPendiente("rechazados")}
                 >
                   Rechazados
                 </button>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Etiquetas</p>
+              <div className="flex gap-2 flex-wrap">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "documentosIncompletos"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  onClick={() => setFiltroEstadoPendiente("documentosIncompletos")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEtiqueta === "todos"
+                      ? "bg-purple-100 text-purple-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                  onClick={() => setFiltroEtiqueta("todos")}
+                >
+                  Todos
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEtiqueta === "documentosIncompletos"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                  onClick={() =>
+                    setFiltroEtiqueta("documentosIncompletos")
+                  }
                 >
                   Documentos Incompletos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "pagosPendientes"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  onClick={() => setFiltroEstadoPendiente("pagosPendientes")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEtiqueta === "pagosPendientes"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                  onClick={() => setFiltroEtiqueta("pagosPendientes")}
                 >
                   Pagos Pendientes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "pagosExonerados"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  onClick={() => setFiltroEstadoPendiente("pagosExonerados")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    filtroEtiqueta === "pagosExonerados"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                  onClick={() => setFiltroEtiqueta("pagosExonerados")}
                 >
                   Pagos Exonerados
                 </button>
@@ -539,10 +610,11 @@ export default function ListaColegiadosPage() {
                             Fecha Registro
                             <ArrowUpDown
                               size={14}
-                              className={`transition-transform ${ordenFechaRegistrados === "desc"
-                                ? "text-purple-600"
-                                : "text-gray-400 rotate-180"
-                                }`}
+                              className={`transition-transform ${
+                                ordenFechaRegistrados === "desc"
+                                  ? "text-purple-600"
+                                  : "text-gray-400 rotate-180"
+                              }`}
                             />
                           </button>
                         </th>
@@ -579,10 +651,11 @@ export default function ListaColegiadosPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colegiado.solvente
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                                }`}
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                colegiado.solvente
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
                             >
                               {colegiado.solvente ? "Solvente" : "No Solvente"}
                             </span>
@@ -644,11 +717,18 @@ export default function ListaColegiadosPage() {
                           Cédula
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                          <button className="flex items-center justify-center gap-1 w-full" onClick={toggleOrdenFecha}>
+                          <button
+                            className="flex items-center justify-center gap-1 w-full"
+                            onClick={toggleOrdenFecha}
+                          >
                             Fecha solicitud
                             <ArrowUpDown
                               size={14}
-                              className={`transition-transform ${ordenFecha === "desc" ? "text-purple-600" : "text-gray-400 rotate-180"}`}
+                              className={`transition-transform ${
+                                ordenFecha === "desc"
+                                  ? "text-purple-600"
+                                  : "text-gray-400 rotate-180"
+                              }`}
                             />
                           </button>
                         </th>
@@ -677,26 +757,26 @@ export default function ListaColegiadosPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
                             {pendiente.created_at
                               ? (() => {
-                                const fecha = new Date(pendiente.created_at);
-                                const dia = String(fecha.getDate()).padStart(
-                                  2,
-                                  "0"
-                                );
-                                const mes = String(
-                                  fecha.getMonth() + 1
-                                ).padStart(2, "0"); // Los meses empiezan en 0
-                                const año = fecha.getFullYear();
-                                const horas = String(
-                                  fecha.getHours()
-                                ).padStart(2, "0");
-                                const minutos = String(
-                                  fecha.getMinutes()
-                                ).padStart(2, "0");
-                                const segundos = String(
-                                  fecha.getSeconds()
-                                ).padStart(2, "0");
-                                return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
-                              })()
+                                  const fecha = new Date(pendiente.created_at);
+                                  const dia = String(fecha.getDate()).padStart(
+                                    2,
+                                    "0"
+                                  );
+                                  const mes = String(
+                                    fecha.getMonth() + 1
+                                  ).padStart(2, "0"); // Los meses empiezan en 0
+                                  const año = fecha.getFullYear();
+                                  const horas = String(
+                                    fecha.getHours()
+                                  ).padStart(2, "0");
+                                  const minutos = String(
+                                    fecha.getMinutes()
+                                  ).padStart(2, "0");
+                                  const segundos = String(
+                                    fecha.getSeconds()
+                                  ).padStart(2, "0");
+                                  return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
+                                })()
                               : "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -711,14 +791,26 @@ export default function ListaColegiadosPage() {
                                 </span>
                               ) : (
                                 <>
-                                  {!pendiente.documentosCompletos && (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        <XCircle size={12} /> Documentos Incompletos
-                                    </span>
-                                  )}
-                                  {pendiente.pagosPendientes && (
+                                  <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${!pendiente.archivos_faltantes.tiene_faltantes
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                              >
+                                {!pendiente.archivos_faltantes.tiene_faltantes ? (
+                                  <>
+                                    <CheckCircle size={12} /> Documentos
+                                    Completos
+                                  </>
+                                ) : (
+                                  <>
+                                    <XCircle size={12} /> Documentos Incompletos
+                                  </>
+                                )}
+                              </span>
+                                  {pendiente.pago === null && (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
-                                        <XCircle size={12} /> Pagos Pendientes
+                                      <XCircle size={12} /> Pagos Pendientes
                                     </span>
                                   )}
                                 </>
@@ -728,8 +820,11 @@ export default function ListaColegiadosPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                             <button
                               onClick={() => verDetallePendiente(pendiente.id)}
-                              className={`text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto ${pendiente.estado === "denegada" ? "opacity-75" : ""
-                                }`}
+                              className={`text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto ${
+                                pendiente.estado === "denegada"
+                                  ? "opacity-75"
+                                  : ""
+                              }`}
                             >
                               Revisar
                               <ChevronRight size={16} />
@@ -741,7 +836,10 @@ export default function ListaColegiadosPage() {
                   </table>
                   <Pagination
                     currentPage={currentPage}
-                    totalPages={Math.ceil((colegiadosPendientesPagination.count || 0) / recordsPerPage)}
+                    totalPages={Math.ceil(
+                      (colegiadosPendientesPagination.count || 0) /
+                        recordsPerPage
+                    )}
                     onPageChange={setCurrentPage}
                     onNextPage={() => setCurrentPage((prev) => prev + 1)}
                     onPrevPage={() => setCurrentPage((prev) => prev - 1)}
