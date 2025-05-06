@@ -70,10 +70,12 @@ export default function RegistroColegiados({
     mppsRegistrationNumber: "",
     mppsRegistrationDate: "",
     titleIssuanceDate: "",
+    state: "",
     ci: null,
     rif: null,
     titulo: null,
     mpps: null,
+    documentos: {}
   };
 
   // Estado para los datos del formulario
@@ -93,6 +95,21 @@ export default function RegistroColegiados({
 
   // Función para manejar cambios en documentos
   const handleDocumentosChange = (docs) => {
+    // Actualizar directamente los campos individuales para archivos
+    if (docs.ci) {
+      setFormData(prev => ({ ...prev, ci: docs.ci }));
+    }
+    if (docs.rif) {
+      setFormData(prev => ({ ...prev, rif: docs.rif }));
+    }
+    if (docs.titulo) {
+      setFormData(prev => ({ ...prev, titulo: docs.titulo }));
+    }
+    if (docs.mpps) {
+      setFormData(prev => ({ ...prev, mpps: docs.mpps }));
+    }
+    
+    // También mantener la estructura de documentos para coherencia
     setFormData((prev) => ({
       ...prev,
       documentos: {
@@ -386,6 +403,11 @@ export default function RegistroColegiados({
                 <span className="block mt-2 text-amber-600 font-medium">
                   Nota: El colegiado tiene pendiente realizar el pago de
                   inscripción.
+                </span>
+              )}
+              {exonerarPagos && (
+                <span className="block mt-2 text-green-600 font-medium">
+                  Nota: El colegiado ha sido exonerado del pago por administración.
                 </span>
               )}
             </p>

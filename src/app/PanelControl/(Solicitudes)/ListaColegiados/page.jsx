@@ -1,26 +1,23 @@
-"use client";
-import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado";
-import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
-import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado/RegistrarColegiadoModal";
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
-import { motion } from "framer-motion";
-import Pagination from "@/Components/Paginations";
+"use client"
+import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado"
+import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente"
+import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal"
+import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
+import Pagination from "@/Components/Paginations.jsx"
+import { motion } from "framer-motion"
 import {
-  ArrowUpDown,
-  CheckCircle,
-  ChevronRight,
-  ChevronLeft,
-  PlusCircle,
-  Search,
-  X,
-  XCircle,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+    AlertTriangle,
+    ArrowUpDown,
+    CheckCircle,
+    ChevronRight,
+    PlusCircle,
+    Search,
+    UserX,
+    X,
+    XCircle,
+} from "lucide-react"
+import { useEffect, useState } from "react"
 
-/**
- * Página principal de gestión de colegiados
- * Muestra dos tablas: pendientes y registrados, con filtros y funciones de búsqueda
- */
 export default function ListaColegiadosPage() {
   // Estado del store de Zustand
   const {
@@ -177,12 +174,7 @@ export default function ListaColegiadosPage() {
           className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{
-            duration: 0.8,
-            delay: 0.2,
-            type: "spring",
-            stiffness: 100,
-          }}
+          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
         >
           Lista de colegiados
         </motion.h1>
@@ -267,19 +259,24 @@ export default function ListaColegiadosPage() {
 
       {/* Tabs para alternar entre colegiados y pendientes */}
       <div className="border-b border-gray-200 mb-6">
-        <nav className="flex gap-8">
+        <nav className="flex gap-6">
           <button
             className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${tabActivo === "pendientes"
               ? "border-[#C40180] text-[#C40180]"
               : "border-transparent text-gray-500 hover:text-gray-700"
               } transition-colors`}
-            onClick={() => {
-              // Solo cambiar el tab, sin hacer cambios adicionales
-              setTabActivo("pendientes");
-              // No hacer nada más que mostrar el tab correcto
-            }}
+            onClick={() => setTabActivo("pendientes")}
           >
-            Pendientes por aprobación ({colegiadosPendientes.length})
+            Pendientes por aprobación ({colegiadosPendientes.filter(p => p.estado !== "denegada").length})
+          </button>
+          <button
+            className={`py-4 cursor-pointer px-1 font-medium text-sm sm:text-base border-b-2 ${tabActivo === "denegadas"
+              ? "border-[#C40180] text-[#C40180]"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+              } transition-colors`}
+            onClick={() => setTabActivo("denegadas")}
+          >
+            Denegadas ({colegiadosPendientes.filter(p => p.estado === "denegada").length})
           </button>
           <button
             className={`py-4 px-1 cursor-pointer font-medium text-sm sm:text-base border-b-2 ${tabActivo === "registrados"
@@ -298,8 +295,9 @@ export default function ListaColegiadosPage() {
         <div className="mb-6">
           <h3 className="text-sm font-medium text-gray-500 mb-3">Filtros:</h3>
           <div className="flex flex-wrap gap-3">
+            {/* Filtro de estado de solvencia */}
             <div>
-              <p className="text-xs text-gray-500 mb-1">Estado</p>
+              <p className="text-xs text-gray-500 mb-1">Estado de solvencia</p>
               <div className="flex gap-2">
                 <button
                   className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstado === "todos"
@@ -335,10 +333,11 @@ export default function ListaColegiadosPage() {
                     }`}
                   onClick={() => setFiltroEstado("solicitudes")}
                 >
-                  Solicitudes
+                  Con Solicitudes
                 </button>
               </div>
             </div>
+
             <div>
               <p className="text-xs text-gray-500 mb-1">Especialidad</p>
               <select
@@ -352,9 +351,7 @@ export default function ListaColegiadosPage() {
                 <option value="Endodoncia">Endodoncia</option>
                 <option value="Periodoncia">Periodoncia</option>
                 <option value="Odontopediatría">Odontopediatría</option>
-                <option value="Cirugía maxilofacial">
-                  Cirugía maxilofacial
-                </option>
+                <option value="Cirugía maxilofacial">Cirugía maxilofacial</option>
               </select>
             </div>
           </div>
@@ -403,9 +400,7 @@ export default function ListaColegiadosPage() {
             <div>
               <div className="flex gap-2 items-center">
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">
-                    Desde
-                  </label>
+                  <label className="text-xs text-gray-500 block mb-1">Desde</label>
                   <input
                     type="date"
                     value={fechaDesde}
@@ -414,9 +409,7 @@ export default function ListaColegiadosPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">
-                    Hasta
-                  </label>
+                  <label className="text-xs text-gray-500 block mb-1">Hasta</label>
                   <input
                     type="date"
                     value={fechaHasta}
@@ -438,10 +431,9 @@ export default function ListaColegiadosPage() {
                 )}
               </div>
             </div>
-
             <div>
               <p className="text-xs text-gray-500 mb-1">Estado</p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button
                   className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "todos"
                     ? "bg-purple-100 text-purple-800"
@@ -452,13 +444,29 @@ export default function ListaColegiadosPage() {
                   Todos
                 </button>
                 <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "pendientes"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroEstadoPendiente("pendientes")}
+                >
+                  Pendientes
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "rechazados"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroEstadoPendiente("rechazados")}
+                >
+                  Rechazados
+                </button>
+                <button
                   className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "documentosIncompletos"
                     ? "bg-yellow-100 text-yellow-800"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
-                  onClick={() =>
-                    setFiltroEstadoPendiente("documentosIncompletos")
-                  }
+                  onClick={() => setFiltroEstadoPendiente("documentosIncompletos")}
                 >
                   Documentos Incompletos
                 </button>
@@ -470,6 +478,15 @@ export default function ListaColegiadosPage() {
                   onClick={() => setFiltroEstadoPendiente("pagosPendientes")}
                 >
                   Pagos Pendientes
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-full text-sm font-medium ${filtroEstadoPendiente === "pagosExonerados"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  onClick={() => setFiltroEstadoPendiente("pagosExonerados")}
+                >
+                  Pagos Exonerados
                 </button>
               </div>
             </div>
@@ -592,19 +609,27 @@ export default function ListaColegiadosPage() {
                 </div>
               )}
             </div>
-          ) : (
-            // TABLA DE COLEGIADOS PENDIENTES
+          ) : tabActivo === "pendientes" || tabActivo === "denegadas" ? (
+            // TABLA DE COLEGIADOS PENDIENTES O DENEGADAS
             <div>
               {colegiadosPendientes.length === 0 ? (
                 <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
                   <div className="flex justify-center mb-4">
-                    <CheckCircle size={48} className="text-gray-300" />
+                    {tabActivo === "denegadas" ? (
+                      <UserX size={48} className="text-gray-300" />
+                    ) : (
+                      <CheckCircle size={48} className="text-gray-300" />
+                    )}
                   </div>
                   <h3 className="text-lg font-medium text-gray-500">
-                    No hay solicitudes pendientes
+                    {tabActivo === "denegadas"
+                      ? "No hay solicitudes denegadas"
+                      : "No hay solicitudes pendientes"}
                   </h3>
                   <p className="text-gray-400 mt-1">
-                    Todas las solicitudes han sido procesadas
+                    {tabActivo === "denegadas"
+                      ? "No se han denegado solicitudes"
+                      : "Todas las solicitudes han sido procesadas"}
                   </p>
                 </div>
               ) : (
@@ -619,17 +644,11 @@ export default function ListaColegiadosPage() {
                           Cédula
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                          <button
-                            className="flex items-center justify-center gap-1 w-full"
-                            onClick={toggleOrdenFecha}
-                          >
+                          <button className="flex items-center justify-center gap-1 w-full" onClick={toggleOrdenFecha}>
                             Fecha solicitud
                             <ArrowUpDown
                               size={14}
-                              className={`transition-transform ${ordenFecha === "desc"
-                                ? "text-purple-600"
-                                : "text-gray-400 rotate-180"
-                                }`}
+                              className={`transition-transform ${ordenFecha === "desc" ? "text-purple-600" : "text-gray-400 rotate-180"}`}
                             />
                           </button>
                         </th>
@@ -682,35 +701,35 @@ export default function ListaColegiadosPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="flex flex-col sm:flex-row gap-1 justify-center items-center">
-                              <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${!pendiente.archivos_faltantes.tiene_faltantes
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                                  }`}
-                              >
-                                {!pendiente.archivos_faltantes.tiene_faltantes ? (
-                                  <>
-                                    <CheckCircle size={12} /> Documentos
-                                    Completos
-                                  </>
-                                ) : (
-                                  <>
-                                    <XCircle size={12} /> Documentos Incompletos
-                                  </>
-                                )}
-                              </span>
-
-                              {pendiente.pago === null && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
-                                  <XCircle size={12} /> Pagos Pendientes
+                              {pendiente.estado === "rechazada" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                  <AlertTriangle size={12} /> Rechazada
                                 </span>
+                              ) : pendiente.estado === "denegada" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  <UserX size={12} /> Denegada
+                                </span>
+                              ) : (
+                                <>
+                                  {!pendiente.documentosCompletos && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <XCircle size={12} /> Documentos Incompletos
+                                    </span>
+                                  )}
+                                  {pendiente.pagosPendientes && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
+                                        <XCircle size={12} /> Pagos Pendientes
+                                    </span>
+                                  )}
+                                </>
                               )}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                             <button
                               onClick={() => verDetallePendiente(pendiente.id)}
-                              className="text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto"
+                              className={`text-[#C40180] hover:text-[#590248] cursor-pointer flex items-center justify-center gap-1 mx-auto ${pendiente.estado === "denegada" ? "opacity-75" : ""
+                                }`}
                             >
                               Revisar
                               <ChevronRight size={16} />
@@ -732,7 +751,7 @@ export default function ListaColegiadosPage() {
                 </div>
               )}
             </div>
-          )}
+          ) : null}
         </>
       )}
 

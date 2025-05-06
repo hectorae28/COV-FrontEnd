@@ -62,12 +62,6 @@ export default function DetallePendiente({ params, onVolver }) {
     });
     const [agregarInstitucion, setAgregarInstitucion] = useState(false);
 
-    // useEffect(() => {
-    //     if (session) {
-    //         initSession(session);
-    //     }
-    // }, [session, initSession]);
-
     // Cargar datos del pendiente
     useEffect(() => {
         const loadData = async () => {
@@ -147,11 +141,6 @@ export default function DetallePendiente({ params, onVolver }) {
         try {
             if (isSubmitting) return;
             setIsSubmitting(true);
-
-            // Asegurarnos de que la sesión esté inicializada
-            // if (session) {
-            //     initSession(session);
-            // }
 
             // Guardar cambios pendientes antes de aprobar
             if (cambiosPendientes) {
