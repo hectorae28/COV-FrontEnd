@@ -28,12 +28,15 @@ export default function DetallePendiente({ params, onVolver }) {
         rejectRegistration,
         denyRegistration,
         initSession,
+        getSolicitudes,
     } = useDataListaColegiados()
 
     // Estados locales
     const [solicitudes, setSolicitudes] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
+    const [pendiente, setPendiente] = useState(null)
+    const [cambiosPendientes, setCambiosPendientes] = useState(false)
 
     // Estados para modales
     const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
@@ -88,11 +91,9 @@ export default function DetallePendiente({ params, onVolver }) {
         const fetchSolicitudes = async () => {
             try {
                 setIsLoading(true)
-
-                // Obtener solicitudes desde el store centralizado
-                const solicitudesColegiado = getSolicitudes(colegiadoId)
+                // Use pendienteId instead of colegiadoId
+                const solicitudesColegiado = getSolicitudes(pendienteId)
                 setSolicitudes(solicitudesColegiado)
-
                 setIsLoading(false)
             } catch (error) {
                 console.error("Error al cargar las solicitudes:", error)
@@ -101,7 +102,7 @@ export default function DetallePendiente({ params, onVolver }) {
         }
 
         fetchSolicitudes()
-    }, [colegiadoId, getSolicitudes, forceUpdate])
+    }, [pendienteId, getSolicitudes])
 
     // Cargar datos del pendiente
     useEffect(() => {
@@ -180,12 +181,36 @@ export default function DetallePendiente({ params, onVolver }) {
             // Actualizar el estado local
             setDocumentosRequeridos(nuevosDocumentos)
 
+            // Check if this is a payment receipt document
+            const isPaymentReceipt =
+                documentoActualizado.id.includes("comprobante_pago") ||
+                documentoActualizado.nombre.toLowerCase().includes("comprobante")
+
+            // If it's a payment receipt and has a file, update pagosPendientes to false
+            let updatedPagosPendientes = pagosPendientes
+            if (
+                isPaymentReceipt &&
+                documentoActualizado.archivo &&
+                !documentoActualizado.archivo.toLowerCase().includes("exonerado")
+            ) {
+                updatedPagosPendientes = false
+                setPagosPendientes(false)
+            }
+
             // Actualizar en el store
             const nuevosDatos = {
                 ...pendiente,
                 documentos: nuevosDocumentos,
+                pagosPendientes: updatedPagosPendientes,
             }
             updateColegiadoPendiente(pendienteId, nuevosDatos)
+
+            // Update local pendiente state
+            setPendiente({
+                ...pendiente,
+                documentos: nuevosDocumentos,
+                pagosPendientes: updatedPagosPendientes,
+            })
 
             // Verificar si los documentos están completos ahora
             const docsRequeridos = nuevosDocumentos.filter(
@@ -209,6 +234,13 @@ export default function DetallePendiente({ params, onVolver }) {
             // Verificar que todos los documentos requeridos estén presentes
             if (!documentosCompletos) {
                 alert("No se puede aprobar esta solicitud. Faltan documentos requeridos.")
+                setIsSubmitting(false)
+                return
+            }
+
+            // Verificar que los pagos estén completos o exonerados
+            if (pagosPendientes && !pendiente.exoneracionPagos?.fecha) {
+                alert("No se puede aprobar esta solicitud. Los pagos están pendientes y no han sido exonerados.")
                 setIsSubmitting(false)
                 return
             }

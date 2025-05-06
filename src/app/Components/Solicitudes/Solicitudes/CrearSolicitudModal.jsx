@@ -1,7 +1,7 @@
 "use client"
 
+import { CheckCircle, ChevronRight, Clock, X } from "lucide-react"
 import { useState } from "react"
-import { X, CheckCircle, ChevronRight, Clock } from "lucide-react"
 import SeleccionarSolicitudesStep from "./StepsSeleccionarSolic"
 
 export default function CrearSolicitudModal({
@@ -9,16 +9,39 @@ export default function CrearSolicitudModal({
   onSolicitudCreada,
   colegiados = [],
   colegiadoPreseleccionado = null,
-  onVerDetalle
+  onVerDetalle,
+  session
 }) {
+
   // Estado para almacenar la solicitud creada
   const [solicitudCreada, setSolicitudCreada] = useState(null)
 
   // Función para manejar la creación de solicitud
   const handleSolicitudCreada = (nuevaSolicitud) => {
-    setSolicitudCreada(nuevaSolicitud)
-    onSolicitudCreada(nuevaSolicitud)
-  }
+    // Crear datos del usuario administrador directamente
+    const userInfo = {
+      name: "Administrador",
+      email: "admin@ejemplo.com",
+      role: "admin",
+      isAdmin: true
+    };
+
+    // Agregar la información del creador a la solicitud
+    const solicitudConCreador = {
+      ...nuevaSolicitud,
+      creador: {
+        nombre: userInfo.name || "Usuario",
+        email: userInfo.email,
+        username: userInfo.name,
+        esAdmin: true,
+        fecha: new Date().toISOString()
+      }
+    };
+
+    // Actualizar estado local y enviar al componente padre
+    setSolicitudCreada(solicitudConCreador);
+    onSolicitudCreada(solicitudConCreador);
+  };
 
   // Función para ir a la vista de detalle de la solicitud
   const handleVerDetalle = () => {
@@ -95,6 +118,18 @@ export default function CrearSolicitudModal({
                     )}
                   </p>
                 </div>
+                {solicitudCreada.creador && (
+                  <div className="sm:col-span-2">
+                    <p className="text-sm text-gray-500">Creado por</p>
+                    <p className="font-medium text-gray-800 flex items-center">
+                      {solicitudCreada.creador.nombre}
+                      {solicitudCreada.creador.esAdmin && (
+                        <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">Admin</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500">{new Date(solicitudCreada.creador.fecha).toLocaleString()}</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -122,6 +157,12 @@ export default function CrearSolicitudModal({
             mostrarSeleccionColegiado={!esContextoColegiado}
             onFinalizarSolicitud={handleSolicitudCreada}
             onClose={onClose}
+            creadorInfo={{
+              name: "Administrador",
+              email: "admin@ejemplo.com",
+              role: "admin",
+              isAdmin: true
+            }}
           />
         )}
       </div>

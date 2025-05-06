@@ -10,7 +10,9 @@ import {
   PlusCircle,
   Search,
   XCircle,
-  FileCheck
+  FileCheck,
+  Shield,
+  User
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
@@ -311,6 +313,24 @@ export default function ListaSolicitudes() {
                         <div className="text-xs text-gray-500 mt-1">
                           {solicitud.costo > 0 ? `${solicitud.costo.toFixed(2)}` : 'Sin costo'}
                         </div>
+                        {/* Mostrar información del creador (NUEVO) */}
+                        {solicitud.creador && (
+                          <div className="flex items-center mt-1 text-xs text-gray-500">
+                            {solicitud.creador.esAdmin ? (
+                              <Shield size={12} className="mr-1 text-purple-500" />
+                            ) : (
+                              <User size={12} className="mr-1 text-gray-400" />
+                            )}
+                            <span>
+                              Creado por {solicitud.creador.nombre || "Usuario"}
+                              {solicitud.creador.esAdmin && (
+                                <span className="ml-1 text-xs bg-purple-100 text-purple-800 px-1 py-0.5 rounded text-[10px]">
+                                  Admin
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{solicitud.colegiadoNombre}</div>
@@ -379,6 +399,14 @@ export default function ListaSolicitudes() {
           colegiados={colegiados}
           colegiadoPreseleccionado={colegiadoSeleccionado}
           onVerDetalle={verDetalleSolicitud}
+          session={{
+            user: {
+              name: "Administrador",
+              email: "admin@ejemplo.com",
+              role: "admin",
+              isAdmin: true
+            }
+          }}
         />
       )}
     </div>

@@ -882,7 +882,7 @@ export default function ListaColegiadosPage() {
                 <RegistroColegiados
                     isAdmin={true}
                     onClose={() => setShowRegistro(false)}
-                    onRegistroExitoso={handleRegistrVeoExitoso}
+                    onRegistroExitoso={handleRegistroExitoso}
                 />
             )}
         </div>

@@ -1,15 +1,8 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-    CheckCircle,
-    ChevronLeft,
-    ChevronRight,
-    XCircle,
-    AlertOctagon,
-    X
-} from "lucide-react";
+import { useState } from "react"
+import { motion } from "framer-motion"
+import { CheckCircle, ChevronLeft, ChevronRight, XCircle, AlertOctagon, X } from "lucide-react"
 
 // Modal de Aprobación
 export function ApprovalModal({
@@ -20,50 +13,51 @@ export function ApprovalModal({
     setPasoModal,
     handleAprobarSolicitud,
     documentosCompletos,
-    onClose
+    onClose,
+    pendiente,
 }) {
-    const [errores, setErrores] = useState({});
+    const [errores, setErrores] = useState({})
 
     // Verificar si puede continuar al paso 2
     const puedeAvanzar = () => {
         // Validar campos del formulario
-        const nuevosErrores = {};
-        if (!datosRegistro.libro.trim()) nuevosErrores.libro = "El libro es requerido";
-        if (!datosRegistro.pagina.trim()) nuevosErrores.pagina = "La página es requerida";
-        if (!datosRegistro.num_cov.trim()) nuevosErrores.num_cov = "El número de COV es requerido";
+        const nuevosErrores = {}
+        if (!datosRegistro.libro.trim()) nuevosErrores.libro = "El libro es requerido"
+        if (!datosRegistro.pagina.trim()) nuevosErrores.pagina = "La página es requerida"
+        if (!datosRegistro.num_cov.trim()) nuevosErrores.num_cov = "El número de COV es requerido"
 
-        setErrores(nuevosErrores);
-        return Object.keys(nuevosErrores).length === 0;
-    };
+        setErrores(nuevosErrores)
+        return Object.keys(nuevosErrores).length === 0
+    }
 
     // Avanzar al siguiente paso
     const avanzarPaso = () => {
         if (puedeAvanzar()) {
-            setPasoModal(2);
+            setPasoModal(2)
         }
-    };
+    }
 
     // Volver al paso anterior
     const retrocederPaso = () => {
-        setPasoModal(1);
-    };
+        setPasoModal(1)
+    }
 
     // Manejar cambios en los campos
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setDatosRegistro(prev => ({
+        const { name, value } = e.target
+        setDatosRegistro((prev) => ({
             ...prev,
-            [name]: value
-        }));
+            [name]: value,
+        }))
         // Limpiar error al modificar el campo
         if (errores[name]) {
-            setErrores(prev => {
-                const nuevosErrores = { ...prev };
-                delete nuevosErrores[name];
-                return nuevosErrores;
-            });
+            setErrores((prev) => {
+                const nuevosErrores = { ...prev }
+                delete nuevosErrores[name]
+                return nuevosErrores
+            })
         }
-    };
+    }
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
@@ -77,9 +71,7 @@ export function ApprovalModal({
                     <div className="flex items-center justify-center mb-2 text-green-600">
                         <CheckCircle size={40} />
                     </div>
-                    <h3 className="text-xl font-semibold text-center text-gray-900">
-                        Aprobar solicitud
-                    </h3>
+                    <h3 className="text-xl font-semibold text-center text-gray-900">Aprobar solicitud</h3>
                 </div>
 
                 {/* Contenido del paso 1 - Datos de registro */}
@@ -91,16 +83,29 @@ export function ApprovalModal({
                                 <div>
                                     <h4 className="text-red-800 font-medium text-sm">Documentación incompleta</h4>
                                     <p className="text-red-700 text-xs mt-1">
-                                        La solicitud no puede ser aprobada porque faltan documentos requeridos.
-                                        Asegúrese de que todos los documentos estén completos antes de aprobar.
+                                        La solicitud no puede ser aprobada porque faltan documentos requeridos. Asegúrese de que todos los
+                                        documentos estén completos antes de aprobar.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        {pendiente && pendiente.pagosPendientes && !pendiente.exoneracionPagos?.fecha && (
+                            <div className="mb-6 bg-red-50 p-4 rounded-md border border-red-100 flex items-start">
+                                <XCircle size={20} className="text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <h4 className="text-red-800 font-medium text-sm">Pagos pendientes</h4>
+                                    <p className="text-red-700 text-xs mt-1">
+                                        La solicitud no puede ser aprobada porque hay pagos pendientes. Complete los pagos o exonere los
+                                        pagos antes de aprobar.
                                     </p>
                                 </div>
                             </div>
                         )}
 
                         <p className="text-center text-gray-600 mb-6">
-                            Está a punto de aprobar la solicitud de <span className="font-medium text-gray-900">{nombreCompleto}</span>.
-                            Por favor complete los datos de registro.
+                            Está a punto de aprobar la solicitud de{" "}
+                            <span className="font-medium text-gray-900">{nombreCompleto}</span>. Por favor complete los datos de
+                            registro.
                         </p>
 
                         <div className="space-y-4">
@@ -114,13 +119,11 @@ export function ApprovalModal({
                                     name="libro"
                                     value={datosRegistro.libro}
                                     onChange={handleInputChange}
-                                    className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.libro ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.libro ? "border-red-300 bg-red-50" : "border-gray-300"
                                         }`}
                                     placeholder="Ej: A-001"
                                 />
-                                {errores.libro && (
-                                    <p className="text-red-500 text-xs mt-1">{errores.libro}</p>
-                                )}
+                                {errores.libro && <p className="text-red-500 text-xs mt-1">{errores.libro}</p>}
                             </div>
 
                             <div>
@@ -133,13 +136,11 @@ export function ApprovalModal({
                                     name="pagina"
                                     value={datosRegistro.pagina}
                                     onChange={handleInputChange}
-                                    className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.pagina ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.pagina ? "border-red-300 bg-red-50" : "border-gray-300"
                                         }`}
                                     placeholder="Ej: 25"
                                 />
-                                {errores.pagina && (
-                                    <p className="text-red-500 text-xs mt-1">{errores.pagina}</p>
-                                )}
+                                {errores.pagina && <p className="text-red-500 text-xs mt-1">{errores.pagina}</p>}
                             </div>
 
                             <div>
@@ -152,13 +153,11 @@ export function ApprovalModal({
                                     name="num_cov"
                                     value={datosRegistro.num_cov}
                                     onChange={handleInputChange}
-                                    className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.num_cov ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.num_cov ? "border-red-300 bg-red-50" : "border-gray-300"
                                         }`}
                                     placeholder="Ej: 12345"
                                 />
-                                {errores.num_cov && (
-                                    <p className="text-red-500 text-xs mt-1">{errores.num_cov}</p>
-                                )}
+                                {errores.num_cov && <p className="text-red-500 text-xs mt-1">{errores.num_cov}</p>}
                             </div>
                         </div>
 
@@ -171,10 +170,12 @@ export function ApprovalModal({
                             </button>
                             <button
                                 onClick={avanzarPaso}
-                                disabled={!documentosCompletos}
-                                className={`px-4 py-2 flex items-center ${documentosCompletos
-                                    ? 'bg-green-600 hover:bg-green-700'
-                                    : 'bg-gray-400 cursor-not-allowed'
+                                disabled={
+                                    !documentosCompletos || (pendiente && pendiente.pagosPendientes && !pendiente.exoneracionPagos?.fecha)
+                                }
+                                className={`px-4 py-2 flex items-center ${documentosCompletos && (!pendiente || !pendiente.pagosPendientes || pendiente.exoneracionPagos?.fecha)
+                                        ? "bg-green-600 hover:bg-green-700"
+                                        : "bg-gray-400 cursor-not-allowed"
                                     } text-white rounded-md transition-colors`}
                             >
                                 Continuar
@@ -206,8 +207,9 @@ export function ApprovalModal({
                         </div>
 
                         <p className="text-center text-gray-600 mb-6">
-                            ¿Está seguro de que desea aprobar la solicitud de <span className="font-medium text-gray-900">{nombreCompleto}</span>?
-                            Una vez aprobada, el colegiado será registrado oficialmente.
+                            ¿Está seguro de que desea aprobar la solicitud de{" "}
+                            <span className="font-medium text-gray-900">{nombreCompleto}</span>? Una vez aprobada, el colegiado será
+                            registrado oficialmente.
                         </p>
 
                         <div className="flex justify-between">
@@ -230,7 +232,7 @@ export function ApprovalModal({
                 )}
             </motion.div>
         </div>
-    );
+    )
 }
 
 // Modal de Rechazo/Denegación
@@ -240,7 +242,7 @@ export function RejectModal({
     setMotivoRechazo,
     handleRechazarSolicitud,
     handleDenegarSolicitud,
-    onClose
+    onClose,
 }) {
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
@@ -253,13 +255,12 @@ export function RejectModal({
                     <div className="flex items-center justify-center mb-2 text-red-600">
                         <XCircle size={40} />
                     </div>
-                    <h3 className="text-xl font-semibold text-center text-gray-900">
-                        Rechazar solicitud
-                    </h3>
+                    <h3 className="text-xl font-semibold text-center text-gray-900">Rechazar solicitud</h3>
                 </div>
                 <div className="p-6">
                     <p className="text-center text-gray-600 mb-4">
-                        Está a punto de rechazar la solicitud de <span className="font-medium text-gray-900">{nombreCompleto}</span>.
+                        Está a punto de rechazar la solicitud de <span className="font-medium text-gray-900">{nombreCompleto}</span>
+                        .
                     </p>
 
                     <div className="bg-yellow-50 p-3 rounded-md border border-yellow-100 mb-4">
@@ -268,8 +269,7 @@ export function RejectModal({
                         </h4>
                         <p className="text-xs text-yellow-700">
                             • <strong>Rechazar:</strong> Permite correcciones futuras. El solicitante puede volver a intentarlo.
-                            <br />
-                            • <strong>Denegar:</strong> Rechazo definitivo. No se permitirán más acciones sobre esta solicitud.
+                            <br />• <strong>Denegar:</strong> Rechazo definitivo. No se permitirán más acciones sobre esta solicitud.
                         </p>
                     </div>
 
@@ -312,7 +312,7 @@ export function RejectModal({
                 </div>
             </motion.div>
         </div>
-    );
+    )
 }
 
 // Modal de Exoneración
@@ -388,5 +388,5 @@ export function ExonerationModal({
                 </div>
             </motion.div>
         </div>
-    );
+    )
 }

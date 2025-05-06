@@ -43,7 +43,8 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
             break;
           default:
             setError("Ocurrió un error inesperado. Intenta nuevamente.");
-        }      
+        }
+            
       } else {
         console.log("Inicio de sesión exitoso:", result);
         router.push("/Colegiado");
@@ -106,46 +107,54 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
           "Iniciar Sesión"
         )}
       </motion.button>
-      
-      {/* Forgot password and Claim Account links */}
-      <div className="text-center mt-4 flex flex-col space-y-2">
-        <a
+        
+      {/* Forgot password link */}
+      <div className="text-center mt-4">
+        <motion.a
           href="#"
-          className="text-[#D7008A] hover:underline text-sm"
+          className="text-[#D7008A] hover:underline text-sm inline-block px-4 py-2"
           onClick={(e) => {
             e.preventDefault();
             onForgotPassword();
           }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           ¿Olvidaste tu contraseña?
-        </a>
+        </motion.a>
+      </div>
         
-        <a
-          href="#"
-          className="text-[#D7008A] hover:underline text-sm"
-          onClick={(e) => {
-            e.preventDefault();
-            onClaimAccount();
-          }}
-        >
-          ¿Ya Fuiste Registrado? Crea tu Nuevo Usuario
-        </a>
-      </div>
-      
-      {/* Register link */}
-      <div className="text-center mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
-        <p className="text-gray-700 mb-2">¿No tienes una cuenta?</p>
-        <a
-          href="#"
-          className="text-[#D7008A] font-medium hover:underline"
-          onClick={(e) => {
-            e.preventDefault();
-            onRegister();
-          }}
-        >
+      {/* Register link - Entire section with hover effect */}
+      <motion.div 
+        className="text-center mt-8 p-2 bg-gray-50 rounded-xl border border-gray-100 cursor-pointer hover:bg-gradient-to-r hover:from-[#D7008A] hover:to-[#41023B] group transition-all duration-300"
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={(e) => {
+          e.preventDefault();
+          onRegister();
+        }}
+      >
+        <p className="text-gray-700 mb-2 group-hover:text-white transition-colors duration-300">¿No tienes una cuenta?</p>
+        <span className="text-[#D7008A] font-medium group-hover:text-white transition-colors duration-300">
           Registrate como Colegiado
-        </a>
-      </div>
+        </span>
+      </motion.div>
+      
+      {/* Claim Account section - Entire section with hover effect */}
+      <motion.div 
+        className="text-center mt-4 p-2 border border-gray-300 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-[#D7008A] hover:to-[#41023B] group transition-all duration-300"
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={(e) => {
+          e.preventDefault();
+          onClaimAccount();
+        }}
+      >
+        <p className="text-gray-700 mb-2 text-sm group-hover:text-white transition-colors duration-300">¿Estas PreInscrito? Finaliza tu Registro</p>
+        <span className="text-[#D7008A] font-medium group-hover:text-white transition-colors duration-300">
+          Registra tu Pago
+        </span>
+      </motion.div>
     </form>
   );
 }

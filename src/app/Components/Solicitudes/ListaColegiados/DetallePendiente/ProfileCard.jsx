@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
+import { motion } from "framer-motion"
 import {
     CheckCircle,
     XCircle,
@@ -12,9 +12,9 @@ import {
     Calendar,
     CreditCard,
     AlertTriangle,
-    UserX
-} from "lucide-react";
-import SessionInfo from "@/Components/SessionInfo";
+    UserX,
+} from "lucide-react"
+import SessionInfo from "@/Components/SessionInfo"
 
 export default function ProfileCard({
     pendiente,
@@ -148,9 +148,7 @@ export default function ProfileCard({
                                 <div className="flex items-start">
                                     <UserX size={18} className="text-red-600 mr-2 mt-0.5" />
                                     <div>
-                                        <p className="text-sm font-medium text-red-800">
-                                            Denegada por: {pendiente.denegadoPor.username}
-                                        </p>
+                                        <p className="text-sm font-medium text-red-800">Denegada por: {pendiente.denegadoPor.username}</p>
                                         <p className="text-xs text-red-700">Fecha: {pendiente.fechaDenegacion}</p>
                                         <p className="text-xs text-red-700 mt-1">Motivo: {pendiente.motivoDenegacion}</p>
                                     </div>
@@ -165,11 +163,18 @@ export default function ProfileCard({
                             {/* Mostrar botón de aprobar tanto para pendientes como para rechazadas */}
                             <button
                                 onClick={() => setMostrarConfirmacion(true)}
-                                disabled={!documentosCompletos || pagosPendientes}
-                                className={`cursor-pointer bg-gradient-to-r ${!documentosCompletos || pagosPendientes
-                                    ? "from-gray-400 to-gray-500 cursor-not-allowed"
-                                    : "from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                                disabled={!documentosCompletos || (pagosPendientes && !pendiente?.exoneracionPagos?.fecha)}
+                                className={`cursor-pointer bg-gradient-to-r ${!documentosCompletos || (pagosPendientes && !pendiente?.exoneracionPagos?.fecha)
+                                        ? "from-gray-400 to-gray-500 cursor-not-allowed"
+                                        : "from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
                                     } text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-sm font-medium`}
+                                title={
+                                    !documentosCompletos
+                                        ? "Complete todos los documentos requeridos para aprobar"
+                                        : pagosPendientes && !pendiente?.exoneracionPagos?.fecha
+                                            ? "Complete el pago o exonere el pago para aprobar"
+                                            : "Aprobar solicitud"
+                                }
                             >
                                 <CheckCircle size={18} />
                                 <span>Aprobar solicitud</span>
@@ -200,5 +205,5 @@ export default function ProfileCard({
                 </div>
             </div>
         </motion.div>
-    );
+    )
 }

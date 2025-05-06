@@ -16,7 +16,8 @@ export default function SeleccionarSolicitudesStep({
     onClose,
     mostrarSeleccionColegiado = true,
     colegiados = [],
-    colegiadoPreseleccionado = null
+    colegiadoPreseleccionado = null,
+    creadorInfo
 }) {
     // Estado inicial del formulario
     const [formData, setFormData] = useState({
@@ -300,6 +301,9 @@ export default function SeleccionarSolicitudesStep({
         if (!validarFormulario()) return
         setIsSubmitting(true)
         try {
+            // Usamos creadorInfo en lugar de session
+            const isAdmin = creadorInfo?.role === 'admin' || creadorInfo?.isAdmin || false;
+
             // Crear lista de documentos requeridos única (sin duplicados)
             const todosDocumentosRequeridos = []
             itemsCarrito.forEach(item => {
@@ -316,6 +320,7 @@ export default function SeleccionarSolicitudesStep({
             } else if (itemsCarrito.length === 1) {
                 tipoMostrar = itemsCarrito[0].nombre
             }
+
             // Crear objeto de nueva solicitud
             const nuevaSolicitud = {
                 id: `sol-${Date.now()}`,
@@ -332,7 +337,15 @@ export default function SeleccionarSolicitudesStep({
                 itemsSolicitud: itemsCarrito,
                 comprobantePago: null,
                 estadoPago: todoExonerado ? "Exonerado" : "Pendiente de verificación",
-                fechaCompletado: new Date().toLocaleDateString()
+                fechaCompletado: new Date().toLocaleDateString(),
+                // Información del creador
+                creador: {
+                    nombre: creadorInfo?.name || "Administrador",
+                    email: creadorInfo?.email || "admin@ejemplo.com",
+                    username: creadorInfo?.name,
+                    esAdmin: isAdmin,
+                    fecha: new Date().toISOString()
+                }
             }
             // Pasar la solicitud creada al componente padre
             onFinalizarSolicitud(nuevaSolicitud)
@@ -503,6 +516,7 @@ export default function SeleccionarSolicitudesStep({
                             </div>
                         </div>
                     )}
+                    {/* Se ha eliminado la sección de información del creador según lo solicitado */}
                 </div>
 
                 {/* Carrito de compras */}
