@@ -40,7 +40,7 @@ export default function Colegiados({ onClose, isClosing }) {
       case "forgot-password":
         return "Ingresa tu correo para recuperar tu contraseña";
       case "claim-account":
-        return "Ingresa tu correo para obtener acceso a tu cuenta pre-registrada";
+        return "Ingresa tu número de cédula para obtener acceso a tu cuenta";
       default:
         return "Acceso para odontólogos adscritos al COV";
     }
@@ -91,7 +91,7 @@ export default function Colegiados({ onClose, isClosing }) {
         </motion.button>
       </div>
       <div className="relative z-10 h-full flex flex-col justify-center px-6 md:px-12 lg:px-20">
-        <div className="max-w-md mx-auto w-full">
+        <div className="max-w-lg mx-auto w-full">
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <Image
@@ -108,7 +108,6 @@ export default function Colegiados({ onClose, isClosing }) {
           <p className="text-center text-gray-700 mb-10 px-4">
             {getDescription()}
           </p>
-
           {currentView === "login" && (
             <LoginForm
               onForgotPassword={() => setCurrentView("forgot-password")}
@@ -117,15 +116,12 @@ export default function Colegiados({ onClose, isClosing }) {
               callbackUrl="/Colegiado"
             />
           )}
-
           {currentView === "forgot-password" && (
             <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
           )}
-
           {currentView === "claim-account" && (
             <ClaimAccountForm onBackToLogin={() => setCurrentView("login")} />
           )}
-
           {/* Botón para mostrar la sección de contacto */}
           <div className="mt-6 text-center">
             <motion.button
@@ -137,7 +133,6 @@ export default function Colegiados({ onClose, isClosing }) {
               {showContact ? "Ocultar contacto" : "Contáctanos"}
             </motion.button>
           </div>
-
           {/* Sección de contacto (visible solo cuando showContact es true) */}
           {showContact && (
             <motion.div
