@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { AccountCircle, ExpandMore, Person } from "@mui/icons-material";
-import { signOut, useSession } from "next-auth/react";
 import api from "@/api/api";
 import { fetchMe } from "@/api/endpoints/colegiado";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
-import { User, LogOut } from "lucide-react";
+import { AccountCircle, ExpandMore, Person } from "@mui/icons-material";
 import { Divider } from "@mui/material";
+import { LogOut } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export default function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -99,17 +98,6 @@ export default function ProfileDropdown() {
       signOut({ redirect: true, callbackUrl: '/Login' });
     }
   };
-  
-  // Si no hay sesión, mostrar un botón de inicio de sesión
-  if (status === "unauthenticated") {
-    return (
-      <Link href="/Login" className="flex items-center justify-center">
-        <button className="px-4 py-2 text-sm font-medium text-white bg-[#41023B] rounded-md hover:bg-[#D7008A]">
-          Iniciar sesión
-        </button>
-      </Link>
-    );
-  }
 
   return (
     <div className="relative" ref={menuRef}>
@@ -128,7 +116,7 @@ export default function ProfileDropdown() {
                 {userInfo?.firstName || userInfo?.nombre}
               </span>
             ) : (
-              <AccountCircle className="text-[#41023B] mr-1" />
+              <AccountCircle className="cursor-pointer text-[#41023B] mr-1" />
             )}
           </>
         ) : (
@@ -148,7 +136,7 @@ export default function ProfileDropdown() {
           </div>
         )}
         {isOpen && (
-          <ExpandMore className="text-[#41023B] transition-transform duration-200 rotate-180" />
+          <ExpandMore className="cursor-pointer text-[#41023B] transition-transform duration-200 rotate-180" />
         )}
       </button>
 
@@ -157,24 +145,19 @@ export default function ProfileDropdown() {
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 py-1 border border-gray-100">
           {/* Información del usuario */}
           <div className="px-4 py-2">
-            <p className="text-sm font-medium text-gray-900 truncate">
+            <p className="text-md font-medium text-black truncate">
               {userInfo?.firstName || userInfo?.nombre || ""} {userInfo?.firstLastName || userInfo?.apellido || ""}
             </p>
-            <p className="text-xs text-gray-500 truncate">
+            <p className="text-md text-black text-center truncate">
               {sessionData?.user?.email || userInfo?.email || ""}
             </p>
-            {userInfo?.numeroColegiatura && (
-              <p className="text-xs font-medium text-[#D7008A] mt-1">
-                {userInfo.numeroColegiatura}
-              </p>
-            )}
           </div>
 
           {/* Opciones del menú - diferentes según la sección */}
           {!isAdminPanel && (
             <>
               <a href="/Perfil" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                <Person className="mr-2 text-[#41023B]" fontSize="small" />
+                <Person className="cursor-pointer mr-2 text-[#41023B]" fontSize="small" />
                 Mi Perfil
               </a>
               <Divider />
@@ -184,7 +167,7 @@ export default function ProfileDropdown() {
           {/* Botón de cerrar sesión */}
           <button
             onClick={handleSignOut}
-            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+            className="cursor-pointer flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
           >
             <LogOut size={16} className="mr-2 text-[#41023B]" />
             <span>Cerrar sesión</span>
