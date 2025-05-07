@@ -88,7 +88,7 @@ export default function ProfileDropdown() {
       // Cerrar sesión en el cliente y redirigir a la página de login
       await signOut({ 
         redirect: true,
-        callbackUrl: '/Login' // Redirigir al Login después de cerrar sesión (con L mayúscula)
+        callbackUrl: '/Login'
       });
       
       // Esta línea podría no ejecutarse debido a la redirección anterior

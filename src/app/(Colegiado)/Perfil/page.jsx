@@ -1,12 +1,11 @@
 "use client";
 
 import { fetchMe } from "@/api/endpoints/colegiado";
+import Chat from "@/app/(Colegiado)/Chat";
 import DashboardLayout from "@/Components/DashboardLayout";
+import Perfil from "@/Components/Perfil/Perfil";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import Perfil from "@/Components/Perfil/Perfil";
-import Chat from "@/app/(Colegiado)/Chat";
-import { BarraProvider } from "@/app/(Colegiado)/BarraContext";
 
 export default function PerfilPage() {
     const [userInfo, setUserInfo] = useState(null);
@@ -59,7 +58,7 @@ export default function PerfilPage() {
                 <h1 className="text-2xl font-bold text-[#41023B] mb-4">Acceso no autorizado</h1>
                 <p className="text-gray-600 mb-6">Debes iniciar sesión para ver esta página</p>
                 <a
-                    href="/login"
+                    href="/Login"
                     className="bg-[#D7008A] text-white px-6 py-2 rounded-lg hover:bg-[#41023B] transition-colors"
                 >
                     Iniciar Sesión
@@ -73,17 +72,15 @@ export default function PerfilPage() {
     };
 
     return (
-        <BarraProvider>
-            <DashboardLayout
-                solvencyInfo={solvencyInfo.date}
-                isSolvent={isSolvent}
-                showSolvencyWarning={showSolvencyWarning}
-                userInfo={userInfo}
-                session={session}
-            >
-                <Perfil userInfo={userInfo} />
-                <Chat />
-            </DashboardLayout>
-        </BarraProvider>
+        <DashboardLayout
+            solvencyInfo={solvencyInfo.date}
+            isSolvent={isSolvent}
+            showSolvencyWarning={showSolvencyWarning}
+            userInfo={userInfo}
+            session={session}
+        >
+            <Perfil userInfo={userInfo} />
+            <Chat />
+        </DashboardLayout>
     );
 }
