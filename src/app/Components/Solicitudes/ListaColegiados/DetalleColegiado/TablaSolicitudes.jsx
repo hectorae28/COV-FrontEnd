@@ -1,12 +1,13 @@
 import { AlertCircle, CheckCircle, Clock, FileText, Search, Eye, Calendar, FileCheck, Tag, MoreHorizontal, User, Shield } from "lucide-react"
 import { useEffect, useState } from "react"
 import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
+import SessionInfo from "@/Components/SessionInfo" // Importar el componente
 
-/**
- * Componente para visualizar y gestionar las solicitudes de un colegiado
- * @param {string} colegiadoId - ID del colegiado
- * @param {boolean} forceUpdate - Bandera para forzar actualización
- * @param {function} onVerDetalle - Función para ver detalle de solicitud
+/** 
+ * Componente para visualizar y gestionar las solicitudes de un colegiado 
+ * @param {string} colegiadoId - ID del colegiado 
+ * @param {boolean} forceUpdate - Bandera para forzar actualización 
+ * @param {function} onVerDetalle - Función para ver detalle de solicitud 
  */
 export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetalle }) {
   // Obtener funciones del store
@@ -22,18 +23,15 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
     const fetchSolicitudes = async () => {
       try {
         setIsLoading(true)
-
         // Obtener solicitudes desde el store centralizado
         const solicitudesColegiado = getSolicitudes(colegiadoId)
         setSolicitudes(solicitudesColegiado)
-
         setIsLoading(false)
       } catch (error) {
         console.error("Error al cargar las solicitudes:", error)
         setIsLoading(false)
       }
     }
-
     fetchSolicitudes()
   }, [colegiadoId, getSolicitudes, forceUpdate])
 
@@ -92,7 +90,6 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
   // Función para formatear fechas
   const formatearFecha = (fechaTexto) => {
     if (!fechaTexto) return "Fecha no disponible"
-
     try {
       // Intentar procesar la fecha
       const fecha = new Date(fechaTexto)
@@ -100,7 +97,6 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
         // Si el formato no es ISO, devolver el texto original
         return fechaTexto
       }
-
       // Formatear la fecha
       return fecha.toLocaleDateString('es-ES', {
         day: '2-digit',
@@ -188,7 +184,6 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
                           </div>
                         </div>
                       </div>
-
                       <div className="mt-3 sm:mt-0">
                         <button
                           onClick={() => onVerDetalle && onVerDetalle(solicitud.id)}
@@ -245,23 +240,14 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
                         </div>
                       )}
 
-                      {/* Información del creador - CORREGIDO */}
+                      {/* Información del creador - USANDO SESSIONINFO */}
                       {solicitud.creador && (
                         <div className="flex items-center text-gray-600">
-                          {solicitud.creador.esAdmin ? (
-                            <Shield size={16} className="mr-2 text-purple-500" />
-                          ) : (
-                            <User size={16} className="mr-2 text-gray-400" />
-                          )}
-                          <div>
-                            <span className="text-xs text-gray-500 block">Creado por</span>
-                            <span className="flex items-center">
-                              {solicitud.creador.nombre || solicitud.creador.username || "Usuario"}
-                              {solicitud.creador.esAdmin && (
-                                <span className="ml-1.5 text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">Admin</span>
-                              )}
-                            </span>
-                          </div>
+                          <SessionInfo
+                            creador={solicitud.creador}
+                            variant="compact"
+                            className="justify-center md:justify-start"
+                          />
                         </div>
                       )}
                     </div>

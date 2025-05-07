@@ -89,11 +89,19 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
             // Actualizar el documento
             if (updateDocumento) {
-                updateDocumento({
+                const updatedDoc = {
                     ...documentoParaSubir,
                     archivo: selectedFile.name,
                     archivoUrl: uploadedFileUrl,
-                })
+                }
+
+                // Check if this is a payment receipt
+                const isPaymentReceipt =
+                    documentoParaSubir.id.includes("comprobante_pago") ||
+                    documentoParaSubir.nombre.toLowerCase().includes("comprobante")
+
+                // Update the document
+                updateDocumento(updatedDoc)
             }
 
             // Cerrar modal después de subir
@@ -113,9 +121,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
         return (
             <div
-                className={`border rounded-lg ${tieneArchivo
-                    ? "border-gray-200 hover:border-[#C40180]"
-                    : "border-red-200 bg-red-50"
+                className={`border rounded-lg ${tieneArchivo ? "border-gray-200 hover:border-[#C40180]" : "border-red-200 bg-red-50"
                     } hover:shadow-md transition-all duration-200`}
             >
                 <div className="p-4">
@@ -139,8 +145,12 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                                 <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
                                     <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
                                     <span>
+<<<<<<< HEAD
                                         Falta documento.{" "}
                                         {documento?.requerido && "Este documento es requerido para completar el registro."}
+=======
+                                        Falta documento. {documento.requerido && "Este documento es requerido para completar el registro."}
+>>>>>>> Feat/ListaColegiados
                                     </span>
                                 </div>
                             )}
@@ -193,10 +203,15 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+<<<<<<< HEAD
                 {documentosRegulares  ? (
                     documentosRegulares.map((documento, index) => (
                         <DocumentCard key={index} documento={documento} />
                     ))
+=======
+                {documentosRegulares && documentosRegulares.length > 0 ? (
+                    documentosRegulares.map((documento) => <DocumentCard key={documento.id} documento={documento} />)
+>>>>>>> Feat/ListaColegiados
                 ) : (
                     <div className="col-span-2 bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">
                         <FileText size={40} className="text-gray-300 mb-3" />

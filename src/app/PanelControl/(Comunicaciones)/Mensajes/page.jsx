@@ -7,6 +7,8 @@ import { MessageList } from "../../../Components/Comunicaciones/Mensajes/Mensage
 import { MessageDetail } from "../../../Components/Comunicaciones/Mensajes/MensajesDetalles"
 import { MessageTabs } from "../../../Components/Comunicaciones/Mensajes/MensajesTabs"
 import { ComposeModal } from "../../../Components/Comunicaciones/Mensajes/ModalCompose"
+// Importa el componente ChatHistorial
+import { ChatHistorial } from "../../../Components/Comunicaciones/Mensajes/ChatHistorial"
 
 export default function MessagingPage() {
   const [activeTab, setActiveTab] = useState("recibidos")
@@ -14,6 +16,8 @@ export default function MessagingPage() {
   const [asuntoSeleccionado, setAsuntoSeleccionado] = useState("")
   const [showComposeModal, setShowComposeModal] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  // Añade estado para manejar la selección de colegiado
+  const [selectedColegiado, setSelectedColegiado] = useState(null)
 
   const {
     selectedMessage,
@@ -29,6 +33,7 @@ export default function MessagingPage() {
     handleSendNewMessage,
     markMessageAsRead,
     asuntosUsados,
+    colegiadosConMensajes,
   } = useMessages(activeTab, searchQuery, asuntoSeleccionado)
 
   useEffect(() => {
@@ -57,6 +62,20 @@ export default function MessagingPage() {
     setAsuntoSeleccionado("")
   }, [activeTab])
 
+  // Añade una función para manejar la selección de colegiado
+  const handleSelectColegiado = (colegiado) => {
+    setSelectedColegiado(colegiado)
+    // Si estamos en móvil, también queremos mostrar el detalle
+    if (isMobile) {
+      setSelectedMessage({
+        id: colegiado.mensajes[0].id,
+        remitente: colegiado.nombre,
+        colegiadoId: colegiado.id,
+        ...colegiado.mensajes[0],
+      })
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden pt-20">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-3 bg-white border-b shadow-sm z-20 flex-shrink-0">
@@ -73,6 +92,9 @@ export default function MessagingPage() {
             asuntos={asuntosUsados}
             asuntoSeleccionado={asuntoSeleccionado}
             onAsuntoChange={setAsuntoSeleccionado}
+            // Dentro del componente MessageTabs, añade un nuevo tab para "Colegiados"
+            // Puedes añadirlo después del tab "eliminados"
+            colegiadosConMensajes={colegiadosConMensajes}
           />
         </div>
 
@@ -113,17 +135,23 @@ export default function MessagingPage() {
       </div>
       <div className="flex flex-1 overflow-hidden relative">
         {/* Lista de mensajes */}
-        <MessageList
-          messages={filteredMessages}
-          selectedMessageId={selectedMessage?.id}
-          onSelectMessage={setSelectedMessage}
-          onToggleFavorite={handleToggleFavorite}
-          onToggleImportant={handleToggleImportant}
-          onDeleteMessage={handleDeleteMessage}
-          onRestoreMessage={handleRestoreMessage}
-          onPermanentDelete={handlePermanentDelete}
-          activeTab={activeTab}
-        />
+        {activeTab === "colegiados" ? (
+          <div className="w-full h-full">
+            <ChatHistorial colegiadoId={null} onSelectColegiado={handleSelectColegiado} />
+          </div>
+        ) : (
+          <MessageList
+            messages={filteredMessages}
+            selectedMessageId={selectedMessage?.id}
+            onSelectMessage={setSelectedMessage}
+            onToggleFavorite={handleToggleFavorite}
+            onToggleImportant={handleToggleImportant}
+            onDeleteMessage={handleDeleteMessage}
+            onRestoreMessage={handleRestoreMessage}
+            onPermanentDelete={handlePermanentDelete}
+            activeTab={activeTab}
+          />
+        )}
         {/* Detalle del mensaje con soporte para navegación móvil */}
         <MessageDetail
           message={selectedMessage}

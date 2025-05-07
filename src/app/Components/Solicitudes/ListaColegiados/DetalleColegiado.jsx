@@ -1,12 +1,14 @@
+"use client"
+
 import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
-import { CheckCircle, ChevronLeft, MessageSquare, X } from "lucide-react"
+import { CheckCircle, ChevronLeft, X } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
-// Componentes
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
 import CarnetInfo from "./DetalleColegiado/CarnetInfo"
+import ChatSection from "./DetalleColegiado/ChatSection"
 import ColegiadoCard from "./DetalleColegiado/ColegiadoCard"
 import DocumentosLista from "./DetalleColegiado/DocumentosLista"
 import EstadisticasUsuario from "./DetalleColegiado/EstadisticasUsuario"
@@ -20,9 +22,8 @@ import TablaSolicitudes from "./DetalleColegiado/TablaSolicitudes"
 export default function DetalleColegiado({ params, onVolver, colegiado: providedColegiado }) {
   // Obtenemos el ID desde los parámetros de la URL
   const colegiadoId = params?.id || "1"
-
-  // IMPORTANTE: Declarar TODOS los hooks al inicio, antes de cualquier lógica condicional
-  const [vistaActual, setVistaActual] = useState("informacion") // informacion, solicitudDetalle
+  
+  const [vistaActual, setVistaActual] = useState("informacion")
   const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null)
   const [colegiado, setColegiado] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -35,13 +36,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
   const [refreshSolicitudes, setRefreshSolicitudes] = useState(0)
 
   // Obtenemos funciones del store centralizado
-  const {
-    getColegiado,
-    getDocumentos,
-    marcarTituloEntregado,
-    addSolicitud,
-    getSolicitudes
-  } = useDataListaColegiados()
+  const { getColegiado, getDocumentos, marcarTituloEntregado, addSolicitud, getSolicitudes } = useDataListaColegiados()
 
   // Función para ver detalle de solicitud
   const verDetalleSolicitud = (id) => {
@@ -53,15 +48,11 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
   const volverATab = () => {
     setVistaActual("informacion")
     setSolicitudSeleccionadaId(null)
-    // Refrescar solicitudes al volver
-    setRefreshSolicitudes(prev => prev + 1)
+    setRefreshSolicitudes((prev) => prev + 1)
   }
 
   // Función para actualizar una solicitud (cuando se aprueba, rechaza, etc.)
   const actualizarSolicitud = (solicitudActualizada) => {
-    // Aquí llamaríamos a una función del store que actualice la solicitud
-    // Por ahora simplemente actualizamos la vista local
-    // Esta función debería ser importada del store centralizado
     console.log("Solicitud actualizada:", solicitudActualizada)
   }
 
@@ -71,7 +62,6 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
       try {
         setIsLoading(true)
 
-        // Usar el colegiado proporcionado o buscarlo en el store
         let colegiadoData = providedColegiado
 
         if (!colegiadoData) {
@@ -99,13 +89,12 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
   // Función para confirmar entrega de título
   const handleConfirmarEntregaTitulo = async () => {
     try {
-      // Llamar a la función del store
+
       marcarTituloEntregado(colegiadoId, true)
 
-      // Actualizar estado local
-      setColegiado(prev => ({
+      setColegiado((prev) => ({
         ...prev,
-        tituloEntregado: true
+        tituloEntregado: true,
       }))
 
       setTituloEntregado(true)
@@ -126,19 +115,11 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
 
   // Función para registrar nueva solicitud
   const handleNuevaSolicitud = (nuevaSolicitud) => {
-    // Añadir la solicitud al store
     addSolicitud(colegiadoId, nuevaSolicitud)
-
-    // Forzar actualización del componente TablaSolicitudes
-    setRefreshSolicitudes(prev => prev + 1)
-
-    // Cerrar el modal
+    setRefreshSolicitudes((prev) => prev + 1)
     setMostrarModalSolicitud(false)
   }
-
-  // IMPORTANTE: En lugar de retornar prematuramente, usamos renderizado condicional
-  // Usar una variable para el contenido a renderizar
-  let content;
+  let content
 
   // Si estamos viendo el detalle de una solicitud
   if (vistaActual === "solicitudDetalle" && solicitudSeleccionadaId) {
@@ -150,7 +131,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
         actualizarSolicitud={actualizarSolicitud}
         breadcrumbColegiado={colegiado?.persona?.nombre}
       />
-    );
+    )
   }
   // Si está cargando
   else if (isLoading) {
@@ -158,7 +139,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
       <div className="w-full px-4 md:px-10 py-10 md:py-12 flex justify-center items-center min-h-[70vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
       </div>
-    );
+    )
   }
   // Si no se encontró el colegiado
   else if (!colegiado) {
@@ -176,16 +157,13 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
             Volver a la lista de colegiados
           </button>
         ) : (
-          <Link
-            href="/colegiados"
-            className="mt-4 inline-flex items-center text-[#C40180] hover:underline"
-          >
+          <Link href="/colegiados" className="mt-4 inline-flex items-center text-[#C40180] hover:underline">
             <ChevronLeft size={20} className="mr-1" />
             Volver a la lista de colegiados
           </Link>
         )}
       </div>
-    );
+    )
   }
   // Vista principal
   else {
@@ -202,10 +180,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
               Volver a la lista de colegiados
             </button>
           ) : (
-            <Link
-              href="/colegiados"
-              className="text-md text-[#7D0053] hover:text-[#C40180] flex items-center"
-            >
+            <Link href="/colegiados" className="text-md text-[#7D0053] hover:text-[#C40180] flex items-center">
               <ChevronLeft size={20} className="mr-1" />
               Volver a la lista de colegiados
             </Link>
@@ -219,10 +194,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
               <CheckCircle size={20} className="mr-2 flex-shrink-0" />
               <span>Se ha registrado la entrega del título físico correctamente.</span>
             </div>
-            <button
-              onClick={() => setTituloEntregado(false)}
-              className="text-green-700"
-            >
+            <button onClick={() => setTituloEntregado(false)} className="text-green-700">
               <X size={18} />
             </button>
           </div>
@@ -241,49 +213,49 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
           <div className="border-b border-gray-200">
             <nav className="flex overflow-x-auto justify-center">
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "informacion" ? 'border-b-2 border-[#C40180] text-[#C40180]' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "informacion" ? "border-b-2 border-[#C40180] text-[#C40180]" : "text-gray-500 hover:text-gray-700"} transition-colors`}
                 onClick={() => setTabActivo("informacion")}
               >
                 Información
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "pagos" ? 'border-b-2 border-[#C40180] text-[#C40180]' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "pagos" ? "border-b-2 border-[#C40180] text-[#C40180]" : "text-gray-500 hover:text-gray-700"} transition-colors`}
                 onClick={() => setTabActivo("pagos")}
               >
                 Pagos
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "inscripciones" ? 'border-b-2 border-[#C40180] text-[#C40180]' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "inscripciones" ? "border-b-2 border-[#C40180] text-[#C40180]" : "text-gray-500 hover:text-gray-700"} transition-colors`}
                 onClick={() => setTabActivo("inscripciones")}
               >
                 Inscripciones
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "solicitudes" ? 'border-b-2 border-[#C40180] text-[#C40180]' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "solicitudes" ? "border-b-2 border-[#C40180] text-[#C40180]" : "text-gray-500 hover:text-gray-700"} transition-colors`}
                 onClick={() => setTabActivo("solicitudes")}
               >
                 Solicitudes
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "carnet" ? 'border-b-2 border-[#C40180] text-[#C40180]' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "carnet" ? "border-b-2 border-[#C40180] text-[#C40180]" : "text-gray-500 hover:text-gray-700"} transition-colors`}
                 onClick={() => setTabActivo("carnet")}
               >
                 Carnet
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "documentos" ? 'border-b-2 border-[#C40180] text-[#C40180]' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "documentos" ? "border-b-2 border-[#C40180] text-[#C40180]" : "text-gray-500 hover:text-gray-700"} transition-colors`}
                 onClick={() => setTabActivo("documentos")}
               >
                 Documentos
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "chats" ? 'border-b-2 border-[#C40180] text-[#C40180]' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "chats" ? "border-b-2 border-[#C40180] text-[#C40180]" : "text-gray-500 hover:text-gray-700"} transition-colors`}
                 onClick={() => setTabActivo("chats")}
               >
                 Chats
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "estadisticas" ? 'border-b-2 border-[#C40180] text-[#C40180]' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "estadisticas" ? "border-b-2 border-[#C40180] text-[#C40180]" : "text-gray-500 hover:text-gray-700"} transition-colors`}
                 onClick={() => setTabActivo("estadisticas")}
               >
                 Estadísticas
@@ -294,7 +266,9 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
           {/* Contenido según el tab activo */}
           <div className="p-6">
             {tabActivo === "informacion" && <TablaInformacionPersonal colegiado={colegiado} />}
-            {tabActivo === "pagos" && <TablaPagos colegiadoId={colegiadoId} handleVerDocumento={handleVerDocumento} documentos={documentos} />}
+            {tabActivo === "pagos" && (
+              <TablaPagos colegiadoId={colegiadoId} handleVerDocumento={handleVerDocumento} documentos={documentos} />
+            )}
             {tabActivo === "inscripciones" && <TablaInscripciones colegiadoId={colegiadoId} />}
             {tabActivo === "solicitudes" && (
               <TablaSolicitudes
@@ -304,14 +278,10 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
               />
             )}
             {tabActivo === "carnet" && <CarnetInfo colegiado={colegiado} />}
-            {tabActivo === "documentos" && <DocumentosLista documentos={documentos} handleVerDocumento={handleVerDocumento} />}
-            {tabActivo === "chats" && (
-              <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg">
-                <MessageSquare size={48} className="text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-500">Sistema de chat</h3>
-                <p className="text-gray-400 mt-1">La funcionalidad de chat está en desarrollo</p>
-              </div>
+            {tabActivo === "documentos" && (
+              <DocumentosLista documentos={documentos} handleVerDocumento={handleVerDocumento} />
             )}
+            {tabActivo === "chats" && <ChatSection colegiado={colegiado} />}
             {tabActivo === "estadisticas" && <EstadisticasUsuario colegiado={colegiado} />}
           </div>
         </div>
@@ -326,10 +296,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
         )}
 
         {documentoSeleccionado && (
-          <ModalVisualizarDocumento
-            documento={documentoSeleccionado}
-            onClose={handleCerrarVistaDocumento}
-          />
+          <ModalVisualizarDocumento documento={documentoSeleccionado} onClose={handleCerrarVistaDocumento} />
         )}
 
         {mostrarModalSolicitud && (
@@ -338,7 +305,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
               id: colegiado.id,
               nombre: `${colegiado.persona.nombre} ${colegiado.persona.primer_apellido}`,
               cedula: colegiado.persona.cedula,
-              numeroRegistro: colegiado.numeroRegistro
+              numeroRegistro: colegiado.numeroRegistro,
             }}
             onClose={() => setMostrarModalSolicitud(false)}
             onSolicitudCreada={handleNuevaSolicitud}
@@ -348,15 +315,14 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
                 name: "Administrador",
                 email: "admin@ejemplo.com",
                 role: "admin",
-                isAdmin: true
-              }
+                isAdmin: true,
+              },
             }}
           />
         )}
       </div>
-    );
+    )
   }
 
-  // IMPORTANTE: Solo un return al final del componente
-  return content;
+  return content
 }
