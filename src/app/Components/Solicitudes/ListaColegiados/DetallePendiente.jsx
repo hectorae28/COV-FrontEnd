@@ -25,12 +25,22 @@ export default function DetallePendiente({ params, onVolver }) {
   const pendienteId = params?.id || "p1";
 
   // Obtenemos funciones del store centralizado
-    const getColegiadoPendiente = useDataListaColegiados((state)=>state.getColegiadoPendiente)
-    const updateColegiadoPendiente = useDataListaColegiados((state)=>state.updateColegiadoPendiente)
-    const approveRegistration = useDataListaColegiados((state)=>state.approveRegistration)
-    const rejectRegistration = useDataListaColegiados((state)=>state.rejectRegistration)
-    const denyRegistration = useDataListaColegiados((state)=>state.denyRegistration)
-    const initSession = useDataListaColegiados((state)=>state.initSession)
+    const getColegiadoPendiente = useDataListaColegiados(
+      (state) => state.getColegiadoPendiente
+    );
+    const updateColegiadoPendiente = useDataListaColegiados(
+      (state) => state.updateColegiadoPendiente
+    );
+    const approveRegistration = useDataListaColegiados(
+      (state) => state.approveRegistration
+    );
+    const rejectRegistration = useDataListaColegiados(
+      (state) => state.rejectRegistration
+    );
+    const denyRegistration = useDataListaColegiados(
+      (state) => state.denyRegistration
+    );
+    const initSession = useDataListaColegiados((state) => state.initSession);
 
   // Estados locales
   const [isLoading, setIsLoading] = useState(true);
@@ -230,7 +240,6 @@ export default function DetallePendiente({ params, onVolver }) {
 
           }
 
-          // Verificar si hay pagos pendientes
           setPagosPendientes(pendienteData.pago === null && !pendienteData.pago_exonerado);
         }
         setIsLoading(false);
@@ -261,7 +270,6 @@ export default function DetallePendiente({ params, onVolver }) {
 
   // Función para actualizar un documento
   const updateDocumento = (documentoActualizado) => {
-    console.log({documentoActualizado})
     try {
       updateColegiadoPendiente(pendienteId, documentoActualizado, true);
     } catch (error) {

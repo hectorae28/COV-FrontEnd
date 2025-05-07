@@ -4,6 +4,8 @@ import { fetchDataUsuario, patchDataUsuario,postDataUsuario } from "@/api/endpoi
 
 const useDataListaColegiados = create((set, get) => ({
   colegiados: [],
+  colegiadosPagination: {},
+
   colegiadosPendientes: [],
   colegiadosPendientesPagination: {},
 
@@ -13,7 +15,9 @@ const useDataListaColegiados = create((set, get) => ({
   async initStore() {
     try {
       const colegiadosResponse = await fetchDataUsuario("colegiado");
-      set({ colegiados: colegiadosResponse.data });
+      set({ colegiados: colegiadosResponse.data.results });
+      set({ colegiadosPendientesPagination: colegiadosResponse.data });
+
 
       const pendientesResponse = await fetchDataUsuario("register");
       set({ colegiadosPendientes: pendientesResponse.data.results });
@@ -38,6 +42,25 @@ const useDataListaColegiados = create((set, get) => ({
       set({
         colegiadosPendientes: res.data.results,
         colegiadosPendientesPagination: res.data,
+        loading: false,
+      });
+    } catch (error) {
+      set({ loading: false, error: error.message || "Error al cargar pendientes" });
+    }
+  },
+
+  fetchPendientes: async (page = 1, pageSize = 10, search = "", otrosFiltros = {}) => {
+    set({ loading: true });
+    try {
+      let params = `?page=${page}&page_size=${pageSize}`;
+      if (search) params += `&search=${encodeURIComponent(search)}`;
+      Object.entries(otrosFiltros).forEach(([key, value]) => {
+        if (value) params += `&${key}=${encodeURIComponent(value)}`;
+      });
+      const res = await fetchDataUsuario("colegiado", null, params);
+      set({
+        colegiados: res.data.results,
+        colegiadosPagination: res.data,
         loading: false,
       });
     } catch (error) {

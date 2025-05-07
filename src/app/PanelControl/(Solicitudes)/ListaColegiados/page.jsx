@@ -105,9 +105,10 @@ export default function ListaColegiadosPage() {
       if(filtroEstado === "rechazados"){
         filtros.status = "rechazados"
       } else if(filtroEstado === "pendientes"){
-        filtroEstado.status = "revisando"
+        filtros.status = "revisando"
       }
     }
+    filtros.especialidad=filtroEspecialidad
     fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros);
   }, [
     currentPage,
@@ -118,7 +119,8 @@ export default function ListaColegiadosPage() {
     fechaDesde,
     fechaHasta,
     ordenFecha,
-    filtroEtiqueta
+    filtroEtiqueta,
+    filtroEspecialidad
   ]);
 
   const verDetalleColegiado = (id) => {
@@ -190,7 +192,7 @@ export default function ListaColegiadosPage() {
       />
     );
   }
-
+  console.log({colegiados})
   // Vista principal de la lista
   return (
     <div className="w-full px-4 md:px-10 py-10 md:py-12">
@@ -638,24 +640,24 @@ export default function ListaColegiadosPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {colegiados.map((colegiado) => (
-                        <tr key={colegiado.id} className="hover:bg-gray-50">
+                      {colegiados.map((colegiado, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="font-medium text-gray-900">
-                              {colegiado.nombre || "-"}
+                              {colegiado.recaudos.persona.nombre || "-"}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                            {colegiado.cedula || "-"}
+                            {colegiado.recaudos.persona.identificacion || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                            {colegiado.numeroRegistro || "-"}
+                            {colegiado.recaudos.num_registro_principal || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                            {colegiado.fechaRegistro || "-"}
+                            {colegiado.recaudos.fecha_registro_principal || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
-                            {colegiado.especialidad || "-"}
+                            {colegiado.especialidad?.nombre==undefined ? "-":colegiado.especialidad?.nombre}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span
