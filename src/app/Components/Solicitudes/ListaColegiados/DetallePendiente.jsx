@@ -25,18 +25,14 @@ export default function DetallePendiente({ params, onVolver }) {
   const pendienteId = params?.id || "p1";
 
   // Obtenemos funciones del store centralizado
-  const {
-    getColegiadoPendiente,
-    updateColegiadoPendiente,
-    approveRegistration,
-    rejectRegistration,
-    denyRegistration,
-    initSession,
-    getSolicitudes,
-  } = useDataListaColegiados();
+    const getColegiadoPendiente = useDataListaColegiados((state)=>state.getColegiadoPendiente)
+    const updateColegiadoPendiente = useDataListaColegiados((state)=>state.updateColegiadoPendiente)
+    const approveRegistration = useDataListaColegiados((state)=>state.approveRegistration)
+    const rejectRegistration = useDataListaColegiados((state)=>state.rejectRegistration)
+    const denyRegistration = useDataListaColegiados((state)=>state.denyRegistration)
+    const initSession = useDataListaColegiados((state)=>state.initSession)
 
   // Estados locales
-  const [solicitudes, setSolicitudes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [pendiente, setPendiente] = useState(null);
@@ -84,32 +80,117 @@ export default function DetallePendiente({ params, onVolver }) {
     num_cov: "",
   });
   const [pasoModal, setPasoModal] = useState(1);
+  
+  const documentosMetadata = {
+    Fondo_negro_credencial: {
+      nombre: "Credencial fondo negro",
+      descripcion: "Credencial profesional con fondo negro",
+      requerido: (tipo_profesion)=> tipo_profesion!=="odontologo"
+    },
+    notas_curso: {
+      nombre: "Notas del curso",
+      descripcion: "Certificado de notas académicas",
+      requerido: (tipo_profesion)=> tipo_profesion!=="odontologo"
+    },
+    fondo_negro_titulo_bachiller: {
+      nombre: "Título bachiller fondo negro",
+      descripcion: "Título de bachiller con fondo negro",
+      requerido: (tipo_profesion)=> tipo_profesion!=="odontologo"
+    },
+    file_ci: {
+      nombre: "Cédula de identidad",
+      descripcion: "Copia escaneada por ambos lados",
+      requerido: true
+    },
+    file_rif: {
+      nombre: "RIF",
+      descripcion: "Registro de Información Fiscal",
+      requerido: true
+    },
+    file_fondo_negro: {
+      nombre: "Título universitario fondo negro",
+      descripcion: "Título de Odontólogo con fondo negro",
+      requerido: true
+    },
+    file_mpps: {
+      nombre: "Registro MPPS",
+      descripcion: "Registro del Ministerio del Poder Popular para la Salud",
+      requerido: true
+    }
+  };
+  const obtenerNombreArchivo = (url) => {
+    if (!url) return "";
+    const partes = url.split('/');
+    return partes[partes.length - 1];
+  };
+  
 
-  useEffect(() => {
-    const fetchSolicitudes = async () => {
-      try {
-        setIsLoading(true);
-        // Use pendienteId instead of colegiadoId
-        const solicitudesColegiado = getSolicitudes(pendienteId);
-        setSolicitudes(solicitudesColegiado);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error al cargar las solicitudes:", error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchSolicitudes();
-  }, [pendienteId, getSolicitudes]);
-
-  // Cargar datos del pendiente
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
         // Obtener datos del pendiente desde el store
         const pendienteData = await getColegiadoPendiente(pendienteId);
+        console.log(pendienteData)
         if (pendienteData) {
+          const documentosFormateados = [
+            {
+              id: "file_ci",
+              nombre: documentosMetadata.file_ci.nombre,
+              descripcion: documentosMetadata.file_ci.descripcion,
+              archivo: obtenerNombreArchivo(pendienteData.file_ci_url),
+              requerido: documentosMetadata.file_ci.requerido,
+              url: pendienteData.file_ci_url
+            },
+            {
+              id: "file_rif",
+              nombre: documentosMetadata.file_rif.nombre,
+              descripcion: documentosMetadata.file_rif.descripcion,
+              archivo: obtenerNombreArchivo(pendienteData.file_rif_url),
+              requerido: documentosMetadata.file_rif.requerido,
+              url: pendienteData.file_rif_url
+            },
+            {
+              id: "file_fondo_negro",
+              nombre: documentosMetadata.file_fondo_negro.nombre,
+              descripcion: documentosMetadata.file_fondo_negro.descripcion,
+              archivo: obtenerNombreArchivo(pendienteData.file_fondo_negro_url),
+              requerido: documentosMetadata.file_fondo_negro.requerido,
+              url: pendienteData.file_fondo_negro_url
+            },
+            {
+              id: "file_mpps",
+              nombre: documentosMetadata.file_mpps.nombre,
+              descripcion: documentosMetadata.file_mpps.descripcion,
+              archivo: obtenerNombreArchivo(pendienteData.file_mpps_url),
+              requerido: documentosMetadata.file_mpps.requerido,
+              url: pendienteData.file_mpps_url
+            },
+            {
+              id: "Fondo_negro_credencial",
+              nombre: documentosMetadata.Fondo_negro_credencial.nombre,
+              descripcion: documentosMetadata.Fondo_negro_credencial.descripcion,
+              archivo: obtenerNombreArchivo(pendienteData.Fondo_negro_credencial_url),
+              requerido: documentosMetadata.Fondo_negro_credencial.requerido(pendienteData.tipo_profesion),
+              url: pendienteData.Fondo_negro_credencial_url
+            },
+            {
+              id: "notas_curso",
+              nombre: documentosMetadata.notas_curso.nombre,
+              descripcion: documentosMetadata.notas_curso.descripcion,
+              archivo: obtenerNombreArchivo(pendienteData.notas_curso_url),
+              requerido: documentosMetadata.notas_curso.requerido(pendienteData.tipo_profesion),
+              url: pendienteData.notas_curso_url
+            },
+            {
+              id: "fondo_negro_titulo_bachiller",
+              nombre: documentosMetadata.fondo_negro_titulo_bachiller.nombre,
+              descripcion: documentosMetadata.fondo_negro_titulo_bachiller.descripcion,
+              archivo: obtenerNombreArchivo(pendienteData.fondo_negro_titulo_bachiller_url),
+              requerido: documentosMetadata.fondo_negro_titulo_bachiller.requerido(pendienteData.tipo_profesion),
+              url: pendienteData.fondo_negro_titulo_bachiller_url
+            },
+          ];
           setPendiente(pendienteData);
           // Inicializar estados de edición
           setDatosPersonales({ ...pendienteData.persona });
@@ -133,15 +214,7 @@ export default function DetallePendiente({ params, onVolver }) {
           setDocumentosCompletos(
             !pendienteData.archivos_faltantes.tiene_faltantes
           );
-          setDocumentosRequeridos([
-            pendienteData.Fondo_negro_credencial_url,
-            pendienteData.notas_curso_url,
-            pendienteData.fondo_negro_titulo_bachiller_url,
-            pendienteData.file_ci_url,
-            pendienteData.file_rif_url,
-            pendienteData.file_fondo_negro_url,
-            pendienteData.file_mpps_url,
-          ]);
+          setDocumentosRequeridos(documentosFormateados);
           if (pendienteData.documentos) {
 
             // Verificar documentos requeridos (excluyendo los exonerados)
@@ -158,7 +231,7 @@ export default function DetallePendiente({ params, onVolver }) {
           }
 
           // Verificar si hay pagos pendientes
-          setPagosPendientes(pendienteData.pago !== null&&pendienteData.pago_exonerado);
+          setPagosPendientes(pendienteData.pago === null && !pendienteData.pago_exonerado);
         }
         setIsLoading(false);
       } catch (error) {
@@ -188,57 +261,9 @@ export default function DetallePendiente({ params, onVolver }) {
 
   // Función para actualizar un documento
   const updateDocumento = (documentoActualizado) => {
+    console.log({documentoActualizado})
     try {
-      // Actualizar el documento en la lista de documentos
-      const nuevosDocumentos = documentosRequeridos.map((doc) =>
-        doc.id === documentoActualizado.id ? documentoActualizado : doc
-      );
-
-      // Actualizar el estado local
-      setDocumentosRequeridos(nuevosDocumentos);
-
-      // Check if this is a payment receipt document
-      const isPaymentReceipt =
-        documentoActualizado.id.includes("comprobante_pago") ||
-        documentoActualizado.nombre.toLowerCase().includes("comprobante");
-
-      // If it's a payment receipt and has a file, update pagosPendientes to false
-      let updatedPagosPendientes = pagosPendientes;
-      if (
-        isPaymentReceipt &&
-        documentoActualizado.archivo &&
-        !documentoActualizado.archivo.toLowerCase().includes("exonerado")
-      ) {
-        updatedPagosPendientes = false;
-        setPagosPendientes(false);
-      }
-
-      // Actualizar en el store
-      const nuevosDatos = {
-        ...pendiente,
-        documentos: nuevosDocumentos,
-        pagosPendientes: updatedPagosPendientes,
-      };
-      updateColegiadoPendiente(pendienteId, nuevosDatos);
-
-      // Update local pendiente state
-      setPendiente({
-        ...pendiente,
-        documentos: nuevosDocumentos,
-        pagosPendientes: updatedPagosPendientes,
-      });
-
-      // Verificar si los documentos están completos ahora
-      const docsRequeridos = nuevosDocumentos.filter(
-        (doc) =>
-          doc.requerido && !doc.archivo?.toLowerCase().includes("exonerado")
-      );
-
-      const docsFaltantes = docsRequeridos.filter(
-        (doc) => !doc.archivo || doc.archivo === ""
-      );
-
-      //setDocumentosCompletos(!pendienteData.archivos_faltantes.tiene_faltantes);
+      updateColegiadoPendiente(pendienteId, documentoActualizado, true);
     } catch (error) {
       console.error("Error al actualizar documento:", error);
     }
@@ -382,11 +407,6 @@ export default function DetallePendiente({ params, onVolver }) {
       }
 
       setIsSubmitting(true);
-
-      // Asegurar que siempre haya información del usuario que exonera
-
-
-      // Actualizar los pagos como exonerados
       const nuevosDatos = {
         "pago_exonerado":true,
         "motivo_exonerado":motivoExoneracion
@@ -395,6 +415,7 @@ export default function DetallePendiente({ params, onVolver }) {
 
       // Actualizar en el store
       updateColegiadoPendiente(pendienteId, nuevosDatos);
+      getColegiadoPendiente(pendienteId)
 
       // Actualizar el estado local
     //   setPendiente(nuevosDatos);

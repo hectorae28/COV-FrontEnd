@@ -20,16 +20,14 @@ import { useEffect, useState } from "react";
 
 export default function ListaColegiadosPage() {
   // Estado del store de Zustand
-  const {
-    initStore,
-    colegiados,
-    colegiadosPendientes,
-    colegiadosPendientesPagination,
-    fetchPendientes,
-    loading,
-    getColegiado,
-    getColegiadoPendiente,
-  } = useDataListaColegiados();
+    const initStore = useDataListaColegiados((state)=>state.initStore)
+    const colegiados = useDataListaColegiados((state)=>state.colegiados)
+    const colegiadosPendientes = useDataListaColegiados((state)=>state.colegiadosPendientes)
+    const colegiadosPendientesPagination = useDataListaColegiados((state)=>state.colegiadosPendientesPagination)
+    const fetchPendientes = useDataListaColegiados((state)=>state.fetchPendientes)
+    const loading = useDataListaColegiados((state)=>state.loading)
+    const getColegiado = useDataListaColegiados((state)=>state.getColegiado)
+    const getColegiadoPendiente = useDataListaColegiados((state)=>state.getColegiadoPendiente)
 
   // Estado local de UI
   const [searchTerm, setSearchTerm] = useState("");
@@ -110,7 +108,6 @@ export default function ListaColegiadosPage() {
         filtroEstado.status = "revisando"
       }
     }
-    console.log({ currentPage, recordsPerPage, searchTerm, filtros });
     fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros);
   }, [
     currentPage,

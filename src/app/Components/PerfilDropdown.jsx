@@ -43,7 +43,7 @@ export default function ProfileDropdown() {
       )
       .then(() => {
         console.log("Logout successful");
-        signOut(session);
+        signOut(sessionData);
       })
       .catch((error) => {
         console.error("Logout error:", error);

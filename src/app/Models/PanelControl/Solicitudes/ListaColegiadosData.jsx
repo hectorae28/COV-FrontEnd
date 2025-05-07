@@ -47,12 +47,14 @@ const useDataListaColegiados = create((set, get) => ({
 
   // Funciones para obtener datos específicos
   getColegiado: async (id) => {
-    const res = await fetchDataUsuario(`colegiados/${id}`);
+    const res = await fetchDataUsuario(`colegiado/${id}`);
+    console.log('hello')
     return res.data
   },
 
   getColegiadoPendiente: async (id) => {
     const res = await fetchDataUsuario(`register/${id}`);
+    
     return res.data
   },
 
@@ -111,14 +113,14 @@ const useDataListaColegiados = create((set, get) => ({
     return get().getColegiado(id);
   },
 
-  updateColegiadoPendiente: async(id, updatedData) => {
+  updateColegiadoPendiente: async(id, updatedData, docs) => {
     set((state) => ({
       colegiadosPendientes: state.colegiadosPendientes.map((pendiente) =>
         pendiente.id === id ? { ...pendiente, ...updatedData } : pendiente
       ),
     }));
 
-    const res = await patchDataUsuario(`register/${id}`,updatedData)
+    const res = await patchDataUsuario(`register/${id}`,updatedData,docs&&docs)
 
     return get().getColegiadoPendiente(id);
   },
@@ -209,7 +211,6 @@ const useDataListaColegiados = create((set, get) => ({
         get().addColegiado(res.data);
         get().removeColegiadoPendiente(pendienteId);
         return res;
-
       }
     )
     .catch((error)=>{

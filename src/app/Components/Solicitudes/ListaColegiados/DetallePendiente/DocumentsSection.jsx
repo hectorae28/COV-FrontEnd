@@ -13,7 +13,6 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
     // Filtrar documentos para excluir comprobantes de pago
     const documentosRegulares =documentosRequeridos
-    console.log({documentosRegulares})
 
     // Función para validar archivo
     const validarArchivo = (file) => {
@@ -72,6 +71,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
     }
 
     const handleUpload = async () => {
+        console.log(documentoParaSubir)
         if (!selectedFile) {
             setError("Por favor seleccione un archivo para subir.")
             return
@@ -89,11 +89,8 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
             // Actualizar el documento
             if (updateDocumento) {
-                const updatedDoc = {
-                    ...documentoParaSubir,
-                    archivo: selectedFile.name,
-                    archivoUrl: uploadedFileUrl,
-                }
+                const Form = new FormData();
+                Form.append(`${documentoParaSubir.id}`, selectedFile)
 
                 // Check if this is a payment receipt
                 const isPaymentReceipt =
@@ -101,7 +98,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                     documentoParaSubir.nombre.toLowerCase().includes("comprobante")
 
                 // Update the document
-                updateDocumento(updatedDoc)
+                updateDocumento(Form)
             }
 
             // Cerrar modal después de subir

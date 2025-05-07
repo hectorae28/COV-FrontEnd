@@ -6,7 +6,7 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
     const obtenerIniciales = () => {
         if (!colegiado) return "CN"
 
-        const { nombre, primer_apellido } = colegiado.persona
+        const { nombre, primer_apellido } = colegiado.recaudos.persona
         return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`
     }
 
@@ -17,7 +17,7 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
     }
 
     // Para mostrar el nombre completo
-    const nombreCompleto = `${colegiado.persona.nombre} ${colegiado.persona.segundo_nombre || ''} ${colegiado.persona.primer_apellido} ${colegiado.persona.segundo_apellido || ''}`.trim()
+    const nombreCompleto = `${colegiado.recaudos.persona.nombre} ${colegiado.recaudos.persona.segundo_nombre || ''} ${colegiado.recaudos.persona.primer_apellido} ${colegiado.recaudos.persona.segundo_apellido || ''}`.trim()
 
     return (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -60,18 +60,18 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
                             <div className="flex items-center justify-center md:justify-start">
                                 <User className="text-gray-400 h-5 w-5 mr-2" />
                                 <span className="text-gray-700">
-                                    {colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}
+                                    {colegiado.recaudos.persona.nacionalidad}-{colegiado.recaudos.persona.identificacion}
                                 </span>
                             </div>
 
                             <div className="flex items-center justify-center md:justify-start mt-4">
                                 <Mail className="text-gray-400 h-5 w-5 mr-2" />
-                                <span className="text-gray-700">{colegiado.persona.correo}</span>
+                                <span className="text-gray-700">{colegiado.recaudos.persona.correo}</span>
                             </div>
 
                             <div className="flex items-center justify-center md:justify-start mt-4">
                                 <Phone className="text-gray-400 h-5 w-5 mr-2" />
-                                <span className="text-gray-700">{colegiado.persona.telefono_movil}</span>
+                                <span className="text-gray-700">{colegiado.recaudos.persona.telefono_movil}</span>
                             </div>
                         </div>
 
@@ -80,7 +80,7 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
                             <div className="flex items-start justify-center md:justify-start mt-4">
                                 <MapPin className="text-gray-400 h-5 w-5 mr-2 mt-0.5" />
                                 <span className="text-gray-700">
-                                    {colegiado.persona.direccion.referencia}, {colegiado.persona.direccion.estado}
+                                    {colegiado.recaudos.persona.direccion.referencia}, {colegiado.recaudos.persona.direccion.estado}
                                 </span>
                             </div>
 
