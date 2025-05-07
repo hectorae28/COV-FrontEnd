@@ -7,15 +7,17 @@ import {
 } from "@mui/icons-material";
 import { Menu } from "lucide-react";
 import PerfilDropdown from "../Components/PerfilDropdown";
+import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 
 export default function Barra({
   onMenuClick,
-  solvencyInfo,
   isSolvent,
   userInfo,
   showSolvencyWarning,
   session
 }) {
+  const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser)
+
   return (
     <div className="bg-white h-20 fixed top-0 right-0 left-0 md:left-72 shadow-sm z-30 flex items-center justify-between px-18">
       <div className="flex items-center">
@@ -39,21 +41,21 @@ export default function Barra({
         {/* Información de solvencia (oculta en móviles) */}
         <div className="hidden md:block min-w-0 whitespace-nowrap">
           <h2 className="text-lg font-semibold cursor-default">
-            {isSolvent ? (
+            {colegiadoUser.solvencia_status ? (
               <>
                 {showSolvencyWarning ? (
                   <span className="text-amber-600 flex items-center">
                     <Warning fontSize="small" className="mr-1" />
                     Solvencia por vencer:{" "}
                     <span className="text-black font-semibold ml-1">
-                      {solvencyInfo}
+                      {colegiadoUser.solvente}
                     </span>
                   </span>
                 ) : (
                   <>
                     <span className="text-green-600">Solvente</span> hasta:{" "}
                     <span className="text-black font-semibold">
-                      {solvencyInfo}
+                      {colegiadoUser.solvente}
                     </span>
                   </>
                 )}

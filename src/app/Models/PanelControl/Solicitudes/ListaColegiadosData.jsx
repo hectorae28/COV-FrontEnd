@@ -2,6 +2,10 @@ import { create } from "zustand";
 import { colegiados } from "./SolicitudesData";
 import { fetchDataUsuario, patchDataUsuario,postDataUsuario } from "@/api/endpoints/colegiado";
 
+/*
+STORE: se almacenan los datos de los colegiados para el modulo administrativo
+*/
+
 const useDataListaColegiados = create((set, get) => ({
   colegiados: [],
   colegiadosPendientes: [],
@@ -214,6 +218,7 @@ const useDataListaColegiados = create((set, get) => ({
   marcarTituloEntregado: (colegiadoId, entregado = true) => {
     return get().updateColegiado(colegiadoId, { tituloEntregado: entregado });
   },
-}));
+})
+);
 
 export default useDataListaColegiados;

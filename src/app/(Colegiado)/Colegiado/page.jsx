@@ -11,6 +11,7 @@ import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
@@ -26,12 +27,12 @@ export default function Home() {
     status: session?.user?.solvenciaStatus,
   }); // Datos de solvencia
   // Datos de solvencia
+  const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser)
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
     if (status === "loading") return;
     const checkSolvencyStatus = () => {
-      console.log("Checking solvency status...");
       if (!userInfo) return;
       const today = new Date();
       const [year, month, day] = solvencyInfo.date.split("-").map(Number);
@@ -58,6 +59,9 @@ export default function Home() {
           fetchMe(session)
             .then((response) => {
               setUser_info(response.data);
+              setColegiadoUser(response.data);
+              setIsSolvent(response.data.solvencia_status)
+
               
               setSolvencyInfo({
                 date: response.data.solvente,
@@ -98,7 +102,6 @@ export default function Home() {
 
   return (
     <DashboardLayout
-      solvencyInfo={solvencyInfo.date}
       isSolvent={isSolvent}
       showSolvencyWarning={showSolvencyWarning}
       userInfo={userInfo}
@@ -130,31 +133,37 @@ export default function Home() {
       ) : (
         <>
           {/* Pestañas de navegación cuando se necesitan mostrar */}
+          
           <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => {
-                setActiveTab("solicitudes");
-                setShowSolicitudForm(false);
-              }}
-              className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "solicitudes"
-                  ? "text-[#D7008A] border-b-2 border-[#D7008A]"
-                  : "text-gray-500 hover:text-[#41023B]"
-              }`}
-            >
-              Panel Principal
-            </button>
+            {(!isSolvent || showSolvencyWarning) && 
+              <button
+                onClick={() => {
+                  setActiveTab("solicitudes");
+                  setShowSolicitudForm(false);
+                }}
+                className={`px-4 py-2 font-medium text-sm ${
+                  activeTab === "solicitudes"
+                    ? "text-[#D7008A] border-b-2 border-[#D7008A]"
+                    : "text-gray-500 hover:text-[#41023B]"
+                }`}
+              >
+                Panel Principal
+              </button>
+            }
+            
 
-            <button
-              onClick={() => setActiveTab("solvencia")}
-              className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "solvencia"
-                  ? "text-[#D7008A] border-b-2 border-[#D7008A]"
-                  : "text-gray-500 hover:text-[#41023B]"
-              }`}
-            >
-              Pago de Solvencia
-            </button>
+            {(!isSolvent || showSolvencyWarning) && 
+              <button
+                onClick={() => setActiveTab("solvencia")}
+                className={`px-4 py-2 font-medium text-sm ${
+                  activeTab === "solvencia"
+                    ? "text-[#D7008A] border-b-2 border-[#D7008A]"
+                    : "text-gray-500 hover:text-[#41023B]"
+                }`}
+              >
+                Pago de Solvencia
+              </button>
+            }            
           </div>
 
           {/* Contenido según la pestaña activa */}
@@ -163,11 +172,9 @@ export default function Home() {
               {/* Estado de Solvencia (solo si no está solvente o está por vencer) */}
               {(!isSolvent || showSolvencyWarning) && (
                 <SolvencyStatus
-                  isSolvent={isSolvent}
-                  solvencyDate={solvencyInfo.date}
                   solvencyAmount={solvencyInfo.amount}
                   onPayClick={handlePayClick}
-                  isExpiringSoon={showSolvencyWarning && isSolvent}
+                  isExpiringSoon={showSolvencyWarning}
                 />
               )}
 

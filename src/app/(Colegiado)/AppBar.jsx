@@ -9,13 +9,12 @@ import {
   Forum,
   Inbox,
 } from "@mui/icons-material";
+import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 
-export default function AppBar({ solvencyInfo }) {
-  console.log(solvencyInfo)
+export default function AppBar() {
   const [selectedItem, setSelectedItem] = useState("Solicitudes");
-  const fechaExpiracion = new Date(solvencyInfo);
-  const isSolvente = fechaExpiracion >= new Date();
-  console.log(isSolvente)
+  const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser)
+  console.log('EPA APPBAR', colegiadoUser.solvente)
 
   return (
     <div className="h-full w-full">
@@ -78,11 +77,11 @@ export default function AppBar({ solvencyInfo }) {
               <span className="text-md text-gray-300 mb-2">Estado:</span>
               <span className="text-[16px] font-semibold text-white">
                 <span
-                  className={isSolvente ? "text-green-400" : "text-red-400"}
+                  className={colegiadoUser.solvencia_status ? "text-green-400" : "text-red-400"}
                 >
-                  {isSolvente ? "Solvente" : "No Solvente"}
+                  {colegiadoUser.solvencia_status ? "Solvente" : "No Solvente"}
                 </span>{" "}
-                hasta: {solvencyInfo}
+                hasta: {colegiadoUser.solvente}
               </span>
             </div>
           </div>
