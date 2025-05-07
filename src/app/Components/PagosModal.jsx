@@ -5,19 +5,6 @@ import { useState, useEffect } from "react";
 import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
-const DEFAULT_METODOS = [
-  {
-    nombre: "Banco de Venezuela",
-    datos_adicionales: { slug: "bdv" },
-    logo_url: "/assets/icons/BDV.png",
-  },
-  {
-    nombre: "PayPal",
-    datos_adicionales: { slug: "paypal" },
-    logo_url: "/assets/icons/Paypal.png",
-  },
-];
-
 export default function PagosColg({ props }) {
   const { handlePaymentComplete, costo } =
     props;
@@ -64,24 +51,21 @@ export default function PagosColg({ props }) {
     const total = (numAmount + 0.3) / (1 - 0.054);
     return total.toFixed(2);
   };
-
   const paypalAmount = calculatePaypalFee(paymentAmount);
 
   const handleSubmit = async (e) => {
-    console.log("handleSubmit");
     e.preventDefault();
     setIsSubmitting(true);
     handlePaymentComplete({
       paymentDate,
       referenceNumber,
       paymentFile,
-      totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount,
+      totalAmount: paymentMethod === "bdv" ? montoEnBs : paypalAmount,
       metodo_de_pago: metodoPago.find(
         (m) => m.datos_adicionales.slug === paymentMethod
       ),
     });
 
-    // Simular procesamiento de pago
 
     setIsSubmitting(false);
   };
