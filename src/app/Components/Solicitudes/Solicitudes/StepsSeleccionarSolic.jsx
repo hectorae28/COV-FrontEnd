@@ -1,22 +1,23 @@
 "use client"
-import { useState, useEffect } from "react"
+import { TIPOS_SOLICITUD } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
 import {
-    FileText,
-    Search,
     Check,
-    User,
     FileCheck,
+    FileText,
     ShoppingCart,
     Trash2,
-    Upload,
+    User,
+    Search
 } from "lucide-react"
-import { TIPOS_SOLICITUD } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
+import { useState, useEffect } from "react"
 
 export default function SeleccionarSolicitudesStep({
-    colegiados,
-    colegiadoPreseleccionado = null,
     onFinalizarSolicitud,
-    onClose
+    onClose,
+    mostrarSeleccionColegiado = true,
+    colegiados = [],
+    colegiadoPreseleccionado = null,
+    creadorInfo
 }) {
     // Estado inicial del formulario
     const [formData, setFormData] = useState({
@@ -29,9 +30,9 @@ export default function SeleccionarSolicitudesStep({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
     const [showColegiadosList, setShowColegiadosList] = useState(false)
+
     // Estados para gestionar las funcionalidades
     const [tiposSeleccionados, setTiposSeleccionados] = useState([])
-    // Modificado: Ahora guardamos un array de subtipos de constancia seleccionados
     const [subtiposConstanciaSeleccionados, setSubtiposConstanciaSeleccionados] = useState([])
     const [itemsCarrito, setItemsCarrito] = useState([])
     const [totalCarrito, setTotalCarrito] = useState(0)
@@ -143,7 +144,7 @@ export default function SeleccionarSolicitudesStep({
         if (tipo === "Solvencia") {
             return;
         }
-        
+
         // Para Constancia, solo toggle de selección
         if (tipo === "Constancia") {
             // Si ya está seleccionada, la quitamos
@@ -165,12 +166,9 @@ export default function SeleccionarSolicitudesStep({
                 // Si está seleccionado, lo quitamos
                 setTiposSeleccionados(tiposSeleccionados.filter(t => t !== tipo))
                 // También eliminar del carrito
-                const itemsParaEliminar = itemsCarrito.filter(item => item.tipo === tipo)
-                if (itemsParaEliminar.length > 0) {
-                    const nuevosItems = itemsCarrito.filter(item => item.tipo !== tipo)
-                    setItemsCarrito(nuevosItems)
-                    actualizarTotal(nuevosItems)
-                }
+                const nuevosItems = itemsCarrito.filter(item => item.tipo !== tipo)
+                setItemsCarrito(nuevosItems)
+                actualizarTotal(nuevosItems)
             } else {
                 // Si no está seleccionado, lo agregamos
                 setTiposSeleccionados([...tiposSeleccionados, tipo])
@@ -275,16 +273,18 @@ export default function SeleccionarSolicitudesStep({
 
     // Filtrar colegiados por término de búsqueda
     const colegiadosFiltrados = colegiados.filter(colegiado =>
-        colegiado.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        colegiado.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (colegiado.cedula && colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (colegiado.numeroRegistro && colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase()))
     )
 
     // Obtener el colegiado seleccionado
-    const colegiadoSeleccionado = colegiados.find(c => c.id === formData.colegiadoId)
+    const colegiadoSeleccionado =
+        colegiadoPreseleccionado ||
+        colegiados.find(c => c.id === formData.colegiadoId)
 
     // Verificar si todo está exonerado
-    const todoExonerado = totalCarrito === 0
+    const todoExonerado = totalCarrito === 0 && itemsCarrito.length > 0
 
     // Validar el formulario antes de enviar
     const validarFormulario = () => {
@@ -301,6 +301,9 @@ export default function SeleccionarSolicitudesStep({
         if (!validarFormulario()) return
         setIsSubmitting(true)
         try {
+            // Usamos creadorInfo en lugar de session
+            const isAdmin = creadorInfo?.role === 'admin' || creadorInfo?.isAdmin || false;
+
             // Crear lista de documentos requeridos única (sin duplicados)
             const todosDocumentosRequeridos = []
             itemsCarrito.forEach(item => {
@@ -317,6 +320,7 @@ export default function SeleccionarSolicitudesStep({
             } else if (itemsCarrito.length === 1) {
                 tipoMostrar = itemsCarrito[0].nombre
             }
+
             // Crear objeto de nueva solicitud
             const nuevaSolicitud = {
                 id: `sol-${Date.now()}`,
@@ -333,7 +337,15 @@ export default function SeleccionarSolicitudesStep({
                 itemsSolicitud: itemsCarrito,
                 comprobantePago: null,
                 estadoPago: todoExonerado ? "Exonerado" : "Pendiente de verificación",
-                fechaCompletado: new Date().toLocaleDateString()
+                fechaCompletado: new Date().toLocaleDateString(),
+                // Información del creador
+                creador: {
+                    username: creadorInfo?.name || "Usuario",
+                    email: creadorInfo?.email || "usuario@ejemplo.com",
+                    esAdmin: creadorInfo?.role === 'admin' || creadorInfo?.isAdmin || false,
+                    fecha: new Date().toISOString(),
+                    tipo: 'creado'
+                }
             }
             // Pasar la solicitud creada al componente padre
             onFinalizarSolicitud(nuevaSolicitud)
@@ -347,87 +359,87 @@ export default function SeleccionarSolicitudesStep({
         }
     }
 
-    // Debug para verificar los colegiados disponibles
-    console.log("Colegiados disponibles:", colegiados);
-
     // Filtrar tipos de solicitud para excluir "Solvencia"
     const tiposSolicitudFiltrados = Object.keys(TIPOS_SOLICITUD).filter(tipo => tipo !== "Solvencia");
 
     return (
         <form onSubmit={handleSubmit}>
             <div className="p-6">
-                {/* Selección de colegiado */}
-                <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Colegiado <span className="text-red-500">*</span>
-                    </label>
-                    {errors.colegiadoId && (
-                        <div className="text-red-500 text-xs mb-2">
-                            {errors.colegiadoId}
-                        </div>
-                    )}
-                    <div className="relative">
-                        {colegiadoSeleccionado ? (
-                            <div className="flex items-center justify-between border rounded-lg p-3 mb-2">
-                                <div className="flex items-center">
-                                    <User size={20} className="text-gray-400 mr-2" />
-                                    <div>
-                                        <p className="font-medium">{colegiadoSeleccionado.nombre}</p>
-                                        <p className="text-xs text-gray-500">
-                                            {colegiadoSeleccionado.cedula} · {colegiadoSeleccionado.numeroRegistro}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setFormData(prev => ({ ...prev, colegiadoId: "" }));
-                                        setShowColegiadosList(true);
-                                    }}
-                                    className="text-[#C40180] text-sm hover:underline"
-                                >
-                                    Cambiar
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Buscar colegiado por nombre, cédula o registro..."
-                                    className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    value={searchTerm}
-                                    onChange={(e) => {
-                                        setSearchTerm(e.target.value);
-                                        setShowColegiadosList(true);
-                                    }}
-                                    onFocus={() => setShowColegiadosList(true)}
-                                />
-                                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                {/* Selección de colegiado (solo si es necesario) */}
+                {mostrarSeleccionColegiado && (
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Colegiado <span className="text-red-500">*</span>
+                        </label>
+                        {errors.colegiadoId && (
+                            <div className="text-red-500 text-xs mb-2">
+                                {errors.colegiadoId}
                             </div>
                         )}
-                        {/* Lista de colegiados */}
-                        {showColegiadosList && !colegiadoSeleccionado && (
-                            <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                                {colegiadosFiltrados.length === 0 ? (
-                                    <div className="p-3 text-sm text-gray-500">No se encontraron colegiados</div>
-                                ) : (
-                                    colegiadosFiltrados.map(colegiado => (
-                                        <div
-                                            key={colegiado.id}
-                                            className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
-                                            onClick={() => selectColegiado(colegiado)}
-                                        >
-                                            <p className="font-medium">{colegiado.nombre}</p>
+                        <div className="relative">
+                            {colegiadoSeleccionado ? (
+                                <div className="flex items-center justify-between border rounded-lg p-3 mb-2">
+                                    <div className="flex items-center">
+                                        <User size={20} className="text-gray-400 mr-2" />
+                                        <div>
+                                            <p className="font-medium">{colegiadoSeleccionado.nombre}</p>
                                             <p className="text-xs text-gray-500">
-                                                {colegiado.cedula} · {colegiado.numeroRegistro}
+                                                {colegiadoSeleccionado.cedula} · {colegiadoSeleccionado.numeroRegistro}
                                             </p>
                                         </div>
-                                    ))
-                                )}
-                            </div>
-                        )}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setFormData(prev => ({ ...prev, colegiadoId: "" }));
+                                            setShowColegiadosList(true);
+                                        }}
+                                        className="text-[#C40180] text-sm hover:underline"
+                                    >
+                                        Cambiar
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar colegiado por nombre, cédula o registro..."
+                                        className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            setShowColegiadosList(true);
+                                        }}
+                                        onFocus={() => setShowColegiadosList(true)}
+                                    />
+                                    <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                                </div>
+                            )}
+                            {/* Lista de colegiados */}
+                            {showColegiadosList && !colegiadoSeleccionado && (
+                                <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                                    {colegiadosFiltrados.length === 0 ? (
+                                        <div className="p-3 text-sm text-gray-500">No se encontraron colegiados</div>
+                                    ) : (
+                                        colegiadosFiltrados.map(colegiado => (
+                                            <div
+                                                key={colegiado.id}
+                                                className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                                                onClick={() => selectColegiado(colegiado)}
+                                            >
+                                                <p className="font-medium">{colegiado.nombre}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {colegiado.cedula} · {colegiado.numeroRegistro}
+                                                </p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
+
                 {/* Selección de tipos de solicitud */}
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -504,7 +516,9 @@ export default function SeleccionarSolicitudesStep({
                             </div>
                         </div>
                     )}
+                    {/* Se ha eliminado la sección de información del creador según lo solicitado */}
                 </div>
+
                 {/* Carrito de compras */}
                 <div className="mb-6 border rounded-lg overflow-hidden">
                     <div className="bg-gray-50 p-3 border-b flex justify-between items-center">
@@ -608,11 +622,12 @@ export default function SeleccionarSolicitudesStep({
                         </div>
                     )}
                 </div>
+
                 {/* Mensaje si todo está exonerado */}
-                {todoExonerado && itemsCarrito.length > 0 && (
+                {todoExonerado && (
                     <div className="mb-6 bg-green-50 border border-green-200 p-4 rounded-lg text-green-800">
                         <h3 className="font-medium flex items-center mb-2">
-                        <Check size={20} className="mr-2" />
+                            <Check size={20} className="mr-2" />
                             No se requiere comprobante de pago
                         </h3>
                         <p className="text-sm">
@@ -621,6 +636,22 @@ export default function SeleccionarSolicitudesStep({
                         </p>
                     </div>
                 )}
+
+                {/* Campo opcional de descripción */}
+                <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Descripción adicional (opcional)
+                    </label>
+                    <textarea
+                        name="descripcion"
+                        value={formData.descripcion}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] text-sm"
+                        placeholder="Ingrese detalles adicionales para su solicitud..."
+                        rows={3}
+                    />
+                </div>
+
                 {/* Mensaje de error general */}
                 {errors.general && (
                     <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-md">

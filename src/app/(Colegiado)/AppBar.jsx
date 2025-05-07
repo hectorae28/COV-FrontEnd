@@ -1,31 +1,57 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
   Description,
   EventNote,
   School,
   Forum,
   Inbox,
+  Home,
+  Person,
 } from "@mui/icons-material";
+import { usePathname } from "next/navigation";
 
 export default function AppBar({ solvencyInfo }) {
-  const [selectedItem, setSelectedItem] = useState("Solicitudes");
+  const [selectedItem, setSelectedItem] = useState("Inicio");
+  const pathname = usePathname();
   const fechaExpiracion = new Date(solvencyInfo);
   const isSolvente = fechaExpiracion >= new Date();
+
+  // Actualizar elemento seleccionado basado en la ruta actual
+  useEffect(() => {
+    if (pathname === "/") {
+      setSelectedItem("Inicio");
+    } else if (pathname.includes("/solicitudes")) {
+      setSelectedItem("Solicitudes");
+    } else if (pathname.includes("/eventos")) {
+      setSelectedItem("Eventos");
+    } else if (pathname.includes("/cursos")) {
+      setSelectedItem("Cursos");
+    } else if (pathname.includes("/notificaciones")) {
+      setSelectedItem("Notificaciones");
+    } else if (pathname.includes("/bandeja")) {
+      setSelectedItem("Bandeja");
+    } else if (pathname.includes("/perfil")) {
+      setSelectedItem("Perfil");
+    }
+  }, [pathname]);
 
   return (
     <div className="h-full w-full">
       {/* Logo */}
       <div className="p-4 sm:p-8">
-        <Image
-          src="/assets/logo.png"
-          alt="Colegio de Odontólogos de Venezuela"
-          width={220}
-          height={80}
-          className="mx-auto"
-        />
+        <Link href="/">
+          <Image
+            src="/assets/logo.png"
+            alt="Colegio de Odontólogos de Venezuela"
+            width={220}
+            height={80}
+            className="mx-auto"
+          />
+        </Link>
       </div>
 
       {/* Separador */}
@@ -34,38 +60,45 @@ export default function AppBar({ solvencyInfo }) {
       {/* Menú */}
       <nav className="mt-6 space-y-6">
         <SidebarItem
+          icon={<Home className="h-5 w-5" />}
+          text="Inicio"
+          active={selectedItem === "Inicio"}
+          href="/Colegiado"
+        />
+        <Divider />
+        <SidebarItem
           icon={<Description className="h-5 w-5" />}
           text="Solicitudes"
           active={selectedItem === "Solicitudes"}
-          onClick={() => setSelectedItem("Solicitudes")}
+          href="/solicitudes"
         />
         <Divider />
         <SidebarItem
           icon={<EventNote className="h-5 w-5" />}
           text="Eventos"
           active={selectedItem === "Eventos"}
-          onClick={() => setSelectedItem("Eventos")}
+          href="/eventos"
         />
         <Divider />
         <SidebarItem
           icon={<School className="h-5 w-5" />}
           text="Cursos"
           active={selectedItem === "Cursos"}
-          onClick={() => setSelectedItem("Cursos")}
+          href="/cursos"
         />
         <Divider />
         <SidebarItem
           icon={<Forum className="h-5 w-5" />}
           text="Notificaciones"
           active={selectedItem === "Notificaciones"}
-          onClick={() => setSelectedItem("Notificaciones")}
+          href="/notificaciones"
         />
         <Divider />
         <SidebarItem
           icon={<Inbox className="h-5 w-5" />}
           text="Bandeja"
           active={selectedItem === "Bandeja"}
-          onClick={() => setSelectedItem("Bandeja")}
+          href="/bandeja"
         />
         <Divider />
 
@@ -90,14 +123,10 @@ export default function AppBar({ solvencyInfo }) {
   );
 }
 
-function SidebarItem({ icon, text, active, onClick }) {
+function SidebarItem({ icon, text, active, href }) {
   return (
-    <a
-      href="#"
-      onClick={(e) => {
-        e.preventDefault();
-        onClick();
-      }}
+    <Link
+      href={href}
       className={`flex items-center px-4 py-2 rounded-lg mx-auto transition-colors w-4/5 ${
         active
           ? "bg-gray-200 text-[#41023B] font-bold"
@@ -106,7 +135,7 @@ function SidebarItem({ icon, text, active, onClick }) {
     >
       <span className="mr-3">{icon}</span>
       <span className="whitespace-nowrap">{text}</span>
-    </a>
+    </Link>
   );
 }
 

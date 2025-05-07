@@ -12,13 +12,16 @@ import InfoLaboral from "@/app/(Registro)/InfoLab";
 import InfoPersonal from "@/app/(Registro)/InfoPers";
 import PagosColg from "@/app/Components/PagosModal";
 import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import api from "@/api/api";
+import { useSession } from "next-auth/react";
 
 export default function RegistroColegiados({
   isAdmin = true,
   onClose,
   onRegistroExitoso,
 }) {
-  // Get methods from Zustand store
+
+  const { data: session } = useSession();
   const addColegiadoPendiente = ListaColegiadosData(state => state.addColegiadoPendiente);
 
   // Estado para seguimiento de pasos
@@ -27,24 +30,30 @@ export default function RegistroColegiados({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [exonerarPagos, setExonerarPagos] = useState(false);
   const [pagarLuego, setPagarLuego] = useState(false);
-  const [tazaBcv, setTazaBcv] = useState(0);
+  const [tasaBcv, setTasaBcv] = useState(0);
+  const [error, setError] = useState(null)
   const [costoInscripcion, setCostoInscripcion] = useState(0);
   const [metodoPago, setMetodoPago] = useState([]);
   const initialState = {
+    tipo_profesion: "",
     nationality: "",
     identityCard: "",
     firstName: "",
-    lastName: "",
+    secondName: "",
+    firstLastName: "",
+    secondLastName: "",
     birthPlace: "",
     birthDate: "",
     gender: "",
     age: "",
     maritalStatus: "",
     email: "",
+    countryCode: "+58",
     phoneNumber: "",
     homePhone: "",
     address: "",
     city: "",
+    state: "",
     collegeNumber: "",
     professionalField: "",
     institutionName: "",
@@ -62,10 +71,11 @@ export default function RegistroColegiados({
     mppsRegistrationDate: "",
     titleIssuanceDate: "",
     state: "",
-    ci: {},
-    rif: {},
-    titulo: {},
-    mpps: {},
+    ci: null,
+    rif: null,
+    titulo: null,
+    mpps: null,
+    documentos: {}
   };
 
   // Estado para los datos del formulario
@@ -73,6 +83,10 @@ export default function RegistroColegiados({
 
   // Función para actualizar datos del formulario
   const handleInputChange = (data) => {
+    if (data && data.isPersonalInfoValid !== undefined) {
+      const { isPersonalInfoValid, ...rest } = data;
+      data = rest;
+    }
     setFormData((prev) => ({
       ...prev,
       ...data,
@@ -81,6 +95,21 @@ export default function RegistroColegiados({
 
   // Función para manejar cambios en documentos
   const handleDocumentosChange = (docs) => {
+    // Actualizar directamente los campos individuales para archivos
+    if (docs.ci) {
+      setFormData(prev => ({ ...prev, ci: docs.ci }));
+    }
+    if (docs.rif) {
+      setFormData(prev => ({ ...prev, rif: docs.rif }));
+    }
+    if (docs.titulo) {
+      setFormData(prev => ({ ...prev, titulo: docs.titulo }));
+    }
+    if (docs.mpps) {
+      setFormData(prev => ({ ...prev, mpps: docs.mpps }));
+    }
+    
+    // También mantener la estructura de documentos para coherencia
     setFormData((prev) => ({
       ...prev,
       documentos: {
@@ -147,140 +176,100 @@ export default function RegistroColegiados({
       setExonerarPagos(false);
     }
   };
-
-  // Función para manejar la finalización del registro
-  const handlePaymentComplete = async () => {
+  const handlePaymentComplete = async ({
+    paymentDate = null,
+    referenceNumber = null,
+    paymentFile = null,
+    totalAmount = null,
+    metodo_de_pago = null,
+  }) => {
     setIsSubmitting(true);
-
-    try {
-      // Preparar los datos para el nuevo colegiado pendiente
-      const nombre = `${formData.firstName} ${formData.lastName}`;
-
-      // Convertir datos del formulario al formato esperado por ListaColegiadosData
-      const nuevoPendiente = {
-        id: `p-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        nombre: nombre,
-        cedula: `${formData.nationality}-${formData.identityCard}`,
-        email: formData.email,
-        telefono: formData.phoneNumber,
-        fechaSolicitud: new Date().toLocaleDateString(),
-        documentosCompletos: true,
-
-        // Detailed data
-        persona: {
-          nombre: formData.firstName,
-          segundo_nombre: "",
-          primer_apellido: formData.lastName,
-          segundo_apellido: "",
-          genero: formData.gender === "M" ? "M" : "F",
-          tipo_identificacion: formData.nationality,
-          identificacion: formData.identityCard,
-          correo: formData.email,
-          id_adicional: "",
-          telefono_movil: formData.phoneNumber,
-          telefono_de_habitacion: formData.homePhone || "",
-          fecha_de_nacimiento: formData.birthDate,
-          estado_civil: formData.maritalStatus,
-          direccion: {
-            referencia: formData.address,
-            estado: formData.state
-          },
-          user: null
+    const Form = new FormData();
+    Form.append("tipo_profesion", formData.tipo_profesion);
+    Form.append(
+      "persona",
+      JSON.stringify({
+        direccion: {
+          referencia: formData.address,
+          estado: 1,
         },
-        instituto_bachillerato: formData.graduateInstitute,
-        universidad: formData.universityTitle,
-        fecha_egreso_universidad: formData.titleIssuanceDate,
-        num_registro_principal: formData.mainRegistrationNumber,
-        fecha_registro_principal: formData.mainRegistrationDate,
-        num_mpps: formData.mppsRegistrationNumber,
-        fecha_mpps: formData.mppsRegistrationDate,
-        instituciones: [
-          formData.institutionName ? {
-            nombre: formData.institutionName,
-            cargo: formData.professionalField,
-            direccion: formData.institutionAddress,
-            telefono: formData.institutionPhone,
-          } : null,
-          formData.clinicName ? {
-            nombre: formData.clinicName,
-            cargo: formData.professionalField,
-            direccion: formData.clinicAddress,
-            telefono: formData.clinicPhone,
-          } : null
-        ].filter(Boolean), // Remove null values
-
-        // Files (using provided data or empty strings)
-        file_ci: formData.ci?.name || "",
-        file_rif: formData.rif?.name || "",
-        file_fondo_negro: formData.titulo?.name || "",
-        file_mpps: formData.mpps?.name || "",
-
-        // Add observation about payment status
-        observaciones: exonerarPagos
-          ? "Colegiado exonerado de pagos por administración"
-          : pagarLuego
-            ? "Pago pendiente. Se debe procesar posteriormente."
-            : "Solicita inscripción en el Colegio de Odontólogos de Venezuela. Pago procesado.",
-
-        // Convert document objects to the expected format for the store
-        documentos: [
-          {
-            id: "file_ci",
-            nombre: "Cédula de identidad",
-            descripcion: "Copia escaneada por ambos lados",
-            archivo: formData.ci?.name || "",
-            requerido: true,
-          },
-          {
-            id: "file_rif",
-            nombre: "RIF",
-            descripcion: "Registro de Información Fiscal",
-            archivo: formData.rif?.name || "",
-            requerido: true,
-          },
-          {
-            id: "file_fondo_negro",
-            nombre: "Título universitario fondo negro",
-            descripcion: "Título de Odontólogo con fondo negro",
-            archivo: formData.titulo?.name || "",
-            requerido: true,
-          },
-          {
-            id: "file_mpps",
-            nombre: "Registro MPPS",
-            descripcion: "Registro del Ministerio del Poder Popular para la Salud",
-            archivo: formData.mpps?.name || "",
-            requerido: true,
-          },
-          {
-            id: "comprobante_pago",
-            nombre: "Comprobante de pago",
-            descripcion: "Comprobante de pago de inscripción",
-            archivo: "comprobante_pago.pdf",
-            requerido: true,
-          }
-        ]
-      };
-
-      // Add the pending member to the central store
-      addColegiadoPendiente(nuevoPendiente);
-
-      // Clean up files from formData to avoid circular references
-      const cleanNuevoPendiente = { ...nuevoPendiente };
-      delete cleanNuevoPendiente.ci;
-      delete cleanNuevoPendiente.rif;
-      delete cleanNuevoPendiente.titulo;
-      delete cleanNuevoPendiente.mpps;
-
-      // Llamamos a la función de registro exitoso del componente padre
-      if (typeof onRegistroExitoso === 'function') {
-        onRegistroExitoso(cleanNuevoPendiente);
+        nombre: formData.firstName,
+        primer_apellido: formData.firstLastName,
+        segundo_apellido: formData.secondLastName,
+        segundo_nombre: formData.secondName,
+        genero: formData.gender,
+        nacionalidad: formData.nationality,
+        identificacion: `${formData.idType}-${formData.identityCard}`,
+        correo: formData.email,
+        telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
+        telefono_de_habitacion: formData.homePhone,
+        fecha_de_nacimiento: formData.birthDate,
+        estado_civil: formData.maritalStatus,
+      })
+    );
+    Form.append("instituto_bachillerato", formData.graduateInstitute);
+    Form.append("universidad", formData.universityTitle);
+    Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
+    if (formData.tipo_profesion === "odontologo") {
+      Form.append("num_registro_principal", formData.mainRegistrationNumber);
+      Form.append("fecha_registro_principal", formData.mainRegistrationDate);
+    }
+    Form.append("num_mpps", formData.mppsRegistrationNumber);
+    Form.append("fecha_mpps", formData.mppsRegistrationDate);
+    Form.append(
+      "instituciones",
+      JSON.stringify(
+        formData.laboralRegistros.map((registro) => ({
+          nombre: registro.institutionName,
+          cargo: registro.cargo,
+          direccion: registro.institutionAddress,
+          telefono: registro.institutionPhone,
+          tipo_institucion: registro.institutionType,
+        })) || []
+      )
+    );
+    Form.append("file_ci", formData.ci );
+    Form.append("file_rif", formData.rif );
+    Form.append("file_fondo_negro", formData.titulo);
+    Form.append("file_mpps", formData.mpps);
+    Form.append("comprobante", paymentFile);
+    if (
+      formData.tipo_profesion === "tecnico" ||
+      formData.tipo_profesion === "higienista"
+    ) {
+      Form.append("Fondo_negro_credencial", formData.Fondo_negro_credencial);
+      Form.append("notas_curso", formData.notas_curso);
+      Form.append(
+        "fondo_negro_titulo_bachiller",
+        formData.fondo_negro_titulo_bachiller
+      );
+    }
+    !pagarLuego
+      ? Form.append(
+          "pago",
+          JSON.stringify({
+            fecha_pago: paymentDate,
+            metodo_de_pago: metodo_de_pago.id,
+            num_referencia: referenceNumber,
+            monto: totalAmount,
+          })
+        )
+      : Form.append("pago", null);
+    try {
+      const response = await api.post("usuario/register/", Form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      if (response.status === 201) {
+        setPasoActual(7);
+        onRegistroExitoso();
       }
-
-      // Avanzamos al paso de confirmación
-      setPasoActual(7);
     } catch (error) {
-      console.error("Error al registrar:", error);
+      console.error(
+        "Error al enviar los datos:",
+        error.response?.data || error
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -289,21 +278,25 @@ export default function RegistroColegiados({
   useEffect(() => {
     const LoadData = async () => {
       try {
-        const taza = await fetchDataSolicitudes("tasa-bcv");
-        setTazaBcv(taza.data.rate);
+        const tasa = await fetchDataSolicitudes("tasa-bcv");
+        setTasaBcv(tasa.data.rate);
         const costo = await fetchDataSolicitudes(
           "costo",
-          "?tipo_costo=1&es_vigente=true"
+          `?search=Inscripcion+${formData.tipo_profesion}&es_vigente=true`
         );
         setCostoInscripcion(Number(costo.data[0].monto_usd));
         const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
         setMetodoPago(Mpagos.data);
       } catch (error) {
-        console.error("Error al obtener los datos:", error);
+        setError(
+          "Ocurrió un error al cargar los datos, verifique su conexión a internet"
+        );
       }
     };
-    LoadData();
-  }, []);
+    if (formData.tipo_profesion.length > 0) {
+      LoadData();
+    }
+  }, [formData.tipo_profesion]);
 
   // Renderizar paso actual
   const renderPasoActual = () => {
@@ -331,7 +324,7 @@ export default function RegistroColegiados({
         return (
           <DocsRequirements
             formData={formData}
-            onInputChange={handleDocumentosChange}
+            onInputChange={handleInputChange}
           />
         );
       case 6:
@@ -341,7 +334,7 @@ export default function RegistroColegiados({
               <PagosColg
                 props={{
                   handlePaymentComplete,
-                  tazaBcv,
+                  tasaBcv,
                   costoInscripcion,
                   metodoPago,
                 }}
@@ -363,7 +356,9 @@ export default function RegistroColegiados({
                         <span className="text-[#41023B] font-bold text-lg">
                           Exonerar pagos:
                         </span>{" "}
-                        Al habilitar esta opción, el colegiado quedará registrado como solvente sin necesidad de realizar un pago.
+                        Al habilitar esta opción, el colegiado quedará
+                        registrado como solvente sin necesidad de realizar un
+                        pago.
                       </p>
                     </label>
                   </div>
@@ -382,7 +377,9 @@ export default function RegistroColegiados({
                         <span className="text-[#41023B] font-bold text-lg">
                           Pagar luego:
                         </span>{" "}
-                        Al habilitar esta opción, el colegiado quedará registrado con pago pendiente y podrá completarlo posteriormente.
+                        Al habilitar esta opción, el colegiado quedará
+                        registrado con pago pendiente y podrá completarlo
+                        posteriormente.
                       </p>
                     </label>
                   </div>
@@ -404,7 +401,13 @@ export default function RegistroColegiados({
               El colegiado ha sido registrado exitosamente en el sistema.
               {pagarLuego && (
                 <span className="block mt-2 text-amber-600 font-medium">
-                  Nota: El colegiado tiene pendiente realizar el pago de inscripción.
+                  Nota: El colegiado tiene pendiente realizar el pago de
+                  inscripción.
+                </span>
+              )}
+              {exonerarPagos && (
+                <span className="block mt-2 text-green-600 font-medium">
+                  Nota: El colegiado ha sido exonerado del pago por administración.
                 </span>
               )}
             </p>
@@ -506,12 +509,13 @@ export default function RegistroColegiados({
                   <div className="flex flex-col items-center">
                     <div
                       className={`w-10 h-10 flex items-center justify-center rounded-full 
-                    ${completedSteps.includes(paso)
-                          ? "bg-[#41023B] text-white"
-                          : pasoActual === paso
-                            ? "bg-[#D7008A] text-white"
-                            : "bg-gray-200 text-gray-600"
-                        }`}
+                    ${
+                      completedSteps.includes(paso)
+                        ? "bg-[#41023B] text-white"
+                        : pasoActual === paso
+                        ? "bg-[#D7008A] text-white"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
                     >
                       {completedSteps.includes(paso) ? (
                         <CheckCircle size={18} />
@@ -527,10 +531,11 @@ export default function RegistroColegiados({
 
                   {index < 4 && (
                     <div
-                      className={`h-1 flex-1 mx-1 ${completedSteps.includes(paso)
-                        ? "bg-[#41023B]"
-                        : "bg-gray-200"
-                        }`}
+                      className={`h-1 flex-1 mx-1 ${
+                        completedSteps.includes(paso)
+                          ? "bg-[#41023B]"
+                          : "bg-gray-200"
+                      }`}
                     ></div>
                   )}
                 </React.Fragment>

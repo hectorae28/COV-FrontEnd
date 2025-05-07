@@ -3,23 +3,7 @@ import PayPalProvider from "@/utils/paypalProvider";
 import { motion } from "framer-motion";
 import { CreditCard, DollarSign } from "lucide-react";
 import { useState } from "react";
-import PaypalPaymentComponent from "@/app/Components/utils/PaypalPaymentComponent"
-
-// Default values for props (in case they're not provided)
-const DEFAULT_COSTO = 8;
-const DEFAULT_TAZA = 36.55;
-const DEFAULT_METODOS = [
-  {
-    nombre: "Banco de Venezuela",
-    datos_adicionales: { slug: "bdv" },
-    logo_url: "/assets/icons/BDV.png",
-  },
-  {
-    nombre: "PayPal",
-    datos_adicionales: { slug: "paypal" },
-    logo_url: "/assets/icons/Paypal.png",
-  },
-];
+import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx"
 
 export default function PagosColg({ props }) {
   const { handlePaymentComplete, tasaBcv, costoInscripcion, metodoPago } =
@@ -40,24 +24,21 @@ export default function PagosColg({ props }) {
     const total = (numAmount + 0.3) / (1 - 0.054);
     return total.toFixed(2);
   };
-
   const paypalAmount = calculatePaypalFee(paymentAmount);
 
   const handleSubmit = async (e) => {
-    console.log("handleSubmit");
     e.preventDefault();
     setIsSubmitting(true);
     handlePaymentComplete({
       paymentDate,
       referenceNumber,
       paymentFile,
-      totalAmount: paymentMethod === "bdv" ? amountInBs : paypalAmount,
+      totalAmount: paymentMethod === "bdv" ? montoEnBs : paypalAmount,
       metodo_de_pago: metodoPago.find(
         (m) => m.datos_adicionales.slug === paymentMethod
       ),
     });
 
-    // Simular procesamiento de pago
 
     setIsSubmitting(false);
   };
@@ -133,8 +114,8 @@ export default function PagosColg({ props }) {
                 src={
                   metodo.logo_url
                     ? metodo.logo_url.startsWith("/")
-                      ? metodo.logo_url
-                      : `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                      ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                      : metodo.logo_url
                     : "/placeholder.svg"
                 }
                 alt={metodo.nombre}

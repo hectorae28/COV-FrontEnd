@@ -31,17 +31,17 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     ) {
       calculatedAge--;
     }
-    
+
     // Verificar si es mayor de edad
     const isUserAdult = calculatedAge >= 18;
     setIsAdult(isUserAdult);
-    
-    onInputChange({ 
+
+    onInputChange({
       age: calculatedAge.toString(),
       // Si no es adulto, consideramos que el campo birthDate no es válido
-      birthDate: isUserAdult ? birthDate : "" 
+      birthDate: isUserAdult ? birthDate : ""
     });
-    
+
     setAge(calculatedAge.toString());
   };
 
@@ -51,9 +51,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       "nationality",
       "identityCard",
       "firstName",
-      "secondName",
       "firstLastName",
-      "secondLastName",
       "birthDate",
       "gender",
       "maritalStatus"
@@ -63,7 +61,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
   }, [formData]);
 
   const isFieldEmpty = (fieldName) => {
-    return (!formData[fieldName] || formData[fieldName].trim() === "");
+    return validationErrors && validationErrors[fieldName];
   };
 
   return (
@@ -85,7 +83,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               name="nationality"
               value={formData.nationality}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("nationality") ? "border-gray-200" : "border-gray-200"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("nationality") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="" disabled>
@@ -142,7 +140,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 const value = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
                 handleChange({ target: { name: "identityCard", value } });
               }}
-              className="w-full px-4 py-3 border border-gray-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
               placeholder="Ingrese su número de identificación"
               style={{ height: "48px" }}
             />
@@ -164,7 +162,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("firstName") ? "border-gray-200" : "border-gray-200"
+            className={`w-full px-4 py-3 border ${isFieldEmpty("firstName") ? "border-red-500 bg-red-50" : "border-gray-200"
               } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
             placeholder="Ingrese su primer nombre"
           />
@@ -172,24 +170,19 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        {/* Second Name */}
+        {/* Second Name - No longer required */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Segundo Nombre
-            <span className="text-red-500 ml-1">*</span>
           </label>
           <input
             type="text"
             name="secondName"
             value={formData.secondName || ""}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("secondName") ? "border-gray-200" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
             placeholder="Ingrese su segundo nombre"
           />
-          {isFieldEmpty("secondName") && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-          )}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -204,7 +197,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             name="firstLastName"
             value={formData.firstLastName || ""}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("firstLastName") ? "border-gray-200" : "border-gray-200"
+            className={`w-full px-4 py-3 border ${isFieldEmpty("firstLastName") ? "border-red-500 bg-red-50" : "border-gray-200"
               } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
             placeholder="Ingrese su primer apellido"
           />
@@ -212,24 +205,19 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        {/* Second Last Name */}
+        {/* Second Last Name - No longer required */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Segundo Apellido
-            <span className="text-red-500 ml-1">*</span>
           </label>
           <input
             type="text"
             name="secondLastName"
             value={formData.secondLastName || ""}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("secondLastName") ? "border-gray-200" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
             placeholder="Ingrese su segundo apellido"
           />
-          {isFieldEmpty("secondLastName") && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-          )}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -237,7 +225,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Fecha de Nacimiento
-            
+
             {formData.age && formData.age > 0 && ` (Mayor de Edad)`}
             <span className="text-red-500 ml-1">*</span>
           </label>
@@ -247,9 +235,8 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               name="birthDate"
               value={formData.birthDate}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${
-                !isAdult && formData.birthDate ? "border-red-500" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
+              className={`w-full px-4 py-3 border ${(!isAdult && formData.birthDate) || isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
               // Establecer fecha máxima para 18 años atrás
               max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
             />
@@ -272,7 +259,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("gender") ? "border-gray-200" : "border-gray-200"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("gender") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="" disabled>
@@ -308,32 +295,31 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             name="maritalStatus"
             value={formData.maritalStatus}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("maritalStatus") ? "border-gray-200" : "border-gray-200"
-            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+            className={`w-full px-4 py-3 border ${isFieldEmpty("maritalStatus") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+          >
+            <option value="" disabled>
+              Seleccionar Estado Civil
+            </option>
+            <option value="soltero">Soltero</option>
+            <option value="casado">Casado</option>
+            <option value="divorciado">Divorciado</option>
+            <option value="viudo">Viudo</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg
+              className="fill-current h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
             >
-              <option value="" disabled>
-                Seleccionar Estado Civil
-              </option>
-              <option value="soltero">Soltero</option>
-              <option value="casado">Casado</option>
-              <option value="divorciado">Divorciado</option>
-              <option value="viudo">Viudo</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg
-                className="fill-current h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+            </svg>
           </div>
-          {isFieldEmpty("maritalStatus") && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-          )}
         </div>
-      </motion.div>
-    );
-  }
-  
+        {isFieldEmpty("maritalStatus") && (
+          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+        )}
+      </div>
+    </motion.div>
+  );
+}

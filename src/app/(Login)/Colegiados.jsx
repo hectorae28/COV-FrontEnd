@@ -1,11 +1,11 @@
 "use client";
-
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ForgotPasswordForm from "../Components/Home/ForgotPasswordForm";
 import LoginForm from "../Components/Home/LoginForm";
+import ClaimAccountForm from "../Components/Home/AccessNewUser";
 import { Phone, MapPin, Clock } from "lucide-react";
 
 export default function Colegiados({ onClose, isClosing }) {
@@ -16,6 +16,34 @@ export default function Colegiados({ onClose, isClosing }) {
   // Función para alternar la sección de contacto
   const toggleContactSection = () => {
     setShowContact(!showContact);
+  };
+
+  // Función para obtener el título según la vista actual
+  const getTitle = () => {
+    switch (currentView) {
+      case "login":
+        return "Colegiados";
+      case "forgot-password":
+        return "Recuperar Contraseña";
+      case "claim-account":
+        return "Acceder a mi Cuenta";
+      default:
+        return "Colegiados";
+    }
+  };
+
+  // Función para obtener la descripción según la vista actual
+  const getDescription = () => {
+    switch (currentView) {
+      case "login":
+        return "Acceso para odontólogos adscritos al COV";
+      case "forgot-password":
+        return "Ingresa tu correo para recuperar tu contraseña";
+      case "claim-account":
+        return "Ingresa tu número de cédula para obtener acceso a tu cuenta";
+      default:
+        return "Acceso para odontólogos adscritos al COV";
+    }
   };
 
   return (
@@ -62,9 +90,8 @@ export default function Colegiados({ onClose, isClosing }) {
           </svg>
         </motion.button>
       </div>
-
       <div className="relative z-10 h-full flex flex-col justify-center px-6 md:px-12 lg:px-20">
-        <div className="max-w-md mx-auto w-full">
+        <div className="max-w-lg mx-auto w-full">
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <Image
@@ -75,28 +102,26 @@ export default function Colegiados({ onClose, isClosing }) {
               className="drop-shadow-md"
             />
           </div>
-
           <h2 className="text-center text-3xl font-bold text-[#41023B] mb-2">
-            {currentView === "login" ? "Colegiados" : "Recuperar Contraseña"}
+            {getTitle()}
           </h2>
           <p className="text-center text-gray-700 mb-10 px-4">
-            {currentView === "login"
-              ? "Acceso para odontólogos adscritos al COV"
-              : "Ingresa tu correo para recuperar tu contraseña"}
+            {getDescription()}
           </p>
-
           {currentView === "login" && (
             <LoginForm
               onForgotPassword={() => setCurrentView("forgot-password")}
               onRegister={() => router.replace("/Registro")}
+              onClaimAccount={() => setCurrentView("claim-account")}
               callbackUrl="/Colegiado"
             />
           )}
-
           {currentView === "forgot-password" && (
             <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
           )}
-
+          {currentView === "claim-account" && (
+            <ClaimAccountForm onBackToLogin={() => setCurrentView("login")} />
+          )}
           {/* Botón para mostrar la sección de contacto */}
           <div className="mt-6 text-center">
             <motion.button
@@ -108,7 +133,6 @@ export default function Colegiados({ onClose, isClosing }) {
               {showContact ? "Ocultar contacto" : "Contáctanos"}
             </motion.button>
           </div>
-
           {/* Sección de contacto (visible solo cuando showContact es true) */}
           {showContact && (
             <motion.div

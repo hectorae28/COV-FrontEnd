@@ -1,10 +1,8 @@
 "use client"
-import { fetchMe } from "@/api/endpoints/colegiado"
 import ProfileDropdown from "@/app/Components/PerfilDropdown"
 import { NotificacionesProvider } from "@/app/Models/PanelControl/Comunicaciones/Notificaciones/NotificacionesData"
 import { Home, Lightbulb, Notifications } from "@mui/icons-material"
 import { Menu } from "lucide-react"
-import { useSession } from "next-auth/react"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { NotificacionesModal } from "../../Components/Comunicaciones/Notificaciones/NotificacionesModal"
@@ -22,21 +20,6 @@ export default function Barra({ onMenuClick, title: propTitle, icon: propIcon })
   const [title, setTitle] = useState("Inicio")
   const [icon, setIcon] = useState(<Home className="h-5 w-5" />)
 
-  // Añadimos los estados para el perfil
-  const [userInfo, setUser_info] = useState(null)
-  const { data: session, status } = useSession()
-
-  // Añadimos el useEffect para cargar la información del usuario
-  useEffect(() => {
-    if (status === "loading") return;
-    if (session) {
-      fetchMe(session)
-        .then((response) => setUser_info(response.data))
-        .catch((error) => console.log(error));
-    }
-  }, [session, status]);
-
-  // Update title and icon when props change or on path change
   useEffect(() => {
     // Check if we're on the home/inicio page
     if (pathname === "/PanelControl") {
@@ -101,7 +84,7 @@ export default function Barra({ onMenuClick, title: propTitle, icon: propIcon })
             </div>
 
             {/* Reemplazamos el botón de Usuario por el ProfileDropdown */}
-            <ProfileDropdown userInfo={userInfo} session={session} />
+            <ProfileDropdown />
           </div>
         </div>
       </div>

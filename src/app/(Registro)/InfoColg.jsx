@@ -14,9 +14,10 @@ export default function InfoColegiado({
     onInputChange({ [name]: value });
   };
 
-  // Checks if a field is empty to display the required message
+  // Checks if a field has validation errors to display the required message
+  // Solo muestra los errores de validación cuando validationErrors existe y contiene el campo
   const isFieldEmpty = (fieldName) => {
-    return !formData[fieldName] || formData[fieldName].trim() === "";
+    return validationErrors && validationErrors[fieldName];
   };
 
   return (
@@ -71,11 +72,8 @@ export default function InfoColegiado({
           name="graduateInstitute"
           value={formData.graduateInstitute}
           onChange={handleChange}
-          className={`w-full px-4 py-3 border ${
-            isFieldEmpty("graduateInstitute")
-              ? "border-gray-200"
-              : "border-gray-200"
-          } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+          className={`w-full px-4 py-3 border ${isFieldEmpty("graduateInstitute") ? "border-red-500 bg-red-50" : "border-gray-200"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
           placeholder="Nombre del instituto de graduación"
         />
         {isFieldEmpty("graduateInstitute") && (
@@ -94,11 +92,8 @@ export default function InfoColegiado({
           name="universityTitle"
           value={formData.universityTitle}
           onChange={handleChange}
-          className={`w-full px-4 py-3 border ${
-            isFieldEmpty("universityTitle")
-              ? "border-gray-200"
-              : "border-gray-200"
-          } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+          className={`w-full px-4 py-3 border ${isFieldEmpty("universityTitle") ? "border-red-500 bg-red-50" : "border-gray-200"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
           placeholder="Nombre completo de la universidad"
         />
         {isFieldEmpty("universityTitle") && (
@@ -119,12 +114,8 @@ export default function InfoColegiado({
               name="mainRegistrationNumber"
               value={formData.mainRegistrationNumber}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${
-                isFieldEmpty("mainRegistrationNumber")
-                  ? "border-gray-200"
-                  : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-              placeholder="Número de registro"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
             />
             {isFieldEmpty("mainRegistrationNumber") && (
               <p className="mt-1 text-xs text-red-500">
@@ -171,11 +162,8 @@ export default function InfoColegiado({
             name="mppsRegistrationNumber"
             value={formData.mppsRegistrationNumber}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border ${
-              isFieldEmpty("mppsRegistrationNumber")
-                ? "border-gray-200"
-                : "border-gray-200"
-            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+            className={`w-full px-4 py-3 border ${isFieldEmpty("mppsRegistrationNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
             placeholder="Número de registro M.P.P.S"
           />
           {isFieldEmpty("mppsRegistrationNumber") && (
@@ -195,11 +183,8 @@ export default function InfoColegiado({
               name="mppsRegistrationDate"
               value={formData.mppsRegistrationDate}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${
-                isFieldEmpty("mppsRegistrationDate")
-                  ? "border-gray-200"
-                  : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
+              className={`w-full px-4 py-3 border ${isFieldEmpty("mppsRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
             />
           </div>
           {isFieldEmpty("mppsRegistrationDate") && (
@@ -224,11 +209,8 @@ export default function InfoColegiado({
             onChange={handleChange}
             onFocus={() => setShowTitleDateWarning(true)}
             onBlur={() => setShowTitleDateWarning(false)}
-            className={`w-full px-4 py-3 border ${
-              isFieldEmpty("titleIssuanceDate")
-                ? "border-gray-200"
-                : "border-gray-200"
-            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
+            className={`w-full px-4 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
           />
         </div>
         {isFieldEmpty("titleIssuanceDate") && (

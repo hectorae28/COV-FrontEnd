@@ -1,66 +1,43 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin } from "lucide-react";
-import phoneCodes from "@/app/Models/phoneCodes"; // Assuming you have a file with phone codes
+import phoneCodes from "@/app/Models/phoneCodes"; 
 
 // Datos de estados y ciudades de Venezuela
 const venezuelaData = {
   "amazonas": ["Puerto Ayacucho", "La Esmeralda", "San Fernando de Atabapo", "Maroa", "San Juan de Manapiare", "San Carlos de Río Negro", "Isla Ratón"],
-  
   "anzoátegui": ["Barcelona", "Puerto La Cruz", "El Tigre", "Anaco", "Puerto Píritu", "Lechería", "Cantaura", "Clarines", "Onoto", "Pariaguán", "San José de Guanipa", "Aragua de Barcelona", "El Chaparro", "Valle de Guanape", "Soledad", "San Mateo", "Guanta", "Boca de Uchire", "Santa Ana", "Mapire"],
-  
   "apure": ["San Fernando de Apure", "Guasdualito", "Achaguas", "El Amparo", "Elorza", "Mantecal", "Bruzual", "San Juan de Payara", "Biruaca", "El Nula"],
-  
   "aragua": ["Maracay", "Turmero", "La Victoria", "El Limón", "Cagua", "Villa de Cura", "Palo Negro", "Santa Cruz de Aragua", "Las Tejerías", "San Mateo", "San Casimiro", "Camatagua", "El Consejo", "Ocumare de la Costa", "Colonia Tovar", "Barbacoas", "San Sebastián", "Magdaleno"],
-  
   "barinas": ["Barinas", "Barinitas", "Socopó", "Ciudad Bolivia", "Santa Bárbara", "Sabaneta", "Barrancas", "Libertad", "Obispos", "Pedraza", "Ciudad de Nutrias", "El Cantón", "Arismendi"],
-  
   "bolívar": ["Ciudad Bolívar", "Ciudad Guayana", "Upata", "Guasipati", "El Callao", "Tumeremo", "Caicara del Orinoco", "El Dorado", "El Palmar", "El Manteco", "Ciudad Piar", "San Félix", "Puerto Ordaz", "Santa Elena de Uairén", "Maripa", "El Pao"],
-  
   "carabobo": ["Valencia", "Puerto Cabello", "Guacara", "Los Guayos", "Morón", "San Diego", "Naguanagua", "Tocuyito", "Mariara", "Güigüe", "Tacarigua", "Bejuma", "Miranda", "Montalbán", "Urama", "San Joaquín"],
-  
   "cojedes": ["San Carlos", "Tinaquillo", "El Baúl", "Libertad", "Las Vegas", "El Pao", "Tinaco", "Macapo", "La Sierra", "La Aguadita", "Apartaderos"],
-  
   "delta amacuro": ["Tucupita", "Pedernales", "Curiapo", "Sierra Imataca", "Piacoa", "Casacoima", "San José de Amacuro"],
-  
   "falcón": ["Coro", "Punto Fijo", "Santa Ana de Coro", "Dabajuro", "Tucacas", "Chichiriviche", "Morón", "La Vela de Coro", "Pueblo Nuevo", "Puerto Cumarebo", "Píritu", "Tocópero", "Mirimire", "Jacura", "Santa Cruz de Bucaral", "Churuguara", "Cabure", "San Juan de los Cayos"],
-  
   "guárico": ["San Juan de los Morros", "Valle de la Pascua", "Calabozo", "Altagracia de Orituco", "Zaraza", "Camaguán", "Las Mercedes", "El Socorro", "Tucupido", "Chaguaramas", "Ortiz", "Guardatinajas", "San José de Guaribe", "Santa María de Ipire"],
-  
   "lara": ["Barquisimeto", "Cabudare", "Carora", "Quíbor", "El Tocuyo", "Duaca", "Sarare", "Siquisique", "Sanare", "Río Claro", "Humocaro Alto", "Humocaro Bajo", "Cubiro", "Curarigua", "Guarico"],
-  
   "mérida": ["Mérida", "Ejido", "El Vigía", "Tovar", "Mucuchíes", "Bailadores", "Santa Cruz de Mora", "Timotes", "Lagunillas", "Tabay", "Aricagua", "Santo Domingo", "Pueblo Llano", "Mucurubá", "Torondoy", "Zea", "Chiguará", "La Azulita"],
-  
   "miranda": ["Los Teques", "Guatire", "Guarenas", "Ocumare del Tuy", "Charallave", "Higuerote", "Santa Teresa del Tuy", "Cúa", "Caucagua", "San José de los Altos", "Carrizal", "San Antonio de los Altos", "Baruta", "El Hatillo", "Petare", "Río Chico", "Santa Lucía", "Cúpira", "San Francisco de Yare"],
-  
   "monagas": ["Maturín", "Caripito", "Punta de Mata", "Temblador", "Aragua de Maturín", "Quiriquire", "Aguasay", "Barrancas del Orinoco", "Caripe", "San Antonio de Maturín", "Caicara de Maturín", "Santa Bárbara", "Jusepin", "Tropical"],
-  
   "nueva esparta": ["La Asunción", "Porlamar", "Pampatar", "Juan Griego", "Punta de Piedras", "San Juan Bautista", "Santa Ana", "El Valle del Espíritu Santo", "Villa Rosa", "La Plaza de Paraguachí", "Las Guevaras", "Las Hernández", "Pedro González"],
-  
   "portuguesa": ["Guanare", "Acarigua", "Araure", "Biscucuy", "Guanarito", "Ospino", "Papelón", "Píritu", "Villa Bruzual", "Agua Blanca", "Turén", "Santa Rosalía", "Chabasquén", "San Rafael de Onoto", "Boconoíto"],
-  
   "sucre": ["Cumaná", "Carúpano", "Güiria", "Río Caribe", "Araya", "Tunapuy", "Irapa", "Casanay", "San Antonio del Golfo", "El Pilar", "Yaguaraparo", "Cariaco", "Marigüitar", "San José de Aerocuar"],
-  
   "táchira": ["San Cristóbal", "Táriba", "La Grita", "San Antonio del Táchira", "Rubio", "Capacho", "Colón", "Pregonero", "Umuquena", "Michelena", "Lobatera", "Ureña", "Delicias", "San Juan de Colón", "Santa Ana del Táchira", "San Simón", "Queniquea", "San Josecito", "Palmira", "Abejales"],
-  
   "trujillo": ["Trujillo", "Valera", "Boconó", "Betijoque", "Escuque", "Sabana de Mendoza", "Motatán", "Pampanito", "Pampán", "Carache", "Monay", "La Puerta", "Santa Ana de Trujillo", "La Quebrada", "Jajó", "Santiago", "Carvajal"],
-  
   "vargas": ["La Guaira", "Catia La Mar", "Maiquetía", "Naiguatá", "Caraballeda", "Macuto", "Carayaca", "El Junko", "Caruao", "La Sabana"],
-  
   "yaracuy": ["San Felipe", "Yaritagua", "Chivacoa", "Nirgua", "Aroa", "Cocorote", "Urachiche", "Guama", "Sabana de Parra", "Boraure", "Yumare", "Farriar", "Marín", "San Pablo", "Guararito"],
-  
   "zulia": ["Maracaibo", "Cabimas", "Ciudad Ojeda", "San Carlos del Zulia", "Santa Rita", "Machiques", "La Villa del Rosario", "San Rafael del Moján", "La Concepción", "Casigua El Cubo", "Mene Grande", "Lagunillas", "El Vigía", "Caja Seca", "Bobures", "Bachaquero", "El Chivo", "El Guayabo", "Encontrados", "Sinamaica"],
-  
   "distrito capital": ["Caracas", "El Junquito", "Antimano", "La Pastora", "El Valle", "Coche", "Caricuao", "El Paraíso", "San Juan", "Catia", "Petare", "Chacao", "El Hatillo", "Baruta"]
 };
 
 export default function InfoContacto({ formData, onInputChange, validationErrors }) {
   const [cities, setCities] = useState([]);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     onInputChange({ [name]: value });
-
     // Si cambia el estado, actualizar las ciudades disponibles y resetear la ciudad seleccionada
     if (name === "state") {
       onInputChange({ city: "" });
@@ -76,12 +53,38 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
     }
   }, [formData.state]);
 
-  const venezuelanStates = Object.keys(venezuelaData).map(state => 
+  // Validar formulario cuando cambia formData
+  useEffect(() => {
+    const requiredFields = [
+      "email",
+      "phoneNumber",
+      "state",
+      "city",
+      "address"
+    ];
+
+    // Validación de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isEmailValid = formData.email && emailRegex.test(formData.email);
+
+    // Validación de número de teléfono
+    const isPhoneValid = formData.phoneNumber && formData.phoneNumber.length >= 10;
+
+    // Verificar que todos los campos requeridos estén completos y válidos
+    const isValid = requiredFields.every(field =>
+      formData[field] && formData[field].trim() !== ""
+    ) && isEmailValid && isPhoneValid;
+
+    setIsFormValid(isValid);
+  }, [formData]);
+
+  const venezuelanStates = Object.keys(venezuelaData).map(state =>
     state.charAt(0).toUpperCase() + state.slice(1)
   );
 
+  // Checks if a field has validation errors to display the required message
   const isFieldEmpty = (fieldName) => {
-    return (!formData[fieldName] || formData[fieldName].trim() === "" );
+    return validationErrors && validationErrors[fieldName];
   };
 
   return (
@@ -103,7 +106,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             name="email"
             value={formData.email || ''}
             onChange={handleChange}
-            className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("email") ? "border-gray-200" : "border-gray-200"
+            className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("email") ? "border-red-500 bg-red-50" : "border-gray-200"
               } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
             placeholder="ejemplo@correo.com"
           />
@@ -113,6 +116,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
           <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
         )}
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -134,13 +138,14 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             <input
               type="tel"
               name="phoneNumber"
-              value={formData.phoneNumber}
+              value={formData.phoneNumber || ''}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, "");
                 handleChange({ target: { name: "phoneNumber", value } });
               }}
               maxLength={phoneCodes.find(c => c.codigo === formData.countryCode)?.longitud || 10}
-              className="w-full px-4 py-3 border border-gray-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("phoneNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
               placeholder="Ingrese su número de teléfono"
               style={{ height: "48px" }}
             />
@@ -168,6 +173,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
           </div>
         </div>
       </div>
+
       {/* State and City */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* State */}
@@ -181,7 +187,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               name="state"
               value={formData.state || ''}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-gray-200" : "border-gray-200"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="">Seleccionar Estado</option>
@@ -217,7 +223,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               value={formData.city || ''}
               onChange={handleChange}
               disabled={!formData.state}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-gray-200" : "border-gray-200"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700 ${!formData.state ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             >
               <option value="">Seleccionar Ciudad</option>
@@ -242,6 +248,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
           )}
         </div>
       </div>
+
       {/* Home Address */}
       <div>
         <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -253,7 +260,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             name="address"
             value={formData.address || ''}
             onChange={handleChange}
-            className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("address") ? "border-gray-200" : "border-gray-200"
+            className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("address") ? "border-red-500 bg-red-50" : "border-gray-200"
               } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] min-h-[100px]`}
             placeholder="Ingrese su dirección completa"
           />

@@ -4,7 +4,8 @@ import {
     CheckCircle,
     XCircle,
     User,
-    Calendar
+    Calendar,
+    Shield
 } from "lucide-react"
 
 const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
@@ -32,12 +33,12 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
                             <h1 className="text-xl font-bold text-gray-800 flex items-center">
                                 {solicitud.tipo}
                                 <span className={`ml-3 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${solicitud.estado === 'Pendiente'
-                                        ? 'bg-yellow-100 text-yellow-800'
-                                        : solicitud.estado === 'Aprobada'
-                                            ? 'bg-green-100 text-green-800'
-                                            : solicitud.estado === 'Exonerada'
-                                                ? 'bg-teal-100 text-teal-800'
-                                                : 'bg-red-100 text-red-800'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : solicitud.estado === 'Aprobada'
+                                        ? 'bg-green-100 text-green-800'
+                                        : solicitud.estado === 'Exonerada'
+                                            ? 'bg-teal-100 text-teal-800'
+                                            : 'bg-red-100 text-red-800'
                                     }`}>
                                     {solicitud.estado === 'Pendiente' && <Clock size={14} />}
                                     {solicitud.estado === 'Aprobada' && <CheckCircle size={14} />}
@@ -64,6 +65,28 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
                                         <p className="text-sm font-medium">{solicitud.fecha}</p>
                                     </div>
                                 </div>
+
+                                {/* Información del creador - AÑADIDO */}
+                                {solicitud.creador && (
+                                    <div className="flex items-center col-span-2 mt-1">
+                                        {solicitud.creador.esAdmin ? (
+                                            <Shield className="text-purple-500 h-4 w-4 mr-1.5" />
+                                        ) : (
+                                            <User className="text-gray-400 h-4 w-4 mr-1.5" />
+                                        )}
+                                        <div>
+                                            <p className="text-xs text-gray-500">Creado por</p>
+                                            <p className="text-sm font-medium flex items-center">
+                                                {solicitud.creador.nombre || "Usuario"}
+                                                {solicitud.creador.esAdmin && (
+                                                    <span className="ml-1.5 text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">
+                                                        Admin
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

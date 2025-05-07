@@ -10,6 +10,7 @@ import Cards from "../Cards";
 import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
@@ -18,18 +19,16 @@ export default function Home() {
   const [showTabs, setShowTabs] = useState(true); // Estado para mostrar/ocultar pestañas
   const [userInfo, setUser_info] = useState(null);
   const { data: session, status } = useSession();
-  const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
-  // Datos de solvencia
-
-  const solvencyInfo = {
+  const [isSolvent, setIsSolvent] = useState(false); // Estado de solvencia
+  const [solvencyInfo, setSolvencyInfo] = useState({
     date: session?.user.solvente,
     amount: "7.00",
-    status: session?.user?.solvenciaStatus
-  };
+    status: session?.user?.solvenciaStatus,
+  }); // Datos de solvencia
+  // Datos de solvencia
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
-    console.log(status)
     if (status === "loading") return;
     const checkSolvencyStatus = () => {
       console.log("Checking solvency status...");
@@ -41,7 +40,7 @@ export default function Home() {
       const warningDate = new Date(solvencyDate);
       warningDate.setDate(warningDate.getDate() - 14);
 
-      setIsSolvent(solvencyInfo.status)
+      //setIsSolvent(solvencyInfo.status)
 
       if (today >= warningDate) {
         setShowSolvencyWarning(true);
@@ -49,22 +48,35 @@ export default function Home() {
         setShowSolvencyWarning(false);
       }
     };
-    if (userInfo&&status === "authenticated") {
-      checkSolvencyStatus();
-    }
 
     const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas
 
     if (session) {
-      fetchMe(session)
+      fetchDataSolicitudes("costo", `?search=Solvencia&es_vigente=true`)
         .then((response) => {
-          setUser_info(response.data);
+          const costo = Number(response.data[0].monto_usd);
+          fetchMe(session)
+            .then((response) => {
+              setUser_info(response.data);
+              
+              setSolvencyInfo({
+                date: response.data.solvente,
+                amount: costo,
+                status: response.data.solvencia_status,
+              });
+              if (userInfo && status === "authenticated") {
+                checkSolvencyStatus();
+              }
+            })
+            .catch((error) => console.log(error));
         })
-        .catch((error) => console.log(error));
+        .catch((error) => {
+          console.error("Error al obtener los datos:", error);
+        });
     }
     return () => clearInterval(intervalId);
-  }, [ session, status]);
-  // Manejar clic en card
+  }, [session, status]);
+
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {
       setShowSolicitudForm(true);

@@ -1,5 +1,4 @@
 "use client";
-
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
@@ -8,12 +7,13 @@ import { Lock, Mail } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Alert from "@/app/Components/Alert"
 
-export default function LoginForm({ onForgotPassword, onRegister }) {
+export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount }) {
   const searchParams = useSearchParams();
   const [error, setError] = useState(searchParams.get("error"));
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
+
   useEffect(() => {
     setError(searchParams.get("error"));
   },[])
@@ -25,7 +25,7 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
     try{
       const Form = new FormData(formRef.current);
       const result = await signIn("credentials", {
-        username: Form.get("email").split("@")[0],
+        username: Form.get("email"),
         password: Form.get("password"),
         redirect: false,
       });
@@ -43,7 +43,8 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
             break;
           default:
             setError("Ocurrió un error inesperado. Intenta nuevamente.");
-        }      
+        }
+            
       } else {
         console.log("Inicio de sesión exitoso:", result);
         router.push("/Colegiado");
@@ -54,7 +55,6 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
     }finally {
       setIsLoading(false);
     }
-
   };
 
   return (
@@ -75,7 +75,6 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
           />
         </div>
       </div>
-
       <div className="mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -89,7 +88,6 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
           />
         </div>
       </div>
-
       {/* Login button */}
       <motion.button
         type="submit"
@@ -109,35 +107,54 @@ export default function LoginForm({ onForgotPassword, onRegister }) {
           "Iniciar Sesión"
         )}
       </motion.button>
-
+        
       {/* Forgot password link */}
       <div className="text-center mt-4">
-        <a
+        <motion.a
           href="#"
-          className="text-[#D7008A] hover:underline text-sm"
+          className="text-[#D7008A] hover:underline text-sm inline-block px-4 py-2"
           onClick={(e) => {
             e.preventDefault();
             onForgotPassword();
           }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           ¿Olvidaste tu contraseña?
-        </a>
+        </motion.a>
       </div>
-
-      {/* Register link */}
-      <div className="text-center mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
-        <p className="text-gray-700 mb-2">¿No tienes una cuenta?</p>
-        <a
-          href="#"
-          className="text-[#D7008A] font-medium hover:underline"
-          onClick={(e) => {
-            e.preventDefault();
-            onRegister();
-          }}
-        >
+        
+      {/* Register link - Entire section with hover effect */}
+      <motion.div 
+        className="text-center mt-8 p-2 bg-gray-50 rounded-xl border border-gray-100 cursor-pointer hover:bg-gradient-to-r hover:from-[#D7008A] hover:to-[#41023B] group transition-all duration-300"
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={(e) => {
+          e.preventDefault();
+          onRegister();
+        }}
+      >
+        <p className="text-gray-700 mb-2 group-hover:text-white transition-colors duration-300">¿No tienes una cuenta?</p>
+        <span className="text-[#D7008A] font-medium group-hover:text-white transition-colors duration-300">
           Registrate como Colegiado
-        </a>
-      </div>
+        </span>
+      </motion.div>
+      
+      {/* Claim Account section - Entire section with hover effect */}
+      <motion.div 
+        className="text-center mt-4 p-2 border border-gray-300 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-[#D7008A] hover:to-[#41023B] group transition-all duration-300"
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={(e) => {
+          e.preventDefault();
+          onClaimAccount();
+        }}
+      >
+        <p className="text-gray-700 mb-2 text-sm group-hover:text-white transition-colors duration-300">¿Estas PreInscrito? Finaliza tu Registro</p>
+        <span className="text-[#D7008A] font-medium group-hover:text-white transition-colors duration-300">
+          Registra tu Pago
+        </span>
+      </motion.div>
     </form>
   );
 }
