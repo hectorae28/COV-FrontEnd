@@ -254,9 +254,8 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               name="city"
               value={formData.city || ''}
               onChange={handleChange}
-              disabled={!formData.state} // Solo deshabilitado si no hay estado seleccionado (independiente del modo de edición)
               className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700 ${!formData.state ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="">Seleccionar Ciudad</option>
               {cities.map((city) => (
