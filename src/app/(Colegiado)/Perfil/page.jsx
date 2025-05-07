@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Perfil from "@/Components/Perfil/Perfil";
 import Chat from "@/app/(Colegiado)/Chat";
+import { BarraProvider } from "@/app/(Colegiado)/BarraContext";
 
 export default function PerfilPage() {
     const [userInfo, setUserInfo] = useState(null);
@@ -72,15 +73,17 @@ export default function PerfilPage() {
     };
 
     return (
-        <DashboardLayout
-            solvencyInfo={solvencyInfo.date}
-            isSolvent={isSolvent}
-            showSolvencyWarning={showSolvencyWarning}
-            userInfo={userInfo}
-            session={session}
-        >
-            <Perfil userInfo={userInfo} />
-            <Chat />
-        </DashboardLayout>
+        <BarraProvider>
+            <DashboardLayout
+                solvencyInfo={solvencyInfo.date}
+                isSolvent={isSolvent}
+                showSolvencyWarning={showSolvencyWarning}
+                userInfo={userInfo}
+                session={session}
+            >
+                <Perfil userInfo={userInfo} />
+                <Chat />
+            </DashboardLayout>
+        </BarraProvider>
     );
 }

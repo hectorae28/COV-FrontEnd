@@ -1,12 +1,9 @@
 "use client";
 
-import {
-  Info,
-  Notifications,
-  Warning
-} from "@mui/icons-material";
+import { Info, Notifications, Warning } from "@mui/icons-material";
 import { Menu } from "lucide-react";
 import PerfilDropdown from "../Components/PerfilDropdown";
+import { useBarraContext } from "@/app/(Colegiado)/BarraContext";
 
 export default function Barra({
   onMenuClick,
@@ -16,6 +13,18 @@ export default function Barra({
   showSolvencyWarning,
   session
 }) {
+  // Manejo seguro del contexto con valores por defecto
+  let currentSection = "Panel de Solicitudes";
+  try {
+    const context = useBarraContext();
+    if (context) {
+      currentSection = context.currentSection;
+    }
+  } catch (error) {
+    console.warn("BarraContext no está disponible. Usando título por defecto.");
+    // Continuar con el valor por defecto
+  }
+
   return (
     <div className="bg-white h-20 fixed top-0 right-0 left-0 md:left-72 shadow-sm z-30 flex items-center justify-between px-4 md:px-18">
       <div className="flex items-center">
@@ -30,7 +39,7 @@ export default function Barra({
 
         {/* Título principal */}
         <h1 className="text-xl font-bold text-[#41023B]">
-          Panel de Solicitudes
+          {currentSection}
         </h1>
       </div>
 
