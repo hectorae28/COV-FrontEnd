@@ -8,7 +8,6 @@ import { fetchMe } from "@/api/endpoints/colegiado";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, LogOut } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 
 export default function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
