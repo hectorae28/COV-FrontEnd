@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-export default function InfoPersonal({ formData, onInputChange, validationErrors }) {
+export default function InfoPersonal({ formData, onInputChange, validationErrors, isProfileEdit }) {
   const [age, setAge] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
-  const [isAdult, setIsAdult] = useState(true); // Nueva variable para validar mayoría de edad
+  const [isAdult, setIsAdult] = useState(true);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,7 +18,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
   const calculateAge = (birthDate) => {
     if (!birthDate) {
       setAge("");
-      setIsAdult(true); // Resetear la validación si no hay fecha
+      setIsAdult(true);
       return;
     }
     const today = new Date();
@@ -38,7 +38,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
 
     onInputChange({
       age: calculatedAge.toString(),
-      // Si no es adulto, consideramos que el campo birthDate no es válido
       birthDate: isUserAdult ? birthDate : ""
     });
 
@@ -60,6 +59,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     setIsFormValid(isValid);
   }, [formData]);
 
+  // Checks if a field has validation errors to display the required message
   const isFieldEmpty = (fieldName) => {
     return validationErrors && validationErrors[fieldName];
   };
@@ -79,30 +79,46 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="relative">
-            <select
-              name="nationality"
-              value={formData.nationality}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("nationality") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-            >
-              <option value="" disabled>
-                Seleccionar Nacionalidad
-              </option>
-              <option value="venezolano">Venezolana</option>
-              <option value="extranjero">Extranjera</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg
-                className="fill-current h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
+            {isProfileEdit ? (
+              // En modo perfil, no editable
+              <input
+                type="text"
+                value={formData.nationality === "venezolana" ? "Venezolana" : "Extranjera"}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
+                disabled
+              />
+            ) : (
+              // En modo normal, editable
+              <select
+                name="nationality"
+                value={formData.nationality}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 border ${isFieldEmpty("nationality") ? "border-red-500 bg-red-50" : "border-gray-200"
+                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
               >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
+                <option value="" disabled>
+                  Seleccionar Nacionalidad
+                </option>
+                <option value="venezolana">Venezolana</option>
+                <option value="extranjera">Extranjera</option>
+              </select>
+            )}
+            {!isProfileEdit && (
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <svg
+                  className="fill-current h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
+            )}
           </div>
-          {isFieldEmpty("nationality") && (
+          {isProfileEdit && (
+            <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
+          )}
+          {isFieldEmpty("nationality") && !isProfileEdit && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
@@ -112,40 +128,51 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             Número de Identificación
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="flex items-center relative">
-            {/* Select for V or E */}
-            <select
-              name="idType"
-              value={formData.idType}
-              onChange={handleChange}
-              className="h-full px-4 pr-10 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700 appearance-none"
-              style={{ height: "48px" }}
-            >
-              <option value="V">V</option>
-              <option value="E">E</option>
-            </select>
-            {/* Flecha personalizada */}
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-10">
-              <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path>
-              </svg>
-            </div>
-            {/* Input for identity card */}
+          {isProfileEdit ? (
+            // En modo perfil, no editable
             <input
               type="text"
-              name="identityCard"
-              value={formData.identityCard}
-              maxLength={8}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
-                handleChange({ target: { name: "identityCard", value } });
-              }}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-              placeholder="Ingrese su número de identificación"
-              style={{ height: "48px" }}
+              value={`${formData.idType} - ${formData.identityCard}`}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
+              disabled
             />
-          </div>
-          {isFieldEmpty("identityCard") && (
+          ) : (
+            // En modo normal, editable
+            <div className="flex items-center relative">
+              <select
+                name="idType"
+                value={formData.idType}
+                onChange={handleChange}
+                className="h-full px-4 pr-10 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700 appearance-none"
+                style={{ height: "48px" }}
+              >
+                <option value="V">V</option>
+                <option value="E">E</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-10">
+                <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                </svg>
+              </div>
+              <input
+                type="text"
+                name="identityCard"
+                value={formData.identityCard}
+                maxLength={8}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  handleChange({ target: { name: "identityCard", value } });
+                }}
+                className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                placeholder="Ingrese su número de identificación"
+                style={{ height: "48px" }}
+              />
+            </div>
+          )}
+          {isProfileEdit && (
+            <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
+          )}
+          {isFieldEmpty("identityCard") && !isProfileEdit && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
@@ -157,20 +184,34 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             Primer Nombre
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <input
-            type="text"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("firstName") ? "border-red-500 bg-red-50" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-            placeholder="Ingrese su primer nombre"
-          />
-          {isFieldEmpty("firstName") && (
+          {isProfileEdit ? (
+            // En modo perfil, no editable
+            <input
+              type="text"
+              value={formData.firstName}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
+              disabled
+            />
+          ) : (
+            // En modo normal, editable
+            <input
+              type="text"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              className={`w-full px-4 py-3 border ${isFieldEmpty("firstName") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+              placeholder="Ingrese su primer nombre"
+            />
+          )}
+          {isProfileEdit && (
+            <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
+          )}
+          {isFieldEmpty("firstName") && !isProfileEdit && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        {/* Second Name - No longer required */}
+        {/* Second Name - Siempre editable */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Segundo Nombre
@@ -192,20 +233,34 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             Primer Apellido
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <input
-            type="text"
-            name="firstLastName"
-            value={formData.firstLastName || ""}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("firstLastName") ? "border-red-500 bg-red-50" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-            placeholder="Ingrese su primer apellido"
-          />
-          {isFieldEmpty("firstLastName") && (
+          {isProfileEdit ? (
+            // En modo perfil, no editable
+            <input
+              type="text"
+              value={formData.firstLastName || ""}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
+              disabled
+            />
+          ) : (
+            // En modo normal, editable
+            <input
+              type="text"
+              name="firstLastName"
+              value={formData.firstLastName || ""}
+              onChange={handleChange}
+              className={`w-full px-4 py-3 border ${isFieldEmpty("firstLastName") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+              placeholder="Ingrese su primer apellido"
+            />
+          )}
+          {isProfileEdit && (
+            <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
+          )}
+          {isFieldEmpty("firstLastName") && !isProfileEdit && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        {/* Second Last Name - No longer required */}
+        {/* Second Last Name - Siempre editable */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Segundo Apellido
@@ -221,11 +276,10 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Birth Date */}
+        {/* Birth Date - Siempre editable */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Fecha de Nacimiento
-
             {formData.age && formData.age > 0 && ` (Mayor de Edad)`}
             <span className="text-red-500 ml-1">*</span>
           </label>
@@ -237,7 +291,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               onChange={handleChange}
               className={`w-full px-4 py-3 border ${(!isAdult && formData.birthDate) || isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
-              // Establecer fecha máxima para 18 años atrás
               max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
             />
           </div>
@@ -248,7 +301,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Debe ser mayor de edad (18 años o más)</p>
           )}
         </div>
-        {/* Gender */}
+        {/* Gender - Siempre editable */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Género
@@ -284,7 +337,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           )}
         </div>
       </div>
-      {/* Marital Status as dropdown */}
+      {/* Marital Status as dropdown - Siempre editable */}
       <div>
         <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Estado Civil

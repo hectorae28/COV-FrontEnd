@@ -176,7 +176,7 @@ export default function PerfilColegiado({ userInfo }) {
     // Eliminar imagen de perfil
     const handleDeleteImage = () => {
         setPreviewImage(null);
-        showToastMessage("Imagen eliminada. Guarda los cambios para confirmar.");
+        showToastMessage("Imagen eliminada Correctamente.");
         // Notificar a otros componentes que la imagen fue eliminada
         updateProfilePhoto(null);
         setProfilePhotoChanged(true);

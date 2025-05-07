@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin } from "lucide-react";
-import phoneCodes from "@/app/Models/phoneCodes"; 
+import phoneCodes from "@/app/Models/phoneCodes";
 
 // Datos de estados y ciudades de Venezuela
 const venezuelaData = {
@@ -31,7 +31,7 @@ const venezuelaData = {
   "distrito capital": ["Caracas", "El Junquito", "Antimano", "La Pastora", "El Valle", "Coche", "Caricuao", "El Paraíso", "San Juan", "Catia", "Petare", "Chacao", "El Hatillo", "Baruta"]
 };
 
-export default function InfoContacto({ formData, onInputChange, validationErrors }) {
+export default function InfoContacto({ formData, onInputChange, validationErrors, isProfileEdit }) {
   const [cities, setCities] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
 
@@ -47,7 +47,8 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
   // Actualizar las ciudades cuando cambia el estado
   useEffect(() => {
     if (formData.state) {
-      setCities(venezuelaData[formData.state.toLowerCase()] || []);
+      const normalizedState = formData.state.toLowerCase();
+      setCities(venezuelaData[normalizedState] || []);
     } else {
       setCities([]);
     }
@@ -94,25 +95,44 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      {/* Email */}
+      {/* Email - SOLO ESTE CAMPO será no editable en modo perfil */}
       <div>
         <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Correo Electrónico
           <span className="text-red-500 ml-1">*</span>
         </label>
         <div className="relative">
-          <input
-            type="email"
-            name="email"
-            value={formData.email || ''}
-            onChange={handleChange}
-            className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("email") ? "border-red-500 bg-red-50" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-            placeholder="ejemplo@correo.com"
-          />
-          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          {isProfileEdit ? (
+            // En modo perfil, email no editable
+            <div className="relative">
+              <input
+                type="email"
+                value={formData.email || ''}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
+                disabled
+              />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            </div>
+          ) : (
+            // En modo normal, email editable
+            <div className="relative">
+              <input
+                type="email"
+                name="email"
+                value={formData.email || ''}
+                onChange={handleChange}
+                className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("email") ? "border-red-500 bg-red-50" : "border-gray-200"
+                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                placeholder="ejemplo@correo.com"
+              />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            </div>
+          )}
         </div>
-        {isFieldEmpty("email") && (
+        {isProfileEdit && (
+          <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
+        )}
+        {isFieldEmpty("email") && !isProfileEdit && (
           <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
         )}
       </div>
@@ -123,18 +143,28 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             Número de Teléfono Móvil
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="flex items-center">
-            <select
-              name="countryCode"
-              value={formData.countryCode}
-              onChange={handleChange}
-              className="px-2 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700"
-              style={{ height: "48px" }} 
-            >
-              {phoneCodes.map((code, index) => (
-                <option key={index} value={code.codigo}>&nbsp;&nbsp;&nbsp;&nbsp;{BanderaComponent({ countryCode: code.codigo_pais })} {code.codigo}</option>
-              ))}
-            </select>
+          <div className="flex items-center relative">
+            {/* Select for country code with custom arrow */}
+            <div className="relative">
+              <select
+                name="countryCode"
+                value={formData.countryCode}
+                onChange={handleChange}
+                className="h-full px-4 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700 appearance-none"
+                style={{ height: "48px" }}
+              >
+                {phoneCodes.map((code, index) => (
+                  <option key={index} value={code.codigo}>{code.codigo}</option>
+                ))}
+              </select>
+              {/* Flecha personalizada */}
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                </svg>
+              </div>
+            </div>
+            {/* Input for phone number */}
             <input
               type="tel"
               name="phoneNumber"
@@ -164,8 +194,10 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               type="tel"
               name="homePhone"
               value={formData.homePhone || ''}
-              onChange={handleChange}
-              maxLength="11"
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                handleChange({ target: { name: "homePhone", value } });
+              }}
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
               placeholder="0212 123 4567"
             />
@@ -174,7 +206,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
         </div>
       </div>
 
-      {/* State and City */}
+      {/* State and City - Ambos editables en cualquier modo */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* State */}
         <div>
@@ -211,7 +243,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        {/* City - Dependent on State */}
+        {/* Ciudad - Siempre editable, solo depende del estado seleccionado */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Ciudad
@@ -222,7 +254,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               name="city"
               value={formData.city || ''}
               onChange={handleChange}
-              disabled={!formData.state}
+              disabled={!formData.state} // Solo deshabilitado si no hay estado seleccionado (independiente del modo de edición)
               className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700 ${!formData.state ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             >
@@ -271,15 +303,5 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
         )}
       </div>
     </motion.div>
-  );
+  )
 }
-function BanderaComponent({ countryCode }) {
-  // Convierte el código ISO (e.g. "VE") a sus puntos de código regionales
-  const base = 0x1F1E6; // punto de código de 'A'
-  const [first, second] = countryCode
-    .toUpperCase()
-    .split('')
-    .map(ch => base + (ch.charCodeAt(0) - 65));
-  return String.fromCodePoint(first, second); // e.g. "🇻🇪"
-}
-

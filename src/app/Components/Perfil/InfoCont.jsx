@@ -48,36 +48,6 @@ export default function ContactSection({ formData }) {
                     fullWidth 
                 />
             </div>
-            
-            {/* Sección de contacto para el sidebar - solo en móviles */}
-            <div className="block md:hidden mt-8 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium text-[#41023B] mb-3">Resumen de Contacto</h4>
-                <div className="space-y-3">
-                    <div className="flex items-center text-sm">
-                        <Phone size={16} className="text-[#D7008A] mr-3 flex-shrink-0" />
-                        <div>
-                            <p className="text-gray-500 text-xs">Teléfono</p>
-                            <p className="text-gray-800">{formData.countryCode} {formData.phoneNumber || "No especificado"}</p>
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-start text-sm">
-                        <MapPin size={16} className="text-[#D7008A] mr-3 mt-1 flex-shrink-0" />
-                        <div>
-                            <p className="text-gray-500 text-xs">Dirección</p>
-                            <p className="text-gray-800">{formData.address || "No especificada"}</p>
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-center text-sm">
-                        <Mail size={16} className="text-[#D7008A] mr-3 flex-shrink-0" />
-                        <div>
-                            <p className="text-gray-500 text-xs">Correo</p>
-                            <p className="text-gray-800">{formData.email}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </motion.div>
     );
 }
