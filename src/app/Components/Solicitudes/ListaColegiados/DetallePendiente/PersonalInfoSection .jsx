@@ -40,10 +40,38 @@ export default function PersonalInfoSection({
         setCambiosPendientes(true);
     };
 
-    // Función para guardar cambios en datos personales
     const handleGuardarDatosPersonales = () => {
-        const nuevosDatos = { ...pendiente, persona: datosPersonales };
-        updateColegiadoPendiente(pendienteId, nuevosDatos);
+
+        const getDifferences = (original, updated) => {
+            const differences = {};
+            
+            Object.keys(updated).forEach(key => {
+                if (
+                    typeof updated[key] === 'object' && 
+                    updated[key] !== null && 
+                    !Array.isArray(updated[key]) && 
+                    original && 
+                    original[key]
+                ) {
+                    const nestedDiff = getDifferences(original[key], updated[key]);
+                    if (Object.keys(nestedDiff).length > 0) {
+                        differences[key] = nestedDiff;
+                    }
+                } 
+                else if (JSON.stringify(updated[key]) !== JSON.stringify(original[key])) {
+                    differences[key] = updated[key];
+                }
+            });
+            
+            return differences;
+        };
+        
+        const personaDifferences = getDifferences(pendiente.persona, datosPersonales);
+
+        if (Object.keys(personaDifferences).length > 0) {
+            const nuevosDatos = { persona: personaDifferences };
+            updateColegiadoPendiente(pendienteId, nuevosDatos);
+        }
         setEditandoPersonal(false);
         setCambiosPendientes(false);
     };

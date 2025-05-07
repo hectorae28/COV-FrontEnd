@@ -47,12 +47,13 @@ const useDataListaColegiados = create((set, get) => ({
 
   // Funciones para obtener datos específicos
   getColegiado: async (id) => {
-    const res = await fetchDataUsuario(`register/${id}`);
+    const res = await fetchDataUsuario(`colegiados/${id}`);
     return res.data
   },
 
-  getColegiadoPendiente: (id) => {
-    return get().colegiadosPendientes.find((pend) => pend.id === id) || null;
+  getColegiadoPendiente: async (id) => {
+    const res = await fetchDataUsuario(`register/${id}`);
+    return res.data
   },
 
   // Funciones para obtener colecciones específicas de cada colegiado
@@ -202,12 +203,19 @@ const useDataListaColegiados = create((set, get) => ({
 
     // Crear un nombre completo con los datos disponibles
    
-    const res = await postDataUsuario(`colegiado`,{...datosRegistro, recaudos_id:pendienteId})
-    // Añadir el colegiado y eliminar el pendiente
-    get().addColegiado(res.data);
-    get().removeColegiadoPendiente(pendienteId);
+    postDataUsuario(`colegiado`,{...datosRegistro, recaudos_id:pendienteId}).then(
+      (res)=>{
+        // Añadir el colegiado y eliminar el pendiente
+        get().addColegiado(res.data);
+        get().removeColegiadoPendiente(pendienteId);
+        return res;
 
-    return res;
+      }
+    )
+    .catch((error)=>{
+      console.error("Error al aprobar la solicitud:", error);
+      return error;
+    })
   },
 
   // Funciones específicas

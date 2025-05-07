@@ -108,7 +108,7 @@ export default function DetallePendiente({ params, onVolver }) {
       try {
         setIsLoading(true);
         // Obtener datos del pendiente desde el store
-        const pendienteData = getColegiadoPendiente(pendienteId);
+        const pendienteData = await getColegiadoPendiente(pendienteId);
         if (pendienteData) {
           setPendiente(pendienteData);
           // Inicializar estados de edición

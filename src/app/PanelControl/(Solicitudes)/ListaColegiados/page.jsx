@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 export default function ListaColegiadosPage() {
   // Estado del store de Zustand
   const {
+    initStore,
     colegiados,
     colegiadosPendientes,
     colegiadosPendientesPagination,
@@ -59,6 +60,16 @@ export default function ListaColegiadosPage() {
   // Nuevo estado para ordenamiento de colegiados registrados
   const [ordenFechaRegistrados, setOrdenFechaRegistrados] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
   const [recordsPerPage, setRecordsPerPage] = useState(10);
+  useEffect(()=>{
+    const LoadInitStore= async()=>{
+      try{
+          await initStore()
+      }catch(e){
+        console.error(e)
+      }
+    }
+    LoadInitStore()
+  },[])
 
   useEffect(() => {
     const filtros = {};
