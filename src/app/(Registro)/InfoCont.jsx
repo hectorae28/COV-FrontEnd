@@ -316,5 +316,14 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
         )}
       </div>
     </motion.div>
-  )
+  );
 }
+function BanderaComponent({ countryCode }) {
+  const base = 0x1F1E6; 
+  const [first, second] = countryCode
+    .toUpperCase()
+    .split('')
+    .map(ch => base + (ch.charCodeAt(0) - 65));
+  return String.fromCodePoint(first, second); // e.g. "🇻🇪"
+}
+

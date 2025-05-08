@@ -190,7 +190,7 @@ export default function ListaColegiadosPage() {
       <DetallePendiente
         params={{ id: colegiadoSeleccionadoId }}
         onVolver={handleAprobarPendiente}
-        pendiente={pendienteActual}
+        isAdmin={true}
       />
     );
   }

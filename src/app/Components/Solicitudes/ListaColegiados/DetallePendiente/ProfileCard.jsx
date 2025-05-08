@@ -30,6 +30,7 @@ export default function ProfileCard({props}) {
         setMostrarExoneracion,
         isRechazada,
         isDenegada,
+        isAdmin
     } = props
     return (
         <motion.div
@@ -168,7 +169,7 @@ export default function ProfileCard({props}) {
                     </div>
 
                     {/* Solo mostrar botones si NO está denegada */}
-                    {!isDenegada && (
+                    {!isDenegada && isAdmin && (
                         <div className="mt-6 flex flex-col sm:flex-row gap-3">
                             {/* Mostrar botón de aprobar tanto para pendientes como para rechazadas */}
                             <button

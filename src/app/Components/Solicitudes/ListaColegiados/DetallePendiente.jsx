@@ -20,7 +20,7 @@ import PersonalInfoSection from "./DetallePendiente/PersonalInfoSection ";
 import ProfileCard from "./DetallePendiente/ProfileCard";
 import StatusAlerts from "./DetallePendiente/StatusAlerts";
 
-export default function DetallePendiente({ params, onVolver }) {
+export default function DetallePendiente({ params, onVolver, isAdmin=false }) {
   const { data: session } = useSession();
   const pendienteId = params?.id || "p1";
 
@@ -495,15 +495,19 @@ export default function DetallePendiente({ params, onVolver }) {
   return (
     <div className="select-none cursor-default w-full px-4 md:px-10 py-10 md:py-28 bg-gray-50">
       {/* Breadcrumbs */}
-      <div className="mb-6">
-        <button
-          onClick={handleVolver}
-          className="text-md text-[#590248] hover:text-[#C40180] flex items-center cursor-pointer transition-colors duration-200"
-        >
-          <ChevronLeft size={20} className="mr-1" />
-          Volver a la lista de colegiados
-        </button>
-      </div>
+      {
+        isAdmin&&(
+          <div className="mb-6">
+            <button
+              onClick={handleVolver}
+              className="text-md text-[#590248] hover:text-[#C40180] flex items-center cursor-pointer transition-colors duration-200"
+            >
+              <ChevronLeft size={20} className="mr-1" />
+              Volver a la lista de colegiados
+            </button>
+          </div>
+        )
+      }
 
       {/* Alertas de estado */}
       <StatusAlerts
@@ -537,22 +541,23 @@ export default function DetallePendiente({ params, onVolver }) {
           setMostrarExoneracion,
           isRechazada,
           isDenegada,
+          isAdmin
         }}
       />
 
       {/* Main content sections */}
       <PersonalInfoSection
-      props={{
-          pendiente,
-          datosPersonales,
-          setDatosPersonales,
-          editandoPersonal,
-          setEditandoPersonal,
-          updateColegiadoPendiente,
-          pendienteId,
-          setCambiosPendientes,
-          isDenegada,
-      }}
+        props={{
+            pendiente,
+            datosPersonales,
+            setDatosPersonales,
+            editandoPersonal,
+            setEditandoPersonal,
+            updateColegiadoPendiente,
+            pendienteId,
+            setCambiosPendientes,
+            isDenegada,
+        }}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -640,6 +645,16 @@ export default function DetallePendiente({ params, onVolver }) {
           onClose={handleCerrarVistaDocumento}
           pendiente={pendiente}
         />
+      )}
+
+      {!isAdmin&&(
+        <button
+            onClick={handleForward}
+            className="cursor-pointer bg-gradient-to-r from-purple-600 to-purple-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all duration-300 shadow-sm font-medium"
+        >
+            <CreditCard size={18} />
+            <span>Reenviar Solicitud De Inscripcion</span>
+        </button>
       )}
     </div>
   );
