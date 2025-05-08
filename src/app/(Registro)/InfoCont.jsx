@@ -233,7 +233,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               name="state"
               value={formData.state || ''}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"
+              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="">Seleccionar Estado</option>
@@ -268,7 +268,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               name="city"
               value={formData.city || ''}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
+              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700 ${!formData.state ? 'bg-white' : ''}`}
             >
               <option value="">Seleccionar Ciudad</option>

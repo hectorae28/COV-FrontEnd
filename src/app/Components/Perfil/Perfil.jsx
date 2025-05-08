@@ -218,7 +218,7 @@ export default function PerfilColegiado({ userInfo }) {
     };
 
     return (
-        <div className="bg-gradient-to-br from-white to-gray-100 rounded-2xl p-0 md:p-6 shadow-lg">
+        <div className="select-none cursor-default bg-gradient-to-br from-white to-gray-100 rounded-2xl p-0 md:p-6 shadow-lg">
             <div className="w-full mx-auto">
                 {/* Cabecera */}
                 <div className="flex justify-between items-center mb-6">
@@ -228,7 +228,7 @@ export default function PerfilColegiado({ userInfo }) {
                     {!isEditing ? (
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="flex items-center gap-2 bg-[#D7008A] hover:bg-[#41023B] text-white rounded-lg px-4 py-2 transition-colors duration-300 shadow-md hover:shadow-lg"
+                            className="cursor-pointer flex items-center gap-2 bg-[#D7008A] hover:bg-[#41023B] text-white rounded-lg px-4 py-2 transition-colors duration-300 shadow-md hover:shadow-lg"
                         >
                             <UserCog size={18} />
                             <span>Actualizar Datos</span>
@@ -237,14 +237,14 @@ export default function PerfilColegiado({ userInfo }) {
                         <div className="flex gap-2">
                             <button
                                 onClick={handleCancel}
-                                className="flex items-center gap-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg px-3 py-2 transition-colors duration-300"
+                                className="cursor-pointer flex items-center gap-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg px-3 py-2 transition-colors duration-300"
                             >
                                 <X size={18} />
                                 <span>Cancelar</span>
                             </button>
                             <button
                                 onClick={handleSubmit}
-                                className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white rounded-lg px-3 py-2 transition-colors duration-300 shadow-md"
+                                className="cursor-pointer flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white rounded-lg px-3 py-2 transition-colors duration-300 shadow-md"
                             >
                                 <Save size={18} />
                                 <span>Guardar</span>

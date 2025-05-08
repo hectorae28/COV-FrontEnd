@@ -196,7 +196,7 @@ export default function ListaColegiadosPage() {
 
   // Vista principal de la lista
   return (
-    <div className="w-full px-4 md:px-10 py-10 md:py-12">
+    <div className="select-none cursor-default w-full px-4 md:px-10 py-10 md:py-12">
       {/* Header con título */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
@@ -346,7 +346,7 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Estado de solvencia</p>
               <div className="flex gap-2">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstado === "todos"
                       ? "bg-purple-100 text-purple-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -356,7 +356,7 @@ export default function ListaColegiadosPage() {
                   Todos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstado === "solventes"
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -366,7 +366,7 @@ export default function ListaColegiadosPage() {
                   Solventes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstado === "No Solvente"
                       ? "bg-red-100 text-red-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -376,7 +376,7 @@ export default function ListaColegiadosPage() {
                   No Solventes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstado === "solicitudes"
                       ? "bg-blue-100 text-blue-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -393,7 +393,7 @@ export default function ListaColegiadosPage() {
               <select
                 value={filtroEspecialidad}
                 onChange={(e) => setFiltroEspecialidad(e.target.value)}
-                className="px-4 py-2 rounded-lg text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="cursor-pointer px-4 py-2 rounded-lg text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="todas">Todas las especialidades</option>
                 <option value="Odontología general">Odontología general</option>
@@ -419,7 +419,7 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Fecha de solicitud</p>
               <div className="flex gap-2">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroFecha === "todas"
                       ? "bg-purple-100 text-purple-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -429,7 +429,7 @@ export default function ListaColegiadosPage() {
                   Todas
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroFecha === "semana"
                       ? "bg-blue-100 text-blue-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -439,7 +439,7 @@ export default function ListaColegiadosPage() {
                   Última semana
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroFecha === "mes"
                       ? "bg-indigo-100 text-indigo-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -482,7 +482,7 @@ export default function ListaColegiadosPage() {
                       setFechaDesde("");
                       setFechaHasta("");
                     }}
-                    className="mt-4 text-gray-500 hover:text-red-500"
+                    className="cursor-pointer mt-4 text-gray-500 hover:text-red-500"
                     title="Limpiar fechas"
                   >
                     <X size={18} />
@@ -494,7 +494,7 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Estado</p>
               <div className="flex gap-2 flex-wrap">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstadoPendiente === "todos"
                       ? "bg-purple-100 text-purple-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -504,7 +504,7 @@ export default function ListaColegiadosPage() {
                   Todos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstadoPendiente === "pendientes"
                       ? "bg-blue-100 text-blue-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -514,7 +514,7 @@ export default function ListaColegiadosPage() {
                   Pendientes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstadoPendiente === "rechazados"
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -529,7 +529,7 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Etiquetas</p>
               <div className="flex gap-2 flex-wrap">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEtiqueta === "todos"
                       ? "bg-purple-100 text-purple-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -539,7 +539,7 @@ export default function ListaColegiadosPage() {
                   Todos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEtiqueta === "documentosIncompletos"
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -551,7 +551,7 @@ export default function ListaColegiadosPage() {
                   Documentos Incompletos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEtiqueta === "pagosPendientes"
                       ? "bg-red-100 text-red-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -561,7 +561,7 @@ export default function ListaColegiadosPage() {
                   Pagos Pendientes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEtiqueta === "pagosExonerados"
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -615,7 +615,7 @@ export default function ListaColegiadosPage() {
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                           <button
-                            className="flex items-center justify-center gap-1 w-full"
+                            className="cursor-pointer flex items-center justify-center gap-1 w-full"
                             onClick={toggleOrdenFechaRegistrados}
                           >
                             Fecha Registro
@@ -729,7 +729,7 @@ export default function ListaColegiadosPage() {
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                           <button
-                            className="flex items-center justify-center gap-1 w-full"
+                            className="cursor-pointer flex items-center justify-center gap-1 w-full"
                             onClick={toggleOrdenFecha}
                           >
                             Fecha solicitud

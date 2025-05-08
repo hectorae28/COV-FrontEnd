@@ -93,7 +93,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 name="nationality"
                 value={formData.nationality}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${isFieldEmpty("nationality") ? "border-red-500 bg-red-50" : "border-gray-200"
+                className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("nationality") ? "border-red-500 bg-red-50" : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
               >
                 <option value="" disabled>
@@ -312,7 +312,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("gender") ? "border-red-500 bg-red-50" : "border-gray-200"
+              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("gender") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="" disabled>
@@ -348,7 +348,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             name="maritalStatus"
             value={formData.maritalStatus}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("maritalStatus") ? "border-red-500 bg-red-50" : "border-gray-200"
+            className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("maritalStatus") ? "border-red-500 bg-red-50" : "border-gray-200"
               } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
           >
             <option value="" disabled>

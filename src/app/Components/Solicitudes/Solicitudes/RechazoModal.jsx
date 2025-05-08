@@ -31,13 +31,13 @@ const RechazoModal = ({ motivoRechazo, setMotivoRechazo, onCancel, onConfirm }) 
                     <div className="flex justify-center gap-4">
                         <button
                             onClick={onCancel}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                            className="cursor-pointer px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={onConfirm}
-                            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                            className="cursor-pointer px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                         >
                             Rechazar solicitud
                         </button>

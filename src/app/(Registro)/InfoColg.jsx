@@ -49,7 +49,7 @@ export default function InfoColegiado({
                 name="tipo_profesion"
                 value={formData.tipo_profesion}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${isFieldEmpty("tipo_profesion") ? "border-red-500 bg-red-50" : "border-gray-200"
+                className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("tipo_profesion") ? "border-red-500 bg-red-50" : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
               >
                 <option value="" disabled>

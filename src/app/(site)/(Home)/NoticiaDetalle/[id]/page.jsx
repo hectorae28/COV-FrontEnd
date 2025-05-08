@@ -155,7 +155,7 @@ const NoticiaDetalle = () => {
                                 onClick={handleNoticias}
                                 className="flex items-center text-gray-700 hover:text-[#C40180] transition-colors group mb-8"
                             >
-                                <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+                                <ArrowLeft className="cursor-pointer w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
                                 <span>Volver a las noticias</span>
                             </motion.button>
 
