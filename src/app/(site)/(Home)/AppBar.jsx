@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { FaChevronDown, FaBars, FaTimes } from "react-icons/fa";
+import { FaChevronDown, FaBars, FaTimes, FaSpinner } from "react-icons/fa";
 import Whatsapp from "./BottomFloat";
 import LogoDownloadModal from "../../Components/SobreCOV/LogoDownloadModal";
 
@@ -43,6 +43,7 @@ export default function AppBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSubmenuOpen, setMobileSubmenuOpen] = useState(null);
   const [showLogoModal, setShowLogoModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // New state for loading spinner
   const menuRefs = useRef([]);
   const mobileMenuRef = useRef(null);
 
@@ -122,6 +123,20 @@ export default function AppBar() {
     }
   };
 
+  // New function for handling login navigation with loading state
+  const navigateToLogin = () => {
+    setIsLoading(true);
+    // Navigate to login page
+    router.push("/Login");
+
+    // Optional: You can add a timeout to ensure the spinner shows for at least a minimum time
+    // setTimeout(() => {
+    //   setIsLoading(false);
+    // }, 1500);
+
+    // The loading state will be reset when the component unmounts during navigation
+  };
+
   const handleBridgeHover = (index) => {
     setOpenMenu(index);
   };
@@ -164,7 +179,7 @@ export default function AppBar() {
           </div>
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex flex-grow items-center justify-center relative">
-            <div className="flex items-center lg:space-x-2 xl:space-x-4 2xl:space-x-10">
+            <div className="cursor-pointer flex items-center lg:space-x-2 xl:space-x-4 2xl:space-x-10">
               {menuItems.map((item, index) => (
                 <div
                   key={index}
@@ -175,31 +190,27 @@ export default function AppBar() {
                   {item.route ? (
                     <span
                       onClick={() => navigateTo(item.route)}
-                      className={`text-white font-bold text-[12px] lg:text-[13px] xl:text-[15px] 2xl:text-[16px] cursor-pointer flex items-center gap-1 lg:gap-2 transition-all duration-300 whitespace-nowrap ${
-                        isMenuActive(item) ? "text-yellow-400" : ""
-                      }`}
+                      className={`text-white font-bold text-[12px] lg:text-[13px] xl:text-[15px] 2xl:text-[16px] cursor-pointer flex items-center gap-1 lg:gap-2 transition-all duration-300 whitespace-nowrap ${isMenuActive(item) ? "text-yellow-400" : ""
+                        }`}
                     >
                       {item.title}
                       {item.submenu && (
                         <FaChevronDown
-                          className={`w-2 h-2 lg:w-2.5 lg:h-2.5 xl:w-3 xl:h-3 transition-transform duration-500 ${
-                            openMenu === index ? "rotate-180" : ""
-                          }`}
+                          className={`w-2 h-2 lg:w-2.5 lg:h-2.5 xl:w-3 xl:h-3 transition-transform duration-500 ${openMenu === index ? "rotate-180" : ""
+                            }`}
                         />
                       )}
                     </span>
                   ) : (
                     <span
-                      className={`text-white font-bold text-[12px] lg:text-[13px] xl:text-[15px] 2xl:text-[16px] cursor-pointer flex items-center gap-1 lg:gap-2 transition-all duration-300 whitespace-nowrap ${
-                        isMenuActive(item) ? "text-yellow-400" : ""
-                      }`}
+                      className={`text-white font-bold text-[12px] lg:text-[13px] xl:text-[15px] 2xl:text-[16px] cursor-pointer flex items-center gap-1 lg:gap-2 transition-all duration-300 whitespace-nowrap ${isMenuActive(item) ? "text-yellow-400" : ""
+                        }`}
                     >
                       {item.title}
                       {item.submenu && (
                         <FaChevronDown
-                          className={`w-2 h-2 lg:w-2.5 lg:h-2.5 xl:w-3 xl:h-3 transition-transform duration-500 ${
-                            openMenu === index ? "rotate-180" : ""
-                          }`}
+                          className={`w-2 h-2 lg:w-2.5 lg:h-2.5 xl:w-3 xl:h-3 transition-transform duration-500 ${openMenu === index ? "rotate-180" : ""
+                            }`}
                         />
                       )}
                     </span>
@@ -231,11 +242,10 @@ export default function AppBar() {
                               onClick={() =>
                                 navigateTo(subItem.route, subItem.action)
                               }
-                              className={`px-4 lg:px-6 xl:px-8 py-2 lg:py-3 ${
-                                subItem.route && isSubmenuActive(subItem.route)
+                              className={`px-4 lg:px-6 xl:px-8 py-2 lg:py-3 ${subItem.route && isSubmenuActive(subItem.route)
                                   ? "bg-gray-200 text-black"
                                   : "text-white hover:text-black hover:bg-gray-200"
-                              } rounded-xl cursor-pointer whitespace-nowrap transition-colors duration-100 text-[12px] lg:text-[13px] xl:text-[14px]`}
+                                } rounded-xl cursor-pointer whitespace-nowrap transition-colors duration-100 text-[12px] lg:text-[13px] xl:text-[14px]`}
                             >
                               {subItem.title}
                             </div>
@@ -253,12 +263,19 @@ export default function AppBar() {
             {/* Botón Colegiados - Tablet */}
             <div className="hidden md:block lg:hidden">
               <div
-                onClick={() => navigateTo("/Login")}
-                className={`bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[14px] py-2 px-4 rounded-full cursor-pointer transition-all duration-200 whitespace-nowrap ${
-                  pathname === "/Login" ? "ring-2 ring-yellow-300" : ""
-                }`}
+                onClick={navigateToLogin}
+                className={`bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[14px] py-2 px-4 rounded-full cursor-pointer transition-all duration-200 whitespace-nowrap ${pathname === "/Login" ? "ring-2 ring-yellow-300" : ""
+                  } flex items-center justify-center`}
+                disabled={isLoading}
               >
-                Colegiados
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    Cargando...
+                  </>
+                ) : (
+                  "Colegiados"
+                )}
               </div>
             </div>
             {/* Mobile & Tablet Menu Button */}
@@ -276,12 +293,19 @@ export default function AppBar() {
             {/* Botón Colegiados - Desktop */}
             <div className="hidden lg:flex items-center">
               <div
-                onClick={() => navigateTo("/Login")}
-                className={`bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[12px] lg:text-[14px] xl:text-[16px] 2xl:text-[18px] py-1.5 lg:py-2 px-3 lg:px-4 xl:px-6 2xl:px-8 rounded-full cursor-pointer transition-all duration-200 whitespace-nowrap ${
-                  pathname === "/Login" ? "ring-2 ring-yellow-300" : ""
-                }`}
+                onClick={navigateToLogin}
+                className={`bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[12px] lg:text-[14px] xl:text-[16px] 2xl:text-[18px] py-1.5 lg:py-2 px-3 lg:px-4 xl:px-6 2xl:px-8 rounded-full cursor-pointer transition-all duration-200 whitespace-nowrap ${pathname === "/Login" ? "ring-2 ring-yellow-300" : ""
+                  } flex items-center justify-center`}
+                disabled={isLoading}
               >
-                Colegiados
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    Cargando...
+                  </>
+                ) : (
+                  "Colegiados"
+                )}
               </div>
             </div>
           </div>
@@ -303,16 +327,14 @@ export default function AppBar() {
                     {item.route ? (
                       <div
                         onClick={() => navigateTo(item.route)}
-                        className={`flex justify-between items-center font-bold py-2 ${
-                          isActive ? "text-yellow-300" : "text-white"
-                        }`}
+                        className={`flex justify-between items-center font-bold py-2 ${isActive ? "text-yellow-300" : "text-white"
+                          }`}
                       >
                         <span>{item.title}</span>
                         {item.submenu && (
                           <FaChevronDown
-                            className={`w-3 h-3 transition-transform duration-300 ${
-                              mobileSubmenuOpen === index ? "rotate-180" : ""
-                            }`}
+                            className={`w-3 h-3 transition-transform duration-300 ${mobileSubmenuOpen === index ? "rotate-180" : ""
+                              }`}
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleMobileSubmenu(index);
@@ -322,9 +344,8 @@ export default function AppBar() {
                       </div>
                     ) : (
                       <div
-                        className={`flex justify-between items-center font-bold py-2 ${
-                          isActive ? "text-yellow-300" : "text-white"
-                        }`}
+                        className={`flex justify-between items-center font-bold py-2 ${isActive ? "text-yellow-300" : "text-white"
+                          }`}
                         onClick={() =>
                           item.submenu ? toggleMobileSubmenu(index) : null
                         }
@@ -332,9 +353,8 @@ export default function AppBar() {
                         <span>{item.title}</span>
                         {item.submenu && (
                           <FaChevronDown
-                            className={`w-3 h-3 transition-transform duration-300 ${
-                              mobileSubmenuOpen === index ? "rotate-180" : ""
-                            }`}
+                            className={`w-3 h-3 transition-transform duration-300 ${mobileSubmenuOpen === index ? "rotate-180" : ""
+                              }`}
                           />
                         )}
                       </div>
@@ -349,11 +369,10 @@ export default function AppBar() {
                               onClick={() =>
                                 navigateTo(subItem.route, subItem.action)
                               }
-                              className={`py-2 cursor-pointer ${
-                                isSubActive
+                              className={`py-2 cursor-pointer ${isSubActive
                                   ? "text-yellow-300 font-bold"
                                   : "text-white hover:text-gray-200"
-                              }`}
+                                }`}
                             >
                               {subItem.title}
                             </div>
@@ -367,12 +386,19 @@ export default function AppBar() {
               {/* Mobile Colegiados */}
               <div className="py-4 flex justify-center md:hidden">
                 <div
-                  onClick={() => navigateTo("/Login")}
-                  className={`bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[16px] py-2 px-6 rounded-full cursor-pointer transition-all duration-200 ${
-                    pathname === "/colegiados" ? "ring-2 ring-yellow-300" : ""
-                  }`}
+                  onClick={navigateToLogin}
+                  className={`bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-600 text-white font-bold text-[16px] py-2 px-6 rounded-full cursor-pointer transition-all duration-200 flex items-center justify-center ${pathname === "/Login" ? "ring-2 ring-yellow-300" : ""
+                    }`}
+                  disabled={isLoading}
                 >
-                  Colegiados
+                  {isLoading ? (
+                    <>
+                      <FaSpinner className="animate-spin mr-2" />
+                      Cargando...
+                    </>
+                  ) : (
+                    "Colegiados"
+                  )}
                 </div>
               </div>
             </div>
@@ -380,7 +406,6 @@ export default function AppBar() {
         )}
         <Whatsapp />
       </header>
-
       {/* Logo Download Modal */}
       {showLogoModal && (
         <LogoDownloadModal onClose={() => setShowLogoModal(false)} />

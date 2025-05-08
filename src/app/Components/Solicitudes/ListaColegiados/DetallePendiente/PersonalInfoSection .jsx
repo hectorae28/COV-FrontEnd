@@ -115,7 +115,7 @@ export default function PersonalInfoSection({
                 {!editandoPersonal ? (
                     <button
                         onClick={() => setEditandoPersonal(true)}
-                        className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors"
+                        className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors"
                     >
                         <Pencil size={16} className="mr-1" />
                         Editar
@@ -129,14 +129,14 @@ export default function PersonalInfoSection({
                                 setEditandoPersonal(false);
                                 setCambiosPendientes(false);
                             }}
-                            className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-gray-200 transition-colors"
+                            className="cursor-pointer bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-gray-200 transition-colors"
                         >
                             <X size={16} className="mr-1" />
                             Cancelar
                         </button>
                         <button
                             onClick={handleGuardarDatosPersonales}
-                            className="bg-green-100 text-green-700 px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-green-200 transition-colors"
+                            className="cursor-pointer bg-green-100 text-green-700 px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-green-200 transition-colors"
                         >
                             <Save size={16} className="mr-1" />
                             Guardar

@@ -107,7 +107,7 @@ export default function ClaimAccountForm({ onBackToLogin }) {
             <div className="text-center mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <a
                     href="#"
-                    className="text-[#D7008A] font-medium hover:underline flex items-center justify-center"
+                    className="cursor-pointer text-[#D7008A] font-medium hover:underline flex items-center justify-center"
                     onClick={(e) => {
                         e.preventDefault();
                         onBackToLogin();

@@ -25,15 +25,15 @@ export default function ProfileSidebar({
     const hasProfileImage = previewImage || userInfo?.imagenPerfil;
 
     return (
-        <div className="lg:col-span-1 h-full">
+        <div className="select-none cursor-default lg:col-span-1 h-full">
             <div className="bg-white rounded-xl shadow-md overflow-hidden h-full flex flex-col">
                 {/* Banner superior */}
                 <div className="h-32 bg-gradient-to-r from-[#41023B] to-[#D7008A]"></div>
                 
                 {/* Contenedor de foto de perfil */}
-                <div className="px-6 pb-8 relative flex-grow flex flex-col">
+                <div className="px-6 pb-6 relative flex-grow flex flex-col">
                     {/* Foto de perfil con botón de eliminar */}
-                    <div className="relative -mt-20 mb-2 mx-auto w-40 h-40">
+                    <div className="relative -mt-20 mb-4 mx-auto w-40 h-40">
                         {/* Contenedor circular para la foto */}
                         <div className="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg">
                             {/* Imagen de perfil o iniciales */}
@@ -54,7 +54,7 @@ export default function ProfileSidebar({
                         {hasProfileImage && (
                             <div className="absolute -top-2 -right-2 group">
                                 <button 
-                                    className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200"
+                                    className="cursor-pointer bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200"
                                     onClick={handleDeleteImage}
                                 >
                                     <Trash2 size={14} />
@@ -67,9 +67,9 @@ export default function ProfileSidebar({
                     </div>
 
                     {/* Botón de cambiar foto */}
-                    <div className="flex justify-center mt-2 mb-6">
+                    <div className="flex justify-center mt-2 mb-12">
                         <button 
-                            className="bg-[#D7008A] hover:bg-[#41023B] text-white px-3 py-1.5 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-1.5"
+                            className="cursor-pointer bg-[#41023B] hover:bg-[#D7008A] text-white px-3 py-1.5 rounded-lg shadow-md transition-colors duration-200 flex items-center gap-1.5"
                             onClick={handleImageClick}
                             title="Cambiar foto de perfil"
                         >
@@ -96,13 +96,13 @@ export default function ProfileSidebar({
                                 {formData.email}
                             </span>
                         </p>
-                        <div className="mt-5 inline-block bg-[#41023B] text-white font-semibold py-2 px-5 rounded-full text-lg">
+                        <div className="mt-12 inline-block bg-[#41023B] text-white font-semibold py-2 px-5 rounded-full text-lg">
                             COV-{formData.mainRegistrationNumber || "0000"}
                         </div>
                     </div>
 
                     {/* Separador */}
-                    <div className="border-t border-gray-100 my-6"></div>
+                    <div className="border-t border-gray-200 my-6"></div>
 
                     {/* Logo institucional - con margin-top auto para empujar al fondo */}
                     <div className="flex justify-center mt-auto">

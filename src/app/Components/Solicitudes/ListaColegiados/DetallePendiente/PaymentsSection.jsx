@@ -347,7 +347,7 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
                             <div className="flex justify-end gap-3 mt-6">
                                 <button
                                     onClick={() => setDocumentoParaSubir(null)}
-                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                                    className="cursor-pointer px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
                                     disabled={isUploading}
                                 >
                                     Cancelar
@@ -355,7 +355,7 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
                                 <button
                                     onClick={handleUpload}
                                     disabled={!selectedFile || isUploading}
-                                    className={`px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${!selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
+                                    className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${!selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
                                         }`}
                                 >
                                     {isUploading ? (

@@ -1,13 +1,11 @@
 "use client";
-import PayPalProvider from "@/utils/paypalProvider";
-import { motion } from "framer-motion";
-import { CreditCard, DollarSign } from "lucide-react";
-import { useState } from "react";
-import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx"
+import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx";
+import { motion, AnimatePresence } from "framer-motion";
+import { CreditCard, DollarSign, Check, X, ArrowLeft } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 export default function PagosColg({ props }) {
-  const { handlePaymentComplete, tasaBcv, costoInscripcion, metodoPago } =
-    props;
+  const { handlePaymentComplete, tasaBcv, costoInscripcion, metodoPago } = props;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -15,7 +13,11 @@ export default function PagosColg({ props }) {
   const [paymentAmount, setPaymentAmount] = useState(costoInscripcion);
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [montoEnBs, setMontoEnBs] = useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2)); // Add this state
+  const [montoEnBs, setMontoEnBs] = useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2));
+  const [showMethodSelection, setShowMethodSelection] = useState(false);
+
+  // Verificar si hay más de 4 métodos de pago para cambiar el estilo de visualización
+  const showAsList = metodoPago.length > 4;
 
   // PayPal fee calculation
   const calculatePaypalFee = (amount) => {
@@ -39,7 +41,6 @@ export default function PagosColg({ props }) {
       ),
     });
 
-
     setIsSubmitting(false);
   };
 
@@ -52,6 +53,12 @@ export default function PagosColg({ props }) {
       const fileUrl = URL.createObjectURL(file);
       setPreviewUrl(fileUrl);
     }
+  };
+
+  // Manejar la selección de método de pago
+  const handleSelectPaymentMethod = (slug) => {
+    setPaymentMethod(slug);
+    setShowMethodSelection(false); // Cerrar automáticamente después de seleccionar
   };
 
   return (
@@ -73,7 +80,7 @@ export default function PagosColg({ props }) {
               <CreditCard className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-[#41023B">
+              <h3 className="font-semibold text-[#41023B]">
                 Información de Pago
               </h3>
             </div>
@@ -81,7 +88,7 @@ export default function PagosColg({ props }) {
 
           {/* Exchange rate */}
           <div className="bg-[#D7008A]/10 px-3 py-2 rounded-lg border border-[#D7008A]">
-            <p className="text-sm font-bold text[#41023B]">
+            <p className="text-sm font-bold text-[#41023B]">
               USD$ 1 = {tasaBcv} bs
             </p>
           </div>
@@ -98,33 +105,182 @@ export default function PagosColg({ props }) {
           </p>
         </div>
 
-        {/* Payment method selection buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
-          {metodoPago.map((metodo, index) => (
-            <button
-              key={index}
-              className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${
-                metodo.datos_adicionales.slug === "bdv"
-                  ? "bg-red-50 border-red-300 text-red-700"
-                  : "bg-blue-50 border-blue-300 text-blue-700"
-              }`}
-              onClick={() => setPaymentMethod(metodo.datos_adicionales.slug)}
-            >
-              <img
-                src={
-                  metodo.logo_url
-                    ? metodo.logo_url.startsWith("/")
-                      ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
-                      : metodo.logo_url
-                    : "/placeholder.svg"
-                }
-                alt={metodo.nombre}
-                className="w-7 h-7"
-              />
-              <span className="font-medium">{metodo.nombre}</span>
-            </button>
-          ))}
-        </div>
+        {/* Payment method selection - Conditional rendering based on number of methods */}
+        {showAsList ? (
+          <div className="mb-8">
+            <AnimatePresence mode="wait">
+              {!showMethodSelection ? (
+                <motion.div
+                  key="payment-method-summary"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <label className="block text-lg font-medium text-[#41023B] mb-4 text-center">
+                    Seleccione un método de pago
+                  </label>
+
+                  {/* Selected method display or selection button */}
+                  {paymentMethod ? (
+                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <img
+                          src={
+                            metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url
+                              ? metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url.startsWith("/")
+                                ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url}`
+                                : metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url
+                              : "/placeholder.svg"
+                          }
+                          alt={metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.nombre}
+                          className="w-10 h-10 mr-3 object-contain"
+                        />
+                        <div>
+                          <p className="font-medium text-gray-900">{metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.nombre}</p>
+                          <p className="text-xs text-gray-500">Método de pago seleccionado</p>
+                        </div>
+                      </div>
+                      <motion.button
+                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium flex items-center space-x-1 transition-colors duration-200"
+                        onClick={() => setShowMethodSelection(true)}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <span>Cambiar</span>
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <motion.button
+                      className="w-full bg-white border border-gray-200 shadow-sm rounded-lg p-4 flex items-center justify-center gap-2 hover:border-[#D7008A] hover:bg-[#D7008A]/5 transition-all duration-300"
+                      onClick={() => setShowMethodSelection(true)}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      <CreditCard className="w-5 h-5 text-[#D7008A]" />
+                      <span className="font-medium text-gray-700">Seleccionar método de pago</span>
+                    </motion.button>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="payment-method-selector"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                >
+                  {/* Header */}
+                  <div className="p-3 border-b border-gray-200 flex items-center bg-[#f8f9fa]">
+                    <button
+                      className="mr-2 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                      onClick={() => setShowMethodSelection(false)}
+                    >
+                      <ArrowLeft className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <h3 className="text-base font-medium text-[#41023B]">
+                      Seleccione un método de pago
+                    </h3>
+                  </div>
+
+                  {/* Methods grid - Versión más compacta y ordenada */}
+                  <div className="p-3">
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {metodoPago.map((metodo, index) => {
+                        // Calcular ancho basado en cantidad de métodos
+                        let widthClass = "";
+                        const totalMetodos = metodoPago.length;
+
+                        if (totalMetodos <= 4) {
+                          // Si hay 4 o menos, todos en una fila
+                          widthClass = "w-20"; // Ancho fijo para hasta 4 elementos
+                        } else if (totalMetodos === 5) {
+                          // Si hay 5, mostramos 3 arriba y 2 abajo centrados
+                          widthClass = "w-40"; // Un poco más ancho para mejor distribución
+                        } else if (totalMetodos === 6) {
+                          // Si hay 6, mostramos 3 arriba y 3 abajo
+                          widthClass = "w-32";
+                        } else if (totalMetodos <= 8) {
+                          // Si hay 7-8, mostramos 4 arriba y el resto abajo
+                          widthClass = "w-20";
+                        } else {
+                          // Para 9 o más
+                          widthClass = "w-20";
+                        }
+
+                        return (
+                          <motion.div
+                            key={index}
+                            className={`cursor-pointer rounded-lg border transition-all overflow-hidden p-2 ${widthClass} ${paymentMethod === metodo.datos_adicionales.slug
+                                ? "border-[#D7008A] ring-1 ring-[#D7008A] bg-[#D7008A]/5"
+                                : "border-gray-200 hover:border-[#D7008A]"
+                              }`}
+                            onClick={() => handleSelectPaymentMethod(metodo.datos_adicionales.slug)}
+                            whileHover={{ y: -2, scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div className="flex flex-col items-center text-center">
+                              <div className="w-10 h-10 flex items-center justify-center mb-1 relative">
+                                <img
+                                  src={
+                                    metodo.logo_url
+                                      ? metodo.logo_url.startsWith("/")
+                                        ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                                        : metodo.logo_url
+                                      : "/placeholder.svg"
+                                  }
+                                  alt={metodo.nombre}
+                                  className="max-w-full max-h-full object-contain"
+                                />
+                                {paymentMethod === metodo.datos_adicionales.slug && (
+                                  <div className="absolute -top-1 -right-1 bg-[#D7008A] rounded-full w-4 h-4 flex items-center justify-center">
+                                    <Check className="w-3 h-3 text-white" />
+                                  </div>
+                                )}
+                              </div>
+                              <h4 className="text-xs font-medium text-gray-900 truncate w-full">{metodo.nombre}</h4>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ) : (
+          // Vista original de botones para 4 métodos o menos
+          <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
+            {metodoPago.map((metodo, index) => (
+              <button
+                key={index}
+                className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
+                    ? "bg-red-50 border-red-300 text-red-700"
+                    : "bg-blue-50 border-blue-300 text-blue-700"
+                  } ${paymentMethod === metodo.datos_adicionales.slug
+                    ? 'ring-2 ring-offset-2 ring-[#D7008A]'
+                    : ''
+                  }`}
+                onClick={() => setPaymentMethod(metodo.datos_adicionales.slug)}
+              >
+                <img
+                  src={
+                    metodo.logo_url
+                      ? metodo.logo_url.startsWith("/")
+                        ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                        : metodo.logo_url
+                      : "/placeholder.svg"
+                  }
+                  alt={metodo.nombre}
+                  className="w-7 h-7"
+                />
+                <span className="font-medium">{metodo.nombre}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Conditional content based on payment method */}
         {paymentMethod && (
@@ -350,7 +506,6 @@ export default function PagosColg({ props }) {
                       </p>
 
                       <div className="mt-4 flex justify-center">
-                        {/* Replace PayPalProvider with PayPalPaymentComponent */}
                         <PaypalPaymentComponent
                           totalPendiente={parseFloat(costoInscripcion)}
                           exchangeRate={tasaBcv}
@@ -358,7 +513,7 @@ export default function PagosColg({ props }) {
                             setPaymentAmount(info.montoPago);
                             setMontoEnBs(info.montoEnBs);
                           }}
-                          allowMultiplePayments={false} // Set this to false for single payment mode
+                          allowMultiplePayments={false}
                         />
                       </div>
                     </div>

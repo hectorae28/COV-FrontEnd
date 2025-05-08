@@ -31,6 +31,17 @@ const venezuelaData = {
   "distrito capital": ["Caracas", "El Junquito", "Antimano", "La Pastora", "El Valle", "Coche", "Caricuao", "El Paraíso", "San Juan", "Catia", "Petare", "Chacao", "El Hatillo", "Baruta"]
 };
 
+// Componente para mostrar la bandera según el código de país
+function BanderaComponent({ countryCode }) {
+  // Convierte el código ISO (e.g. "VE") a sus puntos de código regionales
+  const base = 0x1F1E6; // punto de código de 'A'
+  const [first, second] = countryCode
+    .toUpperCase()
+    .split('')
+    .map(ch => base + (ch.charCodeAt(0) - 65));
+  return String.fromCodePoint(first, second); // e.g. "🇻🇪"
+}
+
 export default function InfoContacto({ formData, onInputChange, validationErrors, isProfileEdit }) {
   const [cities, setCities] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
@@ -144,7 +155,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="flex items-center relative">
-            {/* Select for country code with custom arrow */}
+            {/* Select for country code with flags */}
             <div className="relative">
               <select
                 name="countryCode"
@@ -154,7 +165,9 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
                 style={{ height: "48px" }}
               >
                 {phoneCodes.map((code, index) => (
-                  <option key={index} value={code.codigo}>{code.codigo}</option>
+                  <option key={index} value={code.codigo}>
+                    {BanderaComponent({ countryCode: code.codigo_pais })} {code.codigo}
+                  </option>
                 ))}
               </select>
               {/* Flecha personalizada */}
@@ -198,6 +211,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
                 const value = e.target.value.replace(/\D/g, "");
                 handleChange({ target: { name: "homePhone", value } });
               }}
+              maxLength="11"
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
               placeholder="0212 123 4567"
             />
@@ -219,7 +233,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               name="state"
               value={formData.state || ''}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"
+              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="">Seleccionar Estado</option>
@@ -243,7 +257,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        {/* Ciudad - Siempre editable, solo depende del estado seleccionado */}
+        {/* Ciudad - Siempre editable, pero depende del estado seleccionado */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Ciudad
@@ -254,8 +268,8 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               name="city"
               value={formData.city || ''}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700 ${!formData.state ? 'bg-white' : ''}`}
             >
               <option value="">Seleccionar Ciudad</option>
               {cities.map((city) => (

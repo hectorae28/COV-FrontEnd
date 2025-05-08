@@ -460,7 +460,7 @@ export default function DetallePendiente({ params, onVolver }) {
   const isDenegada = pendiente.estado === "denegada";
 
   return (
-    <div className="w-full px-4 md:px-10 py-10 md:py-28 bg-gray-50">
+    <div className="select-none cursor-default w-full px-4 md:px-10 py-10 md:py-28 bg-gray-50">
       {/* Breadcrumbs */}
       <div className="mb-6">
         <button

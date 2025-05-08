@@ -320,6 +320,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
         <div className="p-6 bg-gray-50 rounded-xl border border-gray-200 text-center">
           <p className="text-gray-700">
             Ha indicado que no se encuentra laborando actualmente. Puede continuar con el siguiente paso.
+            ¡Esta sección puede ser modificado o completado posteriormente!
           </p>
         </div>
       )}

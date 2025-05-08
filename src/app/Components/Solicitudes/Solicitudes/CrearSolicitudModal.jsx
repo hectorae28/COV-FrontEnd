@@ -64,7 +64,7 @@ export default function CrearSolicitudModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="cursor-pointer text-gray-500 hover:text-gray-700"
           >
             <X size={24} />
           </button>
@@ -129,13 +129,13 @@ export default function CrearSolicitudModal({
             <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
               <button
                 onClick={onClose}
-                className="order-2 sm:order-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+                className="cursor-pointer order-2 sm:order-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center justify-center"
               >
                 Cerrar
               </button>
               <button
                 onClick={handleVerDetalle}
-                className="order-1 sm:order-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all duration-300"
+                className="cursor-pointer order-1 sm:order-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all duration-300"
               >
                 <span>Ver detalles</span>
                 <ChevronRight size={16} />

@@ -61,6 +61,7 @@ const steps = [
       "mppsRegistrationNumber",
       "mppsRegistrationDate",
       "titleIssuanceDate",
+      "tipo_profesion"
     ],
   },
   {
@@ -82,12 +83,7 @@ const steps = [
     description: "Documentos necesarios",
     icon: FilePlus,
     component: DocsRequirements,
-    requiredFields: [
-      "ci",
-      "rif",
-      "titulo",
-      "mpps",
-    ],
+    requiredFields: ["ci", "rif", "titulo", "mpps"],
   },
 ];
 
@@ -209,33 +205,52 @@ export default function RegistrationForm() {
     const errors = {};
     let isValid = true;
 
-    // Si es el paso de información laboral (paso 4) y ha seleccionado "no labora",
-    // entonces saltamos la validación de los campos laborales
+    // Si es el paso 5 (Documentos), agregar campos adicionales según tipo_profesion
+    if (stepIndex === 5) {
+      // Crear una copia de los campos requeridos base
+      let fieldsToValidate = [...step.requiredFields];
+
+      // Agregar campos adicionales para técnicos e higienistas
+      if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
+        fieldsToValidate = [
+          ...fieldsToValidate,
+          "fondo_negro_titulo_bachiller",
+          "Fondo_negro_credencial",
+          "notas_curso"
+        ];
+      }
+
+      // Validar todos los campos requeridos
+      fieldsToValidate.forEach((field) => {
+        if (!formData[field]) {
+          errors[field] = true;
+          isValid = false;
+        }
+      });
+
+      // Establecer errores de validación si estamos validando activamente
+      if (attemptedNext) {
+        setValidationErrors(errors);
+      }
+
+      return isValid;
+    }
+
+    // Para los demás pasos, mantener la validación estándar
     if (stepIndex === 4 && formData.workStatus === "noLabora") {
       return true; // Validación exitosa, no hay errores
     }
 
     if (step.requiredFields && step.requiredFields.length > 0) {
       step.requiredFields.forEach((field) => {
-        // Check for file fields (simplified check)
-        if (["ci", "rif", "titulo", "mpps"].includes(field)) {
-          if (!formData[field]) {
-            errors[field] = true;
-            isValid = false;
-          }
-        }
-        // Check for other fields
-        else if (
-          !formData[field] ||
-          (typeof formData[field] === "string" && formData[field].trim() === "")
-        ) {
+        if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
           errors[field] = true;
           isValid = false;
         }
       });
     }
 
-    // Solo establecer errores de validación si estamos validando activamente (después de hacer clic en el botón)
+    // Solo establecer errores de validación si estamos validando activamente
     if (attemptedNext) {
       setValidationErrors(errors);
     }
@@ -338,9 +353,9 @@ export default function RegistrationForm() {
     Form.append("instituto_bachillerato", formData.graduateInstitute);
     Form.append("universidad", formData.universityTitle);
     Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
-    if(formData.tipo_profesion === "odontologo"){
-      Form.append("num_registro_principal",formData.mainRegistrationNumber);
-      Form.append("fecha_registro_principal",formData.mainRegistrationDate);
+    if (formData.tipo_profesion === "odontologo") {
+      Form.append("num_registro_principal", formData.mainRegistrationNumber);
+      Form.append("fecha_registro_principal", formData.mainRegistrationDate);
     }
     Form.append("num_mpps", formData.mppsRegistrationNumber);
     Form.append("fecha_mpps", formData.mppsRegistrationDate);
@@ -374,14 +389,14 @@ export default function RegistrationForm() {
     }
     !pagarLuego
       ? Form.append(
-          "pago",
-          JSON.stringify({
-            fecha_pago: paymentDate,
-            metodo_de_pago: metodo_de_pago.id,
-            num_referencia: referenceNumber,
-            monto: totalAmount,
-          })
-        )
+        "pago",
+        JSON.stringify({
+          fecha_pago: paymentDate,
+          metodo_de_pago: metodo_de_pago.id,
+          num_referencia: referenceNumber,
+          monto: totalAmount,
+        })
+      )
       : Form.append("pago", null);
     setIsSubmitting(true);
     try {
@@ -423,7 +438,7 @@ export default function RegistrationForm() {
           content="Formulario de registro para nuevos colegiados en el Colegio de Odontólogos de Venezuela."
         />
       </Head>
-      <div className="relative w-full min-h-screen overflow-hidden mx-auto my-auto">
+      <div className="select-none cursor-default relative w-full min-h-screen overflow-hidden mx-auto my-auto">
         {/* Header navigation - Improved responsiveness */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -488,15 +503,15 @@ export default function RegistrationForm() {
                     {showPaymentScreen
                       ? "Registro de Pago"
                       : isComplete
-                      ? "Registro Exitoso"
-                      : "Registro de Nuevos Colegiados"}
+                        ? "Registro Exitoso"
+                        : "Registro de Nuevos Colegiados"}
                   </h1>
                   <p className="mt-3 text-white text-lg max-w-3xl mx-auto">
                     {showPaymentScreen
                       ? "Complete el pago para finalizar su registro"
                       : isComplete
-                      ? "¡Gracias por completar su registro y pago!"
-                      : "Complete el formulario en 5 sencillos pasos para unirse a nuestra comunidad profesional"}
+                        ? "¡Gracias por completar su registro y pago!"
+                        : "Complete el formulario en 5 sencillos pasos para unirse a nuestra comunidad profesional"}
                   </p>
                 </motion.div>
               </div>
@@ -527,35 +542,32 @@ export default function RegistrationForm() {
                             >
                               <div className="relative">
                                 <div
-                                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                                    isCompleted
-                                      ? "bg-[#D7008A] border-transparent"
-                                      : isCurrent
+                                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isCompleted
+                                    ? "bg-[#D7008A] border-transparent"
+                                    : isCurrent
                                       ? "bg-white border-[#D7008A]"
                                       : "bg-white border-gray-400"
-                                  }`}
+                                    }`}
                                 >
                                   {isCompleted ? (
                                     <Check className="w-6 h-6 text-white" />
                                   ) : (
                                     <StepIcon
-                                      className={`w-6 h-6 ${
-                                        isCurrent
-                                          ? "text-[#41023B]"
-                                          : "text-gray-400"
-                                      }`}
+                                      className={`w-6 h-6 ${isCurrent
+                                        ? "text-[#41023B]"
+                                        : "text-gray-400"
+                                        }`}
                                     />
                                   )}
                                 </div>
                               </div>
                               <span
-                                className={`mt-2 text-sm font-medium ${
-                                  isCompleted
-                                    ? "text-white"
-                                    : isCurrent
+                                className={`mt-2 text-sm font-medium ${isCompleted
+                                  ? "text-white"
+                                  : isCurrent
                                     ? "text-[#D7008A]"
                                     : "text-gray-300"
-                                } hidden sm:block`}
+                                  } hidden sm:block`}
                               >
                                 {step.title}
                               </span>
@@ -725,7 +737,7 @@ export default function RegistrationForm() {
                             <motion.button
                               type="button"
                               onClick={prevStep}
-                              className="flex items-center px-5 py-2.5 bg-white text-[#41023B] border border-gray-700
+                              className="cursor-pointer flex items-center px-5 py-2.5 bg-white text-[#41023B] border border-gray-700
                   rounded-xl text-base font-medium shadow-sm hover:shadow-md hover:bg-[#41023B] hover:text-white
                   transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
                               whileHover={{ scale: 1.02 }}
@@ -741,7 +753,7 @@ export default function RegistrationForm() {
                             <motion.button
                               type="button"
                               onClick={nextStep}
-                              className="flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+                              className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
                             rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
@@ -753,7 +765,7 @@ export default function RegistrationForm() {
                             <motion.button
                               type="submit"
                               onClick={() => setIsIntentionalSubmit(true)}
-                              className="flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+                              className="cursor-pointer flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
   rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}

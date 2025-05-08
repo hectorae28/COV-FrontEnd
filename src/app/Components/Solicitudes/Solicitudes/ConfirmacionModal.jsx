@@ -17,13 +17,13 @@ const ConfirmacionModal = ({ onCancel, onConfirm }) => {
                     <div className="flex justify-center gap-4">
                         <button
                             onClick={onCancel}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                            className="cursor-pointer px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={onConfirm}
-                            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                            className="cursor-pointer px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                         >
                             Confirmar aprobación
                         </button>
