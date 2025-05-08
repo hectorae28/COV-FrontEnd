@@ -1,25 +1,23 @@
 "use client"
-import { useState, useEffect } from "react"
-import { 
-  ChevronLeft,
-  Clock,
-  CheckCircle,
-  XCircle,
+import {
   AlertCircle,
-  X,
+  CheckCircle,
+  ChevronLeft,
+  Download,
   MessageSquare,
-  Download
+  X
 } from "lucide-react"
+import { useEffect, useState } from "react"
 
 // Componentes importados
 import PagosColg from "@/app/Components/Solicitudes/Solicitudes/PagosModalSolic"
-import SolicitudHeader from "./HeaderSolic"
-import DocumentosSection from "./DocumentosSection"
-import ServiciosSection from "./ServiciosSection"
-import HistorialPagosSection from "./HistorialPagosSection"
 import ConfirmacionModal from "./ConfirmacionModal"
-import RechazoModal from "./RechazoModal"
+import DocumentosSection from "./DocumentosSection"
 import DocumentViewer from "./DocumentViewer"
+import SolicitudHeader from "./HeaderSolic"
+import HistorialPagosSection from "./HistorialPagosSection"
+import RechazoModal from "./RechazoModal"
+import ServiciosSection from "./ServiciosSection"
 
 export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, actualizarSolicitud }) {
   // Estados principales
@@ -254,7 +252,7 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
       <div className="mb-4">
         <button 
           onClick={onVolver}
-          className="text-sm text-[#590248] hover:text-[#C40180] flex items-center"
+          className="cursor-pointer text-sm text-[#590248] hover:text-[#C40180] flex items-center"
         >
           <ChevronLeft size={20} className="mr-1" />
           Volver a la lista de solicitudes
@@ -337,7 +335,7 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
           </button>
         )}
         
-        <button className="bg-gradient-to-t from-[#D7008A] to-[#41023B] text-white px-3 py-2 rounded-md flex items-center gap-2 hover:bg-purple-700 transition-colors text-sm">
+        <button className="cursor-pointer bg-gradient-to-t from-[#D7008A] to-[#41023B] text-white px-3 py-2 rounded-md flex items-center gap-2 hover:bg-purple-700 transition-colors text-sm">
           <MessageSquare size={16} />
           <span>Enviar mensaje al colegiado</span>
         </button>
@@ -379,7 +377,7 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
               </h3>
               <button 
                 onClick={() => setMostrarModalPagos(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="cursor-pointer text-gray-500 hover:text-gray-700"
               >
                 <X size={24} />
               </button>

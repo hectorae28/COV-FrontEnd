@@ -10,7 +10,6 @@ import Cards from "../Cards";
 import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
-import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
@@ -19,64 +18,50 @@ export default function Home() {
   const [showTabs, setShowTabs] = useState(true); // Estado para mostrar/ocultar pestañas
   const [userInfo, setUser_info] = useState(null);
   const { data: session, status } = useSession();
-  const [isSolvent, setIsSolvent] = useState(false); // Estado de solvencia
-  const [solvencyInfo, setSolvencyInfo] = useState({
-    date: session?.user.solvente,
-    amount: "7.00",
-    status: session?.user?.solvenciaStatus,
-  }); // Datos de solvencia
+  const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
   // Datos de solvencia
+
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
     if (status === "loading") return;
     const checkSolvencyStatus = () => {
-      console.log("Checking solvency status...");
-      if (!userInfo) return;
       const today = new Date();
-      const [year, month, day] = solvencyInfo.date.split("-").map(Number);
-      const solvencyDate = new Date(year, month - 1, day); // Meses en JS son 0-indexed
+      const [day, month, year] = solvencyInfo.date.split("-").map(Number);
+      const solvencyDate = new Date(year, month - 1, day);
 
       const warningDate = new Date(solvencyDate);
       warningDate.setDate(warningDate.getDate() - 14);
 
-      //setIsSolvent(solvencyInfo.status)
-
-      if (today >= warningDate) {
+      if (today > solvencyDate) {
+        setIsSolvent(false);
+      } else if (today >= warningDate) {
         setShowSolvencyWarning(true);
       } else {
         setShowSolvencyWarning(false);
       }
     };
+    if (userInfo) {
+      checkSolvencyStatus();
+    }
 
     const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas
 
     if (session) {
-      fetchDataSolicitudes("costo", `?search=Solvencia&es_vigente=true`)
+      fetchMe(session)
         .then((response) => {
-          const costo = Number(response.data[0].monto_usd);
-          fetchMe(session)
-            .then((response) => {
-              setUser_info(response.data);
-              
-              setSolvencyInfo({
-                date: response.data.solvente,
-                amount: costo,
-                status: response.data.solvencia_status,
-              });
-              if (userInfo && status === "authenticated") {
-                checkSolvencyStatus();
-              }
-            })
-            .catch((error) => console.log(error));
+          setUser_info(response.data);
         })
-        .catch((error) => {
-          console.error("Error al obtener los datos:", error);
-        });
+        .catch((error) => console.log(error));
     }
     return () => clearInterval(intervalId);
-  }, [session, status]);
+  }, [ session, status]);
 
+  const solvencyInfo = {
+    date: userInfo?.solvente,
+    amount: "7.00",
+  };
+  // Manejar clic en card
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {
       setShowSolicitudForm(true);

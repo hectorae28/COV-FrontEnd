@@ -183,7 +183,7 @@ export default function SolicitudesForm({ initialSolicitudTipo = 'individual', o
         {onCancel && !isSuccess && (
           <button 
             onClick={onCancel}
-            className="text-white hover:text-gray-200 flex items-center"
+            className="cursor-pointer text-white hover:text-gray-200 flex items-center"
             title="Volver al panel principal"
           >
             <ArrowLeft size={18} className="mr-1" />

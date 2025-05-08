@@ -153,20 +153,20 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                             {tieneArchivo ? (
                                 <button
                                     onClick={() => handleVerDocumento(documento)}
-                                    className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                                    className="cursor-pointer text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
                                     title="Ver documento"
                                 >
                                     <Eye size={18} />
                                 </button>
                             ) : (
-                                <span className="text-gray-400 p-2" title="No hay documento para ver">
+                                <span className="cursor-no-drop text-gray-400 p-2" title="No hay documento para ver">
                                     <Eye size={18} />
                                 </span>
                             )}
 
                             <button
                                 onClick={() => handleReemplazarDocumento(documento)}
-                                className={`${tieneArchivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}
+                                className={`${tieneArchivo ? "cursor-pointer text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} cursor-pointer p-2 rounded-full transition-colors`}
                                 title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
                             >
                                 {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
@@ -296,7 +296,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                                         </>
                                     ) : (
                                         <>
-                                            <Upload size={16} />
+                                            <Upload size={4} />
                                             <span>{documentoParaSubir.archivo ? "Actualizar documento" : "Subir documento"}</span>
                                         </>
                                     )}

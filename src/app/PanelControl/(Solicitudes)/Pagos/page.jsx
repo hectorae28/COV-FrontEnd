@@ -377,7 +377,7 @@ export default function ListaPagos() {
 
   // Vista principal de lista
   return (
-    <div className="w-full px-4 md:px-10 py-10 md:py-12">
+    <div className="w-full px-4 md:px-10 py-10 md:py-12 select-none cursor-default">
       {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
@@ -472,14 +472,14 @@ export default function ListaPagos() {
         <div className="flex gap-3 w-full md:w-auto">
           <button 
             onClick={() => setShowReporteModal(true)}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-opacity w-full md:w-auto justify-center"
+            className="cursor-pointer bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-opacity w-full md:w-auto justify-center"
           >
             <PieChart size={18} />
             <span>Generar reportes</span>
           </button>
           
           <button 
-            className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
+            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
           >
             <Download size={18} />
             <span>Exportar datos</span>
@@ -497,10 +497,10 @@ export default function ListaPagos() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Filtro por tipo de pago */}
           <div>
-            <span className="text-xs text-gray-500 block mb-1">Tipo de pago</span>
-            <div className="flex flex-wrap gap-2">
+            <span className="text-xs text-gray-500 block mb-1 select-none cursor-default">Tipo de pago</span>
+            <div className="flex flex-wrap gap-2 ">
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroTipoPago === "todos" 
                     ? "bg-purple-100 text-purple-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -510,7 +510,7 @@ export default function ListaPagos() {
                 Todos
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroTipoPago === "solicitud" 
                     ? "bg-blue-100 text-blue-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -520,7 +520,7 @@ export default function ListaPagos() {
                 Solicitud
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroTipoPago === "inscripcion" 
                     ? "bg-green-100 text-green-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -530,7 +530,7 @@ export default function ListaPagos() {
                 Inscripción
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroTipoPago === "Solvencia" 
                     ? "bg-amber-100 text-amber-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -540,7 +540,7 @@ export default function ListaPagos() {
                 Solvencia
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroTipoPago === "curso" 
                     ? "bg-indigo-100 text-indigo-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -557,7 +557,7 @@ export default function ListaPagos() {
             <span className="text-xs text-gray-500 block mb-1">Estado</span>
             <div className="flex flex-wrap gap-2">
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroEstado === "todos" 
                     ? "bg-purple-100 text-purple-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -567,7 +567,7 @@ export default function ListaPagos() {
                 Todos
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroEstado === "procesado" 
                     ? "bg-green-100 text-green-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -577,7 +577,7 @@ export default function ListaPagos() {
                 Procesados
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroEstado === "pendiente" 
                     ? "bg-yellow-100 text-yellow-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -587,7 +587,7 @@ export default function ListaPagos() {
                 Pendientes
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroEstado === "rechazado" 
                     ? "bg-red-100 text-red-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -604,7 +604,7 @@ export default function ListaPagos() {
             <span className="text-xs text-gray-500 block mb-1">Fecha</span>
             <div className="flex flex-wrap gap-2">
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroFecha === "todos" 
                     ? "bg-purple-100 text-purple-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -614,7 +614,7 @@ export default function ListaPagos() {
                 Todos
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroFecha === "hoy" 
                     ? "bg-blue-100 text-blue-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -624,7 +624,7 @@ export default function ListaPagos() {
                 Hoy
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroFecha === "estaSemana" 
                     ? "bg-indigo-100 text-indigo-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -634,7 +634,7 @@ export default function ListaPagos() {
                 Esta semana
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroFecha === "esteMes" 
                     ? "bg-green-100 text-green-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -644,7 +644,7 @@ export default function ListaPagos() {
                 Este mes
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   filtroFecha === "personalizado" 
                     ? "bg-amber-100 text-amber-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -685,7 +685,7 @@ export default function ListaPagos() {
             <span className="text-xs text-gray-500 block mb-1">Ordenar por</span>
             <div className="flex flex-wrap gap-2">
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   ordenPor === "fechaDesc" 
                     ? "bg-blue-100 text-blue-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -695,7 +695,7 @@ export default function ListaPagos() {
                 Más recientes
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   ordenPor === "fechaAsc" 
                     ? "bg-blue-100 text-blue-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -705,7 +705,7 @@ export default function ListaPagos() {
                 Más antiguos
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   ordenPor === "montoDesc" 
                     ? "bg-green-100 text-green-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -715,7 +715,7 @@ export default function ListaPagos() {
                 Mayor monto
               </button>
               <button 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
                   ordenPor === "montoAsc" 
                     ? "bg-green-100 text-green-800" 
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -831,7 +831,7 @@ export default function ListaPagos() {
                           )}
                           <button 
                             onClick={() => verDetallePago(pago.id)}
-                            className="text-[#C40180] hover:text-[#590248] flex items-center justify-end gap-1"
+                            className="cursor-pointer text-[#C40180] hover:text-[#590248] flex items-center justify-end gap-1"
                           >
                             {pago.estado === 'Pendiente' ? 'Revisar' : 'Ver'}
                             <ChevronRight size={16} />

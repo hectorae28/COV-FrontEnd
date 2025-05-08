@@ -19,7 +19,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
     } = totales
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-4 mb-5">
+        <div className="select-none cursor-default bg-white rounded-lg shadow-md p-4 mb-5">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 {/* Columna 1: Información básica */}
                 <div className="md:col-span-3">
@@ -150,7 +150,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
                             <>
                                 <button
                                     onClick={onAprobar}
-                                    className="bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-green-700 text-sm transition-colors"
+                                    className="cursor-pointer bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-green-700 text-sm transition-colors"
                                 >
                                     <CheckCircle size={16} />
                                     <span>Aprobar</span>
@@ -158,7 +158,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
 
                                 <button
                                     onClick={onRechazar}
-                                    className="bg-red-600 text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-red-700 text-sm transition-colors"
+                                    className="cursor-pointer bg-red-600 text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-red-700 text-sm transition-colors"
                                 >
                                     <XCircle size={16} />
                                     <span>Rechazar</span>

@@ -137,7 +137,7 @@ export function ChatColegiado({
                     {onBackToList && (
                         <button
                             onClick={onBackToList}
-                            className="h-8 w-8 mr-2 flex-shrink-0 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100"
+                            className="cursor-pointer h-8 w-8 mr-2 flex-shrink-0 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100"
                             aria-label="Volver a la lista"
                         >
                             <ChevronLeft className="h-5 w-5" />

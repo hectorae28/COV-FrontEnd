@@ -35,7 +35,7 @@ export default function Barra({ onMenuClick, title: propTitle, icon: propIcon })
 
   return (
     <>
-      <div className="bg-white h-20 fixed top-0 right-0 left-0 lg:left-72 shadow-sm z-30 flex items-center justify-between px-6">
+      <div className="select-none cursor-default bg-white h-20 fixed top-0 right-0 left-0 lg:left-72 shadow-sm z-30 flex items-center justify-between px-6">
         <div className="flex items-center lg:ml-12">
           {/* Botón de menú para móvil */}
           <button

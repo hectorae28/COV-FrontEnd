@@ -1,8 +1,8 @@
 "use client"
-import { motion } from "framer-motion"
-import { useState, useEffect } from "react"
 import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx"
-import { CreditCard, DollarSign } from "lucide-react"
+import { motion } from "framer-motion"
+import { CreditCard } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -181,7 +181,7 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
     }
 
     return (
-        <div className="w-full">
+        <div className="select-none cursor-default w-full">
             {/* Encabezado */}
             <div className="mb-6 text-center">
                 <h2 className="text-xl font-bold text-[#41023B] mb-2">Registro de Pago</h2>
@@ -333,7 +333,7 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
                                                                 setPaymentFile(null)
                                                                 setPreviewUrl("")
                                                             }}
-                                                            className="text-xs text-red-600 hover:text-red-800"
+                                                            className="cursor-pointer text-xs text-red-600 hover:text-red-800"
                                                         >
                                                             Eliminar
                                                         </button>

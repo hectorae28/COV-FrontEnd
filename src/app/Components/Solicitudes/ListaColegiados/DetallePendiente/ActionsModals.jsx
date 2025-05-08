@@ -164,7 +164,7 @@ export function ApprovalModal({
                         <div className="flex justify-between mt-8">
                             <button
                                 onClick={onClose}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                                className="cursor-pointer px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
                             >
                                 Cancelar
                             </button>
@@ -173,7 +173,7 @@ export function ApprovalModal({
                                 disabled={
                                     !documentosCompletos || (pendiente && pendiente.pagosPendientes && !pendiente.exoneracionPagos?.fecha)
                                 }
-                                className={`px-4 py-2 flex items-center ${documentosCompletos && (!pendiente || !pendiente.pagosPendientes || pendiente.exoneracionPagos?.fecha)
+                                className={`cursor-pointer px-4 py-2 flex items-center ${documentosCompletos && (!pendiente || !pendiente.pagosPendientes || pendiente.exoneracionPagos?.fecha)
                                         ? "bg-green-600 hover:bg-green-700"
                                         : "bg-gray-400 cursor-not-allowed"
                                     } text-white rounded-md transition-colors`}
@@ -215,14 +215,14 @@ export function ApprovalModal({
                         <div className="flex justify-between">
                             <button
                                 onClick={retrocederPaso}
-                                className="px-4 py-2 flex items-center border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                                className="cursor-pointer px-4 py-2 flex items-center border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
                             >
                                 <ChevronLeft size={16} className="mr-1" />
                                 Volver
                             </button>
                             <button
                                 onClick={handleAprobarSolicitud}
-                                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+                                className="cursor-pointer px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
                             >
                                 <CheckCircle size={16} />
                                 Aprobar solicitud
@@ -372,14 +372,14 @@ export function ExonerationModal({
                     <div className="flex justify-end gap-3 mt-6">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                            className="cursor-pointer px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={handleExonerarPagos}
                             disabled={!motivoExoneracion.trim()}
-                            className={`px-4 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-md hover:opacity-90 transition-colors ${!motivoExoneracion.trim() ? "opacity-70 cursor-not-allowed" : ""
+                            className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-md hover:opacity-90 transition-colors ${!motivoExoneracion.trim() ? "opacity-70 cursor-not-allowed" : ""
                                 }`}
                         >
                             Confirmar exoneración

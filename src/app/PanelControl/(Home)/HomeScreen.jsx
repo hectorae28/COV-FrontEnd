@@ -117,7 +117,7 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="max-w-8xl mx-auto flex flex-col gap-8 py-8 px-4 mt-20 mb-10">
+    <div className="select-none cursor-default max-w-8xl mx-auto flex flex-col gap-8 py-8 px-4 mt-20 mb-10">
       {/* Cabecera de bienvenida */}
       <div className="text-center mb-4">
         <h2 className="text-5xl font-bold bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text">
