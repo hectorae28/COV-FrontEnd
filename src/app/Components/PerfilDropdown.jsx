@@ -18,6 +18,34 @@ export default function ProfileDropdown() {
   const pathname = usePathname();
   const [profileImage, setProfileImage] = useState(null);
   
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+  
+  const handleSingOut = () => {
+    api.post(
+      '/usuario/logout/',
+      {
+      headers: {
+        Accept: '/',
+        Authorization: 'Bearer ' + sessionData?.user?.access,
+      },
+      data: {"username": sessionData?.user?.username},
+    }
+      )
+      .then(() => {
+        console.log("Logout successful");
+        signOut(sessionData);
+      })
+      .catch((error) => {
+        console.error("Logout error:", error);
+      });
+  };
+  
+  const navigateToProfile = () => {
+    setIsOpen(false);
+    router.push("/Perfil");
+  };
   // Determinar si estamos en el panel de administradores o en la sección de colegiados
   const isAdminPanel = pathname?.startsWith('/PanelControl');
   

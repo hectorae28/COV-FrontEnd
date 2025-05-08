@@ -26,9 +26,13 @@ export const fetchDataUsuario = async (url,session=null, params = " ") => {
         throw error;
     }
 }
-export const patchDataUsuario = async (url, body) => {
+export const patchDataUsuario = async (url, body, docs=false) => {
     try {
-        const data = api.patch(`usuario/${url}/`,body)
+        const data = api.patch(`usuario/${url}/`,body,docs&&{
+            headers: {
+                "Content-Type": "multipart/form-data",
+              },
+        })
         return data;
     } catch (error) {
         console.error("Error fetching patchDataUsuario:", error);

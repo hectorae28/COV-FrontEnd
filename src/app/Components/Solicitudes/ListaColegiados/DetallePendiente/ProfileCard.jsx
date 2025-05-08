@@ -13,6 +13,7 @@ import {
     CreditCard,
     AlertTriangle,
     UserX,
+    GraduationCap,
 } from "lucide-react"
 import SessionInfo from "@/Components/SessionInfo"
 
@@ -88,55 +89,63 @@ export default function ProfileCard({props}) {
                             )}
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6 mt-4">
-                        <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                            <Mail className="text-[#C40180] h-5 w-5 mr-2" />
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 mt-4 w-full">
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <Mail className="text-[#C40180] h-5 w-5 mr-3" />
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Correo electrónico</p>
-                                <p className="text-sm text-gray-700">{pendiente.persona.correo}</p>
+                                <p className="text-sm text-gray-700 truncate max-w-[45%]">{pendiente.persona.correo}</p>
                             </div>
                         </div>
-                        <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                            <Phone className="text-[#C40180] h-5 w-5 mr-2" />
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <Phone className="text-[#C40180] h-5 w-5 mr-3" />
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Teléfono</p>
                                 <p className="text-sm text-gray-700">{pendiente.persona.telefono_movil}</p>
                             </div>
                         </div>
-                        <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                            <User className="text-[#C40180] h-5 w-5 mr-2" />
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <User className="text-[#C40180] h-5 w-5 mr-3" />
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Identificación</p>
                                 <p className="text-sm text-gray-700">
-                                    {pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}
+                                    {pendiente.persona.identificacion}
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center bg-gray-50 p-2 rounded-md">
-                            <Calendar className="text-[#C40180] h-5 w-5 mr-2" />
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <Calendar className="text-[#C40180] h-5 w-5 mr-3" />
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Fecha de solicitud</p>
                                 <p className="text-sm text-gray-700">{fechaSolicitud}</p>
                             </div>
                         </div>
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <GraduationCap className="text-[#C40180] h-5 w-5 mr-3" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Ejercicio profesional</p>
+                                <p className="text-sm text-gray-700">{pendiente.tipo_profesion_display}</p>
+                            </div>
+                        </div>
 
                         {/* Información del creador del registro */}
-                        {pendiente.creador && (
-                            <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4">
-                                <SessionInfo creador={pendiente.creador} variant="compact" />
+                        {pendiente.user_admin_create_username && (
+                            <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
+                                    <SessionInfo creador={{username:pendiente.user_admin_create_username,fecha:pendiente.created_at}} variant="compact" />
+                                
                             </div>
                         )}
 
                         {/* Información sobre el rechazo si aplica */}
-                        {isRechazada && pendiente.rechazadoPor && (
+                        {isRechazada && pendiente.user_admin_update_username && (
                             <div className="bg-yellow-50 p-2 rounded-md col-span-2 mt-4 border border-yellow-100">
                                 <div className="flex items-start">
                                     <AlertTriangle size={18} className="text-yellow-600 mr-2 mt-0.5" />
                                     <div>
                                         <p className="text-sm font-medium text-yellow-800">
-                                            Rechazada por: {pendiente.rechazadoPor.username}
+                                            Rechazada por: {pendiente.user_admin_update_username}
                                         </p>
-                                        <p className="text-xs text-yellow-700">Fecha: {pendiente.fechaRechazo}</p>
+                                        <p className="text-xs text-yellow-700">Fecha: {pendiente.updated_at}</p>
                                         <p className="text-xs text-yellow-700 mt-1">Motivo: {pendiente.motivoRechazo}</p>
                                     </div>
                                 </div>
@@ -144,14 +153,14 @@ export default function ProfileCard({props}) {
                         )}
 
                         {/* Información sobre la denegación si aplica */}
-                        {isDenegada && pendiente.denegadoPor && (
+                        {isDenegada && pendiente.user_admin_update_username && (
                             <div className="bg-red-50 p-2 rounded-md col-span-2 mt-4 border border-red-100">
                                 <div className="flex items-start">
                                     <UserX size={18} className="text-red-600 mr-2 mt-0.5" />
                                     <div>
-                                        <p className="text-sm font-medium text-red-800">Denegada por: {pendiente.denegadoPor.username}</p>
-                                        <p className="text-xs text-red-700">Fecha: {pendiente.fechaDenegacion}</p>
-                                        <p className="text-xs text-red-700 mt-1">Motivo: {pendiente.motivoDenegacion}</p>
+                                        <p className="text-sm font-medium text-red-800">Denegada por: {pendiente.user_admin_update_username}</p>
+                                        <p className="text-xs text-red-700">Fecha: {pendiente.updated_at}</p>
+                                        <p className="text-xs text-red-700 mt-1">Motivo: {pendiente.motivo_rechazo}</p>
                                     </div>
                                 </div>
                             </div>

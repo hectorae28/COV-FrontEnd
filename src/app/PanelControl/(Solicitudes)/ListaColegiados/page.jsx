@@ -20,16 +20,14 @@ import { useEffect, useState } from "react";
 
 export default function ListaColegiadosPage() {
   // Estado del store de Zustand
-  const {
-    initStore,
-    colegiados,
-    colegiadosPendientes,
-    colegiadosPendientesPagination,
-    fetchPendientes,
-    loading,
-    getColegiado,
-    getColegiadoPendiente,
-  } = useDataListaColegiados();
+    const initStore = useDataListaColegiados((state)=>state.initStore)
+    const colegiados = useDataListaColegiados((state)=>state.colegiados)
+    const colegiadosPendientes = useDataListaColegiados((state)=>state.colegiadosPendientes)
+    const colegiadosPendientesPagination = useDataListaColegiados((state)=>state.colegiadosPendientesPagination)
+    const fetchPendientes = useDataListaColegiados((state)=>state.fetchPendientes)
+    const loading = useDataListaColegiados((state)=>state.loading)
+    const getColegiado = useDataListaColegiados((state)=>state.getColegiado)
+    const getColegiadoPendiente = useDataListaColegiados((state)=>state.getColegiadoPendiente)
 
   // Estado local de UI
   const [searchTerm, setSearchTerm] = useState("");
@@ -103,14 +101,15 @@ export default function ListaColegiadosPage() {
         filtros.pago_exonerado = "true"
       }
     }
-    if(filtroEstado!=="todos"){
-      if(filtroEstado === "rechazados"){
+    if(filtroEstadoPendiente!=="todos"){
+      if(filtroEstadoPendiente === "rechazados"){
         filtros.status = "rechazados"
-      } else if(filtroEstado === "pendientes"){
-        filtroEstado.status = "revisando"
+      } else if(filtroEstadoPendiente === "pendientes"){
+        filtros.status = "revisando"
       }
     }
-    console.log({ currentPage, recordsPerPage, searchTerm, filtros });
+    filtros.especialidad=filtroEspecialidad
+    console.log({filtros})
     fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros);
   }, [
     currentPage,
@@ -121,7 +120,9 @@ export default function ListaColegiadosPage() {
     fechaDesde,
     fechaHasta,
     ordenFecha,
-    filtroEtiqueta
+    filtroEtiqueta,
+    filtroEspecialidad,
+    filtroEstadoPendiente
   ]);
 
   const verDetalleColegiado = (id) => {
@@ -193,7 +194,6 @@ export default function ListaColegiadosPage() {
       />
     );
   }
-
   // Vista principal de la lista
   return (
     <div className="select-none cursor-default w-full px-4 md:px-10 py-10 md:py-12">
@@ -544,9 +544,7 @@ export default function ListaColegiadosPage() {
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
-                  onClick={() =>
-                    setFiltroEtiqueta("documentosIncompletos")
-                  }
+                  onClick={() => setFiltroEtiqueta("documentosIncompletos")}
                 >
                   Documentos Incompletos
                 </button>
@@ -641,24 +639,35 @@ export default function ListaColegiadosPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {colegiados.map((colegiado) => (
-                        <tr key={colegiado.id} className="hover:bg-gray-50">
+                      {colegiados.map((colegiado, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="font-medium text-gray-900">
-                              {colegiado.nombre || "-"}
+                              {colegiado.recaudos.persona.nombre || "-"}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                            {colegiado.cedula || "-"}
+                            {colegiado.recaudos.persona.identificacion || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                            {colegiado.numeroRegistro || "-"}
+                            {colegiado.recaudos.num_registro_principal || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                            {colegiado.fechaRegistro || "-"}
+                            {colegiado.recaudos.fecha_registro_principal || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
-                            {colegiado.especialidad || "-"}
+                            {colegiado.especialidades.map(
+                              (especialidad, index) => (
+                                <div key={index} >
+                                  <span >
+                                    {especialidad?.nombre == undefined
+                                      ? "-"
+                                      : especialidad?.nombre}
+                                  </span>
+                                  <br />
+                                </div>
+                              )
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span
@@ -803,32 +812,38 @@ export default function ListaColegiadosPage() {
                               ) : (
                                 <>
                                   <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${!pendiente.archivos_faltantes.tiene_faltantes
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                                  }`}
-                              >
-                                {!pendiente.archivos_faltantes.tiene_faltantes ? (
-                                  <>
-                                    <CheckCircle size={12} /> Documentos
-                                    Completos
-                                  </>
-                                ) : (
-                                  <>
-                                    <XCircle size={12} /> Documentos Incompletos
-                                  </>
-                                )}
-                              </span>
-                                  {pendiente.pago === null && pendiente.pago_exonerado && (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-1 sm:mt-0 sm:ml-2">
-                                      <XCircle size={12} /> Pagos Exonerado
-                                    </span>
-                                  )}
-                                  {pendiente.pago === null && !pendiente.pago_exonerado && (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
-                                      <XCircle size={12} /> Pagos Pendientes
-                                    </span>
-                                  )}
+                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      !pendiente.archivos_faltantes
+                                        .tiene_faltantes
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-yellow-100 text-yellow-800"
+                                    }`}
+                                  >
+                                    {!pendiente.archivos_faltantes
+                                      .tiene_faltantes ? (
+                                      <>
+                                        <CheckCircle size={12} /> Documentos
+                                        Completos
+                                      </>
+                                    ) : (
+                                      <>
+                                        <XCircle size={12} /> Documentos
+                                        Incompletos
+                                      </>
+                                    )}
+                                  </span>
+                                  {pendiente.pago === null &&
+                                    pendiente.pago_exonerado && (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-1 sm:mt-0 sm:ml-2">
+                                        <XCircle size={12} /> Pagos Exonerado
+                                      </span>
+                                    )}
+                                  {pendiente.pago === null &&
+                                    !pendiente.pago_exonerado && (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
+                                        <XCircle size={12} /> Pagos Pendientes
+                                      </span>
+                                    )}
                                 </>
                               )}
                             </div>

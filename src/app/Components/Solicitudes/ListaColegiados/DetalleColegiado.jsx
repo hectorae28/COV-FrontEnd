@@ -61,21 +61,8 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
     const loadData = async () => {
       try {
         setIsLoading(true)
-
-        let colegiadoData = providedColegiado
-
-        if (!colegiadoData) {
-          colegiadoData = getColegiado(colegiadoId)
-        }
-
-        if (colegiadoData) {
-          setColegiado(colegiadoData)
-
-          // Cargar documentos
-          const documentosData = getDocumentos(colegiadoId)
-          setDocumentos(documentosData)
-        }
-
+        const colegiadoData = await getColegiado(colegiadoId)
+        setColegiado(colegiadoData)
         setIsLoading(false)
       } catch (error) {
         console.error("Error al cargar datos del colegiado:", error)
@@ -303,8 +290,8 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
           <CrearSolicitudModal
             colegiadoPreseleccionado={{
               id: colegiado.id,
-              nombre: `${colegiado.persona.nombre} ${colegiado.persona.primer_apellido}`,
-              cedula: colegiado.persona.cedula,
+              nombre: `${colegiado.recaudos.persona.nombre} ${colegiado.recaudos.persona.primer_apellido}`,
+              cedula: colegiado.recaudos.persona.cedula,
               numeroRegistro: colegiado.numeroRegistro,
             }}
             onClose={() => setMostrarModalSolicitud(false)}
