@@ -94,50 +94,63 @@ const steps = [
   },
 ];
 
-export default function RegistrationForm() {
+export default function RegistrationForm(props) {
   const [currentStep, setCurrentStep] = useState(1);
   const [pagarLuego, setPagarLuego] = useState(false);
-
+  console.log(props);
   const initialState = {
-    tipo_profesion: "",
-    nationality: "",
-    identityCard: "",
-    firstName: "",
-    secondName: "",
-    firstLastName: "",
-    secondLastName: "",
-    birthPlace: "",
-    birthDate: "",
-    gender: "",
-    age: "",
-    maritalStatus: "",
-    email: "",
-    countryCode: "+58",
-    phoneNumber: "",
-    homePhone: "",
-    address: "",
-    city: "",
-    state: "",
-    collegeNumber: "",
-    professionalField: "",
-    institutionName: "",
-    institutionAddress: "",
-    institutionPhone: "",
-    clinicName: "",
-    clinicAddress: "",
-    clinicPhone: "",
-    selectedOption: "",
-    graduateInstitute: "",
-    universityTitle: "",
-    mainRegistrationNumber: "",
-    mainRegistrationDate: "",
-    mppsRegistrationNumber: "",
-    mppsRegistrationDate: "",
-    titleIssuanceDate: "",
-    ci: null,
-    rif: null,
-    titulo: null,
-    mpps: null,
+    // Para tipo_profesion
+    tipo_profesion: props?.tipo_profesion || "",
+    
+    // Persona data
+    nationality: props?.persona?.nacionalidad || "",
+    identityCard: props?.persona?.identificacion?.split("-")[1] || "",
+    idType: props?.persona?.identificacion?.split("-")[0] || "",
+    firstName: props?.persona?.nombre || "",
+    secondName: props?.persona?.segundo_nombre || "",
+    firstLastName: props?.persona?.primer_apellido || "",
+    secondLastName: props?.persona?.segundo_apellido || "",
+    birthDate: props?.persona?.fecha_de_nacimiento || "",
+    gender: props?.persona?.genero || "",
+    maritalStatus: props?.persona?.estado_civil || "",
+    email: props?.persona?.correo || "",
+    countryCode: props?.persona?.telefono_movil?.split(" ")[0] || "+58",
+    phoneNumber: props?.persona?.telefono_movil?.split(" ")[1] || "",
+    homePhone: props?.persona?.telefono_de_habitacion || "",
+    
+    // Dirección
+    address: props?.persona?.direccion?.referencia || "",
+    city: props?.ciudad || "", 
+    state: "",// || "",
+    
+    // Información académica
+    graduateInstitute: props?.instituto_bachillerato || "",
+    universityTitle: props?.universidad || "",
+    mainRegistrationNumber: props?.num_registro_principal || "",
+    mainRegistrationDate: props?.fecha_registro_principal || "",
+    mppsRegistrationNumber: props?.num_mpps || "",
+    mppsRegistrationDate: props?.fecha_mpps || "",
+    titleIssuanceDate: props?.fecha_egreso_universidad || "",
+    
+    // Archivos requeridos  
+    ci: props?.file_ci_url || null,
+    rif: props?.file_rif_url || null,
+    titulo: props?.file_fondo_negro_url || null,
+    mpps: props?.file_mpps_url || null,
+    
+    // Archivos adicionales para técnicos e higienistas
+    Fondo_negro_credencial: props?.file_fondo_negro_credencial_url || null,
+    notas_curso: props?.file_notas_curso_url || null,
+    fondo_negro_titulo_bachiller: props?.file_fondo_negro_titulo_bachiller_url || null,
+    
+    // Datos laborales (que se recorren como un array)
+    laboralRegistros: props?.instituciones?.map(inst => ({
+      institutionName: inst.nombre || "",
+      cargo: inst.cargo || "",
+      institutionAddress: inst.direccion || "",
+      institutionPhone: inst.telefono || "",
+      institutionType: inst.tipo_institucion || "CDP"
+    })) || []
   };
   const [formData, setFormData] = useState(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);

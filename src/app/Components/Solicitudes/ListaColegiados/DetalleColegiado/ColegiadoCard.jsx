@@ -96,12 +96,12 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
                         {/* Información del creador del registro */}
                         {colegiado.recaudos.user_admin_create_username && (
                             <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
-                                <SessionInfo creador={colegiado.recaudos.user_admin_create_username} createDate={colegiado.recaudos.created_at} variant="compact" />
+                                <SessionInfo creador={{username:colegiado.recaudos.user_admin_create_username,fecha:colegiado.recaudos.created_at}} variant="compact" />
                             </div>
                         )}
                         {colegiado.recaudos.user_admin_update_username && (
                             <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
-                                <SessionInfo creador={colegiado.recaudos.user_admin_update_username} createDate={colegiado.recaudos.updated_at} variant="compact" tipo="aprobado" />
+                                <SessionInfo creador={{username:colegiado.recaudos.user_admin_update_username,fecha:colegiado.recaudos.created_at, tipo:"aprobado"}} variant="compact" />
                             </div>
                         )}
                     </div>

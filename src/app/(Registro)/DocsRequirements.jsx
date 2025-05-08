@@ -9,7 +9,15 @@ export default function DocsRequirements({
   attemptedNext,
   validateStep 
 }) {
-  const [fileNames, setFileNames] = useState({
+  const [fileNames, setFileNames] = useState(formData.tipo_profesion !== "odontologo"?{
+    ci: "",
+    rif: "",
+    titulo: "",
+    mpps: "",
+    fondo_negro_credencial: "",
+    notas_curso: "",
+    fondo_negro_titulo_bachiller: "",
+  }:{
     ci: "",
     rif: "",
     titulo: "",

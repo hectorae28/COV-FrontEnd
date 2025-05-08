@@ -109,7 +109,7 @@ export default function ProfileCard({props}) {
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Identificación</p>
                                 <p className="text-sm text-gray-700">
-                                    {pendiente.persona.nacionalidad}-{pendiente.persona.identificacion}
+                                    {pendiente.persona.identificacion}
                                 </p>
                             </div>
                         </div>
@@ -131,7 +131,8 @@ export default function ProfileCard({props}) {
                         {/* Información del creador del registro */}
                         {pendiente.user_admin_create_username && (
                             <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
-                                <SessionInfo creador={pendiente.user_admin_create_username} createDate={pendiente.created_at} variant="compact" />
+                                    <SessionInfo creador={{username:pendiente.user_admin_create_username,fecha:pendiente.created_at}} variant="compact" />
+                                
                             </div>
                         )}
 
