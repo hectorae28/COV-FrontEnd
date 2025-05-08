@@ -83,7 +83,7 @@ const steps = [
     description: "Documentos necesarios",
     icon: FilePlus,
     component: DocsRequirements,
-    requiredFields: [], // Remove required fields from this step
+    requiredFields: ["ci", "rif", "titulo", "mpps"],
   },
 ];
 
@@ -204,18 +204,43 @@ export default function RegistrationForm() {
     const step = steps[stepIndex - 1];
     const errors = {};
     let isValid = true;
-  
-    // Si es el paso 5 (Documentos Requeridos), return true to skip validation
+
+    // Si es el paso 5 (Documentos), agregar campos adicionales según tipo_profesion
     if (stepIndex === 5) {
-      return true;
+      // Crear una copia de los campos requeridos base
+      let fieldsToValidate = [...step.requiredFields];
+
+      // Agregar campos adicionales para técnicos e higienistas
+      if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
+        fieldsToValidate = [
+          ...fieldsToValidate,
+          "fondo_negro_titulo_bachiller",
+          "Fondo_negro_credencial",
+          "notas_curso"
+        ];
+      }
+
+      // Validar todos los campos requeridos
+      fieldsToValidate.forEach((field) => {
+        if (!formData[field]) {
+          errors[field] = true;
+          isValid = false;
+        }
+      });
+
+      // Establecer errores de validación si estamos validando activamente
+      if (attemptedNext) {
+        setValidationErrors(errors);
+      }
+
+      return isValid;
     }
-  
-    // Si es el paso de información laboral (paso 4) y ha seleccionado "no labora",
-    // entonces saltamos la validación de los campos laborales
+
+    // Para los demás pasos, mantener la validación estándar
     if (stepIndex === 4 && formData.workStatus === "noLabora") {
       return true; // Validación exitosa, no hay errores
     }
-  
+
     if (step.requiredFields && step.requiredFields.length > 0) {
       step.requiredFields.forEach((field) => {
         if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
@@ -224,12 +249,12 @@ export default function RegistrationForm() {
         }
       });
     }
-  
-    // Solo establecer errores de validación si estamos validando activamente (después de hacer clic en el botón)
+
+    // Solo establecer errores de validación si estamos validando activamente
     if (attemptedNext) {
       setValidationErrors(errors);
     }
-  
+
     return isValid;
   };
 
@@ -518,10 +543,10 @@ export default function RegistrationForm() {
                               <div className="relative">
                                 <div
                                   className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isCompleted
-                                      ? "bg-[#D7008A] border-transparent"
-                                      : isCurrent
-                                        ? "bg-white border-[#D7008A]"
-                                        : "bg-white border-gray-400"
+                                    ? "bg-[#D7008A] border-transparent"
+                                    : isCurrent
+                                      ? "bg-white border-[#D7008A]"
+                                      : "bg-white border-gray-400"
                                     }`}
                                 >
                                   {isCompleted ? (
@@ -529,8 +554,8 @@ export default function RegistrationForm() {
                                   ) : (
                                     <StepIcon
                                       className={`w-6 h-6 ${isCurrent
-                                          ? "text-[#41023B]"
-                                          : "text-gray-400"
+                                        ? "text-[#41023B]"
+                                        : "text-gray-400"
                                         }`}
                                     />
                                   )}
@@ -538,10 +563,10 @@ export default function RegistrationForm() {
                               </div>
                               <span
                                 className={`mt-2 text-sm font-medium ${isCompleted
-                                    ? "text-white"
-                                    : isCurrent
-                                      ? "text-[#D7008A]"
-                                      : "text-gray-300"
+                                  ? "text-white"
+                                  : isCurrent
+                                    ? "text-[#D7008A]"
+                                    : "text-gray-300"
                                   } hidden sm:block`}
                               >
                                 {step.title}

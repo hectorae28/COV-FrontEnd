@@ -18,16 +18,30 @@ export default function DocsRequirements({
     notas_curso: formData.notas_curso ? (formData.notas_curso.name || "Archivo seleccionado") : ""
   });
 
+  // Verificar si un campo tiene error de validación
+  const isFieldEmpty = (fieldName) => {
+    return attemptedNext && validationErrors && validationErrors[fieldName];
+  };
+
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (files.length > 0) {
-      // Guardar el nombre del archivo para mostrarlo en la UI
       setFileNames(prev => ({
         ...prev,
         [name]: files[0].name
       }));
-      // Pasar el archivo al componente padre
       onInputChange({ [name]: files[0] });
+    }
+  };
+
+  // Determinar la etiqueta correcta para el fondo negro del título según la profesión
+  const getTituloLabel = () => {
+    if (formData.tipo_profesion === "odontologo") {
+      return "Fondo Negro del Título";
+    } else if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
+      return "Fondo Negro del Título de Bachiller";
+    } else {
+      return "Fondo Negro del Título";
     }
   };
 
@@ -38,10 +52,12 @@ export default function DocsRequirements({
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Cédula de Identidad (C.I.)
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="relative">
             <input
@@ -54,21 +70,24 @@ export default function DocsRequirements({
             />
             <label
               htmlFor="ci"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("ci") ? "border-gray-200 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
             >
               <span className={` ${!fileNames.ci ? 'text-gray-400' : 'text-gray-800'}`}>
-                {fileNames.ci || "Seleccionar archivo de C.I."}
+                {fileNames.ci || "Seleccionar archivo."}
               </span>
               <span className="bg-[#D7008A] text-white px-3 py-1 rounded-lg text-sm">
                 Adjuntar Archivo
               </span>
             </label>
           </div>
-          <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
+          {isFieldEmpty("ci") && (
+            <p className="mt-1 text-xs text-red-300">Este campo es obligatorio</p>
+          )}
         </div>
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Registro de Información Fiscal (RIF)
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="relative">
             <input
@@ -81,23 +100,26 @@ export default function DocsRequirements({
             />
             <label
               htmlFor="rif"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("rif") ? "border-gray-200 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
             >
               <span className={` ${!fileNames.rif ? 'text-gray-400' : 'text-gray-800'}`}>
-                {fileNames.rif || "Seleccionar archivo de RIF"}
+                {fileNames.rif || "Seleccionar archivo."}
               </span>
               <span className="bg-[#D7008A] text-white px-3 py-1 rounded-lg text-sm">
                 Adjuntar Archivo
               </span>
             </label>
           </div>
-          <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
+          {isFieldEmpty("rif") && (
+            <p className="mt-1 text-xs text-red-300">Este campo es obligatorio</p>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            Fondo Negro del Título
+            {getTituloLabel()}
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="relative">
             <input
@@ -110,21 +132,24 @@ export default function DocsRequirements({
             />
             <label
               htmlFor="titulo"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("titulo") ? "border-gray-200 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
             >
               <span className={`truncate ${!fileNames.titulo ? 'text-gray-400' : 'text-gray-800'}`}>
-                {fileNames.titulo || "Seleccionar archivo del Título"}
+                {fileNames.titulo || `Seleccionar archivo.`}
               </span>
               <span className="bg-[#D7008A] text-white px-3 py-1 rounded-lg text-sm">
                 Adjuntar Archivo
               </span>
             </label>
           </div>
-          <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
+          {isFieldEmpty("titulo") && (
+            <p className="mt-1 text-xs text-red-300">Este campo es obligatorio</p>
+          )}
         </div>
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Registro MPPS
+            <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="relative">
             <input
@@ -137,25 +162,28 @@ export default function DocsRequirements({
             />
             <label
               htmlFor="mpps"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer"
+              className={`w-full px-4 py-3 border ${isFieldEmpty("mpps") ? "border-gray-200 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
             >
               <span className={`truncate ${!fileNames.mpps ? 'text-gray-400' : 'text-gray-800'}`}>
-                {fileNames.mpps || "Seleccionar archivo de MPPS"}
+                {fileNames.mpps || "Seleccionar archivo."}
               </span>
               <span className="bg-[#D7008A] text-white px-3 py-1 rounded-lg text-sm">
                 Adjuntar Archivo
               </span>
             </label>
           </div>
-          <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
+          {isFieldEmpty("mpps") && (
+            <p className="mt-1 text-xs text-red-300">Este campo es obligatorio</p>
+          )}
         </div>
       </div>
-      {formData.tipo_profesion !== "odontologo" && (
+      {formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista" ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                 Fondo negro de la credencial tamaño carta
+                <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
@@ -168,22 +196,25 @@ export default function DocsRequirements({
                 />
                 <label
                   htmlFor="Fondo_negro_credencial"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer"
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("Fondo_negro_credencial") ? "border-gray-200 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
                 >
                   <span className={`truncate ${!fileNames.Fondo_negro_credencial ? 'text-gray-400' : 'text-gray-800'}`}>
-                    {fileNames.Fondo_negro_credencial || "Seleccionar archivo del Fondo negro"}
+                    {fileNames.Fondo_negro_credencial || "Seleccionar archivo."}
                   </span>
                   <span className="bg-[#D7008A] text-white px-3 py-1 rounded-lg text-sm">
                     Adjuntar Archivo
                   </span>
                 </label>
               </div>
-              <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
+              {isFieldEmpty("Fondo_negro_credencial") && (
+                <p className="mt-1 text-xs text-red-300">Este campo es obligatorio</p>
+              )}
             </div>
 
             <div>
               <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                 Notas del curso
+                <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
@@ -196,23 +227,26 @@ export default function DocsRequirements({
                 />
                 <label
                   htmlFor="notas_curso"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer"
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("notas_curso") ? "border-gray-200 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
                 >
                   <span className={`truncate ${!fileNames.notas_curso ? 'text-gray-400' : 'text-gray-800'}`}>
-                    {fileNames.notas_curso || "Seleccionar archivo de Notas del curso"}
+                    {fileNames.notas_curso || "Seleccionar archivo."}
                   </span>
                   <span className="bg-[#D7008A] text-white px-3 py-1 rounded-lg text-sm">
                     Adjuntar Archivo
                   </span>
                 </label>
               </div>
-              <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
+              {isFieldEmpty("notas_curso") && (
+                <p className="mt-1 text-xs text-red-300">Este campo es obligatorio</p>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                 Fondo negro del título de bachiller
+                <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <input
@@ -225,21 +259,23 @@ export default function DocsRequirements({
                 />
                 <label
                   htmlFor="fondo_negro_titulo_bachiller"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer"
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("fondo_negro_titulo_bachiller") ? "border-gray-200 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
                 >
                   <span className={`truncate ${!fileNames.fondo_negro_titulo_bachiller ? 'text-gray-400' : 'text-gray-800'}`}>
-                    {fileNames.fondo_negro_titulo_bachiller || "Seleccionar archivo del Fondo negro "}
+                    {fileNames.fondo_negro_titulo_bachiller || "Seleccionar archivo."}
                   </span>
                   <span className="bg-[#D7008A] text-white px-3 py-1 rounded-lg text-sm">
                     Adjuntar Archivo
                   </span>
                 </label>
               </div>
-              <p className="mt-1 text-xs text-gray-500">Formatos permitidos: PDF, JPG, PNG</p>
+              {isFieldEmpty("fondo_negro_titulo_bachiller") && (
+                <p className="mt-1 text-xs text-red-300">Este campo es obligatorio</p>
+              )}
             </div>
           </div>
         </>
-      )}
+      ) : null}
 
       <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
         <h3 className="text-sm font-medium text-blue-800 mb-2">Información importante</h3>
