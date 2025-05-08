@@ -133,123 +133,115 @@ export default function DetallePendiente({ params, onVolver }) {
     const partes = url.split('/');
     return partes[partes.length - 1];
   };
-  
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      // Obtener datos del pendiente desde el store
+      const pendienteData = await getColegiadoPendiente(pendienteId);
+      if (pendienteData) {
+        const documentosFormateados = [
+          {
+            id: "file_ci",
+            nombre: documentosMetadata.file_ci.nombre,
+            descripcion: documentosMetadata.file_ci.descripcion,
+            archivo: obtenerNombreArchivo(pendienteData.file_ci_url),
+            requerido: documentosMetadata.file_ci.requerido,
+            url: pendienteData.file_ci_url
+          },
+          {
+            id: "file_rif",
+            nombre: documentosMetadata.file_rif.nombre,
+            descripcion: documentosMetadata.file_rif.descripcion,
+            archivo: obtenerNombreArchivo(pendienteData.file_rif_url),
+            requerido: documentosMetadata.file_rif.requerido,
+            url: pendienteData.file_rif_url
+          },
+          {
+            id: "file_fondo_negro",
+            nombre: documentosMetadata.file_fondo_negro.nombre,
+            descripcion: documentosMetadata.file_fondo_negro.descripcion,
+            archivo: obtenerNombreArchivo(pendienteData.file_fondo_negro_url),
+            requerido: documentosMetadata.file_fondo_negro.requerido,
+            url: pendienteData.file_fondo_negro_url
+          },
+          {
+            id: "file_mpps",
+            nombre: documentosMetadata.file_mpps.nombre,
+            descripcion: documentosMetadata.file_mpps.descripcion,
+            archivo: obtenerNombreArchivo(pendienteData.file_mpps_url),
+            requerido: documentosMetadata.file_mpps.requerido,
+            url: pendienteData.file_mpps_url
+          },
+          {
+            id: "Fondo_negro_credencial",
+            nombre: documentosMetadata.Fondo_negro_credencial.nombre,
+            descripcion: documentosMetadata.Fondo_negro_credencial.descripcion,
+            archivo: obtenerNombreArchivo(pendienteData.Fondo_negro_credencial_url),
+            requerido: documentosMetadata.Fondo_negro_credencial.requerido(pendienteData.tipo_profesion),
+            url: pendienteData.Fondo_negro_credencial_url
+          },
+          {
+            id: "notas_curso",
+            nombre: documentosMetadata.notas_curso.nombre,
+            descripcion: documentosMetadata.notas_curso.descripcion,
+            archivo: obtenerNombreArchivo(pendienteData.notas_curso_url),
+            requerido: documentosMetadata.notas_curso.requerido(pendienteData.tipo_profesion),
+            url: pendienteData.notas_curso_url
+          },
+          {
+            id: "fondo_negro_titulo_bachiller",
+            nombre: documentosMetadata.fondo_negro_titulo_bachiller.nombre,
+            descripcion: documentosMetadata.fondo_negro_titulo_bachiller.descripcion,
+            archivo: obtenerNombreArchivo(pendienteData.fondo_negro_titulo_bachiller_url),
+            requerido: documentosMetadata.fondo_negro_titulo_bachiller.requerido(pendienteData.tipo_profesion),
+            url: pendienteData.fondo_negro_titulo_bachiller_url
+          },
+        ];
+        setPendiente(pendienteData);
+        // Inicializar estados de edición
+        setDatosPersonales({ ...pendienteData.persona });
+        setDatosAcademicos({
+          instituto_bachillerato: pendienteData.instituto_bachillerato || "",
+          universidad: pendienteData.universidad || "",
+          fecha_egreso_universidad:
+            pendienteData.fecha_egreso_universidad || "",
+          num_registro_principal: pendienteData.num_registro_principal || "",
+          fecha_registro_principal:
+            pendienteData.fecha_registro_principal || "",
+          num_mpps: pendienteData.num_mpps || "",
+          fecha_mpps: pendienteData.fecha_mpps || "",
+          observaciones: pendienteData.observaciones || "",
+        });
+        setInstituciones(
+          pendienteData.instituciones ? [...pendienteData.instituciones] : []
+        );
+
+        // Verificar si los documentos están completos
+        setDocumentosCompletos(
+          !pendienteData.archivos_faltantes.tiene_faltantes
+        );
+        setDocumentosRequeridos(documentosFormateados);
+        if (pendienteData.documentos) {
+
+          // Verificar documentos requeridos (excluyendo los exonerados)
+          const docsRequeridos = pendienteData.documentos.filter(
+            (doc) =>
+              doc.requerido &&
+              !doc.archivo?.toLowerCase().includes("exonerado")
+          );
+        }
+        setPagosPendientes(pendienteData.pago === null && !pendienteData.pago_exonerado);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error al cargar datos del pendiente:", error);
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        // Obtener datos del pendiente desde el store
-        const pendienteData = await getColegiadoPendiente(pendienteId);
-        console.log(pendienteData)
-        if (pendienteData) {
-          const documentosFormateados = [
-            {
-              id: "file_ci",
-              nombre: documentosMetadata.file_ci.nombre,
-              descripcion: documentosMetadata.file_ci.descripcion,
-              archivo: obtenerNombreArchivo(pendienteData.file_ci_url),
-              requerido: documentosMetadata.file_ci.requerido,
-              url: pendienteData.file_ci_url
-            },
-            {
-              id: "file_rif",
-              nombre: documentosMetadata.file_rif.nombre,
-              descripcion: documentosMetadata.file_rif.descripcion,
-              archivo: obtenerNombreArchivo(pendienteData.file_rif_url),
-              requerido: documentosMetadata.file_rif.requerido,
-              url: pendienteData.file_rif_url
-            },
-            {
-              id: "file_fondo_negro",
-              nombre: documentosMetadata.file_fondo_negro.nombre,
-              descripcion: documentosMetadata.file_fondo_negro.descripcion,
-              archivo: obtenerNombreArchivo(pendienteData.file_fondo_negro_url),
-              requerido: documentosMetadata.file_fondo_negro.requerido,
-              url: pendienteData.file_fondo_negro_url
-            },
-            {
-              id: "file_mpps",
-              nombre: documentosMetadata.file_mpps.nombre,
-              descripcion: documentosMetadata.file_mpps.descripcion,
-              archivo: obtenerNombreArchivo(pendienteData.file_mpps_url),
-              requerido: documentosMetadata.file_mpps.requerido,
-              url: pendienteData.file_mpps_url
-            },
-            {
-              id: "Fondo_negro_credencial",
-              nombre: documentosMetadata.Fondo_negro_credencial.nombre,
-              descripcion: documentosMetadata.Fondo_negro_credencial.descripcion,
-              archivo: obtenerNombreArchivo(pendienteData.Fondo_negro_credencial_url),
-              requerido: documentosMetadata.Fondo_negro_credencial.requerido(pendienteData.tipo_profesion),
-              url: pendienteData.Fondo_negro_credencial_url
-            },
-            {
-              id: "notas_curso",
-              nombre: documentosMetadata.notas_curso.nombre,
-              descripcion: documentosMetadata.notas_curso.descripcion,
-              archivo: obtenerNombreArchivo(pendienteData.notas_curso_url),
-              requerido: documentosMetadata.notas_curso.requerido(pendienteData.tipo_profesion),
-              url: pendienteData.notas_curso_url
-            },
-            {
-              id: "fondo_negro_titulo_bachiller",
-              nombre: documentosMetadata.fondo_negro_titulo_bachiller.nombre,
-              descripcion: documentosMetadata.fondo_negro_titulo_bachiller.descripcion,
-              archivo: obtenerNombreArchivo(pendienteData.fondo_negro_titulo_bachiller_url),
-              requerido: documentosMetadata.fondo_negro_titulo_bachiller.requerido(pendienteData.tipo_profesion),
-              url: pendienteData.fondo_negro_titulo_bachiller_url
-            },
-          ];
-          setPendiente(pendienteData);
-          // Inicializar estados de edición
-          setDatosPersonales({ ...pendienteData.persona });
-          setDatosAcademicos({
-            instituto_bachillerato: pendienteData.instituto_bachillerato || "",
-            universidad: pendienteData.universidad || "",
-            fecha_egreso_universidad:
-              pendienteData.fecha_egreso_universidad || "",
-            num_registro_principal: pendienteData.num_registro_principal || "",
-            fecha_registro_principal:
-              pendienteData.fecha_registro_principal || "",
-            num_mpps: pendienteData.num_mpps || "",
-            fecha_mpps: pendienteData.fecha_mpps || "",
-            observaciones: pendienteData.observaciones || "",
-          });
-          setInstituciones(
-            pendienteData.instituciones ? [...pendienteData.instituciones] : []
-          );
-
-          // Verificar si los documentos están completos
-          setDocumentosCompletos(
-            !pendienteData.archivos_faltantes.tiene_faltantes
-          );
-          setDocumentosRequeridos(documentosFormateados);
-          if (pendienteData.documentos) {
-
-            // Verificar documentos requeridos (excluyendo los exonerados)
-            const docsRequeridos = pendienteData.documentos.filter(
-              (doc) =>
-                doc.requerido &&
-                !doc.archivo?.toLowerCase().includes("exonerado")
-            );
-
-            const docsFaltantes = docsRequeridos.filter(
-              (doc) => !doc.archivo || doc.archivo === ""
-            );
-
-          }
-
-          setPagosPendientes(pendienteData.pago === null && !pendienteData.pago_exonerado);
-        }
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error al cargar datos del pendiente:", error);
-        setIsLoading(false);
-      }
-    };
     loadData();
-  }, [pendienteId, getColegiadoPendiente]);
+  }, [pendienteId,getColegiadoPendiente]);
 
   // Función para obtener iniciales del nombre
   const obtenerIniciales = () => {
@@ -272,6 +264,7 @@ export default function DetallePendiente({ params, onVolver }) {
   const updateDocumento = (documentoActualizado) => {
     try {
       updateColegiadoPendiente(pendienteId, documentoActualizado, true);
+      loadData()
     } catch (error) {
       console.error("Error al actualizar documento:", error);
     }
@@ -346,29 +339,18 @@ export default function DetallePendiente({ params, onVolver }) {
       setIsSubmitting(true);
 
       // Guardar cambios pendientes antes de rechazar
-      if (cambiosPendientes) {
-        const nuevosDatos = {
-          ...pendiente,
-          persona: datosPersonales,
-          ...datosAcademicos,
-          instituciones,
-        };
-        updateColegiadoPendiente(pendienteId, nuevosDatos);
-      }
 
-      // Llamar a la función de rechazo del store
-      rejectRegistration(pendienteId, motivoRechazo, session?.user);
-
-      // Mostrar confirmación de rechazo
+      const nuevosDatos = {
+        status: "rechazado",
+        motivo_rechazo: motivoRechazo,
+      };
+      await updateColegiadoPendiente(pendienteId, nuevosDatos);
       setRechazoExitoso(true);
       setMostrarRechazo(false);
+      onVolver({ rechazado: true });
+      loadData()
 
-      // Volver a la lista después de un tiempo
-      setTimeout(() => {
-        if (onVolver) {
-          onVolver({ rechazado: true });
-        }
-      }, 3000);
+      // Volver a la lista después de un tiem
     } catch (error) {
       console.error("Error al rechazar solicitud:", error);
     } finally {
@@ -380,27 +362,27 @@ export default function DetallePendiente({ params, onVolver }) {
   const handleDenegarSolicitud = async () => {
     try {
       if (!motivoRechazo.trim()) {
-        alert("Debe ingresar un motivo de denegación");
+        alert("Debe ingresar un motivo de rechazo");
         return;
       }
 
       setIsSubmitting(true);
 
-      // Llamar a la función de denegación del store
-      denyRegistration(pendienteId, motivoRechazo, session?.user);
+      // Guardar cambios pendientes antes de rechazar
 
-      // Mostrar confirmación de denegación
-      setDenegacionExitosa(true);
+      const nuevosDatos = {
+        status: "denegado",
+        motivo_rechazo: motivoRechazo,
+      };
+      await updateColegiadoPendiente(pendienteId, nuevosDatos);
+      setRechazoExitoso(true);
       setMostrarRechazo(false);
+      onVolver({ denegado: true });
+      loadData()
 
-      // Volver a la lista después de un tiempo
-      setTimeout(() => {
-        if (onVolver) {
-          onVolver({ denegado: true });
-        }
-      }, 3000);
+      // Volver a la lista después de un tiem
     } catch (error) {
-      console.error("Error al denegar solicitud:", error);
+      console.error("Error al rechazar solicitud:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -422,8 +404,8 @@ export default function DetallePendiente({ params, onVolver }) {
 
 
       // Actualizar en el store
-      updateColegiadoPendiente(pendienteId, nuevosDatos);
-      getColegiadoPendiente(pendienteId)
+      await updateColegiadoPendiente(pendienteId, nuevosDatos);
+      loadData()
 
       // Actualizar el estado local
     //   setPendiente(nuevosDatos);
@@ -482,11 +464,33 @@ export default function DetallePendiente({ params, onVolver }) {
   } ${pendiente.persona.primer_apellido} ${
     pendiente.persona.segundo_apellido || ""
   }`.trim();
-  const fechaSolicitud = pendiente.fechaSolicitud || "No especificada";
+  const fechaSolicitud = pendiente.created_at
+    ? (() => {
+        const fecha = new Date(pendiente.created_at);
+        const dia = String(fecha.getDate()).padStart(
+          2,
+          "0"
+        );
+        const mes = String(
+          fecha.getMonth() + 1
+        ).padStart(2, "0"); // Los meses empiezan en 0
+        const año = fecha.getFullYear();
+        const horas = String(
+          fecha.getHours()
+        ).padStart(2, "0");
+        const minutos = String(
+          fecha.getMinutes()
+        ).padStart(2, "0");
+        const segundos = String(
+          fecha.getSeconds()
+        ).padStart(2, "0");
+        return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
+      })()
+    : "-";
 
   // Determinar si la solicitud está rechazada o denegada
-  const isRechazada = pendiente.estado === "rechazada";
-  const isDenegada = pendiente.estado === "denegada";
+  const isRechazada = pendiente.status === "rechazado";
+  const isDenegada = pendiente.status === "denegado";
 
   return (
     <div className="w-full px-4 md:px-10 py-10 md:py-28 bg-gray-50">

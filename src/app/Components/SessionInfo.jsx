@@ -2,7 +2,7 @@ import { User, ShieldCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
-export default function SessionInfo({ creador, className = "", variant = "default" }) {
+export default function SessionInfo({ creador, className = "", variant = "default",createDate="null",tipo=null }) {
     if (!creador) return null;
 
     // Formatear la fecha relativa (hace X tiempo)
@@ -44,7 +44,7 @@ export default function SessionInfo({ creador, className = "", variant = "defaul
 
     // Determinar el texto según el tipo de acción y el rol del usuario
     const getActionText = () => {
-        if (creador.tipo === 'aprobado') {
+        if (tipo === 'aprobado') {
             return "Aprobado por administrador";
         } else {
             // Verificar si es admin usando la propiedad esAdmin
@@ -56,7 +56,7 @@ export default function SessionInfo({ creador, className = "", variant = "defaul
 
     // Determinar el icono según el tipo de acción
     const getIcon = () => {
-        if (creador.tipo === 'aprobado') {
+        if (tipo === 'aprobado') {
             return <ShieldCheck className={`flex-shrink-0 ${variant === "compact" ? "h-4 w-4" : "h-5 w-5"} text-green-600`} />;
         } else {
             return <User className={`flex-shrink-0 ${variant === "compact" ? "h-4 w-4" : "h-5 w-5"} text-purple-600`} />;
@@ -65,7 +65,7 @@ export default function SessionInfo({ creador, className = "", variant = "defaul
 
     // Determinar el color del texto según el tipo de acción
     const getTextColor = () => {
-        if (creador.tipo === 'aprobado') {
+        if (tipo === 'aprobado') {
             return "text-green-500";
         } else {
             return "text-gray-500";
@@ -79,7 +79,7 @@ export default function SessionInfo({ creador, className = "", variant = "defaul
                 <p className={`${variant === "compact" ? "text-xs" : "text-sm"} ${getTextColor()}`}>
                     {getActionText()}:
                     <span className="font-medium text-gray-700 ml-1">
-                        {creador.username}
+                        {creador}
                     </span>
                 </p>
                 {variant !== "compact" && (
@@ -89,8 +89,8 @@ export default function SessionInfo({ creador, className = "", variant = "defaul
                 )}
                 <p className="text-xs text-gray-400">
                     {variant === "full"
-                        ? formatearFechaCompleta(creador.fecha)
-                        : formatearFechaRelativa(creador.fecha)
+                        ? formatearFechaCompleta(createDate)
+                        : formatearFechaRelativa(createDate)
                     }
                 </p>
             </div>

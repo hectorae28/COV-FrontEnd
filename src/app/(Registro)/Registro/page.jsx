@@ -1,5 +1,6 @@
 "use client";
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation";
+import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Building,
@@ -16,6 +17,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 // Import step components
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import api from "@/api/api";
 import Head from "next/head";
 import PagosColg from "../../Components/PagosModal";
 import DocsRequirements from "../DocsRequirements";
@@ -23,6 +25,7 @@ import InfoColegiado from "../InfoColg";
 import InfoContacto from "../InfoCont";
 import InfoLaboral from "../InfoLab";
 import InfoPersonal from "../InfoPers";
+import Alert from "@/app/Components/Alert";
 
 const steps = [
   {
@@ -400,10 +403,7 @@ export default function RegistrationForm() {
         setIsComplete(true);
       }
     } catch (error) {
-      console.error(
-        "Error al enviar los datos:",
-        error.response?.data || error
-      );
+      setError(error.response?.data || error)
     } finally {
       setIsSubmitting(false);
     }
@@ -604,6 +604,9 @@ export default function RegistrationForm() {
                         transition={{ duration: 0.5 }}
                         className="relative z-10 p-8"
                       >
+                        {error&&(
+                          <Alert type="alert">{error.detail}</Alert>
+                        )}
                         {!pagarLuego && (
                           <PagosColg
                             props={{

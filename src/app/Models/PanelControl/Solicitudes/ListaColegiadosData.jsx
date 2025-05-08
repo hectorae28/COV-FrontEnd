@@ -49,7 +49,7 @@ const useDataListaColegiados = create((set, get) => ({
     }
   },
 
-  fetchPendientes: async (page = 1, pageSize = 10, search = "", otrosFiltros = {}) => {
+  fetchColegiados: async (page = 1, pageSize = 10, search = "", otrosFiltros = {}) => {
     set({ loading: true });
     try {
       let params = `?page=${page}&page_size=${pageSize}`;
@@ -71,13 +71,11 @@ const useDataListaColegiados = create((set, get) => ({
   // Funciones para obtener datos específicos
   getColegiado: async (id) => {
     const res = await fetchDataUsuario(`colegiado/${id}`);
-    console.log('hello')
     return res.data
   },
 
   getColegiadoPendiente: async (id) => {
     const res = await fetchDataUsuario(`register/${id}`);
-    
     return res.data
   },
 
@@ -145,7 +143,7 @@ const useDataListaColegiados = create((set, get) => ({
 
     const res = await patchDataUsuario(`register/${id}`,updatedData,docs&&docs)
 
-    return get().getColegiadoPendiente(id);
+    return res.data;
   },
 
   // Funciones para eliminar entidades

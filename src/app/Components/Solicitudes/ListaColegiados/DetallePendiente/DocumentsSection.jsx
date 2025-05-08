@@ -114,8 +114,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
     // Componente de tarjeta de documento reutilizable
     const DocumentCard = ({ documento }) => {
-        const tieneArchivo = !!documento
-
+        const tieneArchivo = !documento.requerido||(documento.requerido&&documento.url!==null)
         return (
             <div
                 className={`border rounded-lg ${tieneArchivo ? "border-gray-200 hover:border-[#C40180]" : "border-red-200 bg-red-50"

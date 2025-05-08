@@ -1,5 +1,5 @@
 import SessionInfo from "@/Components/SessionInfo"
-import { Calendar, CheckCircle, Mail, MapPin, Phone, PlusCircle, User } from "lucide-react"
+import { Calendar, CheckCircle, Mail, MapPin, Phone, PlusCircle, User,GraduationCap } from "lucide-react"
 
 export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmarTitulo }) {
     // Función para obtener iniciales del nombre
@@ -35,7 +35,7 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
                     <div className="flex flex-col md:flex-row md:justify-between mb-4">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">{nombreCompleto}</h1>
-                            <p className="text-sm text-gray-500">N° COV: {colegiado.numeroRegistro}</p>
+                            <p className="text-sm text-gray-500">N° COV: {colegiado.num_cov}</p>
                         </div>
 
                         <div className="mt-4 md:mt-0 flex flex-wrap justify-center md:justify-end gap-2">
@@ -54,68 +54,56 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
                     </div>
 
                     {/* Grid de información de contacto */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Columna izquierda */}
-                        <div>
-                            <div className="flex items-center justify-center md:justify-start">
-                                <User className="text-gray-400 h-5 w-5 mr-2" />
-                                <span className="text-gray-700">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 mt-4 w-full">
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <Mail className="text-[#C40180] h-5 w-5 mr-3" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Correo electrónico</p>
+                                <p className="text-sm text-gray-700 truncate max-w-full">{colegiado.recaudos.persona.correo}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <Phone className="text-[#C40180] h-5 w-5 mr-3" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Teléfono</p>
+                                <p className="text-sm text-gray-700">{colegiado.recaudos.persona.telefono_movil}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <User className="text-[#C40180] h-5 w-5 mr-3" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Identificación</p>
+                                <p className="text-sm text-gray-700">
                                     {colegiado.recaudos.persona.nacionalidad}-{colegiado.recaudos.persona.identificacion}
-                                </span>
+                                </p>
                             </div>
-
-                            <div className="flex items-center justify-center md:justify-start mt-4">
-                                <Mail className="text-gray-400 h-5 w-5 mr-2" />
-                                <span className="text-gray-700">{colegiado.recaudos.persona.correo}</span>
+                        </div>
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <Calendar className="text-[#C40180] h-5 w-5 mr-3" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Fecha de inscripcion</p>
+                                <p className="text-sm text-gray-700">{formatearFecha(colegiado.fecha_de_inscripcion)}</p>
                             </div>
-
-                            <div className="flex items-center justify-center md:justify-start mt-4">
-                                <Phone className="text-gray-400 h-5 w-5 mr-2" />
-                                <span className="text-gray-700">{colegiado.recaudos.persona.telefono_movil}</span>
+                        </div>
+                        <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
+                            <GraduationCap className="text-[#C40180] h-5 w-5 mr-3" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Ejercicio profesional</p>
+                                <p className="text-sm text-gray-700">{colegiado.recaudos.tipo_profesion_display}</p>
                             </div>
                         </div>
 
-                        {/* Columna derecha */}
-                        <div>
-                            <div className="flex items-start justify-center md:justify-start mt-4">
-                                <MapPin className="text-gray-400 h-5 w-5 mr-2 mt-0.5" />
-                                <span className="text-gray-700">
-                                    {colegiado.recaudos.persona.direccion.referencia}, {colegiado.recaudos.persona.direccion.estado}
-                                </span>
+                        {/* Información del creador del registro */}
+                        {colegiado.recaudos.user_admin_create_username && (
+                            <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
+                                <SessionInfo creador={colegiado.recaudos.user_admin_create_username} createDate={colegiado.recaudos.created_at} variant="compact" />
                             </div>
-
-                            <div className="flex items-center justify-center md:justify-start mt-4">
-                                <Calendar className="text-gray-400 h-5 w-5 mr-2" />
-                                <span className="text-gray-700">Registrado: {formatearFecha(colegiado.fecha_registro_principal)}</span>
+                        )}
+                        {colegiado.recaudos.user_admin_update_username && (
+                            <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
+                                <SessionInfo creador={colegiado.recaudos.user_admin_update_username} createDate={colegiado.recaudos.updated_at} variant="compact" tipo="aprobado" />
                             </div>
-                        </div>
-                        <div className="flex space-x-8">
-                            {/* Información del creador del registro */}
-                            {colegiado.creador && (
-                                <div className="mt-4">
-                                    <SessionInfo
-                                        creador={colegiado.creador}
-                                        variant="compact"
-                                        className="justify-center md:justify-start"
-                                    />
-                                </div>
-                            )}
-
-                            {/* Información de quien aprobó el registro */}
-                            {colegiado.aprobadoPor && (
-                                <div className="col-span-2 mt-4">
-                                    <SessionInfo
-                                        creador={{
-                                            ...colegiado.aprobadoPor,
-                                            esAdmin: colegiado.aprobadoPor.esAdmin || false,
-                                            tipo: 'aprobado'
-                                        }}
-                                        variant="compact"
-                                        className="justify-center md:justify-start"
-                                    />
-                                </div>
-                            )}
-                        </div>
+                        )}
                     </div>
 
                     <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
