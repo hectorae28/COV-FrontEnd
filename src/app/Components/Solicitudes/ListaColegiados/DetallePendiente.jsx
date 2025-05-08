@@ -62,6 +62,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false }) {
   const [documentosRequeridos, setDocumentosRequeridos] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
   // Estados para notificaciones
   const [confirmacionExitosa, setConfirmacionExitosa] = useState(false);
   const [rechazoExitoso, setRechazoExitoso] = useState(false);
@@ -250,7 +251,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false }) {
     const { nombre, primer_apellido } = pendiente.persona;
     return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`;
   };
-
+  const handleForward = () => {
+    alert('tiene vida');
+  }
   // Funciones para gestión de documentos
   const handleVerDocumento = (documento) => {
     setDocumentoSeleccionado(documento);
@@ -652,7 +655,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false }) {
             onClick={handleForward}
             className="cursor-pointer bg-gradient-to-r from-purple-600 to-purple-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all duration-300 shadow-sm font-medium"
         >
-            <CreditCard size={18} />
+            
             <span>Reenviar Solicitud De Inscripcion</span>
         </button>
       )}

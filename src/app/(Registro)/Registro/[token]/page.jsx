@@ -1,20 +1,18 @@
-import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
-import RegistrationForm from "../page";
+import DetallePendienteWrapper from "./DetallePendienteWrapper";
 import { fetchDataUsuario } from "@/api/endpoints/colegiado";
 
 export default async function RegistrationFormPage({params}) {
-    const { token } = await params;
-    console.log(token);
+    const { token } = params;
+    
     try {
         const res = await fetchDataUsuario(`register/${token}`);
         const data = await res.data;
-
+        
         return (
-          <DetallePendiente
-            params={{ id: token }}
-            onVolver={handleAprobarPendiente}
-            isAdmin={true}
-          />
+            <DetallePendienteWrapper 
+                id={token} 
+                isAdmin={false} 
+            />
         );
     } catch (error) {
         console.log(error);
