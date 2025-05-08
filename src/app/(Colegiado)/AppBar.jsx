@@ -14,7 +14,6 @@ import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 export default function AppBar() {
   const [selectedItem, setSelectedItem] = useState("Solicitudes");
   const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser)
-  console.log('EPA APPBAR', colegiadoUser.solvente)
 
   return (
     <div className="h-full w-full">

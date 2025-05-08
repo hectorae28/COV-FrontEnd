@@ -4,11 +4,11 @@ import { CreditCard, DollarSign } from "lucide-react";
 import { useState, useEffect } from "react";
 import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 
 export default function PagosColg({ props }) {
   const { handlePaymentComplete, costo } =
     props;
-    console.log(costo)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -19,8 +19,17 @@ export default function PagosColg({ props }) {
   const [montoEnBs, setMontoEnBs] = useState(0);
   const [tasaBCV, setTasaBCV] = useState(0);
   const [metodoDePago, setMetodoDePago] = useState([]);
+  const tasaBcv = useColegiadoUserStore((store) => store.tasaBcv);
+
+  
   
   const getTasa = async () => {
+    if(tasaBcv) {
+      const numCosto = parseFloat(costo);
+      const numTasaBcv = parseFloat(tasaBcv);
+
+      console.log(numCosto * numTasaBcv);
+    }
     try {
       const tasa = await fetchDataSolicitudes("tasa-bcv");
       setTasaBCV(tasa.data.rate);
@@ -42,6 +51,7 @@ export default function PagosColg({ props }) {
   useEffect(() => {
     getTasa();
     getMetodosDePago();
+    console.log(tasaBcv);
   }, [tasaBCV])
 
   // PayPal fee calculation

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import { fetchDataUsuario } from "@/api/endpoints/colegiado";
+import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 
 export default function SolvenciaPago() {
   /*const initialState = {
@@ -54,6 +55,7 @@ export default function SolvenciaPago() {
   //const [formData, setFormData] = useState(initialState);
   const [costoSolvencia, setCostoSolvencia] = useState(0);
   const [validationErrors, setValidationErrors] = useState({});
+  const costos = useColegiadoUserStore((store) => store.costos);
 
   
 
@@ -66,23 +68,12 @@ export default function SolvenciaPago() {
     }, 3000);
   };
 
-  const LoadData = async () => {
-    try {
-      const costo = await fetchDataSolicitudes(
-        "costo",
-        "?search=Solvencia"
-      );
-      setCostoSolvencia(Number(costo.data[0].monto_usd));
-    } catch (error) {
-      console.error("Error al obtener los datos:", error);
+  useEffect(() => {
+    if (costos && costos.length > 0) {
+      const filteredCosto = costos.filter(costo => costo.tipo_costo_nombre === 'Solvencia')[0];
+      setCostoSolvencia(filteredCosto);
     }
-  };
-
-  useEffect(() => {     
-
-    LoadData();
-      
-  }, [/*formData.tipo_profesion*/]);
+  }, []);
 
   return (
     <div className="space-y-6" id="solicitudes-tab">
@@ -127,7 +118,7 @@ export default function SolvenciaPago() {
           <PagosColg
             props={{
               handlePaymentComplete,
-              costo: costoSolvencia
+              costo: costoSolvencia.monto_usd
             }}
           />
         )}

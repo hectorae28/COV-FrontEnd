@@ -12,7 +12,7 @@ const useColegiadoUserStore = create((set, get) => (
             id: null
         },
         costos: [],
-        tasaBcv: 0.00,
+        tasaBcv: null,
 
         setColegiadoUser: (newColegiadoUser) => set({colegiadoUser: newColegiadoUser }),
         setCostos: (newCostos) => set({costos: newCostos}),
@@ -22,6 +22,7 @@ const useColegiadoUserStore = create((set, get) => (
                 solvencia_status: newStatus
             }
         })),
+        setTasaBcv: (newTasaBcv) => set({tasaBcv: newTasaBcv})
     })
 );
 

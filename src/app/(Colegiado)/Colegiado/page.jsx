@@ -18,7 +18,7 @@ export default function Home() {
   const [showSolicitudForm, setShowSolicitudForm] = useState(false);
   const [showSolvencyWarning, setShowSolvencyWarning] = useState(false); // Estado para la advertencia
   const [showTabs, setShowTabs] = useState(true); // Estado para mostrar/ocultar pestañas
-  const [userInfo, setUser_info] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
   const { data: session, status } = useSession();
   const [isSolvent, setIsSolvent] = useState(false); // Estado de solvencia
   const [solvencyInfo, setSolvencyInfo] = useState({
@@ -27,56 +27,67 @@ export default function Home() {
     status: session?.user?.solvenciaStatus,
   }); // Datos de solvencia
   // Datos de solvencia
-  const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser)
+  const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
+  const setCostos = useColegiadoUserStore((state) => state.setCostos);
+  const setTasaBcv = useColegiadoUserStore((state) => state.setTasaBcv);
+
+  const checkSolvencyStatus = () => {
+    if (!userInfo) return;
+    const today = new Date();
+    const [year, month, day] = solvencyInfo.date.split("-").map(Number);
+    const solvencyDate = new Date(year, month - 1, day); // Meses en JS son 0-indexed
+
+    const warningDate = new Date(solvencyDate);
+    warningDate.setDate(warningDate.getDate() - 14);
+
+    if (today >= warningDate) {
+      setShowSolvencyWarning(true);
+    } else {
+      setShowSolvencyWarning(false);
+    }
+  };
+
+  async function fetchCostosAndUserData() {
+    try {
+      // Se asume que fetchDataSolicitudes y fetchMe son funciones existentes en tu proyecto
+      const costoResponse = await fetchDataSolicitudes("costo", `?es_vigente=true`);
+      const tasaBcvResponse = await fetchDataSolicitudes("tasa-bcv");
+      const costosData = costoResponse.data;
+      // Obtén el costo filtrando por "Solvencia"
+      const costo = Number(
+        costosData.filter(
+          (item) => item.tipo_costo_nombre === "Solvencia"
+        )[0].monto_usd
+      );
+      setCostos(costosData);
+      setTasaBcv(Number(tasaBcvResponse.data.rate))
+
+      const userResponse = await fetchMe(session);
+      const userData = userResponse.data;
+      setUserInfo(userData);
+      setColegiadoUser(userData);
+      setIsSolvent(userData.solvencia_status);
+      setSolvencyInfo({
+        date: userData.solvente,
+        amount: costo,
+        status: userData.solvencia_status,
+      });
+
+      if (userData) {
+        checkSolvencyStatus();
+      }
+    } catch (error) {
+      console.error("Error al obtener los datos:", error);
+    }
+  }
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
-    if (status === "loading") return;
-    const checkSolvencyStatus = () => {
-      if (!userInfo) return;
-      const today = new Date();
-      const [year, month, day] = solvencyInfo.date.split("-").map(Number);
-      const solvencyDate = new Date(year, month - 1, day); // Meses en JS son 0-indexed
-
-      const warningDate = new Date(solvencyDate);
-      warningDate.setDate(warningDate.getDate() - 14);
-
-      //setIsSolvent(solvencyInfo.status)
-
-      if (today >= warningDate) {
-        setShowSolvencyWarning(true);
-      } else {
-        setShowSolvencyWarning(false);
-      }
-    };
 
     const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas
 
     if (session) {
-      fetchDataSolicitudes("costo", `?search=Solvencia&es_vigente=true`)
-        .then((response) => {
-          const costo = Number(response.data[0].monto_usd);
-          fetchMe(session)
-            .then((response) => {
-              setUser_info(response.data);
-              setColegiadoUser(response.data);
-              setIsSolvent(response.data.solvencia_status)
-
-              
-              setSolvencyInfo({
-                date: response.data.solvente,
-                amount: costo,
-                status: response.data.solvencia_status,
-              });
-              if (userInfo && status === "authenticated") {
-                checkSolvencyStatus();
-              }
-            })
-            .catch((error) => console.log(error));
-        })
-        .catch((error) => {
-          console.error("Error al obtener los datos:", error);
-        });
+      fetchCostosAndUserData();
     }
     return () => clearInterval(intervalId);
   }, [session, status]);
