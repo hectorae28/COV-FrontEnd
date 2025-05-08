@@ -135,7 +135,7 @@ export function MessageDetail({
           {isMobile && (
             <button
               onClick={onBackToList}
-              className="h-10 w-10 mr-2 flex-shrink-0 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100"
+              className="cursor-pointer h-10 w-10 mr-2 flex-shrink-0 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100"
               aria-label="Volver a la lista"
             >
               <ArrowLeft className="h-5 w-5" />

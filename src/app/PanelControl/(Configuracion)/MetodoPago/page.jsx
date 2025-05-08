@@ -222,7 +222,7 @@ export default function MetodosPagoConfig() {
   }
 
   return (
-    <div className="container mx-auto px-4 md:px-20 py-28">
+    <div className="select-none cursor-defaul container mx-auto px-4 md:px-20 py-28">
       {/* Cabecera */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
         <div>
@@ -237,7 +237,7 @@ export default function MetodosPagoConfig() {
         <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
           <motion.button
             onClick={() => setMostrarVistaPrevia(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -250,7 +250,7 @@ export default function MetodosPagoConfig() {
               setModoFormulario("crear");
               setMetodoSeleccionado(null);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#D7008A] text-white rounded-lg hover:bg-[#41023B] transition-colors"
+            className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#D7008A] text-white rounded-lg hover:bg-[#41023B] transition-colors"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -315,7 +315,7 @@ export default function MetodosPagoConfig() {
                 setModoFormulario(null);
                 setMetodoSeleccionado(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="cursor-pointer text-gray-500 hover:text-gray-700"
             >
               <X size={20} />
             </button>
@@ -355,7 +355,7 @@ export default function MetodosPagoConfig() {
             </p>
             <button
               onClick={() => setModoFormulario("crear")}
-              className="px-4 py-2 bg-[#D7008A] text-white rounded-lg hover:bg-[#41023B] transition-colors inline-flex items-center"
+              className="cursor-pointer px-4 py-2 bg-[#D7008A] text-white rounded-lg hover:bg-[#41023B] transition-colors inline-flex items-center"
             >
               <Plus size={16} className="mr-2" />
               Agregar método de pago
@@ -409,7 +409,7 @@ export default function MetodosPagoConfig() {
                         setMetodoSeleccionado(metodo);
                         setMostrarVistaPrevia(true);
                       }}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                      className="cursor-pointer p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
                       title="Vista previa"
                     >
                       <Eye size={18} />
@@ -421,7 +421,7 @@ export default function MetodosPagoConfig() {
                         setMetodoSeleccionado(metodo);
                         setModoFormulario("editar");
                       }}
-                      className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg"
+                      className="cursor-pointer p-2 text-amber-600 hover:bg-amber-50 rounded-lg"
                       title="Editar"
                     >
                       <Edit size={18} />
@@ -430,7 +430,7 @@ export default function MetodosPagoConfig() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleEliminarMetodo(metodo.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      className="cursor-pointer p-2 text-red-600 hover:bg-red-50 rounded-lg"
                       title="Eliminar"
                     >
                       <Trash2 size={18} />

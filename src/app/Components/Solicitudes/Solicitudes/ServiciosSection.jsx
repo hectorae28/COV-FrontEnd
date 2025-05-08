@@ -73,7 +73,7 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago }) => {
             {totalPendiente > 0 && (
               <button
                 onClick={onIniciarPago}
-                className="w-full bg-[#C40180] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#A00060] text-sm transition-colors"
+                className="cursor-pointer w-full bg-[#C40180] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#A00060] text-sm transition-colors"
               >
                 <CreditCard size={18} />
                 <span>Realizar pago</span>

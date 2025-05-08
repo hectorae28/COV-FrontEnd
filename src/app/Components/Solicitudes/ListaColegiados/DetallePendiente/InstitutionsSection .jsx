@@ -88,7 +88,7 @@ export default function InstitutionsSection({
                 {!editandoInstituciones ? (
                     <button
                         onClick={() => setEditandoInstituciones(true)}
-                        className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors"
+                        className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors"
                     >
                         <Pencil size={16} className="mr-1" />
                         Editar
@@ -103,14 +103,14 @@ export default function InstitutionsSection({
                                 setEditandoInstituciones(false);
                                 setCambiosPendientes(false);
                             }}
-                            className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-gray-200 transition-colors"
+                            className="cursor-pointer bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-gray-200 transition-colors"
                         >
                             <X size={16} className="mr-1" />
                             Cancelar
                         </button>
                         <button
                             onClick={handleGuardarInstituciones}
-                            className="bg-green-100 text-green-700 px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-green-200 transition-colors"
+                            className="cursor-pointer bg-green-100 text-green-700 px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-green-200 transition-colors"
                         >
                             <Save size={16} className="mr-1" />
                             Guardar
@@ -164,13 +164,13 @@ export default function InstitutionsSection({
                                 <div key={index} className="bg-gray-50 p-4 rounded-md border border-gray-200 relative">
                                     <button
                                         onClick={() => handleEliminarInstitucion(index)}
-                                        className="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm border border-red-100"
+                                        className="cursor-pointer absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm border border-red-100"
                                         title="Eliminar institución"
                                     >
                                         <Trash2 size={16} />
                                     </button>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 mt-2">
                                         <div>
                                             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre</label>
                                             <input
@@ -285,13 +285,13 @@ export default function InstitutionsSection({
                             <div className="flex gap-2 mt-4 justify-end">
                                 <button
                                     onClick={() => setAgregarInstitucion(false)}
-                                    className="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-sm font-medium"
+                                    className="cursor-pointer px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-sm font-medium"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleAgregarInstitucion}
-                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                                    className="cursor-pointer px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
                                 >
                                     Guardar institución
                                 </button>
@@ -300,7 +300,7 @@ export default function InstitutionsSection({
                     ) : (
                         <button
                             onClick={() => setAgregarInstitucion(true)}
-                            className="w-full py-3 border-2 border-dashed border-blue-300 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 font-medium"
+                            className="cursor-pointer w-full py-3 border-2 border-dashed border-blue-300 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 font-medium"
                         >
                             <Plus size={18} />
                             Agregar nueva institución

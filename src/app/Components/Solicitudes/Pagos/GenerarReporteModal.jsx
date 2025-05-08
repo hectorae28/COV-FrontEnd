@@ -164,7 +164,7 @@ export default function GenerarReporteModal({ onClose, pagos }) {
           <h2 className="text-xl font-semibold text-gray-800">Generación de reportes financieros</h2>
           <button 
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="cursor-pointer text-gray-500 hover:text-gray-700"
           >
             <X size={24} />
           </button>
@@ -212,7 +212,7 @@ export default function GenerarReporteModal({ onClose, pagos }) {
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Período</label>
                 <select
-                  className="w-full border border-gray-300 rounded-md p-2 text-sm"
+                  className="cursor-pointer w-full border border-gray-300 rounded-md p-2 text-sm"
                   value={filtroFecha}
                   onChange={(e) => setFiltroFecha(e.target.value)}
                 >
@@ -226,7 +226,7 @@ export default function GenerarReporteModal({ onClose, pagos }) {
                 {filtroFecha === "personalizado" && (
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Desde</label>
+                      <label className=" block text-xs text-gray-500 mb-1">Desde</label>
                       <input
                         type="date"
                         className="w-full border border-gray-300 rounded-md p-1 text-sm"
@@ -251,7 +251,7 @@ export default function GenerarReporteModal({ onClose, pagos }) {
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Tipo de pago</label>
                 <select
-                  className="w-full border border-gray-300 rounded-md p-2 text-sm"
+                  className="cursor-pointer w-full border border-gray-300 rounded-md p-2 text-sm"
                   value={filtroTipoPago}
                   onChange={(e) => setFiltroTipoPago(e.target.value)}
                 >
@@ -268,7 +268,7 @@ export default function GenerarReporteModal({ onClose, pagos }) {
                 <button
                   onClick={generarDatosReporte}
                   disabled={isGenerating || (filtroFecha === "personalizado" && (!rangoFechas.desde || !rangoFechas.hasta))}
-                  className={`w-full bg-[#C40180] text-white px-4 py-2 rounded-md flex items-center justify-center gap-2 ${
+                  className={`cursor-pointer w-full bg-[#C40180] text-white px-4 py-2 rounded-md flex items-center justify-center gap-2 ${
                     isGenerating || (filtroFecha === "personalizado" && (!rangoFechas.desde || !rangoFechas.hasta))
                       ? 'opacity-70 cursor-not-allowed'
                       : 'hover:bg-[#590248] transition-colors'
@@ -493,19 +493,19 @@ export default function GenerarReporteModal({ onClose, pagos }) {
         <div className="flex justify-end p-4 border-t bg-gray-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 mr-3"
+            className="cursor-pointer px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 mr-3"
           >
             Cancelar
           </button>
           
           {reporteGenerado && (
             <>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 mr-3 flex items-center gap-2">
+              <button className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 mr-3 flex items-center gap-2">
                 <Download size={18} />
                 <span>Exportar</span>
               </button>
               
-              <button className="px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#590248] flex items-center gap-2">
+              <button className="cursor-pointer px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#590248] flex items-center gap-2">
                 <Printer size={18} />
                 <span>Imprimir</span>
               </button>

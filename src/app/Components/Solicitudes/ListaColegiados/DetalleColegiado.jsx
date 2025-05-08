@@ -138,7 +138,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
         {onVolver ? (
           <button
             onClick={onVolver}
-            className="mt-4 inline-flex items-center text-[#C40180] hover:underline cursor-pointer"
+            className="cursor-pointer mt-4 inline-flex items-center text-[#C40180] hover:underline cursor-pointer"
           >
             <ChevronLeft size={20} className="mr-1" />
             Volver a la lista de colegiados
