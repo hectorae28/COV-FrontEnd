@@ -5,29 +5,24 @@ import { DollarSign } from "lucide-react"
 
 function PaypalPaymentComponent({ 
   totalPendiente, 
-  exchangeRate, 
   onPaymentInfoChange,
   allowMultiplePayments // Add this prop
 }) {
   const [montoPago, setMontoPago] = useState("0.00")
-  const [montoEnBs, setMontoEnBs] = useState("0.00")
 
   // Existing useEffect remains unchanged
   useEffect(() => {
     if (totalPendiente) {
       setMontoPago(totalPendiente.toFixed(2))
-      setMontoEnBs((totalPendiente * exchangeRate).toFixed(2))
     } else {
       setMontoPago("0.00")
-      setMontoEnBs("0.00")
     }
-  }, [totalPendiente, exchangeRate])
+  }, [totalPendiente])
 
   const handleMontoChange = (e) => {
     const value = e.target.value
     if (!value) {
       setMontoPago("0.00")
-      setMontoEnBs("0.00")
       return
     }
 
@@ -41,10 +36,8 @@ function PaypalPaymentComponent({
     }
 
     setMontoPago(value)
-    setMontoEnBs((numericValue * exchangeRate).toFixed(2))
     onPaymentInfoChange({
       montoPago,
-      montoEnBs,
     })
   }
 
@@ -62,10 +55,9 @@ function PaypalPaymentComponent({
     if (!allowMultiplePayments) {
       onPaymentInfoChange({
         montoPago,
-        montoEnBs,
       })
     }
-  }, [montoPago, montoEnBs, allowMultiplePayments])
+  }, [montoPago])
 
   return (
     <div className="space-y-4">
@@ -91,9 +83,6 @@ function PaypalPaymentComponent({
               placeholder="0.00"
             />
           </div>
-          <p className="text-xs text-blue-700 mt-1">
-            Equivalente a Bs {montoEnBs}
-          </p>
         </div>
       )}
 

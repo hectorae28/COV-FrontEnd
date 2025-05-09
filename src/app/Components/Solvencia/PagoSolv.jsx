@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import { fetchDataUsuario } from "@/api/endpoints/colegiado";
 import useColegiadoUserStore from "@/utils/colegiadoUserStore";
+import { pagoSolvencia } from "@/api/endpoints/pago";
 
 export default function SolvenciaPago() {
   /*const initialState = {
@@ -57,23 +58,16 @@ export default function SolvenciaPago() {
   const [validationErrors, setValidationErrors] = useState({});
   const costos = useColegiadoUserStore((store) => store.costos);
 
-  
-
-  const handlePaymentComplete = () => {
-    setIsSuccess(true);
-
-    // Reiniciar después de 3 segundos
-    setTimeout(() => {
-      setIsSuccess(false);
-    }, 3000);
-  };
-
   useEffect(() => {
     if (costos && costos.length > 0) {
       const filteredCosto = costos.filter(costo => costo.tipo_costo_nombre === 'Solvencia')[0];
-      setCostoSolvencia(filteredCosto);
+      if (filteredCosto) setCostoSolvencia(filteredCosto);
     }
   }, []);
+
+  const handlePagoSolvencia = async (detallesPagoSolvencia) => {
+
+  }
 
   return (
     <div className="space-y-6" id="solicitudes-tab">
@@ -117,8 +111,9 @@ export default function SolvenciaPago() {
         ) : (
           <PagosColg
             props={{
-              handlePaymentComplete,
-              costo: costoSolvencia.monto_usd
+              costo: costoSolvencia.monto_usd,
+              allowMultiplePayments: false,
+
             }}
           />
         )}

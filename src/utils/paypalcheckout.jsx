@@ -15,8 +15,8 @@ const Checkout = ({ amount }) => {
         }
     }, [amount]);
 
-    const onCreateOrder = (data, actions) => {
-        return actions.order.create({
+    const onCreateOrder = async (data, actions) => {
+        return await actions.order.create({
             purchase_units: [
                 {
                     amount: {
@@ -27,8 +27,8 @@ const Checkout = ({ amount }) => {
         });
     }
 
-    const onApproveOrder = (data, actions) => {
-        const capturedOrder = fetch("http://localhost:8000/api/v1/solicitudes/capture-order/", {
+    const onApproveOrder = async (data, actions) => {
+        const capturedOrder = await fetch("http://localhost:8000/api/v1/solicitudes/capture-order/", {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',

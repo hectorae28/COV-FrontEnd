@@ -7,7 +7,7 @@ import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 
 export default function PagosColg({ props }) {
-  const { handlePaymentComplete, costo } =
+  const { costo } =
     props;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -24,12 +24,6 @@ export default function PagosColg({ props }) {
   
   
   const getTasa = async () => {
-    if(tasaBcv) {
-      const numCosto = parseFloat(costo);
-      const numTasaBcv = parseFloat(tasaBcv);
-
-      console.log(numCosto * numTasaBcv);
-    }
     try {
       const tasa = await fetchDataSolicitudes("tasa-bcv");
       setTasaBCV(tasa.data.rate);
@@ -51,7 +45,6 @@ export default function PagosColg({ props }) {
   useEffect(() => {
     getTasa();
     getMetodosDePago();
-    console.log(tasaBcv);
   }, [tasaBCV])
 
   // PayPal fee calculation
@@ -390,10 +383,8 @@ export default function PagosColg({ props }) {
                         {/* Replace PayPalProvider with PayPalPaymentComponent */}
                         <PaypalPaymentComponent
                           totalPendiente={parseFloat(costo)}
-                          exchangeRate={tasaBCV}
                           onPaymentInfoChange={(info) => {
                             setPaymentAmount(info.montoPago);
-                            setMontoEnBs(info.montoEnBs);
                           }}
                           allowMultiplePayments={false} // Set this to false for single payment mode
                         />
