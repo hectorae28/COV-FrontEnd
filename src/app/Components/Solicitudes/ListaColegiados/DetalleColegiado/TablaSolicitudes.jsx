@@ -1,7 +1,7 @@
-import { AlertCircle, CheckCircle, Clock, FileText, Search, Eye, Calendar, FileCheck, Tag, MoreHorizontal, User, Shield } from "lucide-react"
-import { useEffect, useState } from "react"
 import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
-import SessionInfo from "@/Components/SessionInfo" // Importar el componente
+import SessionInfo from "@/Components/SessionInfo"
+import { AlertCircle, Calendar, CheckCircle, Clock, Eye, FileCheck, FileText, Search, Tag } from "lucide-react"
+import { useEffect, useState } from "react"
 
 /** 
  * Componente para visualizar y gestionar las solicitudes de un colegiado 
@@ -24,7 +24,7 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
       try {
         setIsLoading(true)
         // Obtener solicitudes desde el store centralizado
-        const solicitudesColegiado = getSolicitudes(colegiadoId)
+        const solicitudesColegiado = getSolicitudes(colegiadoId) || []
         setSolicitudes(solicitudesColegiado)
         setIsLoading(false)
       } catch (error) {
@@ -36,7 +36,7 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
   }, [colegiadoId, getSolicitudes, forceUpdate])
 
   // Filtrar solicitudes según el término de búsqueda
-  const solicitudesFiltradas = solicitudes.filter(solicitud =>
+  const solicitudesFiltradas = (solicitudes || []).filter(solicitud =>
     solicitud.tipo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     solicitud.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     solicitud.fecha?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,9 +45,9 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
   )
 
   // Contar solicitudes por estado
-  const solicitudesPendientes = solicitudes.filter(sol => sol.estado === "Pendiente" || sol.estado === "En proceso").length
-  const solicitudesCompletadas = solicitudes.filter(sol => sol.estado === "Completada" || sol.estado === "Aprobada").length
-  const solicitudesExoneradas = solicitudes.filter(sol => sol.estado === "Exonerada").length
+  const solicitudesPendientes = (solicitudes || []).filter(sol => sol.estado === "Pendiente" || sol.estado === "En proceso").length
+  const solicitudesCompletadas = (solicitudes || []).filter(sol => sol.estado === "Completada" || sol.estado === "Aprobada").length
+  const solicitudesExoneradas = (solicitudes || []).filter(sol => sol.estado === "Exonerada").length
 
   // Obtener el color de fondo según el estado
   const getEstadoColor = (estado) => {

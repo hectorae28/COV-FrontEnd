@@ -1,10 +1,10 @@
 "use client"
 
-import { useMessages, asuntosPredefinidos } from "@/app/Models/PanelControl/Comunicaciones/Mensajes/MensajesData"
+import { asuntosPredefinidos, useMessages } from "@/app/Models/PanelControl/Comunicaciones/Mensajes/MensajesData"
+import { ChatColegiado } from "@/Components/Comunicaciones/Mensajes/ChatColegiado"
+import { ComposeModal } from "@/Components/Comunicaciones/Mensajes/ModalCompose"
 import { MessageCircle, Plus } from "lucide-react"
 import { useEffect, useState } from "react"
-import { ComposeModal } from "@/Components/Comunicaciones/Mensajes/ModalCompose"
-import { ChatColegiado } from "@/Components/Comunicaciones/Mensajes/ChatColegiado"
 
 export default function ChatSection({ colegiado }) {
     const [showComposeModal, setShowComposeModal] = useState(false)
@@ -23,34 +23,38 @@ export default function ChatSection({ colegiado }) {
         handlePermanentDelete,
     } = useMessages("recibidos", "", "")
 
-    // Filtrar mensajes solo para este colegiado
+    // Normalizar el nombre y apellido del colegiado para evitar errores
+    const colegiadoNombre = colegiado?.persona?.nombre || colegiado?.recaudos?.persona?.nombre || ''
+    const colegiadoApellido = colegiado?.persona?.primer_apellido || colegiado?.recaudos?.persona?.primer_apellido || ''
+
+    // Filtrar mensajes solo para este colegiado, ahora usando la información normalizada
     const colegiadoMessages = filteredMessages.filter(
         (msg) =>
-            msg.colegiadoId === colegiado.id ||
-            msg.remitente === `${colegiado.persona.nombre} ${colegiado.persona.primer_apellido}`,
-    )
+            msg.colegiadoId === colegiado?.id ||
+            msg.remitente === `${colegiadoNombre} ${colegiadoApellido}`,
+    );
 
     // Función para manejar el envío de un nuevo mensaje
     const handleSendMessage = (nuevoMensaje) => {
         // Asegurarse de que el mensaje tenga el ID del colegiado
         const mensajeConColegiado = {
             ...nuevoMensaje,
-            colegiadoId: colegiado.id,
-            destinatario: `${colegiado.persona.nombre} ${colegiado.persona.primer_apellido}`,
-        }
+            colegiadoId: colegiado?.id,
+            destinatario: `${colegiadoNombre} ${colegiadoApellido}` || nuevoMensaje.destinatario || '',
+        };
 
         // Enviar el mensaje usando la función del hook
-        const mensajeCreado = handleSendNewMessage(mensajeConColegiado)
+        const mensajeCreado = handleSendNewMessage(mensajeConColegiado);
 
         // Actualizar el estado para mostrar el chat recién creado
-        setSelectedChat(mensajeCreado)
-        setRefreshChats((prev) => prev + 1)
+        setSelectedChat(mensajeCreado);
+        setRefreshChats((prev) => prev + 1);
 
         // Asegurarse de que el modal se cierre
-        setShowComposeModal(false)
+        setShowComposeModal(false);
 
-        return mensajeCreado
-    }
+        return mensajeCreado;
+    };
 
     // Efecto para escuchar el evento de abrir el modal de composición
     useEffect(() => {
@@ -95,14 +99,11 @@ export default function ChatSection({ colegiado }) {
                 {showComposeModal && (
                     <ComposeModal
                         onClose={() => setShowComposeModal(false)}
-                        onSendMessage={(mensaje) => {
-                            const mensajeCreado = handleSendMessage(mensaje)
-                            setShowComposeModal(false)
-                            return mensajeCreado
-                        }}
+                        onSendMessage={handleSendMessage}
                         asuntosPredefinidos={asuntosPredefinidos}
-                        destinatarioPreseleccionado={`${colegiado.persona.nombre} ${colegiado.persona.primer_apellido}`}
-                        colegiadoId={colegiado.id}
+                        destinatarioPreseleccionado={`${colegiadoNombre} ${colegiadoApellido}`}
+                        colegiadoId={colegiado?.id}
+                        ocultarDestinatario={true} // Ocultar el campo destinatario ya que estamos en ChatSection
                     />
                 )}
             </div>
@@ -130,14 +131,11 @@ export default function ChatSection({ colegiado }) {
             {showComposeModal && (
                 <ComposeModal
                     onClose={() => setShowComposeModal(false)}
-                    onSendMessage={(mensaje) => {
-                        const mensajeCreado = handleSendMessage(mensaje)
-                        setShowComposeModal(false)
-                        return mensajeCreado
-                    }}
+                    onSendMessage={handleSendMessage}
                     asuntosPredefinidos={asuntosPredefinidos}
-                    destinatarioPreseleccionado={`${colegiado.persona.nombre} ${colegiado.persona.primer_apellido}`}
-                    colegiadoId={colegiado.id}
+                    destinatarioPreseleccionado={`${colegiadoNombre} ${colegiadoApellido}`}
+                    colegiadoId={colegiado?.id}
+                    ocultarDestinatario={true}
                 />
             )}
         </div>

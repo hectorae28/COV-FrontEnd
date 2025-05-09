@@ -22,7 +22,7 @@ import TablaSolicitudes from "./DetalleColegiado/TablaSolicitudes"
 export default function DetalleColegiado({ params, onVolver, colegiado: providedColegiado }) {
   // Obtenemos el ID desde los parámetros de la URL
   const colegiadoId = params?.id || "1"
-  
+
   const [vistaActual, setVistaActual] = useState("informacion")
   const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null)
   const [colegiado, setColegiado] = useState(null)
@@ -63,6 +63,11 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
         setIsLoading(true)
         const colegiadoData = await getColegiado(colegiadoId)
         setColegiado(colegiadoData)
+
+        // Cargar documentos del colegiado
+        const docs = await getDocumentos(colegiadoId)
+        setDocumentos(docs || [])
+
         setIsLoading(false)
       } catch (error) {
         console.error("Error al cargar datos del colegiado:", error)
@@ -254,7 +259,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
           <div className="p-6">
             {tabActivo === "informacion" && <TablaInformacionPersonal colegiado={colegiado} />}
             {tabActivo === "pagos" && (
-              <TablaPagos colegiadoId={colegiadoId} handleVerDocumento={handleVerDocumento} documentos={documentos} />
+              <TablaPagos colegiadoId={colegiadoId} handleVerDocumento={handleVerDocumento} documentos={documentos || []} />
             )}
             {tabActivo === "inscripciones" && <TablaInscripciones colegiadoId={colegiadoId} />}
             {tabActivo === "solicitudes" && (
@@ -264,7 +269,7 @@ export default function DetalleColegiado({ params, onVolver, colegiado: provided
                 onVerDetalle={verDetalleSolicitud}
               />
             )}
-            {tabActivo === "carnet" && <CarnetInfo colegiado={colegiado} />}
+            {tabActivo === "carnet" && <CarnetInfo colegiado={{...colegiado, persona: colegiado.recaudos.persona}} />}
             {tabActivo === "documentos" && (
               <DocumentosLista documentos={documentos} handleVerDocumento={handleVerDocumento} />
             )}

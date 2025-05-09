@@ -20,7 +20,7 @@ const dashboardModules = {
     image: "/assets/PaginaWeb/Inicio/Presentacion.avif",
     icon: "presentation-chart"
   },
-  
+
   servicios: {
     id: "servicios",
     title: "Servicios",
@@ -28,7 +28,7 @@ const dashboardModules = {
     image: "/assets/PaginaWeb/Inicio/Servicios.avif",
     icon: "settings"
   },
-  
+
   noticias: {
     id: "noticiadestacadas",
     title: "Noticias Destacadas",
@@ -36,7 +36,7 @@ const dashboardModules = {
     image: "/assets/PaginaWeb/Inicio/Noticias.avif",
     icon: "newspaper"
   },
-  
+
   aliados: {
     id: "aliados",
     title: "Aliados",
@@ -209,11 +209,10 @@ export default function DashboardPanel() {
             {Object.entries(dashboardModules).map(([id, info], index) => (
               <motion.div
                 key={id}
-                className={`relative mt-2 overflow-hidden rounded-xl shadow-lg cursor-pointer transition-all duration-300 group ${
-                  activeModule === id 
-                    ? "ring-2 transform scale-[1.02] z-10" 
+                className={`relative mt-2 overflow-hidden rounded-xl shadow-lg cursor-pointer transition-all duration-300 group ${activeModule === id
+                    ? "ring-2 transform scale-[1.02] z-10"
                     : "hover:shadow-xl bg-white"
-                }`}
+                  }`}
                 style={{
                   ringColor: activeModule === id ? info.color : "transparent",
                   height: "90px",
@@ -275,7 +274,7 @@ export default function DashboardPanel() {
                     >
                       {renderIcon(info.icon, activeModule === id ? 28 : 24)}
                     </motion.div>
-                    
+
                     {/* Title */}
                     <motion.h3
                       className="text-lg font-bold text-white drop-shadow-md text-center"
@@ -308,9 +307,8 @@ export default function DashboardPanel() {
         <div className="mb-6">
           {/* Mobile dropdown trigger */}
           <motion.div
-            className={`relative overflow-hidden rounded-xl shadow-lg cursor-pointer transition-all duration-300 group ${
-              isDropdownOpen ? "ring-2" : ""
-            }`}
+            className={`relative overflow-hidden rounded-xl shadow-lg cursor-pointer transition-all duration-300 group ${isDropdownOpen ? "ring-2" : ""
+              }`}
             style={{
               ringColor: isDropdownOpen ? moduleInfo.color : "transparent",
               height: "83px",

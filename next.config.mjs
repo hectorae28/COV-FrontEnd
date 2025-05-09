@@ -26,19 +26,31 @@ const nextConfig = {
                 pathname: '/**',
             },
             {
-                //https://horizon-deemed-moss-principles.trycloudflare.com
                 protocol: 'https',
                 hostname: 'horizon-deemed-moss-principles.trycloudflare.com',
                 pathname: '/**',
             },
             {
-                protocol:"http",
-                hostname:"192.168.100.242",
+                protocol: "http",
+                hostname: "192.168.100.242",
                 port: '8000',
                 pathname: '/**',
             }
         ],
     },
-};;
+    // Añadimos configuración para compatibilidad
+    webpack: (config, { dev, isServer }) => {
+        // Configuraciones para mejorar compatibilidad con navegadores
+        if (!isServer) {
+            config.resolve.fallback = {
+                ...config.resolve.fallback,
+                fs: false,
+                net: false,
+                tls: false,
+            };
+        }
+        return config;
+    },
+};
 
 export default nextConfig;

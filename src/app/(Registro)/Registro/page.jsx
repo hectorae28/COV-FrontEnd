@@ -77,7 +77,8 @@ const steps = [
       "institutionName",
       "institutionAddress",
       "institutionPhone",
-      "cargo"
+      "cargo",
+      "institutionType"
     ]
   },
   {
