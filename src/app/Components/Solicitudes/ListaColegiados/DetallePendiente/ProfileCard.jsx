@@ -56,17 +56,18 @@ export default function ProfileCard({props}) {
                         </div>
                         <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
                             {/* Estados de la solicitud */}
-                            {isRechazada ? (
+                            
+                            {isRechazada && isAdmin ? (
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
                                     <AlertTriangle size={12} className="mr-1" />
                                     Rechazada
                                 </span>
-                            ) : isDenegada ? (
+                            ) : isDenegada && isAdmin ? (
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
                                     <UserX size={12} className="mr-1" />
                                     Denegada
                                 </span>
-                            ) : (
+                            ) :isAdmin&& (
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                                     <Clock size={12} className="mr-1" />
                                     Pendiente de aprobación
@@ -74,7 +75,7 @@ export default function ProfileCard({props}) {
                             )}
 
                             {/* Estado de pagos pendientes */}
-                            {pagosPendientes && (
+                            {pagosPendientes && isAdmin && (
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
                                     <XCircle size={12} className="mr-1" />
                                     Pagos pendientes
@@ -82,7 +83,7 @@ export default function ProfileCard({props}) {
                             )}
 
                             {/* Estado de documentos - solo si no están completos */}
-                            {!documentosCompletos && (
+                            {!documentosCompletos && isAdmin && (
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
                                     <AlertCircle size={12} className="mr-1" />
                                     Documentación incompleta
@@ -95,7 +96,7 @@ export default function ProfileCard({props}) {
                             <Mail className="text-[#C40180] h-5 w-5 mr-3" />
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Correo electrónico</p>
-                                <p className="text-sm text-gray-700 truncate max-w-[45%]">{pendiente.persona.correo}</p>
+                                <p className="text-sm text-gray-700 max-w-[45%]">{pendiente.persona.correo}</p>
                             </div>
                         </div>
                         <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
@@ -130,7 +131,7 @@ export default function ProfileCard({props}) {
                         </div>
 
                         {/* Información del creador del registro */}
-                        {pendiente.user_admin_create_username && (
+                        {pendiente.user_admin_create_username && isAdmin && (
                             <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
                                     <SessionInfo creador={{username:pendiente.user_admin_create_username,fecha:pendiente.created_at}} variant="compact" />
                                 
@@ -138,7 +139,7 @@ export default function ProfileCard({props}) {
                         )}
 
                         {/* Información sobre el rechazo si aplica */}
-                        {isRechazada && pendiente.user_admin_update_username && (
+                        {isRechazada && pendiente.user_admin_update_username && isAdmin && (
                             <div className="bg-yellow-50 p-2 rounded-md col-span-2 mt-4 border border-yellow-100">
                                 <div className="flex items-start">
                                     <AlertTriangle size={18} className="text-yellow-600 mr-2 mt-0.5" />
@@ -154,7 +155,7 @@ export default function ProfileCard({props}) {
                         )}
 
                         {/* Información sobre la denegación si aplica */}
-                        {isDenegada && pendiente.user_admin_update_username && (
+                        {isDenegada && pendiente.user_admin_update_username && isAdmin && (
                             <div className="bg-red-50 p-2 rounded-md col-span-2 mt-4 border border-red-100">
                                 <div className="flex items-start">
                                     <UserX size={18} className="text-red-600 mr-2 mt-0.5" />

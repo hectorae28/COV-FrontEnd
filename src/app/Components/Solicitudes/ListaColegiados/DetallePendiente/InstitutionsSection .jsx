@@ -66,7 +66,7 @@ export default function InstitutionsSection({
     // Función para guardar cambios en instituciones
     const handleGuardarInstituciones = () => {
         // Aquí implementarías la lógica para guardar en el backend/store
-        const nuevosDatos = { ...pendiente, instituciones };
+        const nuevosDatos = { instituciones };
         updateColegiadoPendiente(pendienteId, nuevosDatos);
         setEditandoInstituciones(false);
         setCambiosPendientes(false);
@@ -199,6 +199,7 @@ export default function InstitutionsSection({
                                                 type="tel"
                                                 name="telefono"
                                                 value={institucion.telefono || ""}
+                                                maxLength={11}
                                                 onChange={(e) => handleInstitucionChange(index, e)}
                                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
                                             />
@@ -262,6 +263,7 @@ export default function InstitutionsSection({
                                     <input
                                         type="tel"
                                         name="telefono"
+                                        maxLength={11}
                                         value={nuevaInstitucion.telefono}
                                         onChange={handleNuevaInstitucionChange}
                                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"

@@ -145,6 +145,11 @@ const useDataListaColegiados = create((set, get) => ({
 
     return res.data;
   },
+  updateColegiadoPendienteWithToken: async(id, updatedData, docs) => {
+    const res = await patchDataUsuario(`recaudos-token`,{"token":id,"data":updatedData},docs&&docs)
+
+    return res.data;
+  },
 
   // Funciones para eliminar entidades
   removeColegiadoPendiente: (id) => {

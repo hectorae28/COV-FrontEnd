@@ -13,9 +13,10 @@ export default function PersonalInfoSection({
       setDatosPersonales,
       editandoPersonal,
       setEditandoPersonal,
-      updateColegiadoPendiente,
+      updateData,
       pendienteId,
       setCambiosPendientes,
+      isAdmin
     } = props;
     // Función para manejar cambios en datos personales
     const handleDatosPersonalesChange = (e) => {
@@ -70,7 +71,7 @@ export default function PersonalInfoSection({
 
         if (Object.keys(personaDifferences).length > 0) {
             const nuevosDatos = { persona: personaDifferences };
-            updateColegiadoPendiente(pendienteId, nuevosDatos);
+            updateData(pendienteId, nuevosDatos);
         }
         setEditandoPersonal(false);
         setCambiosPendientes(false);
@@ -157,7 +158,7 @@ export default function PersonalInfoSection({
 
                         <div className="bg-gray-50 p-3 rounded-md">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula</p>
-                            <p className="font-medium text-gray-800">{datosPersonales?.nacionalidad}-{datosPersonales?.identificacion}</p>
+                            <p className="font-medium text-gray-800">{datosPersonales?.identificacion}</p>
                         </div>
 
                         <div className="bg-gray-50 p-3 rounded-md">
@@ -264,7 +265,7 @@ export default function PersonalInfoSection({
                                 <input
                                     type="text"
                                     name="identificacion"
-                                    value={datosPersonales?.identificacion || ""}
+                                    value={datosPersonales?.identificacion.split("-")[1] || ""}
                                     onChange={handleDatosPersonalesChange}
                                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
                                 />
@@ -290,9 +291,10 @@ export default function PersonalInfoSection({
                             <input
                                 type="email"
                                 name="correo"
+                                disabled={!isAdmin}
                                 value={datosPersonales?.correo || ""}
                                 onChange={handleDatosPersonalesChange}
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                                className={`w-full p-2 border ${ !isAdmin&& "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
                             />
                         </div>
 
@@ -323,9 +325,10 @@ export default function PersonalInfoSection({
                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Título entregado</label>
                                 <select
                                     name="titulo_entregado"
+                                    disabled={!isAdmin}
                                     value={datosPersonales?.titulo_entregado ? "true" : "false"}
                                     onChange={handleDatosPersonalesChange}
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                                    className={`w-full p-2 border ${ !isAdmin&& "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
                                 >
                                     <option value="false">No entregado</option>
                                     <option value="true">Entregado</option>
@@ -336,9 +339,10 @@ export default function PersonalInfoSection({
                                 <input
                                     type="date"
                                     name="fecha_registro"
+                                    disabled={!isAdmin}
                                     value={datosPersonales?.fecha_registro ? datosPersonales.fecha_registro.split('T')[0] : ""}
                                     onChange={handleDatosPersonalesChange}
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                                    className={`w-full p-2 border ${ !isAdmin&& "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
                                 />
                             </div>
                         </div>
