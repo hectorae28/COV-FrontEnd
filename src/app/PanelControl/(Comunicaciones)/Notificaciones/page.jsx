@@ -277,7 +277,7 @@ function NotificacionesPage() {
 
 export default function NotificacionesPageWithProvider() {
   return (
-    <NotificacionesProvider>
+    <NotificacionesProvider initialActiveTab="no-leidas">
       <NotificacionesPage />
     </NotificacionesProvider>
   )

@@ -122,10 +122,10 @@ const notificacionesIniciales = [
 // Crear contexto para las notificaciones
 const NotificacionesContext = createContext()
 
-export const NotificacionesProvider = ({ children }) => {
+export const NotificacionesProvider = ({ children, initialActiveTab = "no-leidas" }) => {
   const [notificaciones, setNotificaciones] = useState([])
   const [selectedNotificacion, setSelectedNotificacion] = useState(null)
-  const [activeTab, setActiveTab] = useState("todas")
+  const [activeTab, setActiveTab] = useState(initialActiveTab)
   const [searchQuery, setSearchQuery] = useState("")
   const [asuntoFilter, setAsuntoFilter] = useState("")
   const [notificacionesVistasEnModal, setNotificacionesVistasEnModal] = useState([])
