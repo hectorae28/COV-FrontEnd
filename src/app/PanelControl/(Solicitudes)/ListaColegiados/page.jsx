@@ -58,6 +58,7 @@ export default function ListaColegiadosPage() {
   // Nuevo estado para ordenamiento de colegiados registrados
   const [ordenFechaRegistrados, setOrdenFechaRegistrados] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
   const [recordsPerPage, setRecordsPerPage] = useState(10);
+  const [params, setParams] = useState(null)
   useEffect(()=>{
     const LoadInitStore= async()=>{
       try{
@@ -67,6 +68,16 @@ export default function ListaColegiadosPage() {
       }
     }
     LoadInitStore()
+    const temporalParams = window.location.search;
+    const searchParams = new URLSearchParams(temporalParams);
+    const paramsObject = {};
+    searchParams.forEach((value, key) => {
+      paramsObject[key] = value;
+    });
+
+    setParams(paramsObject);
+
+    console.log('Parámetros guardados:', paramsObject);
   },[])
 
   useEffect(() => {

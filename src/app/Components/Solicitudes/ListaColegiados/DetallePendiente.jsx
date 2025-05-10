@@ -23,11 +23,14 @@ import PersonalInfoSection from "./DetallePendiente/PersonalInfoSection ";
 import PagosColg from "@/app/Components/PagosModal";
 import ProfileCard from "./DetallePendiente/ProfileCard";
 import StatusAlerts from "./DetallePendiente/StatusAlerts";
+import { useParams } from 'next/navigation'
 
 export default function DetallePendiente({ params, onVolver, isAdmin=false, recaudos=null, handleForward=null }) {
   const [metodoPago, setMetodoPago] = useState([]);
   const [tasaBcv, setTasaBcv] = useState(0);
   const [costoInscripcion, setCostoInscripcion] = useState(0);
+  const Externalparams = useParams()
+  console.log(window.location.search)
   
   const pendienteId = params?.id || "p1";
 
@@ -301,10 +304,14 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
         num_referencia: referenceNumber,
         monto: totalAmount,
         metodo_de_pago: metodo_de_pago.id,
+
       },
     });
+    const Form = new FormData()
+    Form.append("comprobante", paymentFile);
+    await updateColegiadoPendienteWithToken(pendienteId,{Form},true)
     loadData()
-
+    setPagosPendientes(false)
   }
   // Funciones para gestión de documentos
   const handleVerDocumento = (documento) => {
@@ -321,7 +328,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
       if(!recaudos){
         updateColegiadoPendiente(pendienteId, documentoActualizado, true);
       }else{
-
+        updateColegiadoPendienteWithToken(pendienteId, documentoActualizado, true)
       }
       loadData()
     } catch (error) {
@@ -659,7 +666,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
         updateDocumento={updateDocumento}
       />
 
-      {!isAdmin && pendiente.pago==null&& (
+      {!isAdmin && pendiente.pago==null&&pagosPendientes&& (
                 <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
