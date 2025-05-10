@@ -4,13 +4,12 @@ import { CreditCard, DollarSign } from "lucide-react";
 import { useState, useEffect } from "react";
 import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 
 export default function PagosColg({ props }) {
-  const { costo } =
+  const { costo, allowMultiplePayments, handlePago } =
     props;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(null);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
   const [paymentAmount, setPaymentAmount] = useState(costo);
@@ -19,7 +18,6 @@ export default function PagosColg({ props }) {
   const [montoEnBs, setMontoEnBs] = useState(0);
   const [tasaBCV, setTasaBCV] = useState(0);
   const [metodoDePago, setMetodoDePago] = useState([]);
-  const tasaBcv = useColegiadoUserStore((store) => store.tasaBcv);
 
   
   
@@ -45,6 +43,7 @@ export default function PagosColg({ props }) {
   useEffect(() => {
     getTasa();
     getMetodosDePago();
+    console.log(metodoDePago)
   }, [tasaBCV])
 
   // PayPal fee calculation
@@ -138,7 +137,10 @@ export default function PagosColg({ props }) {
                   ? "bg-red-50 border-red-300 text-red-700"
                   : "bg-blue-50 border-blue-300 text-blue-700"
               }`}
-              onClick={() => setPaymentMethod(metodo.datos_adicionales.slug)}
+              onClick={() => setPaymentMethod({
+                nombre: metodo.datos_adicionales.slug,
+                metodoId: metodo.id
+              })}
             >
               <img
                 src={
@@ -159,7 +161,7 @@ export default function PagosColg({ props }) {
         {/* Conditional content based on payment method */}
         {paymentMethod && (
           <div className="mt-6 border-t pt-6">
-            {paymentMethod === "bdv" ? (
+            {paymentMethod.nombre === "bdv" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Banco de Venezuela information */}
                 <div className="space-y-4">
@@ -386,7 +388,10 @@ export default function PagosColg({ props }) {
                           onPaymentInfoChange={(info) => {
                             setPaymentAmount(info.montoPago);
                           }}
-                          allowMultiplePayments={false} // Set this to false for single payment mode
+                          allowMultiplePayments={allowMultiplePayments} // Set this to false for single payment mode
+                          metodoDePagoId={paymentMethod.metodoId}
+                          handlePago={(detallesPago) => handlePago(detallesPago)}
+                          tasaBCV={tasaBCV}
                         />
                       </div>
                     </div>

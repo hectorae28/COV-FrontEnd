@@ -9,10 +9,14 @@ const initialOptions = {
 };
 
 // Modified to accept the amount prop
-function PayPalProvider({ amount }) {
+function PayPalProvider({ amount, pagoDetalles, handlePago}) {
   return (
     <PayPalScriptProvider options={initialOptions}>
-      <Checkout amount={amount} />
+      <Checkout
+        amount={amount}
+        pagoDetalles={pagoDetalles}
+        handlePago={(pagoDetalles) => handlePago(pagoDetalles)}
+      />
     </PayPalScriptProvider>
   );
 }

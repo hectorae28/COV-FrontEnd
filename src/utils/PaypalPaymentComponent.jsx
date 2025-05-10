@@ -2,13 +2,19 @@
 import PayPalProvider from "./paypalProvider"
 import { useState, useEffect } from "react"
 import { DollarSign } from "lucide-react"
+import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 
 function PaypalPaymentComponent({ 
   totalPendiente, 
   onPaymentInfoChange,
-  allowMultiplePayments // Add this prop
+  allowMultiplePayments, // Add this prop
+  metodoDePagoId,
+  handlePago,
+  tasaBCV
 }) {
-  const [montoPago, setMontoPago] = useState("0.00")
+  const [montoPago, setMontoPago] = useState("0.00");
+  const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser);
+  const [pagoDetalles, setPagoDetalles] = useState(null);
 
   // Existing useEffect remains unchanged
   useEffect(() => {
@@ -17,7 +23,22 @@ function PaypalPaymentComponent({
     } else {
       setMontoPago("0.00")
     }
-  }, [totalPendiente])
+
+    if (!allowMultiplePayments) {
+      onPaymentInfoChange({
+        montoPago,
+      })
+    }
+
+    setPagoDetalles({
+      modelo_solvencia_id: 1,
+      user_id: colegiadoUser.id,
+      metodo_de_pago_id: metodoDePagoId,
+      tasa_bcv: tasaBCV,
+      monto: parseFloat(montoPago),
+      costo: parseFloat(totalPendiente.toFixed(2))
+    });
+  }, [totalPendiente, montoPago])
 
   const handleMontoChange = (e) => {
     const value = e.target.value
@@ -39,6 +60,7 @@ function PaypalPaymentComponent({
     onPaymentInfoChange({
       montoPago,
     })
+    setPagoDetalles({...pagoDetalles, monto: montoPago})
   }
 
   const calculatePaypalFee = (amount) => {
@@ -49,15 +71,6 @@ function PaypalPaymentComponent({
   }
 
   const paypalAmount = calculatePaypalFee(montoPago)
-
-  // Add this useEffect to handle single payment mode
-  useEffect(() => {
-    if (!allowMultiplePayments) {
-      onPaymentInfoChange({
-        montoPago,
-      })
-    }
-  }, [montoPago])
 
   return (
     <div className="space-y-4">
@@ -106,7 +119,11 @@ function PaypalPaymentComponent({
           </div>
 
           <div className="mt-3 flex justify-center">
-            <PayPalProvider amount={paypalAmount} />
+            <PayPalProvider 
+              amount={paypalAmount}
+              pagoDetalles={pagoDetalles}
+              handlePago={(pagoDetalles) => handlePago(pagoDetalles)}
+            />
           </div>
         </div>
       </div>

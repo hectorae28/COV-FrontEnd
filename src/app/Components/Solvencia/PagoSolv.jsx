@@ -66,7 +66,10 @@ export default function SolvenciaPago() {
   }, []);
 
   const handlePagoSolvencia = async (detallesPagoSolvencia) => {
-
+    console.log('EPA por aqui')
+    return pagoSolvencia(detallesPagoSolvencia).then((pagoResult) =>
+      {return [undefined, pagoResult];}
+    ).catch(error => {return [error, undefined]});      
   }
 
   return (
@@ -113,7 +116,7 @@ export default function SolvenciaPago() {
             props={{
               costo: costoSolvencia.monto_usd,
               allowMultiplePayments: false,
-
+              handlePago: handlePagoSolvencia
             }}
           />
         )}

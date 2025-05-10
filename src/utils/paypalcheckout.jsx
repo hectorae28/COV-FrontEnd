@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { getCookie } from 'cookies-next/client';
 
-const Checkout = ({ amount }) => {
+const Checkout = ({ amount, pagoDetalles, handlePago }) => {
     const [{ options, isPending }, dispatch] = usePayPalScriptReducer();
     // Use the passed amount from parent component, default to "0.00" if not provided
     const [paymentAmount, setPaymentAmount] = useState(amount || "0.00");
@@ -28,17 +28,25 @@ const Checkout = ({ amount }) => {
     }
 
     const onApproveOrder = async (data, actions) => {
-        const capturedOrder = await fetch("http://localhost:8000/api/v1/solicitudes/capture-order/", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({
-                order_id: data.orderID
+        try {
+            const capturedOrder = await fetch("http://localhost:8000/api/v1/solicitudes/capture-order/", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    order_id: data.orderID
+                })
             })
-        })
-        return capturedOrder;
+            console.log(capturedOrder)
+            const detallesDePago = {...pagoDetalles, num_referencia: data.orderID}
+            console.log(detallesDePago)
+            const pagoResult = await handlePago(detallesDePago);
+            return pagoResult;
+        } catch(error) {
+            console.error("Hubo un error: ", error);
+        }
     }
 
     return (
