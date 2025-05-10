@@ -2,7 +2,7 @@
 import { motion } from "framer-motion"
 import { Calendar, Clock, Tag, X } from "lucide-react"
 
-const FullNewsPreview = ({ news, onClose }) => {
+const FullPreview = ({ news, onClose }) => {
     // Si el contenido está en HTML desde el editor de texto enriquecido
     const isHtmlContent = news.fullContent && news.fullContent.includes("</")
 
@@ -11,6 +11,23 @@ const FullNewsPreview = ({ news, onClose }) => {
     const remainingContent = !isHtmlContent
         ? (news.fullContent || news.description)?.split("\n\n").slice(1).join("\n\n") || ""
         : ""
+
+    // Verificar si la imageUrl es una URL de video (YouTube, Vimeo, etc.)
+    const isVideo = news.imageUrl && (
+        news.imageUrl.includes('youtube.com') ||
+        news.imageUrl.includes('youtu.be') ||
+        news.imageUrl.includes('vimeo.com')
+    )
+
+    // Extraer el ID de video de YouTube 
+    const getYoutubeVideoId = (url) => {
+        if (!url) return null
+
+        const youtubeRegex = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+        const match = url.match(youtubeRegex)
+
+        return (match && match[2].length === 11) ? match[2] : url
+    }
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto py-10">
@@ -34,17 +51,29 @@ const FullNewsPreview = ({ news, onClose }) => {
                                 </div>
                             </motion.div>
 
-                            {/* Imagen */}
+                            {/* Imagen o Video */}
                             <motion.div className="relative h-[300px] rounded-2xl overflow-hidden shadow-xl mb-8">
-                                <img
-                                    src={news.imageUrl || "/assets/placeholder-image.jpg"}
-                                    alt={news.title}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        e.target.src = "/assets/placeholder-image.jpg"
-                                    }}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                {isVideo ? (
+                                    <iframe
+                                        src={`https://www.youtube.com/embed/${getYoutubeVideoId(news.imageUrl)}`}
+                                        className="w-full h-full"
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    ></iframe>
+                                ) : (
+                                    <>
+                                        <img
+                                            src={news.imageUrl || "/assets/placeholder-image.jpg"}
+                                            alt={news.title}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.src = "/assets/placeholder-image.jpg"
+                                            }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                    </>
+                                )}
                             </motion.div>
 
                             {/* Título y meta */}
@@ -68,8 +97,13 @@ const FullNewsPreview = ({ news, onClose }) => {
                             {/* Contenido */}
                             <motion.div className="bg-white rounded-2xl shadow-lg p-8">
                                 {isHtmlContent ? (
-                                    // Renderizar contenido HTML
-                                    <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: news.fullContent }} />
+                                    // Renderizar contenido HTML con estilos adicionales para garantizar que los elementos aparezcan en la misma fila
+                                    <div 
+                                        className="prose prose-lg max-w-none" 
+                                        dangerouslySetInnerHTML={{ 
+                                            __html: news.fullContent 
+                                        }} 
+                                    />
                                 ) : (
                                     // Renderizar contenido en formato texto
                                     <div className="prose prose-lg max-w-none">
@@ -97,4 +131,4 @@ const FullNewsPreview = ({ news, onClose }) => {
     )
 }
 
-export default FullNewsPreview
+export default FullPreview

@@ -14,7 +14,7 @@ const DeleteConfirmation = ({ onDelete, onCancel }) => {
                     <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                         <Trash2 className="h-6 w-6 text-red-600" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900">¿Eliminar esta oticia?</h3>
+                    <h3 className="text-lg font-medium text-gray-900">¿Eliminar esta noticia?</h3>
                     <p className="text-sm text-gray-500 mt-2">
                         Esta acción no se puede deshacer. ¿Estás seguro de que deseas continuar?
                     </p>

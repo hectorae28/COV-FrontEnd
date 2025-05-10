@@ -6,6 +6,37 @@ const newsItems = [
         title: "XLII Juegos Nacionales de Odontólogos TACHIRA 2024",
         description: "Desde el domingo 28 de abril hasta el viernes 03 de mayo se celebraron los XLII Juegos Nacionales de Odontólogos con gran éxito y participación de profesionales de todo el país.",
         imageUrl: "/assets/noticias/ancho.png",
+        category: "Eventos",
+        fullContent: "<div class=\"flex flex-wrap gap-4 mb-6\"><div class=\"w-full text-left\"><p style=\"margin-bottom: 1rem; line-height: 1.5;\">Desde el domingo 28 de abril hasta el viernes 03 de mayo se celebraron los XLII Juegos Nacionales de Odontólogos con gran éxito y participación de profesionales de todo el país.</p></div></div><div class=\"flex flex-wrap gap-4 mb-6\"><div class=\"w-full text-left\"><p style=\"margin-bottom: 1rem; line-height: 1.5;\">Los juegos tuvieron lugar en las instalaciones deportivas del estado Táchira, donde los participantes compitieron en diversas disciplinas como natación, atletismo, baloncesto, voleibol y tenis.</p></div></div><div class=\"flex flex-wrap gap-4 mb-6\"><div class=\"w-full text-center\"><div style=\"margin: 1rem 0;\"><img src=\"/assets/noticias/ancho.png\" alt=\"Imagen\" style=\"max-width: 100%; border-radius: 0.5rem;\" /></div></div></div>",
+        layoutElements: [
+            {
+                id: 111,
+                type: "paragraph",
+                row: 1,
+                order: 1,
+                cols: 12,
+                align: "left",
+                content: "Desde el domingo 28 de abril hasta el viernes 03 de mayo se celebraron los XLII Juegos Nacionales de Odontólogos con gran éxito y participación de profesionales de todo el país."
+            },
+            {
+                id: 112,
+                type: "paragraph",
+                row: 2,
+                order: 1,
+                cols: 12,
+                align: "left",
+                content: "Los juegos tuvieron lugar en las instalaciones deportivas del estado Táchira, donde los participantes compitieron en diversas disciplinas como natación, atletismo, baloncesto, voleibol y tenis."
+            },
+            {
+                id: 113,
+                type: "image",
+                row: 3,
+                order: 1,
+                cols: 12,
+                align: "center",
+                content: "/assets/noticias/ancho.png"
+            }
+        ]
     },
     {
         id: 2,
