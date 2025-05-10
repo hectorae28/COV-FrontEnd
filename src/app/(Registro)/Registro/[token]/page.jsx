@@ -5,18 +5,30 @@ export default async function RegistrationFormPage({params}) {
     const { token } = await params;
     
     try {
-        const res = await fetchDataUsuario(`recaudos-token`,null, `?token=${token}`);
-        const data = await res.data;
+        
+        const res = await fetchDataUsuario(`recaudos-token`, null, `?token=${token}`);
+        if (!res || !res.data) {
+            throw new Error("No data received from API");
+        }
+        
+        const data = res.data;
         
         return (
             <DetallePendienteWrapper 
                 id={token}
                 isAdmin={false}
                 recaudos={data}
+                error={null}
             />
         );
     } catch (error) {
-        console.log(error);
-        return <div>Error</div>;
+        return(
+            <DetallePendienteWrapper 
+                error={error.message || "Error desconocido"}
+                id={token}
+                isAdmin={false}
+                recaudos={null}
+            />
+        )
     }
 }

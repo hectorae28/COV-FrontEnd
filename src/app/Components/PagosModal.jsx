@@ -14,6 +14,7 @@ export default function PagosColg({ props }) {
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [montoEnBs, setMontoEnBs] = useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2));
+  const [montoEnBs2, setMontoEnBs2] = useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2));
   const [showMethodSelection, setShowMethodSelection] = useState(false);
 
   // Verificar si hay más de 4 métodos de pago para cambiar el estilo de visualización
@@ -35,7 +36,7 @@ export default function PagosColg({ props }) {
       paymentDate,
       referenceNumber,
       paymentFile,
-      totalAmount: paymentMethod === "bdv" ? montoEnBs : paypalAmount,
+      totalAmount: paymentMethod === "bdv" ? montoEnBs2 : paypalAmount,
       metodo_de_pago: metodoPago.find(
         (m) => m.datos_adicionales.slug === paymentMethod
       ),

@@ -24,14 +24,12 @@ import PagosColg from "@/app/Components/PagosModal";
 import ProfileCard from "./DetallePendiente/ProfileCard";
 import StatusAlerts from "./DetallePendiente/StatusAlerts";
 
-export default function DetallePendiente({ params, onVolver, isAdmin=false, recaudos=null }) {
-  const { data: session } = useSession();
+export default function DetallePendiente({ params, onVolver, isAdmin=false, recaudos=null, handleForward=null }) {
   const [metodoPago, setMetodoPago] = useState([]);
   const [tasaBcv, setTasaBcv] = useState(0);
   const [costoInscripcion, setCostoInscripcion] = useState(0);
   
   const pendienteId = params?.id || "p1";
-  console.log({pendienteId})
 
   // Obtenemos funciones del store centralizado
     const getColegiadoPendiente = useDataListaColegiados(
@@ -289,17 +287,24 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
     const { nombre, primer_apellido } = pendiente.persona;
     return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`;
   };
-  const handleForward = () => {
-    alert('tiene vida');
-  }
-  const handlePaymentComplete=({
+  const handlePaymentComplete= async ({
     paymentDate = null,
     referenceNumber = null,
     paymentFile = null,
     totalAmount = null,
     metodo_de_pago = null,
   })=>{
-    updateColegiadoPendienteWithToken(pendienteId,{pago:{paymentDate,referenceNumber,totalAmount,metodo_de_pago}})
+
+    await updateColegiadoPendienteWithToken(pendienteId, {
+      pago: {
+        fecha_pago: paymentDate,
+        num_referencia: referenceNumber,
+        monto: totalAmount,
+        metodo_de_pago: metodo_de_pago.id,
+      },
+    });
+    loadData()
+
   }
   // Funciones para gestión de documentos
   const handleVerDocumento = (documento) => {

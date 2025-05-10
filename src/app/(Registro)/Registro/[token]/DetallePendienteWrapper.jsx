@@ -1,12 +1,27 @@
 "use client";
 import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
 import BackgroundAnimation from "@/Components/Home/BackgroundAnimation";
+import {BadgeCheck} from "lucide-react"
+import { motion } from "framer-motion";
 import Image from "next/image";
+import { useState } from "react";
+import { postDataUsuario } from "@/api/endpoints/colegiado";
 
-
-export default function DetallePendienteWrapper({ id, isAdmin, recaudos }) {
+export default function DetallePendienteWrapper({
+  id,
+  isAdmin,
+  recaudos,
+  error,
+}) {
+  const [isSubmited, setIsSubmited] = useState(false);
   const handleAprobarPendiente = () => {
     alert("tiene vida");
+  };
+  const handleForward = async () => {
+    postDataUsuario("recaudos-token", {
+      token: id,
+      status: "revisando",
+    }).then(() => setIsSubmited(true));
   };
 
   return (
@@ -23,21 +38,66 @@ export default function DetallePendienteWrapper({ id, isAdmin, recaudos }) {
 
           {/* Content with relative positioning to allow scrolling */}
           <div className="relative max-w-7xl z-20 ">
-            <div className="w-full flex justify-center items-center pt-10">
-            <Image
-              src="/assets/logo.png"
-              alt="Logo Colegio de Odontólogos de Venezuela"
-              width={300}
-              height={80}
-              className="relative drop-shadow-md object-contain max-w-full h-auto"
-            />
+            <div className="w-full flex justify-center py-10">
+              <Image
+                src="/assets/logo.png"
+                alt="Logo Colegio de Odontólogos de Venezuela"
+                width={300}
+                height={80}
+                className="relative drop-shadow-md object-contain max-w-full h-auto"
+              />
             </div>
-            <DetallePendiente
-              params={{ id }}
-              onVolver={handleAprobarPendiente}
-              isAdmin={isAdmin}
-              recaudos={recaudos}
-            />
+            {error ? (
+              <motion.div
+                className="relative overflow-hidden rounded-2xl group"
+                whileHover={{ y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm border border-white/40 shadow-xl rounded-2xl z-1"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#41023B]/20 to-[#D7008A]/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+
+                <div className="relative p-6 sm:p-8 z-10 text-center">
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#41023B] mb-4 sm:mb-5">
+                    Error
+                  </h2>
+                  <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                    {error}
+                    <br />
+                    Token invalido, por favor pida denuevo el token.
+                  </p>
+                </div>
+                
+              </motion.div>
+            ) : !isSubmited ? (
+              <DetallePendiente
+                params={{ id }}
+                onVolver={handleAprobarPendiente}
+                isAdmin={isAdmin}
+                recaudos={recaudos}
+                handleForward={handleForward}
+              />
+            ) : (
+              <>
+                <motion.div
+                className="relative overflow-hidden rounded-2xl group"
+                whileHover={{ y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm border border-white/40 shadow-xl rounded-2xl z-1"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#41023B]/20 to-[#D7008A]/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+
+                <div className="relative p-6 sm:p-8 z-10 text-center flex flex-col items-center">
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#41023B] mb-4 sm:mb-5">
+                    Solicitud Actualizada
+                  </h2>
+                  <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                    Sus datos han sido actualizados correctamente. <br/> Recibira  un correo electronico una vez que los administradores hayan revisado su solicitud.
+                  </p>
+                  <BadgeCheck className=" size-32 text-green-600 " />
+                </div>
+              </motion.div>
+              </>
+            )}
           </div>
         </div>
       </div>
