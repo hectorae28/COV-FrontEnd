@@ -10,6 +10,7 @@ export function ComposeModal({
   asuntosPredefinidos,
   destinatarioPreseleccionado = "",
   colegiadoId = null,
+  ocultarDestinatario = false, // Nuevo prop para controlar la visibilidad del campo destinatario
 }) {
   const [message, setMessage] = useState({
     destinatario: destinatarioPreseleccionado,
@@ -67,7 +68,7 @@ export function ComposeModal({
   }
 
   const handleSend = () => {
-    if (!message.destinatario || !message.asunto || !message.contenido) return
+    if ((!message.destinatario && !ocultarDestinatario) || !message.asunto || !message.contenido) return
 
     onSendMessage({
       ...message,
@@ -107,9 +108,8 @@ export function ComposeModal({
           exit="exit"
           variants={isMobile ? mobileVariants : desktopVariants}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className={`bg-white shadow-lg w-full md:rounded-lg md:max-w-2xl max-h-[98vh] md:max-h-[90vh] flex flex-col overflow-hidden ${
-            isMobile ? "rounded-t-xl h-[90vh]" : ""
-          }`}
+          className={`bg-white shadow-lg w-full md:rounded-lg md:max-w-2xl max-h-[98vh] md:max-h-[90vh] flex flex-col overflow-hidden ${isMobile ? "rounded-t-xl h-[90vh]" : ""
+            }`}
         >
           {/* Encabezado */}
           <div className="flex justify-between items-center p-3 md:p-4 border-b bg-gradient-to-l from-[#D7008A] to-[#41023B]">
@@ -143,19 +143,22 @@ export function ComposeModal({
             <div className="space-y-4">
               {isMobile && <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-2" />}
 
-              <div className="space-y-2">
-                <label htmlFor="destinatario" className="block text-sm font-medium text-gray-700">
-                  Destinatario
-                </label>
-                <input
-                  id="destinatario"
-                  value={message.destinatario}
-                  onChange={(e) => setMessage({ ...message, destinatario: e.target.value })}
-                  placeholder="Nombre del destinatario"
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-[#D7008A] focus:outline-none"
-                  disabled={!!destinatarioPreseleccionado}
-                />
-              </div>
+              {/* Mostrar el campo destinatario solo si no está oculto */}
+              {!ocultarDestinatario && (
+                <div className="space-y-2">
+                  <label htmlFor="destinatario" className="block text-sm font-medium text-gray-700">
+                    Destinatario
+                  </label>
+                  <input
+                    id="destinatario"
+                    value={message.destinatario}
+                    onChange={(e) => setMessage({ ...message, destinatario: e.target.value })}
+                    placeholder="Nombre del destinatario"
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-[#D7008A] focus:outline-none"
+                    disabled={!!destinatarioPreseleccionado}
+                  />
+                </div>
+              )}
 
               {/* Selector de asunto */}
               <div className="space-y-2">
@@ -248,12 +251,11 @@ export function ComposeModal({
                 </button>
                 <button
                   onClick={handleSend}
-                  className={`flex items-center px-4 py-2 rounded-md bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white ${
-                    !message.destinatario || !message.asunto || !message.contenido
+                  className={`flex items-center px-4 py-2 rounded-md bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white ${(!message.destinatario && !ocultarDestinatario) || !message.asunto || !message.contenido
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:opacity-90"
-                  }`}
-                  disabled={!message.destinatario || !message.asunto || !message.contenido}
+                    }`}
+                  disabled={(!message.destinatario && !ocultarDestinatario) || !message.asunto || !message.contenido}
                 >
                   <Send className="mr-2 h-4 w-4" />
                   <span className="hidden xs:inline">Enviar</span>

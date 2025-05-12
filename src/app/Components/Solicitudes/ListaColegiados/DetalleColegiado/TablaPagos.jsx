@@ -1,18 +1,17 @@
+import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
 import {
     AlertCircle,
     CheckCircle,
     CreditCard,
-    Search,
-    X,
+    Download,
     FileText,
-    Download
+    Search,
+    X
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
-import ComprobantesSection from "./ComprobantesSection";
 import RegistroPagoModal from "./RegistroPagoModal";
 
-export default function TablaPagos({ colegiadoId, handleVerDocumento, documentos }) {
+export default function TablaPagos({ colegiadoId, handleVerDocumento, documentos = [] }) {
     // Obtener funciones del store centralizado
     const {
         getPagos,
@@ -40,11 +39,12 @@ export default function TablaPagos({ colegiadoId, handleVerDocumento, documentos
             try {
                 setIsLoading(true);
                 // Obtener pagos desde el store centralizado
-                const pagosColegiado = getPagos(colegiadoId);
+                const pagosColegiado = getPagos(colegiadoId) || [];
                 setPagos(pagosColegiado);
                 setIsLoading(false);
             } catch (error) {
                 console.error("Error al cargar los datos:", error);
+                setPagos([]); // Establecer a array vacío en caso de error
                 setIsLoading(false);
             }
         };
@@ -105,25 +105,26 @@ export default function TablaPagos({ colegiadoId, handleVerDocumento, documentos
     };
 
     // Filtrar pagos según el término de búsqueda
-    const pagosFiltrados = pagos.filter(pago =>
+    const pagosFiltrados = pagos?.filter(pago =>
         pago.concepto.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pago.referencia.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pago.fecha.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pago.estado.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pago.metodoPago?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ) || [];
 
     // Calcular totales
-    const totalPagado = pagos
-        .filter(pago => pago.estado === "Pagado")
-        .reduce((suma, pago) => suma + pago.monto, 0);
+    const totalPagado = pagos?.filter(pago => pago.estado === "Pagado")
+        .reduce((suma, pago) => suma + pago.monto, 0) || 0;
 
-    const totalPendiente = pagos
-        .filter(pago => pago.estado === "Pendiente")
-        .reduce((suma, pago) => suma + pago.monto, 0);
+    const totalPendiente = pagos?.filter(pago => pago.estado === "Pendiente")
+        .reduce((suma, pago) => suma + pago.monto, 0) || 0;
 
     // Obtener datos del colegiado
     const colegiado = getColegiado(colegiadoId);
+
+    // Verificar si hay documentos/comprobantes
+    const hayComprobantes = documentos && documentos.length > 0;
 
     return (
         <div className="space-y-6">
@@ -201,11 +202,51 @@ export default function TablaPagos({ colegiadoId, handleVerDocumento, documentos
                 </div>
             </div>
 
-            {/* Sección de comprobantes de pago */}
-            <ComprobantesSection
-                documentos={documentos}
-                handleVerDocumento={handleVerDocumento}
-            />
+            {/* Sección de comprobantes de pago integrada */}
+            {hayComprobantes ? (
+                <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                        <h3 className="text-base font-medium text-gray-900">Comprobantes de pago</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Nombre
+                                    </th>
+                                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Tipo
+                                    </th>
+                                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {documentos.map((doc) => (
+                                    <tr key={doc.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{doc.nombre}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-500">{doc.tipo || "Documento"}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button
+                                                onClick={() => handleVerDocumento(doc.id)}
+                                                className="text-purple-600 hover:text-purple-800"
+                                            >
+                                                Ver documento
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ) : null}
 
             {/* Tabla de pagos */}
             {isLoading ? (
@@ -214,7 +255,15 @@ export default function TablaPagos({ colegiadoId, handleVerDocumento, documentos
                 </div>
             ) : (
                 <>
-                    {pagosFiltrados.length === 0 ? (
+                    {pagosFiltrados.length === 0 && !hayComprobantes ? (
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                            <div className="flex justify-center mb-4">
+                                <CreditCard size={48} className="text-gray-300" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-500">No se encontraron pagos</h3>
+                            <p className="text-gray-400 mt-1">No hay registros de pago que coincidan con tu búsqueda</p>
+                        </div>
+                    ) : pagosFiltrados.length === 0 ? (
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
                             <div className="flex justify-center mb-4">
                                 <CreditCard size={48} className="text-gray-300" />

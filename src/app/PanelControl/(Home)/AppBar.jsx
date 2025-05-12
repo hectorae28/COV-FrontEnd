@@ -87,7 +87,6 @@ const menuItems = [
       icon: <DescriptionRounded className="h-5 w-5" />,
       routes: [
         { path: "/PanelControl/ListaColegiados", title: "Lista de Colegiados", icon: <Assignment className="h-5 w-5" /> },
-        { path: "/PanelControl/ListaEspecialistas", title: "Lista de Especialistas", icon: <FactCheck className="h-5 w-5" /> },
         { path: "/PanelControl/Solicitudes", title: "Solicitudes", icon: <NoteAdd className="h-5 w-5" /> },
         { path: "/PanelControl/Pagos", title: "Pagos", icon: <RequestQuote className="h-5 w-5" /> },
       ],

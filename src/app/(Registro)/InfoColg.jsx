@@ -27,7 +27,7 @@ export default function InfoColegiado({
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      {/* Profesión - Nuevo campo de la segunda versión */}
+      {/* Profesión */}
       <div>
         <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Profesión

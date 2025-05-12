@@ -39,11 +39,16 @@ export function ChatColegiado({
     // Obtener los mensajes y funciones del hook useMessages
     const { filteredMessages, markMessageAsRead } = useMessages("recibidos", "", "")
 
-    // Filtrar mensajes solo para este colegiado
+    // Normalizar el nombre y apellido del colegiado para evitar errores
+    const colegiadoNombre = colegiado?.persona?.nombre || colegiado?.recaudos?.persona?.nombre || ''
+    const colegiadoApellido = colegiado?.persona?.primer_apellido || colegiado?.recaudos?.persona?.primer_apellido || ''
+    const colegiadoId = colegiado?.id || ''
+
+    // Filtrar mensajes solo para este colegiado, ahora usando la información normalizada
     const colegiadoMessages = filteredMessages.filter(
         (msg) =>
-            msg.colegiadoId === colegiado.id ||
-            msg.remitente === `${colegiado.persona.nombre} ${colegiado.persona.primer_apellido}`,
+            msg.colegiadoId === colegiadoId ||
+            msg.remitente === `${colegiadoNombre} ${colegiadoApellido}`,
     )
 
     // Seleccionar el mensaje inicial o el primero disponible
@@ -145,12 +150,12 @@ export function ChatColegiado({
                     )}
                     <div className="flex items-center">
                         <div className="h-9 w-9 rounded-full bg-gray-300 text-[#41023B] flex items-center justify-center font-bold text-sm mr-3 relative">
-                            {colegiado.persona.nombre.charAt(0)}
+                            {colegiadoNombre.charAt(0)}
                         </div>
                         <div>
-                            <h2 className="font-semibold text-gray-900">{`${colegiado.persona.nombre} ${colegiado.persona.primer_apellido}`}</h2>
+                            <h2 className="font-semibold text-gray-900">{`${colegiadoNombre} ${colegiadoApellido}`}</h2>
                             <span className="text-xs text-gray-500">
-                                {colegiado.numeroRegistro ? `Registro: ${colegiado.numeroRegistro}` : "Colegiado"}
+                                {colegiado?.numeroRegistro ? `Registro: ${colegiado.numeroRegistro}` : "Colegiado"}
                             </span>
                         </div>
                     </div>

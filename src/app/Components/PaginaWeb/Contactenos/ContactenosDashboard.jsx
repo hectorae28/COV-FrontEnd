@@ -1,7 +1,7 @@
 "use client"
-import { useState } from "react"
-import { useContactStore } from "@/app/Models/PanelControl/Contactenos/ContactenosData"
-import { Save, Plus, Trash2, RefreshCw } from "lucide-react"
+import { useContactStore } from "@/app/Models/PanelControl/Contactenos/ContactenosData";
+import { Plus, RefreshCw, Save, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 export default function ContactenosDashboard() {
   const contactData = useContactStore((state) => state.contactData);
@@ -52,11 +52,6 @@ export default function ContactenosDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard de Contactos</h1>
-          <p className="text-gray-600">Administre la información de la página de contacto</p>
-        </div>
 
         {/* Save status notification */}
         {saveStatus && (

@@ -35,7 +35,7 @@ const steps = [
     icon: User,
     component: InfoPersonal,
     requiredFields: [
-      "nationality",
+      "documentType",
       "identityCard",
       "firstName",
       "firstLastName",
@@ -77,7 +77,8 @@ const steps = [
       "institutionName",
       "institutionAddress",
       "institutionPhone",
-      "cargo"
+      "cargo",
+      "institutionType"
     ]
   },
   {
@@ -97,11 +98,11 @@ export default function RegistrationForm(props) {
   const initialState = {
     // Para tipo_profesion
     tipo_profesion: props?.tipo_profesion || "",
-    
+
     // Persona data
-    nationality: props?.persona?.nacionalidad || "",
+    documentType: props?.persona?.documentType || "", // Nuevo campo para tipo de documento (vacío por defecto)
     identityCard: props?.persona?.identificacion?.split("-")[1] || "",
-    idType: props?.persona?.identificacion?.split("-")[0] || "",
+    idType: props?.persona?.identificacion?.split("-")[0] || "V",
     firstName: props?.persona?.nombre || "",
     secondName: props?.persona?.segundo_nombre || "",
     firstLastName: props?.persona?.primer_apellido || "",
@@ -113,12 +114,12 @@ export default function RegistrationForm(props) {
     countryCode: props?.persona?.telefono_movil?.split(" ")[0] || "+58",
     phoneNumber: props?.persona?.telefono_movil?.split(" ")[1] || "",
     homePhone: props?.persona?.telefono_de_habitacion || "",
-    
+
     // Dirección
     address: props?.persona?.direccion?.referencia || "",
-    city: props?.ciudad || "", 
+    city: props?.ciudad || "",
     state: "",// || "",
-    
+
     // Información académica
     graduateInstitute: props?.instituto_bachillerato || "",
     universityTitle: props?.universidad || "",
@@ -127,18 +128,18 @@ export default function RegistrationForm(props) {
     mppsRegistrationNumber: props?.num_mpps || "",
     mppsRegistrationDate: props?.fecha_mpps || "",
     titleIssuanceDate: props?.fecha_egreso_universidad || "",
-    
+
     // Archivos requeridos  
     ci: props?.file_ci_url || null,
     rif: props?.file_rif_url || null,
     titulo: props?.file_fondo_negro_url || null,
     mpps: props?.file_mpps_url || null,
-    
+
     // Archivos adicionales para técnicos e higienistas
     Fondo_negro_credencial: props?.file_fondo_negro_credencial_url || null,
     notas_curso: props?.file_notas_curso_url || null,
     fondo_negro_titulo_bachiller: props?.file_fondo_negro_titulo_bachiller_url || null,
-    
+
     // Datos laborales (que se recorren como un array)
     laboralRegistros: props?.instituciones?.map(inst => ({
       institutionName: inst.nombre || "",
@@ -225,7 +226,6 @@ export default function RegistrationForm(props) {
     if (stepIndex === 5) {
       // Crear una copia de los campos requeridos base
       let fieldsToValidate = [...step.requiredFields];
-
       // Agregar campos adicionales para técnicos e higienistas
       if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
         fieldsToValidate = [
@@ -235,7 +235,6 @@ export default function RegistrationForm(props) {
           "notas_curso"
         ];
       }
-
       // Validar todos los campos requeridos
       fieldsToValidate.forEach((field) => {
         if (!formData[field]) {
@@ -243,12 +242,10 @@ export default function RegistrationForm(props) {
           isValid = false;
         }
       });
-
       // Establecer errores de validación si estamos validando activamente
       if (attemptedNext) {
         setValidationErrors(errors);
       }
-
       return isValid;
     }
 
@@ -264,6 +261,15 @@ export default function RegistrationForm(props) {
           isValid = false;
         }
       });
+    }
+
+    // Validación específica para cédula (solo en el paso 1)
+    if (stepIndex === 1 && formData.documentType === "cedula" && formData.identityCard) {
+      // Verificar que la cédula tenga entre 7 y 8 dígitos
+      if (formData.identityCard.length < 7 || formData.identityCard.length > 8) {
+        errors["identityCard"] = true;
+        isValid = false;
+      }
     }
 
     // Solo establecer errores de validación si estamos validando activamente
@@ -357,8 +363,11 @@ export default function RegistrationForm(props) {
         segundo_apellido: formData.secondLastName,
         segundo_nombre: formData.secondName,
         genero: formData.gender,
-        nacionalidad: formData.nationality,
-        identificacion: `${formData.idType}-${formData.identityCard}`,
+        // Ajustar para manejar pasaporte o cédula
+        nacionalidad: formData.documentType === "cedula" ? "venezolana" : "extranjera",
+        identificacion: formData.documentType === "cedula"
+          ? `${formData.idType}-${formData.identityCard}`
+          : formData.identityCard,
         correo: formData.email,
         telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
         telefono_de_habitacion: formData.homePhone,
@@ -629,7 +638,7 @@ export default function RegistrationForm(props) {
                         transition={{ duration: 0.5 }}
                         className="relative z-10 p-8"
                       >
-                        {error&&(
+                        {error && (
                           <Alert type="alert">{error.detail}</Alert>
                         )}
                         {!pagarLuego && (
