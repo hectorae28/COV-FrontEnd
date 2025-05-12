@@ -15,22 +15,6 @@ const nextConfig = {
                 pathname: '/**',
             },
             {
-                protocol: 'https',
-                hostname: 'romance-suggestion-pam-boxed.trycloudflare.com',
-                pathname: '/**',
-                port: '80',
-            },
-            {
-                protocol: 'https',
-                hostname: 'composite-broadband-root-accordance.trycloudflare.com',
-                pathname: '/**',
-            },
-            {
-                protocol: 'https',
-                hostname: 'horizon-deemed-moss-principles.trycloudflare.com',
-                pathname: '/**',
-            },
-            {
                 protocol: "http",
                 hostname: "192.168.100.242",
                 port: '8000',

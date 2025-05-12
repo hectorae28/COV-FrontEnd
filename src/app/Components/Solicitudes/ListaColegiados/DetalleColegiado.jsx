@@ -24,7 +24,6 @@ export default function DetalleColegiado({
   colegiado: providedColegiado,
 }) {
   // Obtenemos el ID desde los parámetros de la URL
-<<<<<<< HEAD
   const colegiadoId = params?.id || "1";
 
   const [vistaActual, setVistaActual] = useState("informacion");
@@ -39,21 +38,6 @@ export default function DetalleColegiado({
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null);
   const [refreshSolicitudes, setRefreshSolicitudes] = useState(0);
   const [solicitudItem, setSolicitudItem] = useState(null);
-=======
-  const colegiadoId = params?.id || "1"
-
-  const [vistaActual, setVistaActual] = useState("informacion")
-  const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null)
-  const [colegiado, setColegiado] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [tabActivo, setTabActivo] = useState("informacion")
-  const [mostrarModalSolicitud, setMostrarModalSolicitud] = useState(false)
-  const [tituloEntregado, setTituloEntregado] = useState(false)
-  const [confirmarTitulo, setConfirmarTitulo] = useState(false)
-  const [documentos, setDocumentos] = useState([])
-  const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null)
-  const [refreshSolicitudes, setRefreshSolicitudes] = useState(0)
->>>>>>> Feat/Noticias
 
   // Obtenemos funciones del store centralizado
   const {
@@ -89,13 +73,6 @@ export default function DetalleColegiado({
   useEffect(() => {
     const loadData = async () => {
       try {
-<<<<<<< HEAD
-        setIsLoading(true);
-        const colegiadoData = await getColegiado(colegiadoId);
-        console.log({ colegiadoData });
-        setColegiado(colegiadoData);
-        setIsLoading(false);
-=======
         setIsLoading(true)
         const colegiadoData = await getColegiado(colegiadoId)
         setColegiado(colegiadoData)
@@ -105,7 +82,6 @@ export default function DetalleColegiado({
         setDocumentos(docs || [])
 
         setIsLoading(false)
->>>>>>> Feat/Noticias
       } catch (error) {
         console.error("Error al cargar datos del colegiado:", error);
         setIsLoading(false);
@@ -143,9 +119,10 @@ export default function DetalleColegiado({
 
   // Función para registrar nueva solicitud
   const handleNuevaSolicitud = (nuevaSolicitud) => {
-    addSolicitud(colegiadoId, nuevaSolicitud);
-    setRefreshSolicitudes((prev) => prev + 1);
-    setMostrarModalSolicitud(false);
+    console.log(nuevaSolicitud)
+    // addSolicitud(colegiadoId, nuevaSolicitud);
+    // setRefreshSolicitudes((prev) => prev + 1);
+    // setMostrarModalSolicitud(false);
   };
 
   useEffect(() => {
@@ -364,24 +341,9 @@ export default function DetalleColegiado({
 
           {/* Contenido según el tab activo */}
           <div className="p-6">
-<<<<<<< HEAD
-            {tabActivo === "informacion" && (
-              <TablaInformacionPersonal colegiado={colegiado} />
-            )}
-            {tabActivo === "pagos" && (
-              <TablaPagos
-                colegiadoId={colegiadoId}
-                handleVerDocumento={handleVerDocumento}
-                documentos={documentos}
-              />
-            )}
-            {tabActivo === "inscripciones" && (
-              <TablaInscripciones colegiadoId={colegiadoId} />
-=======
             {tabActivo === "informacion" && <TablaInformacionPersonal colegiado={colegiado} />}
             {tabActivo === "pagos" && (
               <TablaPagos colegiadoId={colegiadoId} handleVerDocumento={handleVerDocumento} documentos={documentos || []} />
->>>>>>> Feat/Noticias
             )}
             {tabActivo === "solicitudes" && (
               <TablaSolicitudes

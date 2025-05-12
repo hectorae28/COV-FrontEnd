@@ -20,7 +20,6 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
 
   // Cargar solicitudes del colegiado
   useEffect(() => {
-<<<<<<< HEAD
     const fetchSolicitudes = () => {
       setIsLoading(true)
       
@@ -42,46 +41,18 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
         .finally(() => {
           setIsLoading(false);
         });
-=======
-    const fetchSolicitudes = async () => {
-      try {
-        setIsLoading(true)
-        // Obtener solicitudes desde el store centralizado
-        const solicitudesColegiado = getSolicitudes(colegiadoId) || []
-        setSolicitudes(solicitudesColegiado)
-        setIsLoading(false)
-      } catch (error) {
-        console.error("Error al cargar las solicitudes:", error)
-        setIsLoading(false)
-      }
->>>>>>> Feat/Noticias
     }
     
     fetchSolicitudes()
   }, [colegiadoId, getSolicitudes, forceUpdate])
 
   // Filtrar solicitudes según el término de búsqueda
-<<<<<<< HEAD
   const solicitudesFiltradas = Array.isArray(solicitudes) ? solicitudes : [];
 
   // Contar solicitudes por estado
   const solicitudesPendientes = solicitudesFiltradas.filter(sol => sol.estado === "Pendiente" || sol.estado === "En proceso").length
   const solicitudesCompletadas = solicitudesFiltradas.filter(sol => sol.estado === "Completada" || sol.estado === "Aprobada").length
   const solicitudesExoneradas = solicitudesFiltradas.filter(sol => sol.estado === "Exonerada").length
-=======
-  const solicitudesFiltradas = (solicitudes || []).filter(solicitud =>
-    solicitud.tipo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.fecha?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.estado?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.creador?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  // Contar solicitudes por estado
-  const solicitudesPendientes = (solicitudes || []).filter(sol => sol.estado === "Pendiente" || sol.estado === "En proceso").length
-  const solicitudesCompletadas = (solicitudes || []).filter(sol => sol.estado === "Completada" || sol.estado === "Aprobada").length
-  const solicitudesExoneradas = (solicitudes || []).filter(sol => sol.estado === "Exonerada").length
->>>>>>> Feat/Noticias
 
   // Obtener el color de fondo según el estado
   const getEstadoColor = (estado) => {
