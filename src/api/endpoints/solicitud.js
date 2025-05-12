@@ -31,12 +31,20 @@ export const getBcvDay = async () => {
         throw error;
     }
 }
-export const getCostos = async (pa) => {
+export const getCostos = async () => {
     try {
         const data = api.get('solicitudes/costo/')
         return data;
     } catch (error) {
         console.error("Error fetching presidentes:", error);
+        throw error;
+    }
+}
+export const fetchSolicitudes = async (url, params = "") => {
+    try {
+        return api.get(`solicitudes/${url}/${params}`)
+    } catch (error) {
+        console.error("error", error)
         throw error;
     }
 }

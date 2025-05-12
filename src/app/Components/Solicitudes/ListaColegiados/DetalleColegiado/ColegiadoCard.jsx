@@ -115,7 +115,7 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
                             <span>Nueva solicitud</span>
                         </button>
 
-                        {!colegiado.tituloEntregado && (
+                        {!colegiado.titulo && (
                             <button
                                 onClick={onConfirmarTitulo}
                                 className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-green-700 transition-colors"

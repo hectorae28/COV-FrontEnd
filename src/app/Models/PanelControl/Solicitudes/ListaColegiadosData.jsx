@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { colegiados } from "./SolicitudesData";
 import { fetchDataUsuario, patchDataUsuario,postDataUsuario } from "@/api/endpoints/colegiado";
+import {fetchSolicitudes} from "@/api/endpoints/solicitud"
 
 const useDataListaColegiados = create((set, get) => ({
   colegiados: [],
@@ -85,9 +86,9 @@ const useDataListaColegiados = create((set, get) => ({
     return colegiado ? colegiado.pagos : [];
   },
 
-  getSolicitudes: (colegiadoId) => {
-    const colegiado = get().getColegiado(colegiadoId);
-    return colegiado ? colegiado.solicitudes : [];
+  getSolicitudes: async(colegiadoId) => {
+    const res = await fetchSolicitudes("solicitud_unida", `?colegiado=${colegiadoId}`)
+    return res.data
   },
 
   getDocumentos: (colegiadoId) => {
@@ -246,8 +247,10 @@ const useDataListaColegiados = create((set, get) => ({
   },
 
   // Funciones específicas
-  marcarTituloEntregado: (colegiadoId, entregado = true) => {
-    return get().updateColegiado(colegiadoId, { tituloEntregado: entregado });
+  marcarTituloEntregado: async(colegiadoId, entregado = true) => {
+    const res = await patchDataUsuario(`colegiado/${colegiadoId}`,{titulo:entregado})
+    get().updateColegiado(colegiadoId, {titulo:entregado});
+    return res.data;
   },
 }));
 

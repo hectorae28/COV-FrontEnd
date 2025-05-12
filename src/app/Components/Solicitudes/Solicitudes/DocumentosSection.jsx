@@ -8,11 +8,11 @@ const DocumentosSection = ({ solicitud, onVerDocumento }) => {
                 Documentos requeridos
             </h2>
 
-            {solicitud.documentosRequeridos.length === 0 ? (
+            {false ? (
                 <div className="text-gray-500 text-sm">No se requieren documentos para esta solicitud</div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {solicitud.documentosRequeridos.map((documento, index) => {
+                    {/* {solicitud.documentosRequeridos.map((documento, index) => {
                         const documentoAdjunto = solicitud.documentosAdjuntos.find(doc =>
                             doc.toLowerCase().includes(documento.split(" ")[0].toLowerCase())
                         );
@@ -45,7 +45,7 @@ const DocumentosSection = ({ solicitud, onVerDocumento }) => {
                                 )}
                             </div>
                         )
-                    })}
+                    })} */}
                 </div>
             )}
         </div>

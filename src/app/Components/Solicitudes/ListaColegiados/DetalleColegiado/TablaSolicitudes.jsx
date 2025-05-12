@@ -20,34 +20,39 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
 
   // Cargar solicitudes del colegiado
   useEffect(() => {
-    const fetchSolicitudes = async () => {
-      try {
-        setIsLoading(true)
-        // Obtener solicitudes desde el store centralizado
-        const solicitudesColegiado = getSolicitudes(colegiadoId)
-        setSolicitudes(solicitudesColegiado)
-        setIsLoading(false)
-      } catch (error) {
-        console.error("Error al cargar las solicitudes:", error)
-        setIsLoading(false)
-      }
+    const fetchSolicitudes = () => {
+      setIsLoading(true)
+      
+      getSolicitudes(colegiadoId)
+        .then(solicitudesColegiado => {
+          // Asegurarse de que sea un array
+          const solicitudesArray = Array.isArray(solicitudesColegiado) ? solicitudesColegiado : [];
+          
+          // Filtrar elementos no válidos o indefinidos
+          const solicitudesValidas = solicitudesArray.filter(item => item && typeof item === 'object');
+          
+          console.log("Solicitudes válidas:", solicitudesValidas);
+          setSolicitudes(solicitudesValidas);
+        })
+        .catch(error => {
+          console.error("Error al cargar las solicitudes:", error);
+          setSolicitudes([]);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
+    
     fetchSolicitudes()
   }, [colegiadoId, getSolicitudes, forceUpdate])
 
   // Filtrar solicitudes según el término de búsqueda
-  const solicitudesFiltradas = solicitudes.filter(solicitud =>
-    solicitud.tipo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.fecha?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.estado?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solicitud.creador?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const solicitudesFiltradas = Array.isArray(solicitudes) ? solicitudes : [];
 
   // Contar solicitudes por estado
-  const solicitudesPendientes = solicitudes.filter(sol => sol.estado === "Pendiente" || sol.estado === "En proceso").length
-  const solicitudesCompletadas = solicitudes.filter(sol => sol.estado === "Completada" || sol.estado === "Aprobada").length
-  const solicitudesExoneradas = solicitudes.filter(sol => sol.estado === "Exonerada").length
+  const solicitudesPendientes = solicitudesFiltradas.filter(sol => sol.estado === "Pendiente" || sol.estado === "En proceso").length
+  const solicitudesCompletadas = solicitudesFiltradas.filter(sol => sol.estado === "Completada" || sol.estado === "Aprobada").length
+  const solicitudesExoneradas = solicitudesFiltradas.filter(sol => sol.estado === "Exonerada").length
 
   // Obtener el color de fondo según el estado
   const getEstadoColor = (estado) => {
@@ -133,7 +138,7 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Total de solicitudes</p>
-          <p className="text-xl font-semibold text-purple-600">{solicitudes.length}</p>
+          <p className="text-xl font-semibold text-purple-600">{solicitudesFiltradas.length}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Pendientes o en proceso</p>
@@ -166,8 +171,8 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
             </div>
           ) : (
             <div className="space-y-4">
-              {solicitudesFiltradas.map(solicitud => (
-                <div key={solicitud.id} className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-lg">
+              {solicitudesFiltradas.map((solicitud, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-lg">
                   <div className="p-5">
                     <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
                       <div>
@@ -176,10 +181,10 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
                             <FileText className="text-[#C40180]" size={20} />
                           </div>
                           <div>
-                            <h4 className="font-medium text-gray-900">{solicitud.tipo || "Solicitud"}</h4>
+                            <h4 className="font-medium text-gray-900">{solicitud.tipo_solicitud || "Solicitud"}</h4>
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${getEstadoColor(solicitud.estado)}`}>
-                              {getEstadoIcon(solicitud.estado)}
-                              {solicitud.estado || "Pendiente"}
+                              {getEstadoIcon(solicitud.status)}
+                              {solicitud.status || "Pendiente"}
                             </span>
                           </div>
                         </div>
@@ -187,7 +192,7 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
                       <div className="mt-3 sm:mt-0">
                         <button
                           onClick={() => onVerDetalle && onVerDetalle(solicitud.id)}
-                          className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-md text-sm flex items-center transition-colors"
+                          className="bg-blue-50 cursor-pointer hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-md text-sm flex items-center transition-colors"
                         >
                           <Eye size={16} className="mr-2" />
                           Ver detalles
@@ -197,7 +202,7 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
 
                     {solicitud.descripcion && (
                       <div className="mb-4 bg-gray-50 p-3 rounded-md">
-                        <p className="text-gray-700 text-sm line-clamp-2">{solicitud.descripcion}</p>
+                        <p className="text-gray-700 text-sm line-clamp-2">{solicitud.descripcion||"texto"}</p>
                       </div>
                     )}
 
@@ -206,7 +211,7 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
                         <Calendar size={16} className="mr-2 text-gray-400" />
                         <div>
                           <span className="text-xs text-gray-500 block">Fecha de solicitud</span>
-                          <span>{formatearFecha(solicitud.fecha)}</span>
+                          <span>{formatearFecha(solicitud.fecha_solicitud)}</span>
                         </div>
                       </div>
 
@@ -215,7 +220,7 @@ export default function TablaSolicitudes({ colegiadoId, forceUpdate, onVerDetall
                           <CheckCircle size={16} className="mr-2 text-gray-400" />
                           <div>
                             <span className="text-xs text-gray-500 block">Fecha de aprobación</span>
-                            <span>{formatearFecha(solicitud.fechaAprobacion)}</span>
+                            <span>{formatearFecha(solicitud.fecha_solicitud)}</span>
                           </div>
                         </div>
                       )}

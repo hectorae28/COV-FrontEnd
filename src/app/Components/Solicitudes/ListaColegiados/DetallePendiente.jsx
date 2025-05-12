@@ -29,9 +29,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
   const [metodoPago, setMetodoPago] = useState([]);
   const [tasaBcv, setTasaBcv] = useState(0);
   const [costoInscripcion, setCostoInscripcion] = useState(0);
-  const Externalparams = useParams()
-  console.log(window.location.search)
-  
   const pendienteId = params?.id || "p1";
 
   // Obtenemos funciones del store centralizado
@@ -72,6 +69,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
   const [documentosCompletos, setDocumentosCompletos] = useState(false);
   const [documentosRequeridos, setDocumentosRequeridos] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null)
 
 
   // Estados para notificaciones
@@ -477,12 +475,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
       await updateColegiadoPendiente(pendienteId, nuevosDatos);
       loadData()
 
-      // Actualizar el estado local
-    //   setPendiente(nuevosDatos);
-    //   setPagosPendientes(false);
-    //   setDocumentosRequeridos(nuevosDatos.documentos);
-
-      // Mostrar confirmación de exoneración
       setExoneracionExitosa(true);
       setMostrarExoneracion(false);
 
