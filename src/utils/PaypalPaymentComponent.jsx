@@ -31,7 +31,6 @@ function PaypalPaymentComponent({
     }
 
     setPagoDetalles({
-      modelo_solvencia_id: 1,
       user_id: colegiadoUser.id,
       metodo_de_pago_id: metodoDePagoId,
       tasa_bcv: tasaBCV,
