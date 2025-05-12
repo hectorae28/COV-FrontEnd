@@ -39,9 +39,7 @@ const Checkout = ({ amount, pagoDetalles, handlePago }) => {
                     order_id: data.orderID
                 })
             })
-            console.log(capturedOrder)
             const detallesDePago = {...pagoDetalles, num_referencia: data.orderID}
-            console.log(detallesDePago)
             const pagoResult = await handlePago(detallesDePago);
             return pagoResult;
         } catch(error) {

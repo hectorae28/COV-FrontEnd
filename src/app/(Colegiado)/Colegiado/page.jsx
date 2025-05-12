@@ -30,21 +30,19 @@ export default function Home() {
   const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
   const setCostos = useColegiadoUserStore((state) => state.setCostos);
   const setTasaBcv = useColegiadoUserStore((state) => state.setTasaBcv);
+  const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
 
   const checkSolvencyStatus = () => {
-    if (!userInfo) return;
+    if (!colegiadoUser) return;
+    
     const today = new Date();
-    const [year, month, day] = solvencyInfo.date.split("-").map(Number);
-    const solvencyDate = new Date(year, month - 1, day); // Meses en JS son 0-indexed
+    const [year, month, day] = colegiadoUser.solvente.split("-").map(Number);
+    const solvencyDate = new Date(year, month - 1, day);
 
     const warningDate = new Date(solvencyDate);
     warningDate.setDate(warningDate.getDate() - 14);
 
-    if (today >= warningDate) {
-      setShowSolvencyWarning(true);
-    } else {
-      setShowSolvencyWarning(false);
-    }
+    setShowSolvencyWarning(today >= warningDate);
   };
 
   async function fetchCostosAndUserData() {
@@ -83,14 +81,18 @@ export default function Home() {
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
-
-    const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas
+    const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24h check
 
     if (session) {
       fetchCostosAndUserData();
     }
+
     return () => clearInterval(intervalId);
   }, [session, status]);
+
+  useEffect(() => {
+    checkSolvencyStatus();
+  }, [useColegiadoUserStore((state) => state.colegiadoUser.solvente)]);
 
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {

@@ -3,11 +3,9 @@
 import PagosColg from "@/app/Components/PagosModal";
 import { Info } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import { fetchDataUsuario } from "@/api/endpoints/colegiado";
 import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 import { pagoSolvencia } from "@/api/endpoints/pago";
+import { fetchMe } from "@/api/endpoints/colegiado";
 
 export default function SolvenciaPago() {
   /*const initialState = {
@@ -57,6 +55,7 @@ export default function SolvenciaPago() {
   const [costoSolvencia, setCostoSolvencia] = useState(0);
   const [validationErrors, setValidationErrors] = useState({});
   const costos = useColegiadoUserStore((store) => store.costos);
+  const setColegiadoUser = useColegiadoUserStore((store) => store.setColegiadoUser);
 
   useEffect(() => {
     if (costos && costos.length > 0) {
@@ -66,10 +65,14 @@ export default function SolvenciaPago() {
   }, []);
 
   const handlePagoSolvencia = async (detallesPagoSolvencia) => {
-    console.log('EPA por aqui')
-    return pagoSolvencia(detallesPagoSolvencia).then((pagoResult) =>
-      {return [undefined, pagoResult];}
-    ).catch(error => {return [error, undefined]});      
+    try {
+      const pagoResult = await pagoSolvencia(detallesPagoSolvencia);
+      const colegiadoResult = await fetchMe();
+      setColegiadoUser(colegiadoResult.data);
+      return [undefined, pagoResult]
+    } catch(error) {
+      return [error, undefined];
+    }
   }
 
   return (

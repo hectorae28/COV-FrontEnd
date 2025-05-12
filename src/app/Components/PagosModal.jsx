@@ -43,7 +43,6 @@ export default function PagosColg({ props }) {
   useEffect(() => {
     getTasa();
     getMetodosDePago();
-    console.log(metodoDePago)
   }, [tasaBCV])
 
   // PayPal fee calculation
