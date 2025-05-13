@@ -23,41 +23,50 @@ import ArticlePreview from "./article-preview.jsx"
 import { organizeElementsIntoRows } from "./utils"
 
 const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPreview, handleInputChange }) => {
-  const [editedArticle, setEditedArticle] = useState(article);
-  const [activeElement, setActiveElement] = useState(null);
-  const [activeTab, setActiveTab] = useState("general");
-  const [contentElements, setContentElements] = useState([]);
-  const [elementRows, setElementRows] = useState([]);
-  
+  const [editedArticle, setEditedArticle] = useState(article)
+  const [activeElement, setActiveElement] = useState(null)
+  const [activeTab, setActiveTab] = useState("general")
+  const [contentElements, setContentElements] = useState([])
+  const [elementRows, setElementRows] = useState([])
+
   // Actualiza el editedArticle cuando cambia el artículo de entrada
   useEffect(() => {
-    setEditedArticle(article);
-  }, [article]);
+    setEditedArticle(article)
+  }, [article])
 
   // Si no hay handleInputChange proporcionado, definimos uno local
-  const handleArticleInputChange = handleInputChange || ((e) => {
-    const { name, value } = e.target;
-    setEditedArticle({
-      ...editedArticle,
-      [name]: value,
-    });
-  });
+  const handleArticleInputChange =
+    handleInputChange ||
+    ((e) => {
+      const { name, value } = e.target
+      setEditedArticle({
+        ...editedArticle,
+        [name]: value,
+      })
+    })
 
   useEffect(() => {
     if (!article.contentElements) {
-      const initialElements = [];
-      initialElements.push({
-        id: "title",
-        type: "heading1",
-        content: article.title || "Nuevo Título",
-        style: {
-          textAlign: "center",
-          width: "100%",
-          color: "#1f2937",
-        },
-      });
+      const initialElements = []
+      // Evitar duplicar el título si ya existe en el contenido
+      if (!initialElements.some((el) => el.type === "heading1" && el.content === article.title)) {
+        initialElements.push({
+          id: "title",
+          type: "heading1",
+          content: article.title || "Nuevo Título",
+          style: {
+            textAlign: "center",
+            width: "100%",
+            color: "#1f2937",
+          },
+          rowData: {
+            row: 0,
+            gridPosition: 0,
+          },
+        })
+      }
 
-      const paragraphs = (article.fullContent || article.description || "Contenido del artículo").split("\n\n");
+      const paragraphs = (article.fullContent || article.description || "Contenido del artículo").split("\n\n")
       paragraphs.forEach((para, index) => {
         initialElements.push({
           id: `p${index}`,
@@ -68,19 +77,36 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
             width: "100%",
             color: "#4b5563",
           },
-        });
-      });
+          rowData: {
+            row: index + 1,
+            gridPosition: 0,
+          },
+        })
+      })
 
-      setContentElements(initialElements);
+      setContentElements(initialElements)
     } else {
-      setContentElements(article.contentElements);
+      // Asegurarse de que todos los elementos tengan rowData
+      const elementsWithRowData = article.contentElements.map((element, index) => {
+        if (!element.rowData) {
+          return {
+            ...element,
+            rowData: {
+              row: index,
+              gridPosition: 0,
+            },
+          }
+        }
+        return element
+      })
+      setContentElements(elementsWithRowData)
     }
-  }, [article]);
+  }, [article])
 
   useEffect(() => {
-    const rows = organizeElementsIntoRows(contentElements);
-    setElementRows(rows);
-  }, [contentElements]);
+    const rows = organizeElementsIntoRows(contentElements)
+    setElementRows(rows)
+  }, [contentElements])
 
   // Manejar cambios en elementos de contenido
   const handleElementUpdate = (id, updatedData) => {
@@ -100,6 +126,10 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
         textAlign: "left",
         width: "100%",
         color: type.includes("heading") ? "#1f2937" : "#4b5563",
+      },
+      rowData: {
+        row: elementRows.length > 0 ? elementRows.length : 0,
+        gridPosition: 0,
       },
     }
 
@@ -141,50 +171,179 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
     }
   }
 
- // Mover elemento hacia arriba o abajo (entre filas)
-const moveElement = (id, direction) => {
-  const currentIndex = contentElements.findIndex((element) => element.id === id);
-  if (currentIndex < 0) return;
+  // Mover elemento hacia arriba o abajo (entre filas)
+  const moveElement = (id, direction) => {
+    const currentIndex = contentElements.findIndex((element) => element.id === id)
+    if (currentIndex < 0) return
 
-  const newIndex =
-    direction === "up" ? Math.max(0, currentIndex - 1) : Math.min(contentElements.length - 1, currentIndex + 1);
+    const newIndex =
+      direction === "up" ? Math.max(0, currentIndex - 1) : Math.min(contentElements.length - 1, currentIndex + 1)
 
-  if (newIndex === currentIndex) return;
+    if (newIndex === currentIndex) return
 
-  const updatedElements = [...contentElements];
-  const [movedElement] = updatedElements.splice(currentIndex, 1);
-  updatedElements.splice(newIndex, 0, movedElement);
+    const updatedElements = [...contentElements]
+    const [movedElement] = updatedElements.splice(currentIndex, 1)
+    updatedElements.splice(newIndex, 0, movedElement)
 
-  setContentElements(updatedElements);
-};
+    // Actualizar rowData para reflejar el nuevo orden
+    const updatedWithRowData = updatedElements.map((element, index) => {
+      if (!element.rowData) {
+        return {
+          ...element,
+          rowData: {
+            row: index,
+            gridPosition: 0,
+          },
+        }
+      }
+      return {
+        ...element,
+        rowData: {
+          ...element.rowData,
+          row: index,
+        },
+      }
+    })
 
-// Mover elemento horizontalmente dentro de su fila
-const moveElementHorizontally = (id, direction) => {
-  const rowIndex = elementRows.findIndex((row) => row.some((element) => element.id === id));
-  if (rowIndex === -1) return;
+    setContentElements(updatedWithRowData)
+  }
 
-  const row = elementRows[rowIndex];
-  const elementIndex = row.findIndex((element) => element.id === id);
-  if (elementIndex === -1) return;
+  // Mover elemento horizontalmente dentro de su fila o a una posición específica
+  const moveElementInGrid = (id, direction, position) => {
+    const elementIndex = contentElements.findIndex((element) => element.id === id)
+    if (elementIndex === -1) return
 
-  const newElementIndex =
-    direction === "left" ? Math.max(0, elementIndex - 1) : Math.min(row.length - 1, elementIndex + 1);
+    const element = contentElements[elementIndex]
+    const currentPosition = element.rowData?.gridPosition || 0
+    const width = Number.parseInt(element.style?.width || "100%") / 25
 
-  if (newElementIndex === elementIndex) return;
+    let newPosition
 
-  const updatedElements = [...contentElements];
-  const [movedElement] = updatedElements.splice(contentElements.findIndex((el) => el.id === id), 1);
-  updatedElements.splice(
-    contentElements.findIndex((el) => el.id === row[newElementIndex].id),
-    0,
-    movedElement
-  );
+    if (direction === "position" && position !== undefined) {
+      // Mover a una posición específica
+      newPosition = position
+    } else {
+      // Mover a la izquierda o derecha
+      newPosition = direction === "left" ? Math.max(0, currentPosition - 1) : Math.min(4 - width, currentPosition + 1)
+    }
 
-  setContentElements(updatedElements);
-};
+    // Si la posición no cambia, no hacer nada
+    if (newPosition === currentPosition) return
+
+    // Verificar si el elemento cabe en la nueva posición
+    const row = element.rowData?.row || 0
+    if (newPosition + width > 4) return // No cabe en el grid
+
+    // Verificar si hay conflicto con otros elementos
+    const rowElements = contentElements.filter((el) => el.id !== id && el.rowData?.row === row)
+
+    const hasConflict = rowElements.some((el) => {
+      const elPos = el.rowData?.gridPosition || 0
+      const elWidth = Number.parseInt(el.style?.width || "100%") / 25
+      return newPosition < elPos + elWidth && newPosition + width > elPos
+    })
+
+    if (hasConflict) return // Hay conflicto con otro elemento
+
+    // Actualizar la posición del elemento
+    const updatedElements = [...contentElements]
+    updatedElements[elementIndex] = {
+      ...element,
+      rowData: {
+        ...element.rowData,
+        gridPosition: newPosition,
+      },
+    }
+
+    setContentElements(updatedElements)
+  }
+
+  // Mover elemento a otra fila
+  const moveElementToRow = (id, targetRow) => {
+    const elementIndex = contentElements.findIndex((element) => element.id === id)
+    if (elementIndex === -1) return
+
+    const element = contentElements[elementIndex]
+    const currentRow = element.rowData?.row || 0
+
+    // Si la fila no cambia, no hacer nada
+    if (targetRow === currentRow) return
+
+    // Buscar la mejor posición disponible en la fila objetivo
+    const width = element.style?.width || "100%"
+    const widthInGrid = Number.parseInt(width) / 25
+
+    // Verificar si hay espacio en la fila objetivo
+    const rowElements = contentElements.filter((el) => el.id !== id && el.rowData?.row === targetRow)
+
+    // Encontrar posiciones disponibles
+    const availablePositions = []
+    for (let pos = 0; pos <= 4 - widthInGrid; pos++) {
+      const hasConflict = rowElements.some((el) => {
+        const elPos = el.rowData?.gridPosition || 0
+        const elWidth = Number.parseInt(el.style?.width || "100%") / 25
+        return pos < elPos + elWidth && pos + widthInGrid > elPos
+      })
+
+      if (!hasConflict) {
+        availablePositions.push(pos)
+      }
+    }
+
+    if (availablePositions.length === 0) {
+      // No hay espacio disponible en la fila objetivo
+      alert("No hay espacio disponible en la fila seleccionada para este elemento.")
+      return
+    }
+
+    // Usar la primera posición disponible
+    const newPosition = availablePositions[0]
+
+    // Actualizar la fila y posición del elemento
+    const updatedElements = [...contentElements]
+    updatedElements[elementIndex] = {
+      ...element,
+      rowData: {
+        ...element.rowData,
+        row: targetRow,
+        gridPosition: newPosition,
+      },
+    }
+
+    setContentElements(updatedElements)
+  }
 
   // Cambiar ancho de elemento
   const changeElementWidth = (id, newWidth) => {
+    const elementIndex = contentElements.findIndex((element) => element.id === id)
+    if (elementIndex === -1) return
+
+    const element = contentElements[elementIndex]
+    const currentPosition = element.rowData?.gridPosition || 0
+    const widthInGrid = Number.parseInt(newWidth) / 25
+
+    // Verificar si el nuevo ancho cabe en la posición actual
+    if (currentPosition + widthInGrid > 4) {
+      alert("El elemento no cabe con este ancho en la posición actual.")
+      return
+    }
+
+    // Verificar si hay conflicto con otros elementos
+    const row = element.rowData?.row || 0
+    const rowElements = contentElements.filter((el) => el.id !== id && el.rowData?.row === row)
+
+    const hasConflict = rowElements.some((el) => {
+      const elPos = el.rowData?.gridPosition || 0
+      const elWidth = Number.parseInt(el.style?.width || "100%") / 25
+      return currentPosition < elPos + elWidth && currentPosition + widthInGrid > elPos
+    })
+
+    if (hasConflict) {
+      alert("No se puede cambiar el ancho porque hay conflicto con otros elementos.")
+      return
+    }
+
+    // Actualizar el ancho del elemento
     const updatedElements = contentElements.map((element) =>
       element.id === id ? { ...element, style: { ...element.style, width: newWidth } } : element,
     )
@@ -195,7 +354,7 @@ const moveElementHorizontally = (id, direction) => {
   const handleSave = () => {
     const finalArticle = {
       ...editedArticle,
-      contentElements
+      contentElements,
     }
     onSave(finalArticle)
   }
@@ -304,23 +463,21 @@ const moveElementHorizontally = (id, direction) => {
 
           <div className="p-6">
             {activeTab === "general" ? (
-              <GeneralInfoTab 
-                editedArticle={editedArticle} 
-                handleInputChange={handleArticleInputChange} 
-              />
+              <GeneralInfoTab editedArticle={editedArticle} handleInputChange={handleArticleInputChange} />
             ) : (
               <ContentTab
-  contentElements={contentElements}
-  elementRows={elementRows}
-  activeElement={activeElement}
-  setActiveElement={setActiveElement}
-  addContentElement={addContentElement}
-  handleElementUpdate={handleElementUpdate}
-  removeContentElement={removeContentElement}
-  moveElement={moveElement}
-  moveElementInGrid={moveElementHorizontally} // Asegúrate de que esta función está definida
-  changeElementWidth={changeElementWidth}
-/>
+                contentElements={contentElements}
+                elementRows={elementRows}
+                activeElement={activeElement}
+                setActiveElement={setActiveElement}
+                addContentElement={addContentElement}
+                handleElementUpdate={handleElementUpdate}
+                removeContentElement={removeContentElement}
+                moveElement={moveElement}
+                moveElementInGrid={moveElementInGrid}
+                changeElementWidth={changeElementWidth}
+                moveElementToRow={moveElementToRow}
+              />
             )}
           </div>
         </div>
@@ -385,7 +542,7 @@ const GeneralInfoTab = ({ editedArticle, handleInputChange }) => {
   )
 }
 
-// Componente para la pestaña de contenido
+// Modificar el componente ContentTab para incluir la nueva funcionalidad de mover elementos
 const ContentTab = ({
   contentElements,
   elementRows,
@@ -397,23 +554,24 @@ const ContentTab = ({
   moveElement,
   moveElementInGrid,
   changeElementWidth,
-  debugInfo
+  moveElementToRow,
+  debugInfo,
 }) => {
   return (
     <div className="space-y-6">
       <ContentElementButtons addContentElement={addContentElement} />
 
       {activeElement ? (
-  <ElementEditor
-    element={contentElements.find((e) => e.id === activeElement)}
-    onUpdate={(updatedData) => handleElementUpdate(activeElement, updatedData)}
-    onRemove={() => removeContentElement(activeElement)}
-    onMove={(direction) => moveElement(activeElement, direction)}
-    onMoveInGrid={(direction) => moveElementInGrid(activeElement, direction)}
-    onChangeWidth={(width) => changeElementWidth(activeElement, width)}
-    // NO intentes pasar 'row' o algo similar que no esté definido
-  />
-) : (
+        <ElementEditor
+          element={contentElements.find((e) => e.id === activeElement)}
+          onUpdate={(updatedData) => handleElementUpdate(activeElement, updatedData)}
+          onRemove={() => removeContentElement(activeElement)}
+          onMove={(direction) => moveElement(activeElement, direction)}
+          onMoveInGrid={(id, direction, position) => moveElementInGrid(id, direction, position)}
+          onChangeWidth={(width) => changeElementWidth(activeElement, width)}
+          onMoveToRow={(id, targetRow) => moveElementToRow(id, targetRow)}
+        />
+      ) : (
         <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-xl">
           <p className="text-gray-500 mb-4">Selecciona un elemento en la vista previa para editarlo</p>
           {contentElements.length > 0 && (
@@ -431,12 +589,12 @@ const ContentTab = ({
       )}
 
       <ContentStructure
-  elementRows={elementRows}
-  activeElement={activeElement}
-  setActiveElement={setActiveElement}
-  removeContentElement={removeContentElement}
-  moveElementHorizontally={moveElementInGrid} // Asegúrate de pasar con el nombre correcto
-/>
+        elementRows={elementRows}
+        activeElement={activeElement}
+        setActiveElement={setActiveElement}
+        removeContentElement={removeContentElement}
+        moveElementHorizontally={moveElementInGrid}
+      />
 
       {/* Información de depuración si está disponible */}
       {debugInfo && (

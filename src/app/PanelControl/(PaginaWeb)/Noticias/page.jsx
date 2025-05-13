@@ -8,6 +8,7 @@ import ArticlesList from "@/Components/PaginaWeb/Noticias/articles-list"
 import ArticleEditor from "@/Components/PaginaWeb/Noticias/article-editor"
 import ArticleFullPreview from "@/app/Components/PaginaWeb/Noticias/article-full-preview.jsx"
 
+// Mejorar el filtro por fecha para que sea más preciso y útil
 const NewsDashboard = () => {
   const [articles, setArticles] = useState([])
   const [filteredArticles, setFilteredArticles] = useState([])
@@ -18,14 +19,16 @@ const NewsDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("")
   const [dateFilter, setDateFilter] = useState("")
+  const [dateRangeFilter, setDateRangeFilter] = useState({ start: "", end: "" })
+  const [useAdvancedDateFilter, setUseAdvancedDateFilter] = useState(false)
   const router = useRouter()
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setSelectedArticle({
       ...selectedArticle,
       [name]: value,
-    });
+    })
   }
 
   // Cargar noticias al iniciar
@@ -52,14 +55,61 @@ const NewsDashboard = () => {
     }
 
     // Filtrar por fecha
-    if (dateFilter !== "") {
-      result = result.filter((article) => {
-        return article.date.includes(dateFilter)
-      })
+    if (useAdvancedDateFilter) {
+      // Filtro avanzado por rango de fechas
+      if (dateRangeFilter.start || dateRangeFilter.end) {
+        result = result.filter((article) => {
+          if (!article.date) return true
+
+          // Convertir fecha del artículo a formato Date
+          const dateParts = article.date.split("/")
+          if (dateParts.length !== 3) return true
+
+          const articleDate = new Date(
+            Number.parseInt(dateParts[2]), // año
+            Number.parseInt(dateParts[1]) - 1, // mes (0-11)
+            Number.parseInt(dateParts[0]), // día
+          )
+
+          // Verificar si está dentro del rango
+          let isInRange = true
+
+          if (dateRangeFilter.start) {
+            const startDate = new Date(dateRangeFilter.start)
+            isInRange = isInRange && articleDate >= startDate
+          }
+
+          if (dateRangeFilter.end) {
+            const endDate = new Date(dateRangeFilter.end)
+            isInRange = isInRange && articleDate <= endDate
+          }
+
+          return isInRange
+        })
+      }
+    } else {
+      // Filtro simple por mes/año
+      if (dateFilter !== "") {
+        result = result.filter((article) => {
+          if (!article.date) return false
+
+          // Extraer mes y año del filtro (formato YYYY-MM)
+          const [filterYear, filterMonth] = dateFilter.split("-")
+
+          // Extraer mes y año de la fecha del artículo (formato DD/MM/YYYY)
+          const dateParts = article.date.split("/")
+          if (dateParts.length !== 3) return false
+
+          const articleMonth = dateParts[1]
+          const articleYear = dateParts[2]
+
+          return articleYear === filterYear && articleMonth === filterMonth
+        })
+      }
     }
 
     setFilteredArticles(result)
-  }, [articles, searchQuery, categoryFilter, dateFilter])
+  }, [articles, searchQuery, categoryFilter, dateFilter, dateRangeFilter, useAdvancedDateFilter])
 
   // Función para eliminar un artículo
   const handleDelete = (id) => {
@@ -114,30 +164,30 @@ const NewsDashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-18 pb-16 select-none cursor-default">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className="text-center mb-8 md:mb-10 mt-16 md:mt-22"
-      >
-        <motion.h1
-          className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
-        >
-          Sección Noticias
-        </motion.h1>
-        <motion.p
-          className="mt-4 max-w-full mx-auto text-gray-600 text-base md:text-lg"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-        >
-          Gestión de contenidos de la sección <span className="font-bold text-[#C40180]">Noticias</span> del sitio web
-          del Colegio Odontológico de Venezuela
-        </motion.p>
-      </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="text-center mb-8 md:mb-10 mt-16 md:mt-22"
+          >
+            <motion.h1
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
+            >
+              Sección Noticias
+            </motion.h1>
+            <motion.p
+              className="mt-4 max-w-full mx-auto text-gray-600 text-base md:text-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+            >
+              Gestión de contenidos de la sección <span className="font-bold text-[#C40180]">Noticias</span> del sitio
+              web del Colegio Odontológico de Venezuela
+            </motion.p>
+          </motion.div>
 
           {/* Herramientas de búsqueda y filtrado */}
           <div className="mb-8 bg-white rounded-xl shadow-md p-4">
@@ -174,14 +224,56 @@ const NewsDashboard = () => {
                 </select>
               </div>
 
-              {/* Filtro por fecha */}
+              {/* Filtro por fecha mejorado */}
               <div className="w-full md:w-1/4">
-                <input
-                  type="month"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="cursor-pointer block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180]"
-                />
+                {useAdvancedDateFilter ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="date"
+                        value={dateRangeFilter.start}
+                        onChange={(e) => setDateRangeFilter({ ...dateRangeFilter, start: e.target.value })}
+                        className="cursor-pointer block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180]"
+                        placeholder="Fecha inicio"
+                      />
+                      <span className="text-gray-500">a</span>
+                      <input
+                        type="date"
+                        value={dateRangeFilter.end}
+                        onChange={(e) => setDateRangeFilter({ ...dateRangeFilter, end: e.target.value })}
+                        className="cursor-pointer block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180]"
+                        placeholder="Fecha fin"
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        setUseAdvancedDateFilter(false)
+                        setDateRangeFilter({ start: "", end: "" })
+                      }}
+                      className="text-xs text-[#C40180] hover:underline"
+                    >
+                      Usar filtro simple
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <input
+                      type="month"
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      className="cursor-pointer block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180]"
+                    />
+                    <button
+                      onClick={() => {
+                        setUseAdvancedDateFilter(true)
+                        setDateFilter("")
+                      }}
+                      className="text-xs text-[#C40180] hover:underline"
+                    >
+                      Usar filtro avanzado
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Botón para añadir nueva noticia */}
@@ -218,11 +310,12 @@ const NewsDashboard = () => {
             onPreview={handlePreview}
             searchQuery={searchQuery}
             categoryFilter={categoryFilter}
-            dateFilter={dateFilter}
+            dateFilter={useAdvancedDateFilter ? `${dateRangeFilter.start} - ${dateRangeFilter.end}` : dateFilter}
             onClearFilters={() => {
               setSearchQuery("")
               setCategoryFilter("")
               setDateFilter("")
+              setDateRangeFilter({ start: "", end: "" })
             }}
           />
         </div>
@@ -234,17 +327,17 @@ const NewsDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-28 pb-16">
       {editMode ? (
-  <ArticleEditor
-    article={selectedArticle}
-    onSave={handleSaveArticle}
-    onCancel={handleBackToList}
-    fullPreview={fullPreview}
-    toggleFullPreview={() => setFullPreview(!fullPreview)}
-    handleInputChange={handleInputChange} // Asegúrate de pasar handleInputChange
-  />
-) : (
-  <ArticleFullPreview article={selectedArticle} onBack={handleBackToList} />
-)}
+        <ArticleEditor
+          article={selectedArticle}
+          onSave={handleSaveArticle}
+          onCancel={handleBackToList}
+          fullPreview={fullPreview}
+          toggleFullPreview={() => setFullPreview(!fullPreview)}
+          handleInputChange={handleInputChange}
+        />
+      ) : (
+        <ArticleFullPreview article={selectedArticle} onBack={handleBackToList} />
+      )}
     </div>
   )
 }

@@ -15,58 +15,63 @@ import {
   ChevronRight,
 } from "lucide-react"
 
-const ElementEditor = ({ element, onUpdate, onRemove, onMove, onMoveInGrid, onChangeWidth }) => {
-  if (!element) return (
-    <div className="p-4 bg-white border border-gray-200 rounded-xl">
-      <p className="text-gray-500 text-center">No hay elemento seleccionado para editar</p>
-    </div>
-  );
+// Modificar el componente ElementEditor para incluir la funcionalidad de mover entre posiciones específicas
+const ElementEditor = ({ element, onUpdate, onRemove, onMove, onMoveInGrid, onChangeWidth, onMoveToRow }) => {
+  if (!element)
+    return (
+      <div className="p-4 bg-white border border-gray-200 rounded-xl">
+        <p className="text-gray-500 text-center">No hay elemento seleccionado para editar</p>
+      </div>
+    )
 
   const handleContentChange = (e) => {
-    if (!e || !e.target) return;
-    onUpdate && onUpdate({ content: e.target.value });
+    if (!e || !e.target) return
+    onUpdate && onUpdate({ content: e.target.value })
   }
 
   const handleListItemChange = (index, value) => {
-    if (!element.content || !Array.isArray(element.content)) return;
+    if (!element.content || !Array.isArray(element.content)) return
 
-    const newContent = [...element.content];
-    newContent[index] = value;
-    onUpdate && onUpdate({ content: newContent });
+    const newContent = [...element.content]
+    newContent[index] = value
+    onUpdate && onUpdate({ content: newContent })
   }
 
   const addListItem = () => {
-    if (!element.content || !Array.isArray(element.content)) return;
+    if (!element.content || !Array.isArray(element.content)) return
 
-    onUpdate && onUpdate({ content: [...element.content, "Nuevo elemento"] });
+    onUpdate && onUpdate({ content: [...element.content, "Nuevo elemento"] })
   }
 
   const removeListItem = (index) => {
-    if (!element.content || !Array.isArray(element.content)) return;
+    if (!element.content || !Array.isArray(element.content)) return
 
-    const newContent = [...element.content];
-    newContent.splice(index, 1);
-    onUpdate && onUpdate({ content: newContent });
+    const newContent = [...element.content]
+    newContent.splice(index, 1)
+    onUpdate && onUpdate({ content: newContent })
   }
 
   const handleStyleChange = (property, value) => {
-    if (!property) return;
+    if (!property) return
 
-    onUpdate && onUpdate({
-      style: {
-        ...(element.style || {}),
-        [property]: value,
-      },
-    });
+    onUpdate &&
+      onUpdate({
+        style: {
+          ...(element.style || {}),
+          [property]: value,
+        },
+      })
   }
 
   // Calcular ancho en unidades grid (1-4)
-  const widthInGrid = parseInt(element.style?.width || "100%") / 25;
+  const widthInGrid = Number.parseInt(element.style?.width || "100%") / 25
   // Obtener posición actual en el grid
-  const gridPosition = element.rowData?.gridPosition || 0;
+  const gridPosition = element.rowData?.gridPosition || 0
+  // Obtener fila actual
+  const currentRow = element.rowData?.row || 0
 
   // Verificar si puede moverse a la izquierda o derecha basado en la posición
-  const canMoveLeft = gridPosition > 0;
+  const canMoveLeft = gridPosition > 0
   const canMoveRight = gridPosition + widthInGrid < 4
 
   return (
@@ -131,24 +136,62 @@ const ElementEditor = ({ element, onUpdate, onRemove, onMove, onMoveInGrid, onCh
               </button>
             )}
           </div>
-          
+
           <div className="text-sm text-gray-600">
             Posición: <span className="font-medium">{gridPosition + 1}</span> de 4
           </div>
         </div>
 
-        {/* Representación visual del grid */}
+        {/* Representación visual del grid con posiciones específicas */}
         <div className="mt-3">
           <div className="grid grid-cols-4 gap-1 border border-gray-200 rounded-md bg-white p-1">
             {[0, 1, 2, 3].map((pos) => (
               <div
                 key={`grid-pos-${pos}`}
-                className={`h-6 rounded ${pos >= gridPosition && pos < gridPosition + widthInGrid
-                    ? 'bg-[#C40180]/20 border border-[#C40180]/40'
-                    : 'bg-gray-100'
-                  }`}
+                className={`h-6 rounded cursor-pointer ${
+                  pos >= gridPosition && pos < gridPosition + widthInGrid
+                    ? "bg-[#C40180]/20 border border-[#C40180]/40"
+                    : "bg-gray-100 hover:bg-gray-200"
+                }`}
+                onClick={() => {
+                  // Solo permitir mover si el elemento cabe en la nueva posición
+                  if (pos + widthInGrid <= 4) {
+                    onMoveInGrid && onMoveInGrid(element.id, "position", pos)
+                  }
+                }}
+                title={`Mover a posición ${pos + 1}`}
               />
             ))}
+          </div>
+        </div>
+
+        {/* Selector de fila */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Mover a otra fila</label>
+          <div className="flex items-center space-x-2">
+            <select
+              className="p-2 border rounded-lg bg-white text-gray-700"
+              value={currentRow}
+              onChange={(e) => {
+                const targetRow = Number.parseInt(e.target.value)
+                if (targetRow !== currentRow) {
+                  onMoveToRow && onMoveToRow(element.id, targetRow)
+                }
+              }}
+            >
+              {Array.from({ length: 10 }, (_, i) => (
+                <option key={i} value={i}>
+                  Fila {i + 1}
+                </option>
+              ))}
+            </select>
+            <button
+              className="p-2 border rounded-lg bg-white text-gray-700 hover:bg-gray-100 cursor-pointer"
+              onClick={() => onMoveToRow && onMoveToRow(element.id, currentRow + 1)}
+              title="Mover a nueva fila"
+            >
+              Nueva Fila
+            </button>
           </div>
         </div>
       </div>
@@ -177,7 +220,7 @@ const ElementEditor = ({ element, onUpdate, onRemove, onMove, onMoveInGrid, onCh
 
 // Componente para editar imágenes
 const ImageEditor = ({ element, handleContentChange, onUpdate }) => {
-  if (!element) return null;
+  if (!element) return null
 
   return (
     <div className="space-y-4">
@@ -206,7 +249,7 @@ const ImageEditor = ({ element, handleContentChange, onUpdate }) => {
 
 // Componente para editar citas
 const QuoteEditor = ({ element, handleContentChange, onUpdate }) => {
-  if (!element) return null;
+  if (!element) return null
 
   return (
     <div className="space-y-4">
@@ -246,7 +289,7 @@ const ListEditor = ({ element, handleListItemChange, addListItem, removeListItem
           Añadir Elemento
         </button>
       </div>
-    );
+    )
   }
 
   return (
@@ -284,7 +327,7 @@ const ListEditor = ({ element, handleListItemChange, addListItem, removeListItem
 
 // Componente para editar texto (párrafos y encabezados)
 const TextEditor = ({ element, handleContentChange }) => {
-  if (!element) return null;
+  if (!element) return null
 
   return (
     <div>
@@ -301,7 +344,7 @@ const TextEditor = ({ element, handleContentChange }) => {
 
 // Componente para controles de estilo
 const StyleControls = ({ element, handleStyleChange, onChangeWidth }) => {
-  if (!element) return null;
+  if (!element) return null
 
   return (
     <div className="mt-6 space-y-4">
