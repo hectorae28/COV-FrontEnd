@@ -13,23 +13,53 @@ const ArticlePreview = ({ article, contentElements, elementRows, activeElement, 
   return (
     <div className="p-6">
       {/* Renderizar cada fila de elementos */}
-      {elementRows.map((row, rowIndex) => (
-        <div key={`row-${rowIndex}`} className="flex flex-wrap mb-4 -mx-2">
-          {/* Renderizar cada elemento en la fila */}
-          {row.map((element) => (
-            <div
-              key={element.id}
-              className={`relative transition-all duration-200 px-2 ${
-                activeElement === element.id ? "ring-2 ring-[#C40180] rounded-xl bg-[#C40180]/5" : ""
-              }`}
-              style={{ width: element.style.width || "100%" }}
-              onClick={() => onSelectElement && onSelectElement(element.id)}
-            >
-              <RenderElement element={element} />
-            </div>
-          ))}
-        </div>
-      ))}
+      {elementRows.map((row, rowIndex) => {
+        // Verificar si la fila está vacía
+        if (!row || row.length === 0) return null;
+        
+        return (
+          <div key={`row-${rowIndex}`} className="relative grid grid-cols-4 gap-2 mb-6">
+            {/* Renderizar cada elemento en la fila según su posición en el grid */}
+            {row.map((element) => {
+              // Verificación defensiva para propiedades que pueden ser indefinidas
+              if (!element) return null;
+              
+              const gridPosition = element.rowData?.gridPosition || 0;
+              const width = parseInt(element.style?.width || "100%") / 25; // Ancho en unidades grid (1-4)
+              
+              // Calcular estilos de grid de manera segura
+              let gridStyles = {};
+              
+              // Para elementos que ocupan toda la fila (100%)
+              if (width === 4) {
+                gridStyles = {
+                  gridColumn: "1 / span 4" // De columna 1 a 5 (exclusivo)
+                };
+              } else {
+                // Para elementos más pequeños, calcular inicio y fin
+                const startColumn = gridPosition + 1; // +1 porque CSS grid empieza en 1
+                const colSpan = width;
+                gridStyles = {
+                  gridColumn: `${startColumn} / span ${colSpan}`
+                };
+              }
+              
+              return (
+                <div
+                  key={element.id}
+                  className={`relative transition-all duration-200 ${
+                    activeElement === element.id ? "ring-2 ring-[#C40180] rounded-xl bg-[#C40180]/5" : ""
+                  }`}
+                  style={gridStyles}
+                  onClick={() => onSelectElement && onSelectElement(element.id)}
+                >
+                  <RenderElement element={element} />
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -43,11 +73,11 @@ const RenderElement = ({ element }) => {
       return (
         <p
           style={{
-            textAlign: element.style.textAlign || "left",
-            color: element.style.color || "#4b5563",
-            fontWeight: element.style.fontWeight || "normal",
-            fontStyle: element.style.fontStyle || "normal",
-            textDecoration: element.style.textDecoration || "none",
+            textAlign: element.style?.textAlign || "left",
+            color: element.style?.color || "#4b5563",
+            fontWeight: element.style?.fontWeight || "normal",
+            fontStyle: element.style?.fontStyle || "normal",
+            textDecoration: element.style?.textDecoration || "none",
           }}
           className="cursor-pointer my-4"
         >
@@ -59,11 +89,11 @@ const RenderElement = ({ element }) => {
       return (
         <h1
           style={{
-            textAlign: element.style.textAlign || "left",
-            color: element.style.color || "#1f2937",
-            fontWeight: element.style.fontWeight || "bold",
-            fontStyle: element.style.fontStyle || "normal",
-            textDecoration: element.style.textDecoration || "none",
+            textAlign: element.style?.textAlign || "left",
+            color: element.style?.color || "#1f2937",
+            fontWeight: element.style?.fontWeight || "bold",
+            fontStyle: element.style?.fontStyle || "normal",
+            textDecoration: element.style?.textDecoration || "none",
           }}
           className="cursor-pointer text-3xl font-bold my-6"
         >
@@ -75,11 +105,11 @@ const RenderElement = ({ element }) => {
       return (
         <h2
           style={{
-            textAlign: element.style.textAlign || "left",
-            color: element.style.color || "#1f2937",
-            fontWeight: element.style.fontWeight || "bold",
-            fontStyle: element.style.fontStyle || "normal",
-            textDecoration: element.style.textDecoration || "none",
+            textAlign: element.style?.textAlign || "left",
+            color: element.style?.color || "#1f2937",
+            fontWeight: element.style?.fontWeight || "bold",
+            fontStyle: element.style?.fontStyle || "normal",
+            textDecoration: element.style?.textDecoration || "none",
           }}
           className="cursor-pointer text-2xl font-bold my-5"
         >
@@ -91,11 +121,11 @@ const RenderElement = ({ element }) => {
       return (
         <h3
           style={{
-            textAlign: element.style.textAlign || "left",
-            color: element.style.color || "#1f2937",
-            fontWeight: element.style.fontWeight || "bold",
-            fontStyle: element.style.fontStyle || "normal",
-            textDecoration: element.style.textDecoration || "none",
+            textAlign: element.style?.textAlign || "left",
+            color: element.style?.color || "#1f2937",
+            fontWeight: element.style?.fontWeight || "bold",
+            fontStyle: element.style?.fontStyle || "normal",
+            textDecoration: element.style?.textDecoration || "none",
           }}
           className="cursor-pointer text-xl font-semibold my-4"
         >
@@ -121,16 +151,16 @@ const RenderElement = ({ element }) => {
       return (
         <blockquote
           style={{
-            textAlign: element.style.textAlign || "left",
-            color: element.style.color || "#4b5563",
+            textAlign: element.style?.textAlign || "left",
+            color: element.style?.color || "#4b5563",
           }}
           className="border-l-4 border-[#C40180] pl-4 my-6 italic"
         >
           <p
             style={{
-              fontWeight: element.style.fontWeight || "normal",
+              fontWeight: element.style?.fontWeight || "normal",
               fontStyle: "italic",
-              textDecoration: element.style.textDecoration || "none",
+              textDecoration: element.style?.textDecoration || "none",
             }}
           >
             {element.content}
@@ -143,18 +173,18 @@ const RenderElement = ({ element }) => {
       return (
         <ul
           style={{
-            textAlign: element.style.textAlign || "left",
-            color: element.style.color || "#4b5563",
+            textAlign: element.style?.textAlign || "left",
+            color: element.style?.color || "#4b5563",
           }}
           className="cursor-pointer list-disc pl-5 my-4 space-y-2"
         >
-          {element.content.map((item, index) => (
+          {element.content && Array.isArray(element.content) && element.content.map((item, index) => (
             <li
               key={index}
               style={{
-                fontWeight: element.style.fontWeight || "normal",
-                fontStyle: element.style.fontStyle || "normal",
-                textDecoration: element.style.textDecoration || "none",
+                fontWeight: element.style?.fontWeight || "normal",
+                fontStyle: element.style?.fontStyle || "normal",
+                textDecoration: element.style?.textDecoration || "none",
               }}
             >
               {item}
@@ -167,18 +197,18 @@ const RenderElement = ({ element }) => {
       return (
         <ol
           style={{
-            textAlign: element.style.textAlign || "left",
-            color: element.style.color || "#4b5563",
+            textAlign: element.style?.textAlign || "left",
+            color: element.style?.color || "#4b5563",
           }}
           className="cursor-pointer list-decimal pl-5 my-4 space-y-2"
         >
-          {element.content.map((item, index) => (
+          {element.content && Array.isArray(element.content) && element.content.map((item, index) => (
             <li
               key={index}
               style={{
-                fontWeight: element.style.fontWeight || "normal",
-                fontStyle: element.style.fontStyle || "normal",
-                textDecoration: element.style.textDecoration || "none",
+                fontWeight: element.style?.fontWeight || "normal",
+                fontStyle: element.style?.fontStyle || "normal",
+                textDecoration: element.style?.textDecoration || "none",
               }}
             >
               {item}

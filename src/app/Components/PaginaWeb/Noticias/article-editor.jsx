@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import ElementEditor from "./element-editor"
 import ArticlePreview from "./article-preview.jsx"
-import { organizeElementsIntoRows, preserveElementsInRows } from "./utils"
+import { organizeElementsIntoRows } from "./utils"
 
 const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPreview, handleInputChange }) => {
   const [editedArticle, setEditedArticle] = useState(article);
@@ -43,12 +43,9 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
     });
   });
 
-  // Inicializar los elementos de contenido
   useEffect(() => {
     if (!article.contentElements) {
       const initialElements = [];
-      
-      // Elemento de título
       initialElements.push({
         id: "title",
         type: "heading1",
@@ -58,10 +55,8 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
           width: "100%",
           color: "#1f2937",
         },
-        rowData: { row: 0, order: 0 }
       });
 
-      // Elementos de párrafo
       const paragraphs = (article.fullContent || article.description || "Contenido del artículo").split("\n\n");
       paragraphs.forEach((para, index) => {
         initialElements.push({
@@ -73,19 +68,15 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
             width: "100%",
             color: "#4b5563",
           },
-          rowData: { row: index + 1, order: 0 }
         });
       });
 
       setContentElements(initialElements);
     } else {
-      // Asegurarnos que todos los elementos tienen rowData
-      const elementsWithRowData = preserveElementsInRows(article.contentElements);
-      setContentElements(elementsWithRowData);
+      setContentElements(article.contentElements);
     }
   }, [article]);
 
-  // Organizar elementos en filas
   useEffect(() => {
     const rows = organizeElementsIntoRows(contentElements);
     setElementRows(rows);
@@ -101,13 +92,6 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
 
   // Añadir nuevo elemento de contenido
   const addContentElement = (type) => {
-    // Encontrar el número más alto de fila
-    const maxRowIndex = contentElements.reduce(
-      (max, el) => Math.max(max, el.rowData?.row || 0), 
-      0
-    );
-    
-    // Crear un nuevo elemento en su propia fila
     const newElement = {
       id: `element-${Date.now()}`,
       type,
@@ -117,10 +101,6 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
         width: "100%",
         color: type.includes("heading") ? "#1f2937" : "#4b5563",
       },
-      rowData: { 
-        row: maxRowIndex + 1,  // Nueva fila
-        order: 0               // Primer elemento en la fila
-      }
     }
 
     // Configuraciones específicas por tipo
@@ -155,32 +135,53 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
 
   // Eliminar elemento de contenido
   const removeContentElement = (id) => {
-    // Eliminar el elemento pero mantener las filas intactas
     setContentElements(contentElements.filter((element) => element.id !== id))
     if (activeElement === id) {
       setActiveElement(null)
     }
   }
 
-  // Mover elemento hacia arriba o abajo (entre filas)
-  const moveElement = (id, direction) => {
-    const element = contentElements.find(el => el.id === id);
-    if (!element || !element.rowData) return;
-    
-    const currentRow = element.rowData.row;
-    const newRow = direction === "up" ? currentRow - 1 : currentRow + 1;
-    
-    // No permitir índices de fila negativos
-    if (newRow < 0) return;
-    
-    const updatedElements = contentElements.map(el => 
-      el.id === id 
-        ? { ...el, rowData: { ...el.rowData, row: newRow } } 
-        : el
-    );
-    
-    setContentElements(updatedElements);
-  };
+ // Mover elemento hacia arriba o abajo (entre filas)
+const moveElement = (id, direction) => {
+  const currentIndex = contentElements.findIndex((element) => element.id === id);
+  if (currentIndex < 0) return;
+
+  const newIndex =
+    direction === "up" ? Math.max(0, currentIndex - 1) : Math.min(contentElements.length - 1, currentIndex + 1);
+
+  if (newIndex === currentIndex) return;
+
+  const updatedElements = [...contentElements];
+  const [movedElement] = updatedElements.splice(currentIndex, 1);
+  updatedElements.splice(newIndex, 0, movedElement);
+
+  setContentElements(updatedElements);
+};
+
+// Mover elemento horizontalmente dentro de su fila
+const moveElementHorizontally = (id, direction) => {
+  const rowIndex = elementRows.findIndex((row) => row.some((element) => element.id === id));
+  if (rowIndex === -1) return;
+
+  const row = elementRows[rowIndex];
+  const elementIndex = row.findIndex((element) => element.id === id);
+  if (elementIndex === -1) return;
+
+  const newElementIndex =
+    direction === "left" ? Math.max(0, elementIndex - 1) : Math.min(row.length - 1, elementIndex + 1);
+
+  if (newElementIndex === elementIndex) return;
+
+  const updatedElements = [...contentElements];
+  const [movedElement] = updatedElements.splice(contentElements.findIndex((el) => el.id === id), 1);
+  updatedElements.splice(
+    contentElements.findIndex((el) => el.id === row[newElementIndex].id),
+    0,
+    movedElement
+  );
+
+  setContentElements(updatedElements);
+};
 
   // Cambiar ancho de elemento
   const changeElementWidth = (id, newWidth) => {
@@ -309,16 +310,17 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
               />
             ) : (
               <ContentTab
-                contentElements={contentElements}
-                elementRows={elementRows}
-                activeElement={activeElement}
-                setActiveElement={setActiveElement}
-                addContentElement={addContentElement}
-                handleElementUpdate={handleElementUpdate}
-                removeContentElement={removeContentElement}
-                moveElement={moveElement}
-                changeElementWidth={changeElementWidth}
-              />
+  contentElements={contentElements}
+  elementRows={elementRows}
+  activeElement={activeElement}
+  setActiveElement={setActiveElement}
+  addContentElement={addContentElement}
+  handleElementUpdate={handleElementUpdate}
+  removeContentElement={removeContentElement}
+  moveElement={moveElement}
+  moveElementInGrid={moveElementHorizontally} // Asegúrate de que esta función está definida
+  changeElementWidth={changeElementWidth}
+/>
             )}
           </div>
         </div>
@@ -393,41 +395,56 @@ const ContentTab = ({
   handleElementUpdate,
   removeContentElement,
   moveElement,
+  moveElementInGrid,
   changeElementWidth,
+  debugInfo
 }) => {
   return (
     <div className="space-y-6">
       <ContentElementButtons addContentElement={addContentElement} />
 
       {activeElement ? (
-        <ElementEditor
-          element={contentElements.find((e) => e.id === activeElement)}
-          onUpdate={(updatedData) => handleElementUpdate(activeElement, updatedData)}
-          onRemove={() => removeContentElement(activeElement)}
-          onMove={(direction) => moveElement(activeElement, direction)}
-          onChangeWidth={(width) => changeElementWidth(activeElement, width)}
-        />
-      ) : (
+  <ElementEditor
+    element={contentElements.find((e) => e.id === activeElement)}
+    onUpdate={(updatedData) => handleElementUpdate(activeElement, updatedData)}
+    onRemove={() => removeContentElement(activeElement)}
+    onMove={(direction) => moveElement(activeElement, direction)}
+    onMoveInGrid={(direction) => moveElementInGrid(activeElement, direction)}
+    onChangeWidth={(width) => changeElementWidth(activeElement, width)}
+    // NO intentes pasar 'row' o algo similar que no esté definido
+  />
+) : (
         <div className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-xl">
           <p className="text-gray-500 mb-4">Selecciona un elemento en la vista previa para editarlo</p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="cursor-pointer px-4 py-2 text-white bg-gradient-to-r from-[#C40180] to-[#590248] rounded-lg flex items-center transition-colors hover:from-[#e20091] hover:to-[#e20091]"
-            onClick={() => setActiveElement(contentElements[0]?.id)}
-          >
-            <Pencil className="w-4 h-4 mr-2" />
-            Editar Primer Elemento
-          </motion.button>
+          {contentElements.length > 0 && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="cursor-pointer px-4 py-2 text-white bg-gradient-to-r from-[#C40180] to-[#590248] rounded-lg flex items-center transition-colors hover:from-[#e20091] hover:to-[#e20091]"
+              onClick={() => setActiveElement(contentElements[0]?.id)}
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Editar Primer Elemento
+            </motion.button>
+          )}
         </div>
       )}
 
       <ContentStructure
-        elementRows={elementRows}
-        activeElement={activeElement}
-        setActiveElement={setActiveElement}
-        removeContentElement={removeContentElement}
-      />
+  elementRows={elementRows}
+  activeElement={activeElement}
+  setActiveElement={setActiveElement}
+  removeContentElement={removeContentElement}
+  moveElementHorizontally={moveElementInGrid} // Asegúrate de pasar con el nombre correcto
+/>
+
+      {/* Información de depuración si está disponible */}
+      {debugInfo && (
+        <div className="mt-4 p-3 bg-gray-100 rounded-md text-xs">
+          <h4 className="font-bold mb-1">Información de depuración:</h4>
+          <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+        </div>
+      )}
     </div>
   )
 }
@@ -496,23 +513,24 @@ const ContentElementButtons = ({ addContentElement }) => {
   )
 }
 
-// Componente para mostrar la estructura del contenido
+// Componente para mostrar la estructura del contenid
 const ContentStructure = ({
   elementRows,
   activeElement,
   setActiveElement,
+  moveElementHorizontally,
   removeContentElement,
 }) => {
   return (
     <div className="mt-8">
-      <h3 className="text-lg font-medium text-gray-700 mb-4">Estructura del Contenido</h3>
+      <h3 className="text-lg font-medium text-gray-700 mb-4">Contenido</h3>
       <div className="space-y-2 max-h-64 overflow-y-auto p-2">
         {elementRows.map((row, rowIndex) => (
           <div key={`row-${rowIndex}`} className="mb-4 p-2 bg-gray-50 rounded-lg">
             <div className="text-xs text-gray-400 mb-2">
-              Fila {rowIndex + 1}
+              Fila {rowIndex + 1} - Ocupación:{" "}
+              {row.reduce((acc, el) => acc + Number.parseInt(el.style.width) || 100, 0)}%
             </div>
-            
             <div className="flex flex-wrap gap-2">
               {row.map((element) => (
                 <ContentElementItem
@@ -520,7 +538,9 @@ const ContentStructure = ({
                   element={element}
                   activeElement={activeElement}
                   setActiveElement={setActiveElement}
+                  moveElementHorizontally={moveElementHorizontally}
                   removeContentElement={removeContentElement}
+                  row={row}
                 />
               ))}
             </div>
@@ -536,7 +556,9 @@ const ContentElementItem = ({
   element,
   activeElement,
   setActiveElement,
+  moveElementHorizontally,
   removeContentElement,
+  row,
 }) => {
   return (
     <div
@@ -561,6 +583,30 @@ const ContentElementItem = ({
           <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded-full">{element.style.width || "100%"}</span>
         </div>
         <div className="flex space-x-1">
+          {row.length > 1 && row.indexOf(element) > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                moveElementHorizontally(element.id, "left")
+              }}
+              className="p-1 text-gray-400 hover:text-gray-700 transition-colors"
+              title="Mover a la izquierda"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          )}
+          {row.length > 1 && row.indexOf(element) < row.length - 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                moveElementHorizontally(element.id, "right")
+              }}
+              className="p-1 text-gray-400 hover:text-gray-700 transition-colors"
+              title="Mover a la derecha"
+            >
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation()
