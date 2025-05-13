@@ -26,7 +26,11 @@ export default function AcademicInfoSection({
     // Función para guardar cambios en datos académicos
     const handleGuardarDatosAcademicos = () => {
         // Aquí implementarías la lógica para guardar en el backend/store
-        const nuevosDatos = { ...pendiente, ...datosAcademicos };
+        const nuevosDatos = { ...datosAcademicos };
+        if(pendiente.tipo_profesion !== "odontologo"){
+            delete nuevosDatos.num_registro_principal;
+            delete nuevosDatos.fecha_registro_principal;
+        }
         updateColegiadoPendiente(pendienteId, nuevosDatos);
         setEditandoAcademico(false);
         setCambiosPendientes(false);
@@ -91,11 +95,6 @@ export default function AcademicInfoSection({
                 // Vista de información académica
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {/* Primera columna */}
-                    <div className="space-y-4">
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Instituto de bachillerato</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.instituto_bachillerato || "No especificado"}</p>
-                        </div>
 
                         <div className="bg-gray-50 p-3 rounded-md">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</p>
@@ -106,19 +105,20 @@ export default function AcademicInfoSection({
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de egreso</p>
                             <p className="font-medium text-gray-800">{datosAcademicos?.fecha_egreso_universidad ? new Date(datosAcademicos.fecha_egreso_universidad).toLocaleDateString('es-ES') : "No especificada"}</p>
                         </div>
+                        {pendiente.tipo_profesion === "odontologo" && (
+                            <>
+                            <div className="bg-gray-50 p-3 rounded-md">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro principal</p>
+                                <p className="font-medium text-gray-800">{datosAcademicos?.num_registro_principal || "No especificado"}</p>
+                            </div>
 
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro principal</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.num_registro_principal || "No especificado"}</p>
-                        </div>
-                    </div>
-
-                    {/* Segunda columna */}
-                    <div className="space-y-4">
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro principal</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.fecha_registro_principal ? new Date(datosAcademicos.fecha_registro_principal).toLocaleDateString('es-ES') : "No especificado"}</p>
-                        </div>
+                            <div className="bg-gray-50 p-3 rounded-md">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro principal</p>
+                                <p className="font-medium text-gray-800">{datosAcademicos?.fecha_registro_principal ? new Date(datosAcademicos.fecha_registro_principal).toLocaleDateString('es-ES') : "No especificado"}</p>
+                            </div>
+                            
+                            </>
+                        )}
 
                         <div className="bg-gray-50 p-3 rounded-md">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número MPPS</p>
@@ -134,23 +134,94 @@ export default function AcademicInfoSection({
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Observaciones</p>
                             <p className="font-medium text-gray-800">{datosAcademicos?.observaciones || "Ninguna"}</p>
                         </div>
-                    </div>
+                        <div className="bg-gray-50 p-3 rounded-md">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Instituto de bachillerato</p>
+                            <p className="font-medium text-gray-800">{datosAcademicos?.instituto_bachillerato || "No especificado"}</p>
+                        </div>
+
                 </div>
             ) : (
                 // Formulario de edición de información académica
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {/* Primera columna */}
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Observaciones</label>
-                            <textarea
-                                name="observaciones"
-                                value={datosAcademicos?.observaciones || ""}
-                                onChange={handleDatosAcademicosChange}
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                                rows="3"
-                            ></textarea>
-                        </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</label>
+                        <input
+                            type="text"
+                            name="universidad"
+                            value={datosAcademicos?.universidad?.titulo || ""}
+                            onChange={handleDatosAcademicosChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de egreso</label>
+                        <input
+                            type="date"
+                            name="fecha_egreso_universidad"
+                            value={datosAcademicos?.fecha_egreso_universidad ? datosAcademicos.fecha_egreso_universidad.split('T')[0] : ""}
+                            onChange={handleDatosAcademicosChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+
+                    {pendiente.tipo_profesion === "odontologo" && (
+                        <>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro principal</label>
+                                <input
+                                    type="text"
+                                    name="num_registro_principal"
+                                    value={datosAcademicos?.num_registro_principal || ""}
+                                    onChange={handleDatosAcademicosChange}
+                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro principal</label>
+                                <input
+                                    type="date"
+                                    name="fecha_registro_principal"
+                                    value={datosAcademicos?.fecha_registro_principal || ""}
+                                    onChange={handleDatosAcademicosChange}
+                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número MPPS</label>
+                        <input
+                            type="text"
+                            name="num_mpps"
+                            value={datosAcademicos?.num_mpps || ""}
+                            onChange={handleDatosAcademicosChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha MPPS</label>
+                        <input
+                            type="date"
+                            name="fecha_mpps"
+                            value={datosAcademicos?.fecha_mpps ? datosAcademicos.fecha_mpps.split('T')[0] : ""}
+                            onChange={handleDatosAcademicosChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Instituto de bachillerato</label>
+                        <input
+                            type="text"
+                            name="instituto_bachillerato"
+                            value={datosAcademicos?.instituto_bachillerato || ""}
+                            onChange={handleDatosAcademicosChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
                     </div>
                 </div>
             )}

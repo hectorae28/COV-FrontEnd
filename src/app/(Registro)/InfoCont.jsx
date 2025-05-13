@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin } from "lucide-react";
+import getUnicodeFlagIcon from 'country-flag-icons/unicode'
 import phoneCodes from "@/app/Models/phoneCodes";
 
 // Datos de estados y ciudades de Venezuela
@@ -34,7 +35,7 @@ const venezuelaData = {
 export default function InfoContacto({ formData, onInputChange, validationErrors, isProfileEdit }) {
   const [cities, setCities] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
-
+  console.log(phoneCodes.length)
   const handleChange = (e) => {
     const { name, value } = e.target;
     onInputChange({ [name]: value });
@@ -155,7 +156,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               >
                 {phoneCodes.map((code, index) => (
                   <option key={index} value={code.codigo}>
-                    {BanderaComponent({ countryCode: code.codigo_pais })} {code.codigo}
+                    {getUnicodeFlagIcon(code.codigo_pais)} {code.codigo}
                   </option>
                 ))}
               </select>

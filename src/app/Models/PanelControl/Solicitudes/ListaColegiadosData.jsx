@@ -19,7 +19,6 @@ const useDataListaColegiados = create((set, get) => ({
       set({ colegiados: colegiadosResponse.data.results });
       set({ colegiadosPendientesPagination: colegiadosResponse.data });
 
-
       const pendientesResponse = await fetchDataUsuario("register");
       set({ colegiadosPendientes: pendientesResponse.data.results });
       set({ colegiadosPendientesPagination: pendientesResponse.data });
@@ -31,7 +30,12 @@ const useDataListaColegiados = create((set, get) => ({
     }
   },
 
-  fetchPendientes: async (page = 1, pageSize = 10, search = "", otrosFiltros = {}) => {
+  fetchPendientes: async (
+    page = 1,
+    pageSize = 10,
+    search = "",
+    otrosFiltros = {}
+  ) => {
     set({ loading: true });
     try {
       let params = `?page=${page}&page_size=${pageSize}`;
@@ -46,11 +50,19 @@ const useDataListaColegiados = create((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      set({ loading: false, error: error.message || "Error al cargar pendientes" });
+      set({
+        loading: false,
+        error: error.message || "Error al cargar pendientes",
+      });
     }
   },
 
-  fetchColegiados: async (page = 1, pageSize = 10, search = "", otrosFiltros = {}) => {
+  fetchColegiados: async (
+    page = 1,
+    pageSize = 10,
+    search = "",
+    otrosFiltros = {}
+  ) => {
     set({ loading: true });
     try {
       let params = `?page=${page}&page_size=${pageSize}`;
@@ -65,19 +77,22 @@ const useDataListaColegiados = create((set, get) => ({
         loading: false,
       });
     } catch (error) {
-      set({ loading: false, error: error.message || "Error al cargar pendientes" });
+      set({
+        loading: false,
+        error: error.message || "Error al cargar pendientes",
+      });
     }
   },
 
   // Funciones para obtener datos específicos
   getColegiado: async (id) => {
     const res = await fetchDataUsuario(`colegiado/${id}`);
-    return res.data
+    return res.data;
   },
 
   getColegiadoPendiente: async (id) => {
     const res = await fetchDataUsuario(`register/${id}`);
-    return res.data
+    return res.data;
   },
 
   // Funciones para obtener colecciones específicas de cada colegiado
@@ -86,9 +101,12 @@ const useDataListaColegiados = create((set, get) => ({
     return colegiado ? colegiado.pagos : [];
   },
 
-  getSolicitudes: async(colegiadoId) => {
-    const res = await fetchSolicitudes("solicitud_unida", `?colegiado=${colegiadoId}`)
-    return res.data
+  getSolicitudes: async (colegiadoId) => {
+    const res = await fetchSolicitudes(
+      "solicitud_unida",
+      `?colegiado=${colegiadoId}`
+    );
+    return res.data;
   },
 
   getDocumentos: (colegiadoId) => {
@@ -135,20 +153,37 @@ const useDataListaColegiados = create((set, get) => ({
     return get().getColegiado(id);
   },
 
-  updateColegiadoPendiente: async(id, updatedData, docs) => {
+  updateColegiadoPendiente: async (id, updatedData, docs) => {
     set((state) => ({
       colegiadosPendientes: state.colegiadosPendientes.map((pendiente) =>
         pendiente.id === id ? { ...pendiente, ...updatedData } : pendiente
       ),
     }));
 
-    const res = await patchDataUsuario(`register/${id}`,updatedData,docs&&docs)
+    const res = await patchDataUsuario(
+      `register/${id}`,
+      updatedData,
+      docs && docs
+    );
 
     return res.data;
   },
-  updateColegiadoPendienteWithToken: async(id, updatedData, docs) => {
-    const res = await patchDataUsuario(`recaudos-token`,{"token":id,"data":updatedData},docs&&docs)
-
+  updateColegiadoPendienteWithToken: async (id, updatedData, docs) => {
+    if (docs) {
+      const formData = new FormData();
+      formData.append("token", id);
+      formData.append("data", {});
+      for (const item of updatedData.entries()) {
+        formData.append(item[0], item[1]);
+      }
+      const res = await patchDataUsuario("recaudos-token", formData, true);
+      return res.data;
+    }
+    const res = await patchDataUsuario(
+      `recaudos-token`,
+      { token: id, data: updatedData },
+      docs && docs
+    );
     return res.data;
   },
 
@@ -231,25 +266,26 @@ const useDataListaColegiados = create((set, get) => ({
     }
 
     // Crear un nombre completo con los datos disponibles
-   
-    postDataUsuario(`colegiado`,{...datosRegistro, recaudos_id:pendienteId}).then(
-      (res)=>{
+
+    postDataUsuario(`colegiado`, { ...datosRegistro, recaudos_id: pendienteId })
+      .then((res) => {
         // Añadir el colegiado y eliminar el pendiente
         get().addColegiado(res.data);
         get().removeColegiadoPendiente(pendienteId);
         return res;
-      }
-    )
-    .catch((error)=>{
-      console.error("Error al aprobar la solicitud:", error);
-      return error;
-    })
+      })
+      .catch((error) => {
+        console.error("Error al aprobar la solicitud:", error);
+        return error;
+      });
   },
 
   // Funciones específicas
-  marcarTituloEntregado: async(colegiadoId, entregado = true) => {
-    const res = await patchDataUsuario(`colegiado/${colegiadoId}`,{titulo:entregado})
-    get().updateColegiado(colegiadoId, {titulo:entregado});
+  marcarTituloEntregado: async (colegiadoId, entregado = true) => {
+    const res = await patchDataUsuario(`colegiado/${colegiadoId}`, {
+      titulo: entregado,
+    });
+    get().updateColegiado(colegiadoId, { titulo: entregado });
     return res.data;
   },
 }));

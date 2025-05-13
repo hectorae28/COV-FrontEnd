@@ -71,7 +71,6 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
     }
 
     const handleUpload = async () => {
-        console.log(documentoParaSubir)
         if (!selectedFile) {
             setError("Por favor seleccione un archivo para subir.")
             return
@@ -81,13 +80,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
         setError("")
 
         try {
-            // Simulación de carga
-            await new Promise((resolve) => setTimeout(resolve, 1500))
-
-            // Simular respuesta exitosa
             const uploadedFileUrl = URL.createObjectURL(selectedFile)
-
-            // Actualizar el documento
             if (updateDocumento) {
                 const Form = new FormData();
                 Form.append(`${documentoParaSubir.id}`, selectedFile)

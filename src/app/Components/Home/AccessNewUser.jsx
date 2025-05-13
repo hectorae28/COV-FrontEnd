@@ -17,9 +17,10 @@ export default function ClaimAccountForm({ onBackToLogin }) {
       await fetchDataUsuario("recaudos-token",null, `?email=${email}`)
         .then((_) => {
           setIsLoading(false);
-          setMessage({ text: "Email Enviado", type: "success" });
+          onBackToLogin({ text: "Email Enviado", type: "success" });
         })
-        .catch((_) => {
+        .catch((err) => {
+          console.error(err)
           setIsLoading(false);
           setMessage({ text: "Error al enviar email", type: "error" });
         });

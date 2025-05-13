@@ -7,10 +7,12 @@ import ForgotPasswordForm from "../Components/Home/ForgotPasswordForm";
 import LoginForm from "../Components/Home/LoginForm";
 import ClaimAccountForm from "../Components/Home/AccessNewUser";
 import { Phone, MapPin, Clock } from "lucide-react";
+import Alert from "@/app/Components/Alert";
 
 export default function Colegiados({ onClose, isClosing }) {
   const [currentView, setCurrentView] = useState("login");
   const [showContact, setShowContact] = useState(false);
+  const [message, setMessage] = useState({text:"",type:"info"});
   const router = useRouter();
 
   // Función para alternar la sección de contacto
@@ -108,6 +110,9 @@ export default function Colegiados({ onClose, isClosing }) {
           <p className="text-center text-gray-700 mb-10 px-4">
             {getDescription()}
           </p>
+          {message.text.length > 0 && (
+            <Alert type={message.type}>{message.text}</Alert>
+          )}
           {currentView === "login" && (
             <LoginForm
               onForgotPassword={() => setCurrentView("forgot-password")}
@@ -117,10 +122,10 @@ export default function Colegiados({ onClose, isClosing }) {
             />
           )}
           {currentView === "forgot-password" && (
-            <ForgotPasswordForm onBackToLogin={() => setCurrentView("login")} />
+            <ForgotPasswordForm onBackToLogin={(e) =>{setCurrentView("login"); setMessage(e)}} />
           )}
           {currentView === "claim-account" && (
-            <ClaimAccountForm onBackToLogin={() => setCurrentView("login")} />
+            <ClaimAccountForm onBackToLogin={(e) => {setCurrentView("login"); setMessage(e)}} />
           )}
           {/* Botón para mostrar la sección de contacto */}
           <div className="mt-6 text-center">

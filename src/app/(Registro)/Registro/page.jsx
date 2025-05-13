@@ -674,7 +674,7 @@ export default function RegistrationForm(props) {
                           </div>
                         </div>
                         {pagarLuego && (
-                          <div className="flex justify-center p-6">
+                          <div className="flex justify-center p-6 gap-6">
                             <button
                               type="button"
                               onClick={handlePaymentComplete}
@@ -708,6 +708,16 @@ export default function RegistrationForm(props) {
                               ) : (
                                 "Completar Registro"
                               )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowPaymentScreen(false)}
+                              disabled={isSubmitting}
+                              className="px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
+                            >
+                                <span className="flex items-center justify-center">
+                                  Regresar
+                                </span>
                             </button>
                           </div>
                         )}

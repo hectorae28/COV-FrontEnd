@@ -127,7 +127,8 @@ export default function InfoColegiado({
             {isProfileEdit ? (
               // En modo perfil, no editable
               <input
-                type="text"
+                type="number"
+                pattern="[0-9]*"
                 value={formData.mainRegistrationNumber ? `COV-${formData.mainRegistrationNumber}` : "No especificado"}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
                 disabled
@@ -135,7 +136,13 @@ export default function InfoColegiado({
             ) : (
               // En modo normal, editable
               <input
-                type="text"
+                type="number"
+                onKeyPress={(e) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                pattern="[0-9]*"
                 name="mainRegistrationNumber"
                 value={formData.mainRegistrationNumber}
                 onChange={handleChange}
@@ -197,7 +204,8 @@ export default function InfoColegiado({
           {isProfileEdit ? (
             // En modo perfil, no editable
             <input
-              type="text"
+              type="number"
+              pattern="[0-9]*"
               value={formData.mppsRegistrationNumber || "No especificado"}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
               disabled
@@ -205,7 +213,13 @@ export default function InfoColegiado({
           ) : (
             // En modo normal, editable
             <input
-              type="text"
+              type="number"
+              onKeyPress={(e) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              pattern="[0-9]*"
               name="mppsRegistrationNumber"
               value={formData.mppsRegistrationNumber}
               onChange={handleChange}

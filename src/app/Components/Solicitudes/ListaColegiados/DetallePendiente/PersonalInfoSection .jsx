@@ -314,12 +314,12 @@ export default function PersonalInfoSection({
                             <input
                                 type="text"
                                 name="direccion.completa"
-                                value={datosPersonales?.direccion?.completa || ""}
+                                value={datosPersonales?.direccion?.referencia || ""}
                                 onChange={handleDatosPersonalesChange}
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
                             />
                         </div>
-
+                        {isAdmin && (
                         <div className="grid grid-cols-2 gap-2">
                             <div>
                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Título entregado</label>
@@ -346,6 +346,7 @@ export default function PersonalInfoSection({
                                 />
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
             )}

@@ -307,9 +307,10 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
     });
     const Form = new FormData()
     Form.append("comprobante", paymentFile);
-    await updateColegiadoPendienteWithToken(pendienteId,{Form},true)
+    await updateColegiadoPendienteWithToken(pendienteId,Form,true)
     loadData()
     setPagosPendientes(false)
+    handleForward()
   }
   // Funciones para gestión de documentos
   const handleVerDocumento = (documento) => {
@@ -705,6 +706,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
           handleRechazarSolicitud={handleRechazarSolicitud}
           handleDenegarSolicitud={handleDenegarSolicitud}
           onClose={() => setMostrarRechazo(false)}
+          isRechazada={isRechazada}
         />
       )}
 
@@ -726,7 +728,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin=false, reca
         />
       )}
 
-      {!isAdmin && (
+      {!isAdmin && pendiente.pago!=null&&!pagosPendientes&& (
         <div className="w-full flex items-center justify-center">
         <button
           onClick={handleForward}

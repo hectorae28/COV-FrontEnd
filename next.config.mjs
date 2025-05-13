@@ -19,6 +19,12 @@ const nextConfig = {
                 hostname: "192.168.100.242",
                 port: '8000',
                 pathname: '/**',
+            },
+            {//https://sad-variation-subjects-saver.trycloudflare.com
+                protocol: "https",
+                hostname: "sad-variation-subjects-saver.trycloudflare.com",
+                pathname: '/**',
+
             }
         ],
     },

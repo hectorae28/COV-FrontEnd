@@ -128,7 +128,7 @@ export default function ListaColegiadosPage() {
     }
     if (filtroEstadoPendiente !== "todos") {
       if (filtroEstadoPendiente === "rechazados") {
-        filtros.status = "rechazados";
+        filtros.status = "rechazado";
       } else if (filtroEstadoPendiente === "pendientes") {
         filtros.status = "revisando";
       }
@@ -815,7 +815,7 @@ export default function ListaColegiadosPage() {
                         <tr key={index} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="font-medium text-gray-900">
-                              {pendiente.persona.nombre}
+                              {pendiente.persona.nombre+" "+pendiente.persona.primer_apellido}
                             </div>
                             <div className="text-sm text-gray-500 md:hidden">
                               {pendiente.persona.cedula}
@@ -851,37 +851,28 @@ export default function ListaColegiadosPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="flex flex-col sm:flex-row gap-1 justify-center items-center">
-                              {pendiente.estado === "rechazada" ? (
+                              {pendiente.status === "rechazado" ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                   <AlertTriangle size={12} /> Rechazada
                                 </span>
-                              ) : pendiente.estado === "denegada" ? (
+                              ) : pendiente.status === "denegado" ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                   <UserX size={12} /> Denegada
                                 </span>
-                              ) : (
+                              ) :pendiente.status === "revisando" ?(<span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-green-800">
+                                <UserX size={12} /> Pendiente por aprobación
+                              </span>): (
                                 <>
-                                  <span
-                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                      !pendiente.archivos_faltantes
-                                        .tiene_faltantes
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-yellow-100 text-yellow-800"
-                                    }`}
-                                  >
-                                    {!pendiente.archivos_faltantes
-                                      .tiene_faltantes ? (
-                                      <>
-                                        <CheckCircle size={12} /> Documentos
-                                        Completos
-                                      </>
-                                    ) : (
-                                      <>
-                                        <XCircle size={12} /> Documentos
-                                        Incompletos
-                                      </>
-                                    )}
-                                  </span>
+                                {pendiente.archivos_faltantes.tiene_faltantes &&(
+                                    <span
+                                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 not-only:bg-yellow-100 text-yellow-800"
+                                      }`}
+                                    >
+                                          <XCircle size={12} /> Documentos
+                                          Incompletos
+                                    </span>
+
+                                )}
                                   {pendiente.pago === null &&
                                     pendiente.pago_exonerado && (
                                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-1 sm:mt-0 sm:ml-2">
