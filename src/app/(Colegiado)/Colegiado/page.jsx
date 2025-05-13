@@ -185,7 +185,7 @@ export default function Home() {
               {/* Estado de Solvencia (solo si no está solvente o está por vencer) */}
               {(!isSolvent || showSolvencyWarning) && (
                 <SolvencyStatus
-                  solvencyAmount={solvencyInfo.amount}
+                  solvencyAmount={colegiadoUser.costo_de_solvencia}
                   onPayClick={handlePayClick}
                   isExpiringSoon={showSolvencyWarning}
                 />

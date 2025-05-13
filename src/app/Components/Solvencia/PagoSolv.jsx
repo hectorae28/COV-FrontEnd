@@ -56,11 +56,12 @@ export default function SolvenciaPago() {
   const [validationErrors, setValidationErrors] = useState({});
   const costos = useColegiadoUserStore((store) => store.costos);
   const setColegiadoUser = useColegiadoUserStore((store) => store.setColegiadoUser);
+  const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser);
 
   useEffect(() => {
-    if (costos && costos.length > 0) {
-      const filteredCosto = costos.filter(costo => costo.tipo_costo_nombre === 'Solvencia')[0];
-      if (filteredCosto) setCostoSolvencia(filteredCosto);
+    if (colegiadoUser && colegiadoUser.costo_de_solvencia) {
+      setCostoSolvencia(colegiadoUser.costo_de_solvencia);
+      console.log(colegiadoUser.costo_de_solvencia);
     }
   }, []);
 
@@ -117,7 +118,7 @@ export default function SolvenciaPago() {
         ) : (
           <PagosColg
             props={{
-              costo: costoSolvencia.monto_usd,
+              costo: costoSolvencia,
               allowMultiplePayments: false,
               handlePago: handlePagoSolvencia
             }}

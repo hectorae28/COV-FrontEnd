@@ -9,7 +9,9 @@ const useColegiadoUserStore = create((set, get) => (
             solvencia_status: null,
             solvente: "",
             username: "",
-            id: null
+            id: null,
+            requiere_solvencia_esp: null,
+            costo_de_solvencia: null
         },
         costos: [],
         tasaBcv: null,
