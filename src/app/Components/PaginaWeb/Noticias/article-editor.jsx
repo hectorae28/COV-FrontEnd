@@ -1,5 +1,4 @@
-"use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import {
   ArrowLeft,
@@ -17,6 +16,10 @@ import {
   ListOrdered,
   ArrowRight,
   Trash2,
+  AlignJustify,
+  Upload,
+  Link,
+  FileVideo,
 } from "lucide-react"
 import ElementEditor from "./element-editor"
 import ArticlePreview from "./article-preview.jsx"
@@ -48,24 +51,10 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
   useEffect(() => {
     if (!article.contentElements) {
       const initialElements = []
-      // Evitar duplicar el título si ya existe en el contenido
-      if (!initialElements.some((el) => el.type === "heading1" && el.content === article.title)) {
-        initialElements.push({
-          id: "title",
-          type: "heading1",
-          content: article.title || "Nuevo Título",
-          style: {
-            textAlign: "center",
-            width: "100%",
-            color: "#1f2937",
-          },
-          rowData: {
-            row: 0,
-            gridPosition: 0,
-          },
-        })
-      }
-
+      
+      // NO añadir automáticamente el título como un elemento heading1
+      // Solo generar elementos para el contenido del artículo
+      
       const paragraphs = (article.fullContent || article.description || "Contenido del artículo").split("\n\n")
       paragraphs.forEach((para, index) => {
         initialElements.push({
@@ -78,7 +67,7 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
             color: "#4b5563",
           },
           rowData: {
-            row: index + 1,
+            row: index,
             gridPosition: 0,
           },
         })
@@ -488,8 +477,33 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
 
 // Componente para la pestaña de información general
 const GeneralInfoTab = ({ editedArticle, handleInputChange }) => {
+  const [mediaType, setMediaType] = useState("image") // "image" o "video"
+  const [mediaSource, setMediaSource] = useState("url") // "local" o "url"
+  const fileInputRef = useRef(null)
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Crear URL temporal para la vista previa
+      const imageUrl = URL.createObjectURL(file)
+      handleInputChange({
+        target: {
+          name: "imageUrl",
+          value: imageUrl
+        }
+      })
+      
+      // Aquí podrías implementar la lógica para subir el archivo al servidor
+      // Por ahora simplemente usamos la URL temporal
+    }
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current.click()
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Título de la Noticia</label>
         <input
@@ -507,7 +521,7 @@ const GeneralInfoTab = ({ editedArticle, handleInputChange }) => {
           name="description"
           value={editedArticle.description}
           onChange={handleInputChange}
-          rows="3"
+          rows="2"
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180] transition-colors"
         />
       </div>
@@ -529,14 +543,83 @@ const GeneralInfoTab = ({ editedArticle, handleInputChange }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">URL de Imagen</label>
-        <input
-          type="text"
-          name="imageUrl"
-          value={editedArticle.imageUrl}
-          onChange={handleInputChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180] transition-colors"
-        />
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm font-medium text-gray-700">Contenido Multimedia</label>
+          <div className="flex space-x-2 text-sm">
+            <button 
+              onClick={() => setMediaType("image")}
+              className={`px-2 py-1 rounded ${mediaType === "image" ? "bg-[#C40180] text-white" : "bg-gray-100"}`}
+            >
+              Imagen
+            </button>
+            <button 
+              onClick={() => setMediaType("video")}
+              className={`px-2 py-1 rounded ${mediaType === "video" ? "bg-[#C40180] text-white" : "bg-gray-100"}`}
+            >
+              Video
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex space-x-2 mb-2 text-sm">
+          <button 
+            onClick={() => setMediaSource("url")}
+            className={`px-2 py-1 rounded ${mediaSource === "url" ? "bg-[#C40180] text-white" : "bg-gray-100"}`}
+          >
+            URL
+          </button>
+          <button 
+            onClick={() => setMediaSource("local")}
+            className={`px-2 py-1 rounded ${mediaSource === "local" ? "bg-[#C40180] text-white" : "bg-gray-100"}`}
+          >
+            Desde Dispositivo
+          </button>
+        </div>
+
+        {mediaSource === "url" ? (
+          <input
+            type="text"
+            name="imageUrl"
+            value={editedArticle.imageUrl}
+            onChange={handleInputChange}
+            placeholder={mediaType === "image" ? "URL de imagen" : "URL de video (YouTube, Vimeo)"}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180] transition-colors"
+          />
+        ) : (
+          <div className="flex flex-col items-center">
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept={mediaType === "image" ? "image/*" : "video/*"} 
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <button 
+              onClick={triggerFileInput}
+              className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center justify-center"
+            >
+              <ImageIcon className="h-5 w-5 mr-2" />
+              {mediaType === "image" ? "Seleccionar Imagen" : "Seleccionar Video"}
+            </button>
+            {editedArticle.imageUrl && (
+              <div className="mt-2 max-w-full overflow-hidden rounded-lg">
+                {mediaType === "image" ? (
+                  <img 
+                    src={editedArticle.imageUrl} 
+                    alt="Vista previa" 
+                    className="max-h-40 object-contain"
+                  />
+                ) : (
+                  <video 
+                    src={editedArticle.imageUrl} 
+                    controls 
+                    className="max-h-40 w-full"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -671,7 +754,7 @@ const ContentElementButtons = ({ addContentElement }) => {
   )
 }
 
-// Componente para mostrar la estructura del contenid
+// Componente para mostrar la estructura del contenido
 const ContentStructure = ({
   elementRows,
   activeElement,
@@ -742,18 +825,6 @@ const ContentElementItem = ({
         </div>
         <div className="flex space-x-1">
           {row.length > 1 && row.indexOf(element) > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                moveElementHorizontally(element.id, "left")
-              }}
-              className="p-1 text-gray-400 hover:text-gray-700 transition-colors"
-              title="Mover a la izquierda"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-          )}
-          {row.length > 1 && row.indexOf(element) < row.length - 1 && (
             <button
               onClick={(e) => {
                 e.stopPropagation()

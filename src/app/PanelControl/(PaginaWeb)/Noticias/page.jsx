@@ -8,7 +8,6 @@ import ArticlesList from "@/Components/PaginaWeb/Noticias/articles-list"
 import ArticleEditor from "@/Components/PaginaWeb/Noticias/article-editor"
 import ArticleFullPreview from "@/app/Components/PaginaWeb/Noticias/article-full-preview.jsx"
 
-// Mejorar el filtro por fecha para que sea más preciso y útil
 const NewsDashboard = () => {
   const [articles, setArticles] = useState([])
   const [filteredArticles, setFilteredArticles] = useState([])
@@ -18,9 +17,6 @@ const NewsDashboard = () => {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("")
-  const [dateFilter, setDateFilter] = useState("")
-  const [dateRangeFilter, setDateRangeFilter] = useState({ start: "", end: "" })
-  const [useAdvancedDateFilter, setUseAdvancedDateFilter] = useState(false)
   const router = useRouter()
 
   const handleInputChange = (e) => {
@@ -54,62 +50,8 @@ const NewsDashboard = () => {
       result = result.filter((article) => article.category === categoryFilter)
     }
 
-    // Filtrar por fecha
-    if (useAdvancedDateFilter) {
-      // Filtro avanzado por rango de fechas
-      if (dateRangeFilter.start || dateRangeFilter.end) {
-        result = result.filter((article) => {
-          if (!article.date) return true
-
-          // Convertir fecha del artículo a formato Date
-          const dateParts = article.date.split("/")
-          if (dateParts.length !== 3) return true
-
-          const articleDate = new Date(
-            Number.parseInt(dateParts[2]), // año
-            Number.parseInt(dateParts[1]) - 1, // mes (0-11)
-            Number.parseInt(dateParts[0]), // día
-          )
-
-          // Verificar si está dentro del rango
-          let isInRange = true
-
-          if (dateRangeFilter.start) {
-            const startDate = new Date(dateRangeFilter.start)
-            isInRange = isInRange && articleDate >= startDate
-          }
-
-          if (dateRangeFilter.end) {
-            const endDate = new Date(dateRangeFilter.end)
-            isInRange = isInRange && articleDate <= endDate
-          }
-
-          return isInRange
-        })
-      }
-    } else {
-      // Filtro simple por mes/año
-      if (dateFilter !== "") {
-        result = result.filter((article) => {
-          if (!article.date) return false
-
-          // Extraer mes y año del filtro (formato YYYY-MM)
-          const [filterYear, filterMonth] = dateFilter.split("-")
-
-          // Extraer mes y año de la fecha del artículo (formato DD/MM/YYYY)
-          const dateParts = article.date.split("/")
-          if (dateParts.length !== 3) return false
-
-          const articleMonth = dateParts[1]
-          const articleYear = dateParts[2]
-
-          return articleYear === filterYear && articleMonth === filterMonth
-        })
-      }
-    }
-
     setFilteredArticles(result)
-  }, [articles, searchQuery, categoryFilter, dateFilter, dateRangeFilter, useAdvancedDateFilter])
+  }, [articles, searchQuery, categoryFilter])
 
   // Función para eliminar un artículo
   const handleDelete = (id) => {
@@ -191,9 +133,9 @@ const NewsDashboard = () => {
 
           {/* Herramientas de búsqueda y filtrado */}
           <div className="mb-8 bg-white rounded-xl shadow-md p-4">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
               {/* Buscador */}
-              <div className="flex-1">
+              <div className="w-full md:w-1/2 lg:w-2/3">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Search className="h-5 w-5 text-gray-400" />
@@ -208,94 +150,44 @@ const NewsDashboard = () => {
                 </div>
               </div>
 
-              {/* Filtro por categoría */}
-              <div className="w-full md:w-1/4">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="cursor-pointer block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180]"
-                >
-                  <option value="">Todas las categorías</option>
-                  {uniqueCategories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <div className="flex w-full md:w-1/2 lg:w-1/3 gap-4">
+                {/* Filtro por categoría */}
+                <div className="flex-1">
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="cursor-pointer block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180]"
+                  >
+                    <option value="">Todas las categorías</option>
+                    {uniqueCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Filtro por fecha mejorado */}
-              <div className="w-full md:w-1/4">
-                {useAdvancedDateFilter ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="date"
-                        value={dateRangeFilter.start}
-                        onChange={(e) => setDateRangeFilter({ ...dateRangeFilter, start: e.target.value })}
-                        className="cursor-pointer block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180]"
-                        placeholder="Fecha inicio"
-                      />
-                      <span className="text-gray-500">a</span>
-                      <input
-                        type="date"
-                        value={dateRangeFilter.end}
-                        onChange={(e) => setDateRangeFilter({ ...dateRangeFilter, end: e.target.value })}
-                        className="cursor-pointer block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180]"
-                        placeholder="Fecha fin"
-                      />
-                    </div>
-                    <button
-                      onClick={() => {
-                        setUseAdvancedDateFilter(false)
-                        setDateRangeFilter({ start: "", end: "" })
-                      }}
-                      className="text-xs text-[#C40180] hover:underline"
-                    >
-                      Usar filtro simple
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <input
-                      type="month"
-                      value={dateFilter}
-                      onChange={(e) => setDateFilter(e.target.value)}
-                      className="cursor-pointer block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180]"
-                    />
-                    <button
-                      onClick={() => {
-                        setUseAdvancedDateFilter(true)
-                        setDateFilter("")
-                      }}
-                      className="text-xs text-[#C40180] hover:underline"
-                    >
-                      Usar filtro avanzado
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Botón para añadir nueva noticia */}
-              <div>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() =>
-                    handleEdit({
-                      id: Date.now(), // ID temporal
-                      title: "Nueva Noticia",
-                      description: "Descripción de la noticia",
-                      imageUrl: "Seleccione una Imagen",
-                      category: "Actualización",
-                      fullContent: "Contenido completo de la noticia.\n\nAquí puedes añadir más párrafos.",
-                    })
-                  }
-                  className="cursor-pointer w-full md:w-auto px-6 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-xl shadow-md flex items-center justify-center hover:bg-white"
-                >
-                  <PlusCircle className="w-5 h-5 mr-2" />
-                  Nueva Noticia
-                </motion.button>
+                {/* Botón para añadir nueva noticia */}
+                <div>
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() =>
+                      handleEdit({
+                        id: Date.now(), // ID temporal
+                        title: "Nueva Noticia",
+                        description: "Descripción de la noticia",
+                        imageUrl: "Seleccione una Imagen",
+                        category: "Actualización",
+                        fullContent: "Contenido completo de la noticia.\n\nAquí puedes añadir más párrafos.",
+                      })
+                    }
+                    className="cursor-pointer w-full px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-xl shadow-md flex items-center justify-center hover:bg-white whitespace-nowrap"
+                  >
+                    <PlusCircle className="w-5 h-5 mr-2" />
+                    Nueva Noticia
+                  </motion.button>
+                </div>
               </div>
             </div>
           </div>
@@ -310,12 +202,9 @@ const NewsDashboard = () => {
             onPreview={handlePreview}
             searchQuery={searchQuery}
             categoryFilter={categoryFilter}
-            dateFilter={useAdvancedDateFilter ? `${dateRangeFilter.start} - ${dateRangeFilter.end}` : dateFilter}
             onClearFilters={() => {
               setSearchQuery("")
               setCategoryFilter("")
-              setDateFilter("")
-              setDateRangeFilter({ start: "", end: "" })
             }}
           />
         </div>
