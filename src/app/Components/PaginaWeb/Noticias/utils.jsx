@@ -1,4 +1,3 @@
-// Funciones para el sistema de grid con 4 posiciones por fila
 export const organizeElementsIntoRows = (elements) => {
   if (!elements || !elements.length) return []
 
@@ -31,7 +30,7 @@ export const organizeElementsIntoRows = (elements) => {
 
   // Convertir el mapa de filas en un array de filas
   const rows = Object.keys(rowMap)
-    .sort((a, b) => Number(a) - Number(b)) // ordenar filas numéricamente
+    .sort((a, b) => Number(a) - Number(b))
     .map((rowIndex) => rowMap[rowIndex])
 
   return rows
@@ -48,7 +47,7 @@ const assignInitialRowData = (elements) => {
       ...element,
       rowData: {
         row: currentRow,
-        gridPosition: 0, // Posición inicial en el grid
+        gridPosition: 0,
       },
     })
 

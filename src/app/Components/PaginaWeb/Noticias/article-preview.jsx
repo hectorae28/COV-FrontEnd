@@ -1,4 +1,107 @@
 "use client"
+import { Film, Play } from "lucide-react"
+import { useEffect, useState } from "react"
+
+// Función para extraer el ID de un video de YouTube
+const extractYoutubeVideoId = (url) => {
+  if (!url) return null
+  
+  // Patrón para diferentes formatos de URL de YouTube
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+  const match = url.match(regExp)
+  
+  return (match && match[2].length === 11) ? match[2] : null
+}
+
+// Función para extraer el ID de un video de Vimeo
+const extractVimeoVideoId = (url) => {
+  if (!url) return null
+  
+  // Patrón para diferentes formatos de URL de Vimeo
+  const regExp = /vimeo\.com\/(?:video\/)?([0-9]+)/
+  const match = url.match(regExp)
+  
+  return match ? match[1] : null
+}
+
+// Modificación del componente EmbeddedVideo en article-preview.jsx
+
+const EmbeddedVideo = ({ url }) => {
+  const [videoType, setVideoType] = useState('unknown')
+  const [videoId, setVideoId] = useState(null)
+  
+  useEffect(() => {
+    if (!url) return;
+    
+    // Detectar el tipo de video y extraer su ID
+    const youtubeId = extractYoutubeVideoId(url)
+    const vimeoId = extractVimeoVideoId(url)
+    
+    if (youtubeId) {
+      setVideoType('youtube')
+      setVideoId(youtubeId)
+    } else if (vimeoId) {
+      setVideoType('vimeo')
+      setVideoId(vimeoId)
+    } else {
+      setVideoType('generic')
+    }
+  }, [url])
+  
+  // Si no hay URL, mostrar un placeholder
+  if (!url) {
+    return (
+      <div className="w-full aspect-video rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+        <Film className="h-8 w-8 text-gray-400" />
+      </div>
+    );
+  }
+  
+  if (videoType === 'youtube' && videoId) {
+    return (
+      <div className="w-full aspect-video rounded-lg overflow-hidden">
+        <iframe 
+          src={`https://www.youtube.com/embed/${videoId}`}
+          className="w-full h-full"
+          title="Video de YouTube"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    )
+  }
+  
+  if (videoType === 'vimeo' && videoId) {
+    return (
+      <div className="w-full aspect-video rounded-lg overflow-hidden">
+        <iframe 
+          src={`https://player.vimeo.com/video/${videoId}`}
+          className="w-full h-full"
+          title="Video de Vimeo"
+          frameBorder="0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    )
+  }
+  
+  // Vista genérica para otros tipos de video
+  return (
+    <div className="w-full aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
+          <Play className="h-8 w-8 text-white fill-white" />
+        </div>
+        <p className="text-white text-sm max-w-lg mx-auto px-4">
+          <span className="font-medium block mb-1">Vista previa no disponible</span>
+          <span className="text-xs opacity-80 break-all">{url}</span>
+        </p>
+      </div>
+    </div>
+  )
+}
 
 const ArticlePreview = ({ article, contentElements, elementRows, activeElement, onSelectElement }) => {
   // Si no hay filas o elementos, mostrar mensaje de vista previa vacía
@@ -144,6 +247,20 @@ const RenderElement = ({ element }) => {
               e.target.src = "/assets/placeholder-image.jpg"
             }}
           />
+          {element.alt && <p className="text-sm text-gray-500 mt-1 italic">{element.alt}</p>}
+        </div>
+      )
+    
+    case "video":
+      return (
+        <div className="cursor-pointer my-6">
+          {element.content ? (
+            <EmbeddedVideo url={element.content} />
+          ) : (
+            <div className="aspect-video w-full bg-gray-100 flex items-center justify-center rounded-lg">
+              <Film className="w-8 h-8 text-gray-400" />
+            </div>
+          )}
         </div>
       )
 
