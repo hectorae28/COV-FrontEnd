@@ -1,8 +1,6 @@
 "use client"
 
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
-import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
-import { colegiados as colegiadosIniciales, solicitudes as solicitudesIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
 import { motion } from "framer-motion"
 import {
   CheckCircle,
@@ -16,7 +14,6 @@ import {
   XCircle
 } from "lucide-react"
 import { useEffect, useState,useMemo } from "react"
-import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
 import { solicitudes as solicitudesIniciales, colegiados as colegiadosIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
 import {convertJsonToFormData} from "@/app/Models/PanelControl/Solicitudes/SolicitudesStore.jsx"
