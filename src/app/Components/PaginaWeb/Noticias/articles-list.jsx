@@ -1,16 +1,28 @@
 "use client"
 import { motion } from "framer-motion"
 import { Calendar, Check, Clock, Eye, Film, Pencil, Play, RotateCcw, Trash2, X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 // Función para extraer el ID de video de YouTube
 const extractYoutubeVideoId = (url) => {
   if (!url) return null
 
+  // Patrón para diferentes formatos de URL de YouTube
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
   const match = url.match(regExp)
 
   return (match && match[2].length === 11) ? match[2] : null
+}
+
+// Función para extraer el ID de video de Vimeo
+const extractVimeoVideoId = (url) => {
+  if (!url) return null
+  
+  // Patrón para diferentes formatos de URL de Vimeo
+  const regExp = /vimeo\.com\/(?:video\/)?([0-9]+)/
+  const match = url.match(regExp)
+  
+  return match ? match[1] : null
 }
 
 // Componente para mostrar múltiples etiquetas
@@ -48,69 +60,103 @@ const TagsList = ({ tags }) => {
   );
 };
 
-// Componente ArticleMediaPreview
+// Componente ArticleMediaPreview mejorado
 const ArticleMediaPreview = ({ article }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-
-  // Función para determinar si una URL es de video
-  const isVideoURL = (url) => {
-    if (!url) return false;
-
-    const patterns = [
-      /youtube\.com\/watch\?v=([^&]+)/,  // YouTube watch
-      /youtu\.be\/([^?]+)/,              // YouTube short URL
-      /youtube\.com\/embed\/([^?]+)/,    // YouTube embed
-      /vimeo\.com\/(?:video\/)?([0-9]+)/ // Vimeo
-    ];
-
-    return patterns.some(pattern => pattern.test(url));
-  };
-
-  // Determinar si es un video (por tipo explícito, URL de video, o URL que parece video)
-  const isExplicitVideo = article.videoUrl || article.portada_tipo === "video";
-  const mediaUrl = isExplicitVideo
-    ? article.videoUrl || article.imagen_portada_url || article.imageUrl
-    : (article.imageUrl || article.imagen_portada_url);
-
-  const isVideo = isExplicitVideo || isVideoURL(mediaUrl);
-
-  // Para videos de YouTube, mostrar thumbnail
-  if (isVideo && mediaUrl) {
-    const youtubeId = extractYoutubeVideoId(mediaUrl);
-
+  const [videoType, setVideoType] = useState('unknown')
+  const [videoId, setVideoId] = useState(null)
+  
+  // Efecto para detectar y configurar el tipo de video cuando cambia el artículo
+  useEffect(() => {
+    setLoading(true)
+    setError(false)
+    
+    // Determinar si es un video (por tipo explícito o URL)
+    const isExplicitVideo = article.videoUrl || article.portada_tipo === "video"
+    
+    // Obtener la URL del medio según prioridad
+    const mediaUrl = isExplicitVideo
+      ? (article.videoUrl || article.imagen_portada_url || article.imageUrl)
+      : (article.imageUrl || article.imagen_portada_url)
+    
+    if (!mediaUrl) {
+      setLoading(false)
+      return
+    }
+    
+    // Detectar el tipo de video basado en la URL
+    const youtubeId = extractYoutubeVideoId(mediaUrl)
+    const vimeoId = extractVimeoVideoId(mediaUrl)
+    
     if (youtubeId) {
-      // Usar la miniatura de YouTube
-      return (
-        <div className="relative h-48 w-full md:h-full">
-          <img
-            src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
-            alt={article.title || article.titulo}
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-            <div className="rounded-full bg-white/30 p-3 backdrop-blur-sm">
-              <Play className="h-8 w-8 text-white" fill="white" />
-            </div>
+      setVideoType('youtube')
+      setVideoId(youtubeId)
+      setLoading(false)
+    } else if (vimeoId) {
+      setVideoType('vimeo')
+      setVideoId(vimeoId)
+      setLoading(false)
+    } else if (isExplicitVideo) {
+      setVideoType('generic')
+      setLoading(false)
+    } else {
+      setVideoType('unknown')
+      setLoading(false)
+    }
+  }, [article])
+  
+  // Para videos de YouTube, mostrar thumbnail con overlay de reproducción
+  if (videoType === 'youtube' && videoId) {
+    return (
+      <div className="relative h-48 w-full md:h-full">
+        <img
+          src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+          alt={article.title || article.titulo}
+          className="h-full w-full object-cover"
+          onLoad={() => setLoading(false)}
+          onError={() => setError(true)}
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="rounded-full bg-white/30 p-3 backdrop-blur-sm">
+            <Play className="h-8 w-8 text-white" fill="white" />
           </div>
         </div>
-      );
-    }
+      </div>
+    )
+  }
+  
+  // Para videos de Vimeo
+  if (videoType === 'vimeo' && videoId) {
+    return (
+      <div className="relative h-48 w-full md:h-full bg-gradient-to-br from-[#1ab7ea] to-[#0077cc]">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="rounded-full bg-white/30 p-3 backdrop-blur-sm">
+            <Play className="h-8 w-8 text-white" fill="white" />
+          </div>
+        </div>
+        <div className="absolute bottom-2 left-2 text-white text-xs">
+          Vimeo
+        </div>
+      </div>
+    )
+  }
 
-    // Para otros videos, mostrar placeholder
+  // Para otros tipos de videos genéricos
+  if (videoType === 'generic') {
     return (
       <div className="flex h-48 w-full items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 md:h-full">
         <div className="text-center">
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
             <Film className="h-6 w-6 text-white" />
           </div>
-          <p className="text-white">Video</p>
+          <p className="text-white text-sm">Video</p>
         </div>
       </div>
-    );
+    )
   }
 
-  // Para imágenes
+  // Para imágenes (o tipo desconocido/no video)
   return (
     <div className="relative h-48 w-full md:h-full">
       {loading && (
@@ -119,7 +165,7 @@ const ArticleMediaPreview = ({ article }) => {
         </div>
       )}
       <img
-        src={mediaUrl || "/assets/placeholder-image.jpg"}
+        src={article.imageUrl || article.imagen_portada_url || "/assets/placeholder-image.jpg"}
         alt={article.title || article.titulo}
         className="h-full w-full object-cover"
         onLoad={() => setLoading(false)}
@@ -130,8 +176,8 @@ const ArticleMediaPreview = ({ article }) => {
         }}
       />
     </div>
-  );
-};
+  )
+}
 
 const ArticlesList = ({
   articles,
