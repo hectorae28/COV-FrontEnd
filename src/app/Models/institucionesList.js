@@ -1,11 +1,7 @@
 const institucionesList = [
   {
     "code": "CDP",
-    "name": "Consultorios Dentales Privados"
-  },
-  {
-    "code": "CM",
-    "name": "Consultorios de Médicos"
+    "name": "Consultorios "
   },
   {
     "code": "CAA",
@@ -13,7 +9,7 @@ const institucionesList = [
   },
   {
     "code": "HD",
-    "name": "Hospitales y Departamentos Dentales Hospitalarios"
+    "name": "Hospitales"
   },
   {
     "code": "ASP",
@@ -21,11 +17,7 @@ const institucionesList = [
   },
   {
     "code": "LDC",
-    "name": "Laboratorios Dentales Comerciales"
-  },
-  {
-    "code": "LI",
-    "name": "Laboratorios Internos en Consultorios"
+    "name": "Laboratorio"
   },
   {
     "code": "FMD",
@@ -41,7 +33,7 @@ const institucionesList = [
   },
   {
     "code": "CC",
-    "name": "Clínicas Comunitarias y ONG de Salud"
+    "name": "Clínicas"
   },
   {
     "code": "PMSB",
@@ -50,14 +42,6 @@ const institucionesList = [
   {
     "code": "FAP",
     "name": "Fuerzas Armadas y Servicios Penitenciarios"
-  },
-  {
-    "code": "CCA",
-    "name": "Clínicas en Cruceros y Aerolíneas"
-  },
-  {
-    "code": "TO",
-    "name": "Teleodontología"
   },
   {
     "code": "OT",

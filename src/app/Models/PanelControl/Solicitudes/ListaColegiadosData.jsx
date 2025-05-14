@@ -106,7 +106,16 @@ const useDataListaColegiados = create((set, get) => ({
       "solicitud_unida",
       `?colegiado=${colegiadoId}`
     );
-    return res.data;
+    //return res.data;
+    return [{
+      id: "1-1",
+      tipo: "Constancia de inscripción",
+      fecha: "10/02/2024",
+      estado: "Completada",
+      descripcion: "Constancia de inscripción al COV",
+      urgente: false,
+      monto: 20.0,
+    }]
   },
 
   getDocumentos: (colegiadoId) => {

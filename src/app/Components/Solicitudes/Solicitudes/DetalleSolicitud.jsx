@@ -34,7 +34,7 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
   // Estados para formularios
   const [motivoRechazo, setMotivoRechazo] = useState("")
   const [observaciones, setObservaciones] = useState("")
-
+  
   // Obtener datos de la solicitud
   useEffect(() => {
     if (solicitudes && solicitudId) {
@@ -43,13 +43,14 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
       if (solicitudEncontrada) {
         // Process the solicitudEncontrada to handle the new data structure
         const solicitudProcesada = procesarSolicitud(solicitudEncontrada)
-        setSolicitud(solicitudProcesada)
+        setSolicitud(solicitudes[0])
         setObservaciones(solicitudProcesada.observaciones || "")
       }
       
       setIsLoading(false)
     }
   }, [solicitudId, solicitudes])
+  console.log({solicitud})
 
   // Add this function to process the solicitud and extract itemsSolicitud from detalles_solicitud
   const procesarSolicitud = (solicitudOriginal) => {
@@ -66,11 +67,11 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
             nombre: detalle.tipo_solicitud || tipoSolicitud.charAt(0).toUpperCase() + tipoSolicitud.slice(1),
             descripcion: `Solicitud de ${tipoSolicitud}`,
             costo: detalle.id_costo,
-            exonerado: detalle.status === "exonerado",
-            pagado: detalle.status === "aprobado" || detalle.status === "completado",
-            pagadoParcialmente: detalle.status === "pago_parcial",
+            exonerado: detalle.estado === "exonerado",
+            pagado: detalle.estado === "aprobado" || detalle.estado === "completado",
+            pagadoParcialmente: detalle.estado === "pago_parcial",
             tipoSolicitud: tipoSolicitud,
-            status: detalle.status || "pendiente"
+            estado: detalle.estado || "pendiente"
           })
         }
       })
@@ -78,29 +79,29 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
     
     // Ensure we have the basic fields needed for rendering
     resultado.tipo_solicitud = resultado.tipo_solicitud || "Solicitud Unificada"
-    resultado.status = resultado.status || determinarEstadoGeneral(resultado.itemsSolicitud)
+    resultado.estado = resultado.estado || determinarEstadoGeneral(resultado.itemsSolicitud)
     resultado.fecha = new Date(resultado.created_at).toLocaleDateString() || new Date().toLocaleDateString()
     resultado.colegiadoNombre = solicitudOriginal.colegiado || "Colegiado"
     
     return resultado
   }
 
-  // Helper function to determine the overall status
+  // Helper function to determine the overall estado
   const determinarEstadoGeneral = (items) => {
     if (!items || items.length === 0) return "Pendiente"
     
     // If all items are approved or completed
-    if (items.every(item => item.status === "aprobado" || item.status === "completado")) {
+    if (items.every(item => item.estado === "aprobado" || item.estado === "completado")) {
       return "Aprobada"
     }
     
     // If all items are exonerated
-    if (items.every(item => item.status === "exonerado")) {
+    if (items.every(item => item.estado === "exonerado")) {
       return "Exonerada"
     }
     
     // If any item is rejected
-    if (items.some(item => item.status === "rechazado")) {
+    if (items.some(item => item.estado === "rechazado")) {
       return "Rechazada"
     }
     
@@ -131,9 +132,9 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
       const costoItem = item.id_costo || 0
       totalOriginal += costoItem
       
-      if (item.exonerado || item.status === "exonerado") {
+      if (item.exonerado || item.estado === "exonerado") {
         totalExonerado += costoItem
-      } else if (item.pagado || item.status === "aprobado" || item.status === "completado") {
+      } else if (item.pagado || item.estado === "aprobado" || item.estado === "completado") {
         totalPagado += costoItem
       } else if (item.pagadoParcialmente || item.status === "pago_parcial") {
         const montoPagado = item.montoPagado || 0

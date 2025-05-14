@@ -249,7 +249,7 @@ export default function SeleccionarSolicitudesStep({
         if (file) {
             setDocumentosAdjuntos(prev => ({
                 ...prev,
-                [`${itemId}-${documentoId}`]: file
+                [`${itemId}`]: file
             }))
         }
     }
@@ -333,7 +333,7 @@ export default function SeleccionarSolicitudesStep({
                 referencia: `REF-${Date.now().toString().slice(-6)}`,
                 costo: totalCarrito,
                 documentosRequeridos: todosDocumentosRequeridos,
-                documentosAdjuntos: Object.keys(documentosAdjuntos).map(key => documentosAdjuntos[key].name || "documento.pdf"),
+                documentosAdjuntos: documentosAdjuntos,//Object.keys(documentosAdjuntos).map(key => documentosAdjuntos[key] || "documento.pdf"),
                 itemsSolicitud: itemsCarrito,
                 comprobantePago: null,
                 estadoPago: todoExonerado ? "Exonerado" : "Pendiente de verificación",
@@ -581,7 +581,7 @@ export default function SeleccionarSolicitudesStep({
                                                             <input
                                                                 type="file"
                                                                 id={`documento-${item.id}-${index}`}
-                                                                onChange={(e) => handleFileChange(e, index, item.id)}
+                                                                onChange={(e) => handleFileChange(e, index, doc)}
                                                                 className="hidden"
                                                                 accept=".pdf,.jpg,.jpeg,.png"
                                                             />
@@ -589,12 +589,12 @@ export default function SeleccionarSolicitudesStep({
                                                                 htmlFor={`documento-${item.id}-${index}`}
                                                                 className="ml-2 text-xs text-blue-600 cursor-pointer hover:underline"
                                                             >
-                                                                {documentosAdjuntos[`${item.id}-${index}`]
+                                                                {documentosAdjuntos[`${doc}-${index}`]
                                                                     ? <span className="text-green-600 flex items-center">
                                                                         <FileCheck size={14} className="mr-1" />
-                                                                        {documentosAdjuntos[`${item.id}-${index}`].name.length > 15
-                                                                            ? documentosAdjuntos[`${item.id}-${index}`].name.substring(0, 15) + '...'
-                                                                            : documentosAdjuntos[`${item.id}-${index}`].name}
+                                                                        {documentosAdjuntos[`${doc}-${index}`].name.length > 15
+                                                                            ? documentosAdjuntos[`${doc}-${index}`].name.substring(0, 15) + '...'
+                                                                            : documentosAdjuntos[`${doc}-${index}`].name}
                                                                     </span>
                                                                     : "Adjuntar"}
                                                             </label>

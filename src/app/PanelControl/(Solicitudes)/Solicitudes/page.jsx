@@ -18,7 +18,7 @@ import { useEffect, useState } from "react"
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
 import { solicitudes as solicitudesIniciales, colegiados as colegiadosIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
-
+import {convertJsonToFormData} from "@/app/Models/PanelControl/Solicitudes/SolicitudesStore.jsx"
 export default function ListaSolicitudes() {
   // Estados para manejar los datos
   const [solicitudes, setSolicitudes] = useState([])
@@ -93,7 +93,10 @@ export default function ListaSolicitudes() {
 
   // Función para manejar la creación exitosa de una nueva solicitud
   const handleSolicitudCreada = (nuevaSolicitud) => {
-    setSolicitudes(prev => [nuevaSolicitud, ...prev]); // Añadir al principio del array
+    console.log({nuevaSolicitud})
+    const formatSolicitud= convertJsonToFormData(nuevaSolicitud)
+    console.log(formatSolicitud)
+    //setSolicitudes(prev => [nuevaSolicitud, ...prev]); // Añadir al principio del array
   }
 
   // Función para abrir el modal con un colegiado preseleccionado

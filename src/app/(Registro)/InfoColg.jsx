@@ -55,8 +55,8 @@ export default function InfoColegiado({
                 <option value="" disabled>
                   Profesión
                 </option>
-                <option value="tecnico">Técnico</option>
                 <option value="odontologo">Odontólogo</option>
+                <option value="tecnico">Técnico</option>
                 <option value="higienista">Higienista</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">

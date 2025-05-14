@@ -1,16 +1,10 @@
 import { motion } from "framer-motion";
 import { Briefcase, BriefcaseBusiness, Phone, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import institucionesList from "@/app/Models/institucionesList";
 
 export default function InfoLaboral({ formData, onInputChange, validationErrors }) {
   // Lista de tipos de instituciones
-  const institucionesList = [
-    { code: "publica", name: "Institución Pública" },
-    { code: "privada", name: "Institución Privada" },
-    { code: "mixta", name: "Institución Mixta" },
-    { code: "ong", name: "ONG / Sin fines de lucro" },
-    { code: "otro", name: "Otro tipo de institución" }
-  ];
 
   // Estado para manejar el estado laboral
   const [workStatus, setWorkStatus] = useState(formData.workStatus || "labora");
