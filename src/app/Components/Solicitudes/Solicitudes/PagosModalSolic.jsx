@@ -1,8 +1,8 @@
-"use client"
-import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx"
-import { motion } from "framer-motion"
-import { CreditCard } from "lucide-react"
-import { useEffect, useState } from "react"
+"use client";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx";
+import { CreditCard, DollarSign } from "lucide-react";
 
 export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
     const [isSubmitting, setIsSubmitting] = useState(false)

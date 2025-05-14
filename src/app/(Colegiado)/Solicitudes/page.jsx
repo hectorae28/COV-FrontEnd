@@ -5,7 +5,7 @@ import { colegiado, solicitudes as solicitudesIniciales } from "@/app/Models/Pan
 import DashboardLayout from "@/Components/DashboardLayout"
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
-import {convertJsonToFormData} from "@/app/Models/PanelControl/Solicitudes/SolicitudesStore.jsx"
+import {convertJsonToFormData} from "@/store/SolicitudesStore.jsx"
 import { motion } from "framer-motion"
 import {
     CheckCircle,

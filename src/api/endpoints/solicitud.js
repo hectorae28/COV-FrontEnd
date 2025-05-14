@@ -48,3 +48,12 @@ export const fetchSolicitudes = async (url, params = "") => {
         throw error;
     }
 }
+export const pagoSolvencia = async (detallesPagoSolvencia) => {
+    try {
+        const data = api.post('solicitudes/pago_solvencia/', detallesPagoSolvencia)
+        return data;
+    } catch (error) {
+        console.error("Ha ocurrido un error: ", error);
+        throw error;
+    }
+}

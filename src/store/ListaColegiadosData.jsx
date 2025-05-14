@@ -1,7 +1,11 @@
 import { create } from "zustand";
-import { colegiados } from "./SolicitudesData";
+import { colegiados } from "../app/Models/PanelControl/Solicitudes/SolicitudesData";
 import { fetchDataUsuario, patchDataUsuario,postDataUsuario } from "@/api/endpoints/colegiado";
 import {fetchSolicitudes} from "@/api/endpoints/solicitud"
+
+/*
+STORE: se almacenan los datos de los colegiados para el modulo administrativo
+*/
 
 const useDataListaColegiados = create((set, get) => ({
   colegiados: [],
@@ -297,6 +301,7 @@ const useDataListaColegiados = create((set, get) => ({
     get().updateColegiado(colegiadoId, { titulo: entregado });
     return res.data;
   },
-}));
+})
+);
 
 export default useDataListaColegiados;

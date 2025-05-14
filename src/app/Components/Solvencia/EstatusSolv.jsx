@@ -2,8 +2,11 @@
 
 import { Calendar, AlertCircle, CheckCircle } from "lucide-react";
 import { Warning } from "@mui/icons-material";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
-export default function SolvencyStatus({ isSolvent, solvencyDate, solvencyAmount, onPayClick, isExpiringSoon }) {
+export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSoon }) {
+  const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser)
+
   return (
     <div className="w-full bg-white rounded-xl shadow-md overflow-hidden mb-6">
       <div className="bg-gradient-to-b from-[#41023B] to-[#D7008A] p-4">
@@ -13,7 +16,7 @@ export default function SolvencyStatus({ isSolvent, solvencyDate, solvencyAmount
       <div className="p-5">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
-            {isSolvent ? (
+            {colegiadoUser.solvencia_status ? (
               <>
                 {isExpiringSoon ? (
                   <div className="flex items-center text-amber-600 mb-2">
@@ -28,7 +31,7 @@ export default function SolvencyStatus({ isSolvent, solvencyDate, solvencyAmount
                 )}
                 <div className="flex items-center text-gray-700">
                   <Calendar size={16} className="mr-2" />
-                  <span>Válido hasta: <span className="font-semibold">{solvencyDate}</span></span>
+                  <span>Válido hasta: <span className="font-semibold">{colegiadoUser.solvente}</span></span>
                 </div>
                 {isExpiringSoon && (
                   <div className="text-amber-600 text-sm mt-2">
@@ -57,7 +60,7 @@ export default function SolvencyStatus({ isSolvent, solvencyDate, solvencyAmount
               onClick={onPayClick}
               className="bg-gradient-to-b from-[#41023B] to-[#D7008A] text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition-colors"
             >
-              {isSolvent ? "Renovar Solvencia" : "Realizar Pago"}
+              {colegiadoUser.solvencia_status ? "Renovar Solvencia" : "Realizar Pago"}
             </button>
           </div>
         </div>

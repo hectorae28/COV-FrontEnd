@@ -1,4 +1,4 @@
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import useDataListaColegiados from "@/store/ListaColegiadosData";
 import {
     AlertCircle,
     CheckCircle,

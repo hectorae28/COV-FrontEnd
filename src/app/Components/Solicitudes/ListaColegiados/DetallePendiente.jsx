@@ -1,6 +1,6 @@
 "use client";
 
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import useDataListaColegiados from "@/store/ListaColegiadosData";
 import { ChevronLeft } from "lucide-react";
 import { motion } from "framer-motion"
 import { useSession } from "next-auth/react";

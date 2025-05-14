@@ -16,7 +16,7 @@ import {
 import { useEffect, useState,useMemo } from "react"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
 import { solicitudes as solicitudesIniciales, colegiados as colegiadosIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
-import {convertJsonToFormData} from "@/app/Models/PanelControl/Solicitudes/SolicitudesStore.jsx"
+import {convertJsonToFormData} from "@/store/SolicitudesStore.jsx"
 export default function ListaSolicitudes() {
   // Estados para manejar los datos
   const [solicitudes, setSolicitudes] = useState([])

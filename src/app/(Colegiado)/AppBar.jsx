@@ -12,12 +12,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 export default function AppBar({ solvencyInfo }) {
     const [selectedItem, setSelectedItem] = useState("Inicio");
     const pathname = usePathname();
-    const fechaExpiracion = new Date(solvencyInfo);
-    const isSolvente = fechaExpiracion >= new Date();
+    const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser)
 
     // Actualizar elemento seleccionado basado en la ruta actual
     useEffect(() => {
@@ -108,11 +108,11 @@ export default function AppBar({ solvencyInfo }) {
                             <span className="text-md text-gray-300 mb-2">Estado:</span>
                             <span className="text-[16px] font-semibold text-white">
                                 <span
-                                    className={isSolvente ? "text-green-400" : "text-red-400"}
+                                    className={colegiadoUser.solvencia_status ? "text-green-400" : "text-red-400"}
                                 >
-                                    {isSolvente ? "Solvente" : "No Solvente"}
+                                    {colegiadoUser.solvencia_status ? "Solvente" : "No Solvente"}
                                 </span>{" "}
-                                hasta: {solvencyInfo}
+                                hasta: {colegiadoUser.solvente}
                             </span>
                         </div>
                     </div>

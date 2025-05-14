@@ -40,9 +40,9 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
 
                         <div className="mt-4 md:mt-0 flex flex-wrap justify-center md:justify-end gap-2">
                             <span
-                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colegiado.solvente ? 'bg-green-100 text-green-800 font-bold' : 'bg-red-100 text-red-800'}`}
+                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colegiado.solvencia_status ? 'bg-green-100 text-green-800 font-bold' : 'bg-red-100 text-red-800'}`}
                             >
-                                {colegiado.solvente ? 'Solvente' : 'No Solvente'}
+                                {colegiado.solvencia_status ? 'Solvente' : 'No Solvente'}
                             </span>
 
                             <span

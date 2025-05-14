@@ -1,6 +1,6 @@
 "use client";
 
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import useDataListaColegiados from "@/store/ListaColegiadosData";
 import { CheckCircle, ChevronLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";

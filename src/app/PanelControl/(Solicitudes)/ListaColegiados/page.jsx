@@ -2,7 +2,7 @@
 import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado";
 import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
 import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal";
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import useDataListaColegiados from "@/store/ListaColegiadosData";
 import Pagination from "@/Components/Paginations.jsx";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation"

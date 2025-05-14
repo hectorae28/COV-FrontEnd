@@ -1,4 +1,4 @@
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData"
+import useDataListaColegiados from "@/store/ListaColegiadosData"
 import SessionInfo from "@/Components/SessionInfo"
 import { AlertCircle, Calendar, CheckCircle, Clock, Eye, FileCheck, FileText, Search, Tag } from "lucide-react"
 import { useEffect, useState } from "react"
