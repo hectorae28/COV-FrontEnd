@@ -5,6 +5,7 @@ import { colegiado, solicitudes as solicitudesIniciales } from "@/app/Models/Pan
 import DashboardLayout from "@/Components/DashboardLayout"
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
+import {convertJsonToFormData} from "@/app/Models/PanelControl/Solicitudes/SolicitudesStore.jsx"
 import { motion } from "framer-motion"
 import {
     CheckCircle,
@@ -135,9 +136,12 @@ export default function ListaSolicitudesColegiado() {
         setSolicitudSeleccionadaId(null);
     };
 
-    const handleSolicitudCreada = (nuevaSolicitud) => {
-        setSolicitudes(prev => [nuevaSolicitud, ...prev]);
-    };
+  const handleSolicitudCreada = (nuevaSolicitud) => {
+    console.log({nuevaSolicitud})
+    const formatSolicitud= convertJsonToFormData(nuevaSolicitud)
+    console.log(formatSolicitud)
+    //setSolicitudes(prev => [nuevaSolicitud, ...prev]); // Añadir al principio del array
+  }
 
     const actualizarSolicitud = (solicitudActualizada) => {
         setSolicitudes(prev => prev.map(s =>
