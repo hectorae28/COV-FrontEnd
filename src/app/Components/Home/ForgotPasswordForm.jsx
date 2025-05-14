@@ -22,7 +22,7 @@ export default function ForgotPasswordForm({ onBackToLogin }) {
       email: correoRecuperacion,
     }).then((_) => {
       setIsLoading(false);
-      setMesagge({text:"Se ha enviado un correo de recuperación a tu correo electrónico.",type:"success"});
+      onBackToLogin({text:"Se ha enviado un correo de recuperación a tu correo electrónico.",type:"success"});
     }).catch((error) => {
       setIsLoading(false);
       setMesagge({text:error.status==404?" El correo no esta registrado":error.status==500?"Error interno del servidor.":"Error desconocido.",type:"alert"});

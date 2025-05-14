@@ -22,4 +22,3 @@ export const getGradientColor = (index) => {
   return gradientCombinations[index % gradientCombinations.length];
 };
 
-// Timeline data with automatically assigned gradient colors

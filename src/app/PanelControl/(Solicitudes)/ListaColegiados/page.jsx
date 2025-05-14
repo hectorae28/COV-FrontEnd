@@ -2,9 +2,10 @@
 import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado";
 import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
 import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal";
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import useDataListaColegiados from "@/store/ListaColegiadosData";
 import Pagination from "@/Components/Paginations.jsx";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation"
 import {
   AlertTriangle,
   ArrowUpDown,
@@ -20,19 +21,32 @@ import { useEffect, useState } from "react";
 
 export default function ListaColegiadosPage() {
   // Estado del store de Zustand
-    const initStore = useDataListaColegiados((state)=>state.initStore)
-    const colegiados = useDataListaColegiados((state)=>state.colegiados)
-    const colegiadosPendientes = useDataListaColegiados((state)=>state.colegiadosPendientes)
-    const colegiadosPendientesPagination = useDataListaColegiados((state)=>state.colegiadosPendientesPagination)
-    const fetchPendientes = useDataListaColegiados((state)=>state.fetchPendientes)
-    const loading = useDataListaColegiados((state)=>state.loading)
-    const getColegiado = useDataListaColegiados((state)=>state.getColegiado)
-    const getColegiadoPendiente = useDataListaColegiados((state)=>state.getColegiadoPendiente)
+  const initStore = useDataListaColegiados((state) => state.initStore);
+  const colegiados = useDataListaColegiados((state) => state.colegiados);
+  const colegiadosPagination = useDataListaColegiados(
+    (state) => state.colegiadosPagination
+  );
+  const colegiadosPendientes = useDataListaColegiados(
+    (state) => state.colegiadosPendientes
+  );
+  const colegiadosPendientesPagination = useDataListaColegiados(
+    (state) => state.colegiadosPendientesPagination
+  );
+  const fetchPendientes = useDataListaColegiados(
+    (state) => state.fetchPendientes
+  );
+  const fetchColegiados = useDataListaColegiados((state)=>state.fetchColegiados)
+  const loading = useDataListaColegiados((state) => state.loading);
+  const getColegiado = useDataListaColegiados((state) => state.getColegiado);
+  const getColegiadoPendiente = useDataListaColegiados(
+    (state) => state.getColegiadoPendiente
+  );
 
   // Estado local de UI
   const [searchTerm, setSearchTerm] = useState("");
   const [showRegistro, setShowRegistro] = useState(false);
   const [vistaActual, setVistaActual] = useState("lista"); // lista, detalleColegiado, detallePendiente
+  const [params, setParams] = useState({id:null,type:null});
   const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null);
   const [tabActivo, setTabActivo] = useState("pendientes");
 
@@ -43,7 +57,7 @@ export default function ListaColegiadosPage() {
   // Filtros para pendientes
   const [filtroFecha, setFiltroFecha] = useState("todas");
   const [filtroEstadoPendiente, setFiltroEstadoPendiente] = useState("todos"); // Cambiado de filtroPagosPendientes
-  const [filtroEtiqueta, setFiltroEtiqueta] = useState("todos")
+  const [filtroEtiqueta, setFiltroEtiqueta] = useState("todos");
   const [registroExitoso, setRegistroExitoso] = useState(false);
   const [aprobacionExitosa, setAprobacionExitosa] = useState(false);
 
@@ -58,16 +72,27 @@ export default function ListaColegiadosPage() {
   // Nuevo estado para ordenamiento de colegiados registrados
   const [ordenFechaRegistrados, setOrdenFechaRegistrados] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
   const [recordsPerPage, setRecordsPerPage] = useState(10);
-  useEffect(()=>{
-    const LoadInitStore= async()=>{
-      try{
-          await initStore()
-      }catch(e){
-        console.error(e)
+  const router = useRouter()
+  useEffect(() => {
+    const LoadInitStore = async () => {
+      try {
+        await initStore();
+      } catch (e) {
+        console.error(e);
       }
-    }
-    LoadInitStore()
-  },[])
+    };
+    LoadInitStore();
+    const temporalParams = window.location.search;
+    const searchParams = new URLSearchParams(temporalParams);
+    const paramsObject = {};
+    searchParams.forEach((value, key) => {
+      paramsObject[key] = value;
+    });
+
+    setParams(paramsObject);
+    setColegiadoSeleccionadoId(paramsObject.id) 
+    console.log("Parámetros guardados:", paramsObject);
+  }, []);
 
   useEffect(() => {
     const filtros = {};
@@ -97,20 +122,28 @@ export default function ListaColegiadosPage() {
         filtros.documentos_completos = "false";
       } else if (filtroEtiqueta === "pagosPendientes") {
         filtros.tiene_pago = "false";
-      } else if(filtroEtiqueta === "pagosExonerados"){
-        filtros.pago_exonerado = "true"
+      } else if (filtroEtiqueta === "pagosExonerados") {
+        filtros.pago_exonerado = "true";
       }
     }
-    if(filtroEstadoPendiente!=="todos"){
-      if(filtroEstadoPendiente === "rechazados"){
-        filtros.status = "rechazados"
-      } else if(filtroEstadoPendiente === "pendientes"){
-        filtros.status = "revisando"
+    if (filtroEstadoPendiente !== "todos") {
+      if (filtroEstadoPendiente === "rechazados") {
+        filtros.status = "rechazado";
+      } else if (filtroEstadoPendiente === "pendientes") {
+        filtros.status = "revisando";
       }
     }
-    filtros.especialidad=filtroEspecialidad
-    console.log({filtros})
-    fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros);
+    filtros.especialidad = filtroEspecialidad;
+    if(filtroEstado!=="todos"){
+      filtros.solvencia_status=`${filtroEstado==="solventes"}`
+      filtroEstado=='solicitudes'? filtros.tiene_solicitudes_pendientes='true':null
+    }
+    console.log({ filtros,vistaActual });
+    if(tabActivo === "registrados") {
+      fetchColegiados(currentPage, recordsPerPage, searchTerm, filtros)
+    }else if(tabActivo === "pendientes") {
+      fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros);
+    }
   }, [
     currentPage,
     recordsPerPage,
@@ -120,11 +153,12 @@ export default function ListaColegiadosPage() {
     fechaDesde,
     fechaHasta,
     ordenFecha,
+    filtroEstado,
     filtroEtiqueta,
     filtroEspecialidad,
-    filtroEstadoPendiente
+    filtroEstadoPendiente,
   ]);
-
+  
   const verDetalleColegiado = (id) => {
     setColegiadoSeleccionadoId(id);
     setVistaActual("detalleColegiado");
@@ -136,6 +170,10 @@ export default function ListaColegiadosPage() {
   };
 
   const volverALista = () => {
+    const temporalParams = window.location.search;
+    if(temporalParams){
+      router.push("/PanelControl/ListaColegiados")
+    }
     setVistaActual("lista");
     setColegiadoSeleccionadoId(null);
   };
@@ -184,13 +222,13 @@ export default function ListaColegiadosPage() {
     );
   }
 
-  if (vistaActual === "detallePendiente") {
+  if (vistaActual === "detallePendiente"|| params.type==="pendiente") {
     const pendienteActual = getColegiadoPendiente(colegiadoSeleccionadoId);
     return (
       <DetallePendiente
         params={{ id: colegiadoSeleccionadoId }}
         onVolver={handleAprobarPendiente}
-        pendiente={pendienteActual}
+        isAdmin={true}
       />
     );
   }
@@ -205,7 +243,7 @@ export default function ListaColegiadosPage() {
         className="text-center mb-8 md:mb-10 mt-16 md:mt-22"
       >
         <motion.h1
-          className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
+          className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text p-2"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{
@@ -305,7 +343,7 @@ export default function ListaColegiadosPage() {
                 ? "border-[#C40180] text-[#C40180]"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             } transition-colors`}
-            onClick={() => setTabActivo("pendientes")}
+            onClick={() => {setTabActivo("pendientes"); setCurrentPage(1)}}
           >
             Pendientes por aprobación (
             {colegiadosPendientes.filter((p) => p.estado !== "denegada").length}
@@ -317,7 +355,7 @@ export default function ListaColegiadosPage() {
                 ? "border-[#C40180] text-[#C40180]"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             } transition-colors`}
-            onClick={() => setTabActivo("denegadas")}
+            onClick={() => {setTabActivo("denegadas"); setCurrentPage(1)}}
           >
             Denegadas (
             {colegiadosPendientes.filter((p) => p.estado === "denegada").length}
@@ -329,7 +367,7 @@ export default function ListaColegiadosPage() {
                 ? "border-[#C40180] text-[#C40180]"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             } transition-colors`}
-            onClick={() => setTabActivo("registrados")}
+            onClick={() => {setTabActivo("registrados"); setCurrentPage(1)}}
           >
             Colegiados registrados ({colegiados.length})
           </button>
@@ -367,11 +405,11 @@ export default function ListaColegiadosPage() {
                 </button>
                 <button
                   className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
-                    filtroEstado === "No Solvente"
+                    filtroEstado === "!solvente"
                       ? "bg-red-100 text-red-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
-                  onClick={() => setFiltroEstado("No Solvente")}
+                  onClick={() => setFiltroEstado("!solvente")}
                 >
                   No Solventes
                 </button>
@@ -658,8 +696,8 @@ export default function ListaColegiadosPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
                             {colegiado.especialidades.map(
                               (especialidad, index) => (
-                                <div key={index} >
-                                  <span >
+                                <div key={index}>
+                                  <span>
                                     {especialidad?.nombre == undefined
                                       ? "-"
                                       : especialidad?.nombre}
@@ -672,12 +710,12 @@ export default function ListaColegiadosPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                colegiado.solvente
+                                colegiado.solvencia_status
                                   ? "bg-green-100 text-green-800"
                                   : "bg-red-100 text-red-800"
                               }`}
                             >
-                              {colegiado.solvente ? "Solvente" : "No Solvente"}
+                              {colegiado.solvencia_status ? "Solvente" : "No Solvente"}
                             </span>
                             {colegiado.solicitudes &&
                               colegiado.solicitudes.length > 0 && (
@@ -699,6 +737,18 @@ export default function ListaColegiadosPage() {
                       ))}
                     </tbody>
                   </table>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(
+                      (colegiadosPagination.count || 0) /
+                        recordsPerPage
+                    )}
+                    onPageChange={setCurrentPage}
+                    onNextPage={() => setCurrentPage((prev) => prev + 1)}
+                    onPrevPage={() => setCurrentPage((prev) => prev - 1)}
+                    isNextDisabled={!colegiadosPagination.next}
+                    isPrevDisabled={!colegiadosPagination.previous}
+                  />
                 </div>
               )}
             </div>
@@ -765,7 +815,7 @@ export default function ListaColegiadosPage() {
                         <tr key={index} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="font-medium text-gray-900">
-                              {pendiente.persona.nombre}
+                              {pendiente.persona.nombre+" "+pendiente.persona.primer_apellido}
                             </div>
                             <div className="text-sm text-gray-500 md:hidden">
                               {pendiente.persona.cedula}
@@ -801,37 +851,28 @@ export default function ListaColegiadosPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="flex flex-col sm:flex-row gap-1 justify-center items-center">
-                              {pendiente.estado === "rechazada" ? (
+                              {pendiente.status === "rechazado" ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                   <AlertTriangle size={12} /> Rechazada
                                 </span>
-                              ) : pendiente.estado === "denegada" ? (
+                              ) : pendiente.status === "denegado" ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                   <UserX size={12} /> Denegada
                                 </span>
-                              ) : (
+                              ) :pendiente.status === "revisando" ?(<span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-green-800">
+                                <UserX size={12} /> Pendiente por aprobación
+                              </span>): (
                                 <>
-                                  <span
-                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                      !pendiente.archivos_faltantes
-                                        .tiene_faltantes
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-yellow-100 text-yellow-800"
-                                    }`}
-                                  >
-                                    {!pendiente.archivos_faltantes
-                                      .tiene_faltantes ? (
-                                      <>
-                                        <CheckCircle size={12} /> Documentos
-                                        Completos
-                                      </>
-                                    ) : (
-                                      <>
-                                        <XCircle size={12} /> Documentos
-                                        Incompletos
-                                      </>
-                                    )}
-                                  </span>
+                                {pendiente.archivos_faltantes.tiene_faltantes &&(
+                                    <span
+                                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 not-only:bg-yellow-100 text-yellow-800"
+                                      }`}
+                                    >
+                                          <XCircle size={12} /> Documentos
+                                          Incompletos
+                                    </span>
+
+                                )}
                                   {pendiente.pago === null &&
                                     pendiente.pago_exonerado && (
                                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-1 sm:mt-0 sm:ml-2">

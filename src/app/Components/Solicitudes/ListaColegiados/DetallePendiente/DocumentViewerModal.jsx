@@ -1,10 +1,129 @@
 "use client"
 import { useState, useEffect } from "react"
-import { X, Download, FileText, CheckCircle } from "lucide-react"
+import { X, Download, FileText, CheckCircle,ExternalLink } from "lucide-react"
 import { motion } from "framer-motion"
 
+
+const PDFViewer = ({ pdfPath, title }) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+    const [isMobile, setIsMobile] = useState(false);
+  
+    // Detectar si es dispositivo móvil
+    useEffect(() => {
+      const checkIfMobile = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+  
+      // Comprobar al cargar y cuando cambia el tamaño de la ventana
+      checkIfMobile();
+      window.addEventListener("resize", checkIfMobile);
+  
+      return () => {
+        window.removeEventListener("resize", checkIfMobile);
+      };
+    }, []);
+  
+    useEffect(() => {
+      // Cargar el PDF como Blob
+      const fetchPdf = async () => {
+        try {
+          const response = await fetch(pdfPath);
+          if (!response.ok) {
+            throw new Error(`Error al cargar el PDF: ${response.statusText}`);
+          }
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setPdfBlobUrl(url);
+          setIsLoading(false);
+        } catch (error) {
+          console.error("Error al cargar el PDF:", error);
+          setIsLoading(false);
+        }
+      };
+  
+      if (pdfPath) {
+        fetchPdf();
+      }
+    }, [pdfPath]);
+  
+    // Versión móvil - Botones de descarga y abrir
+    if (isMobile) {
+      return (
+        <div className="flex flex-col h-full w-full">
+          <div className="flex justify-between items-center mb-4 p-3 bg-gradient-to-t from-[#C40180] to-[#590248] rounded-lg">
+            <h3 className="text-lg font-bold text-white">{title}</h3>
+          </div>
+  
+          <div className="flex-grow flex flex-col items-center justify-center bg-gray-100 rounded-lg p-8">
+            <div className="text-center mb-6">
+              <p className="text-gray-700 mb-2">Ver o descargar el documento</p>
+              <p className="text-sm text-gray-600">
+                Acceda al documento desde su dispositivo
+              </p>
+            </div>
+  
+            <div className="grid grid-cols-1 gap-4 w-full max-w-xs">
+              <motion.a
+                href={pdfPath}
+                download
+                className="flex items-center justify-center px-6 py-3 rounded-lg bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                about="_blank"
+              >
+                <Download className="w-5 h-5 mr-2" />
+                <span className="font-medium">Descargar</span>
+              </motion.a>
+  
+              <motion.a
+                href={pdfPath}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center px-6 py-3 rounded-lg border-2 border-[#C40180] text-[#C40180] shadow-md"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ExternalLink className="w-5 h-5 mr-2" />
+                <span className="font-medium">Abrir</span>
+              </motion.a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  
+    // Versión desktop - Visor de PDF
+    return (
+      <div className="flex flex-col h-full w-full">
+  
+        <div className="relative flex-grow bg-gray-200 rounded-lg overflow-hidden">
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C40180]"></div>
+                <p className="mt-3 text-sm text-gray-600">
+                  Cargando documento...
+                </p>
+              </div>
+            </div>
+          ) : pdfBlobUrl ? (
+            <iframe
+              src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
+              className="w-full h-full rounded-lg"
+              title={title}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <p className="text-red-500">Error al cargar el documento</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
 export default function DocumentViewerModal({ documento, onClose, pendiente }) {
-    console.log({documento})
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
@@ -106,11 +225,7 @@ export default function DocumentViewerModal({ documento, onClose, pendiente }) {
                     ) : documento.url ? (
                         <div className="h-full flex items-center justify-center min-h-[400px]">
                             {documento.url.endsWith(".pdf") ? (
-                                <iframe
-                                    src={process.env.NEXT_PUBLIC_BACK_HOST+documento.url}
-                                    className="w-full h-full border-0 rounded"
-                                    title={documento.nombre}
-                                ></iframe>
+                               <PDFViewer pdfPath={process.env.NEXT_PUBLIC_BACK_HOST+documento.url} title={documento.nombre} />
                             ) : (
                                 <img
                                     src={process.env.NEXT_PUBLIC_BACK_HOST+documento.url || "/placeholder.svg"}
@@ -129,7 +244,7 @@ export default function DocumentViewerModal({ documento, onClose, pendiente }) {
                     )}
                 </div>
 
-                <div className="p-4 border-t flex justify-between items-center">
+                <div className="p-4 border-t justify-between items-center hidden md:flex">
                     <div>
                         <p className="text-sm text-gray-500">
                             {isExonerado

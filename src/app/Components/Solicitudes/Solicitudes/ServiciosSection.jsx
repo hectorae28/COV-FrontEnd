@@ -24,8 +24,8 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago }) => {
         </div>
         {/* Listado de servicios */}
         <div className="divide-y">
-          {solicitud.itemsSolicitud && solicitud.itemsSolicitud.map((item) => (
-            <div key={item.id} className="p-2.5 grid grid-cols-12 items-center text-sm">
+          {solicitud.itemsSolicitud && solicitud.itemsSolicitud.map((item, index) => (
+            <div key={index} className="p-2.5 grid grid-cols-12 items-center text-sm">
               <div className="col-span-8">
                 <span className="font-medium">{item.nombre}</span>
               </div>

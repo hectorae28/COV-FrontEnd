@@ -2,7 +2,7 @@
 import PayPalProvider from "./paypalProvider"
 import { useState, useEffect } from "react"
 import { DollarSign } from "lucide-react"
-import useColegiadoUserStore from "@/utils/colegiadoUserStore";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 function PaypalPaymentComponent({ 
   totalPendiente, 

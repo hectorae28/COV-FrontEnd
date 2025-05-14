@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
-import { Plus, Trash2, Phone } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Briefcase, BriefcaseBusiness, Phone, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import institucionesList from "@/app/Models/institucionesList";
 
 export default function InfoLaboral({ formData, onInputChange, validationErrors }) {
+  // Lista de tipos de instituciones
+
   // Estado para manejar el estado laboral
   const [workStatus, setWorkStatus] = useState(formData.workStatus || "labora");
 
@@ -13,10 +16,11 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
       : [
         {
           id: 1,
+          institutionType: formData.institutionType || "",
           institutionName: formData.institutionName || "",
           institutionAddress: formData.institutionAddress || "",
           institutionPhone: formData.institutionPhone || "",
-          cargo: formData.cargo || "", // Añadido el campo cargo
+          cargo: formData.cargo || "",
         }
       ]
   );
@@ -29,19 +33,18 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
   }, [formData.workStatus]);
 
   // Manejar el cambio en el estado laboral
-  const handleWorkStatusChange = (e) => {
-    const { value } = e.target;
+  const handleWorkStatusChange = (value) => {
     setWorkStatus(value);
-
     // Si selecciona "No Laborando", limpiamos los campos laborales
     if (value === "noLabora") {
       // Limpiar campos laborales
       onInputChange({
         workStatus: value,
-        institutionName: "N/A",  // Valor por defecto para pasar la validación
-        institutionAddress: "N/A", // Valor por defecto para pasar la validación
-        institutionPhone: "N/A", // Valor por defecto para pasar la validación
-        cargo: "N/A", // Valor por defecto para pasar la validación
+        institutionType: "N/A",
+        institutionName: "N/A",
+        institutionAddress: "N/A",
+        institutionPhone: "N/A",
+        cargo: "N/A",
         laboralRegistros: []
       });
     } else {
@@ -101,10 +104,11 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
       ...registros,
       {
         id: nuevoId,
+        institutionType: "",
         institutionName: "",
         institutionAddress: "",
         institutionPhone: "",
-        cargo: "" // Añadido el campo cargo
+        cargo: ""
       }
     ];
     setRegistros(nuevosRegistros);
@@ -121,10 +125,11 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
       // Si se elimina el primer registro, actualizar los campos principales
       if (index === 0 && nuevosRegistros.length > 0) {
         onInputChange({
+          institutionType: nuevosRegistros[0].institutionType,
           institutionName: nuevosRegistros[0].institutionName,
           institutionAddress: nuevosRegistros[0].institutionAddress,
           institutionPhone: nuevosRegistros[0].institutionPhone,
-          cargo: nuevosRegistros[0].cargo // Añadido el campo cargo
+          cargo: nuevosRegistros[0].cargo
         });
       }
     }
@@ -136,15 +141,12 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
     if (workStatus === "noLabora") {
       return false;
     }
-
     // Solo mostrar errores si validationErrors existe y contiene campos de este registro
     if (!validationErrors) return false;
-
     // Para el primer registro, podemos usar los nombres de campo directos
     if (registro.id === 1) {
       return validationErrors[fieldName];
     }
-
     // Para registros adicionales, habría que implementar una lógica más compleja
     // si se quiere validar cada registro individualmente
     return false;
@@ -157,34 +159,33 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
       transition={{ duration: 0.3 }}
       className="space-y-8"
     >
-      {/* Opción para indicar estado laboral */}
-      <div className="mb-6">
-        <label className="block mb-2 text-sm font-medium text-[#41023B]">
-          Estado Laboral Actual
-        </label>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="radio"
-              name="workStatus"
-              value="labora"
-              checked={workStatus === "labora"}
-              onChange={handleWorkStatusChange}
-              className="w-4 h-4 text-[#D7008A] focus:ring-[#D7008A]"
-            />
-            <span>Actualmente Laborando</span>
-          </label>
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="radio"
-              name="workStatus"
-              value="noLabora"
-              checked={workStatus === "noLabora"}
-              onChange={handleWorkStatusChange}
-              className="w-4 h-4 text-[#D7008A] focus:ring-[#D7008A]"
-            />
-            <span>No Laborando Actualmente</span>
-          </label>
+      {/* Título y tabs de estado laboral */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <h2 className="text-xl font-semibold text-[#41023B] mb-4 sm:mb-0"></h2>
+
+        <div className="bg-gray-100 rounded-lg p-1 flex w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => handleWorkStatusChange("labora")}
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex-1 sm:flex-auto ${workStatus === "labora"
+              ? "bg-white text-[#D7008A] shadow-sm"
+              : "text-gray-600 hover:bg-gray-200"
+              }`}
+          >
+            <BriefcaseBusiness size={18} />
+            <span>Laborando</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleWorkStatusChange("noLabora")}
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex-1 sm:flex-auto ${workStatus === "noLabora"
+              ? "bg-white text-[#D7008A] shadow-sm"
+              : "text-gray-600 hover:bg-gray-200"
+              }`}
+          >
+            <Briefcase size={18} />
+            <span>No Laborando</span>
+          </button>
         </div>
       </div>
 
@@ -199,7 +200,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
               {/* Título del registro */}
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-[#41023B] font-semibold text-lg">
-                  Situación Laboral
+                  {index === 0 ? "Información Laboral Principal" : `Institución Adicional ${index}`}
                 </h3>
                 {registros.length > 1 && (
                   <button
@@ -211,8 +212,55 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
                   </button>
                 )}
               </div>
-              {/* Datos de la institución */}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Tipo de Institución */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+                    Tipo de Institución
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="institutionType"
+                      value={registro.institutionType}
+                      onChange={(e) =>
+                        handleRegistroChange(
+                          index,
+                          "institutionType",
+                          e.target.value
+                        )
+                      }
+                      className={`w-full px-4 py-3 border ${isFieldEmpty(registro, "institutionType")
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-200"
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                    >
+                      <option value="" disabled className="text-gray-500">
+                        Seleccionar Tipo de Institución
+                      </option>
+                      {institucionesList.map((tipo, i) => (
+                        <option key={i} value={tipo.code}>
+                          {tipo.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg
+                        className="fill-current h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
+                  </div>
+                  {isFieldEmpty(registro, "institutionType") && (
+                    <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+                  )}
+                </div>
+
+                {/* Nombre de Institución */}
                 <div>
                   <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                     Nombre de Institución
@@ -230,6 +278,8 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
                     <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                 </div>
+
+                {/* Cargo */}
                 <div>
                   <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                     Cargo
@@ -247,8 +297,35 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
                     <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                 </div>
+
+                {/* Teléfono de Institución */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+                    Teléfono de Institución
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      value={registro.institutionPhone || ''}
+                      onChange={(e) => handleRegistroChange(index, "institutionPhone", e.target.value)}
+                      onFocus={() => handlePhoneFocus(index)}
+                      className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty(registro, "institutionPhone") ? "border-red-500 bg-red-50" : "border-gray-200"
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                      placeholder="+584241234567"
+                    />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
+                  {isFieldEmpty(registro, "institutionPhone") && (
+                    <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Ingrese código de área y número. Ej: +584241234567
+                  </p>
+                </div>
               </div>
 
+              {/* Dirección de Institución */}
               <div className="mt-3">
                 <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                   Dirección de Institución
@@ -266,33 +343,9 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
                   <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                 )}
               </div>
-
-              <div className="mt-3">
-                <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-                  Teléfono de Institución
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="tel"
-                    value={registro.institutionPhone || ''}
-                    onChange={(e) => handleRegistroChange(index, "institutionPhone", e.target.value)}
-                    onFocus={() => handlePhoneFocus(index)}
-                    className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty(registro, "institutionPhone") ? "border-red-500 bg-red-50" : "border-gray-200"
-                      } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                    placeholder="+584241234567"
-                  />
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                </div>
-                {isFieldEmpty(registro, "institutionPhone") && (
-                  <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-                )}
-                <p className="mt-1 text-xs text-gray-500">
-                  Debe ingresar el código de área seguido del número de teléfono. Ejemplo: +584241234567
-                </p>
-              </div>
             </div>
           ))}
+
           {/* Botón para agregar nuevo registro */}
           <div className="flex justify-center">
             <button
@@ -304,6 +357,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
               Agregar otra institución
             </button>
           </div>
+
           {/* Explicación */}
           <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
             <h3 className="text-sm font-medium text-blue-800 mb-2">Información importante</h3>
@@ -317,11 +371,20 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
 
       {/* Mensaje informativo si no está laborando */}
       {workStatus === "noLabora" && (
-        <div className="p-6 bg-gray-50 rounded-xl border border-gray-200 text-center">
-          <p className="text-gray-700">
+        <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-center mb-4">
+            <Briefcase size={40} className="text-gray-400" />
+          </div>
+          <h3 className="text-center text-gray-700 font-medium mb-2">No laborando actualmente</h3>
+          <p className="text-center text-gray-600 text-sm">
             Ha indicado que no se encuentra laborando actualmente. Puede continuar con el siguiente paso.
-            ¡Esta sección puede ser modificado o completado posteriormente!
+            Esta sección puede ser modificada o completada posteriormente si su situación laboral cambia.
           </p>
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-xs text-blue-700 text-center">
+              Si comienza a laborar en el futuro, puede volver a esta sección y actualizar su información laboral.
+            </p>
+          </div>
         </div>
       )}
     </motion.div>

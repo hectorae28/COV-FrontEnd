@@ -1,9 +1,12 @@
 "use client";
 
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import useDataListaColegiados from "@/store/ListaColegiadosData";
 import { ChevronLeft } from "lucide-react";
+import { motion } from "framer-motion"
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+
 
 // Import components
 import AcademicInfoSection from "./DetallePendiente/AcademicInfoSection ";
@@ -17,11 +20,15 @@ import DocumentViewerModal from "./DetallePendiente/DocumentViewerModal";
 import InstitutionsSection from "./DetallePendiente/InstitutionsSection ";
 import PaymentsSection from "./DetallePendiente/PaymentsSection";
 import PersonalInfoSection from "./DetallePendiente/PersonalInfoSection ";
+import PagosColg from "@/app/Components/PagosModal";
 import ProfileCard from "./DetallePendiente/ProfileCard";
 import StatusAlerts from "./DetallePendiente/StatusAlerts";
+import { useParams } from 'next/navigation'
 
-export default function DetallePendiente({ params, onVolver }) {
-  const { data: session } = useSession();
+export default function DetallePendiente({ params, onVolver, isAdmin=false, recaudos=null, handleForward=null }) {
+  const [metodoPago, setMetodoPago] = useState([]);
+  const [tasaBcv, setTasaBcv] = useState(0);
+  const [costoInscripcion, setCostoInscripcion] = useState(0);
   const pendienteId = params?.id || "p1";
 
   // Obtenemos funciones del store centralizado
@@ -41,6 +48,7 @@ export default function DetallePendiente({ params, onVolver }) {
       (state) => state.denyRegistration
     );
     const initSession = useDataListaColegiados((state) => state.initSession);
+    const updateColegiadoPendienteWithToken = useDataListaColegiados((state)=>state.updateColegiadoPendienteWithToken)
 
   // Estados locales
   const [isLoading, setIsLoading] = useState(true);
@@ -61,6 +69,8 @@ export default function DetallePendiente({ params, onVolver }) {
   const [documentosCompletos, setDocumentosCompletos] = useState(false);
   const [documentosRequeridos, setDocumentosRequeridos] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null)
+
 
   // Estados para notificaciones
   const [confirmacionExitosa, setConfirmacionExitosa] = useState(false);
@@ -137,7 +147,12 @@ export default function DetallePendiente({ params, onVolver }) {
     try {
       setIsLoading(true);
       // Obtener datos del pendiente desde el store
-      const pendienteData = await getColegiadoPendiente(pendienteId);
+      let pendienteData
+      if(!recaudos){
+        pendienteData = await getColegiadoPendiente(pendienteId);
+      }else{
+        pendienteData = recaudos
+      }
       if (pendienteData) {
         const documentosFormateados = [
           {
@@ -241,7 +256,30 @@ export default function DetallePendiente({ params, onVolver }) {
 
   useEffect(() => {
     loadData();
-  }, [pendienteId,getColegiadoPendiente]);
+  }, [pendienteId, getColegiadoPendiente,recaudos]);
+
+  useEffect(() => {
+    const LoadData = async () => {
+      try {
+        const tasa = await fetchDataSolicitudes("tasa-bcv");
+        setTasaBcv(tasa.data.rate);
+        const costo = await fetchDataSolicitudes(
+          "costo",
+          `?search=Inscripcion+${pendiente.tipo_profesion}&es_vigente=true`
+        );
+        setCostoInscripcion(Number(costo.data[0].monto_usd));
+        const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
+        setMetodoPago(Mpagos.data);
+      } catch (error) {
+        setError(
+          "Ocurrió un error al cargar los datos, verifique su conexión a internet"
+        );
+      }
+    };
+    if (!isLoading && pendiente) {
+      LoadData();
+    }
+  }, [isLoading, pendiente]);
 
   // Función para obtener iniciales del nombre
   const obtenerIniciales = () => {
@@ -250,7 +288,30 @@ export default function DetallePendiente({ params, onVolver }) {
     const { nombre, primer_apellido } = pendiente.persona;
     return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`;
   };
+  const handlePaymentComplete= async ({
+    paymentDate = null,
+    referenceNumber = null,
+    paymentFile = null,
+    totalAmount = null,
+    metodo_de_pago = null,
+  })=>{
 
+    await updateColegiadoPendienteWithToken(pendienteId, {
+      pago: {
+        fecha_pago: paymentDate,
+        num_referencia: referenceNumber,
+        monto: totalAmount,
+        metodo_de_pago: metodo_de_pago.id,
+
+      },
+    });
+    const Form = new FormData()
+    Form.append("comprobante", paymentFile);
+    await updateColegiadoPendienteWithToken(pendienteId,Form,true)
+    loadData()
+    setPagosPendientes(false)
+    handleForward()
+  }
   // Funciones para gestión de documentos
   const handleVerDocumento = (documento) => {
     setDocumentoSeleccionado(documento);
@@ -263,12 +324,20 @@ export default function DetallePendiente({ params, onVolver }) {
   // Función para actualizar un documento
   const updateDocumento = (documentoActualizado) => {
     try {
-      updateColegiadoPendiente(pendienteId, documentoActualizado, true);
+      if(!recaudos){
+        updateColegiadoPendiente(pendienteId, documentoActualizado, true);
+      }else{
+        updateColegiadoPendienteWithToken(pendienteId, documentoActualizado, true)
+      }
       loadData()
     } catch (error) {
       console.error("Error al actualizar documento:", error);
     }
   };
+  const updateData = (id,newData)=>{
+    if(!recaudos) updateColegiadoPendiente(id,newData)
+      else updateColegiadoPendienteWithToken(id, newData)
+  }
 
   // Función para manejar aprobación
   const handleAprobarSolicitud = async () => {
@@ -407,12 +476,6 @@ export default function DetallePendiente({ params, onVolver }) {
       await updateColegiadoPendiente(pendienteId, nuevosDatos);
       loadData()
 
-      // Actualizar el estado local
-    //   setPendiente(nuevosDatos);
-    //   setPagosPendientes(false);
-    //   setDocumentosRequeridos(nuevosDatos.documentos);
-
-      // Mostrar confirmación de exoneración
       setExoneracionExitosa(true);
       setMostrarExoneracion(false);
 
@@ -493,17 +556,19 @@ export default function DetallePendiente({ params, onVolver }) {
   const isDenegada = pendiente.status === "denegado";
 
   return (
-    <div className="select-none cursor-default w-full px-4 md:px-10 py-10 md:py-28 bg-gray-50">
+    <div className={`cursor-default w-full px-4 md:px-10 py-10 md:py-28 ${isAdmin ? "bg-gray-50 " : ""}`}>
       {/* Breadcrumbs */}
-      <div className="mb-6">
-        <button
-          onClick={handleVolver}
-          className="text-md text-[#590248] hover:text-[#C40180] flex items-center cursor-pointer transition-colors duration-200"
-        >
-          <ChevronLeft size={20} className="mr-1" />
-          Volver a la lista de colegiados
-        </button>
-      </div>
+      {isAdmin && (
+        <div className="mb-6">
+          <button
+            onClick={handleVolver}
+            className="text-md text-[#590248] hover:text-[#C40180] flex items-center cursor-pointer transition-colors duration-200"
+          >
+            <ChevronLeft size={20} className="mr-1" />
+            Volver a la lista de colegiados
+          </button>
+        </div>
+      )}
 
       {/* Alertas de estado */}
       <StatusAlerts
@@ -537,22 +602,24 @@ export default function DetallePendiente({ params, onVolver }) {
           setMostrarExoneracion,
           isRechazada,
           isDenegada,
+          isAdmin,
         }}
       />
 
       {/* Main content sections */}
       <PersonalInfoSection
-      props={{
+        props={{
           pendiente,
           datosPersonales,
           setDatosPersonales,
           editandoPersonal,
           setEditandoPersonal,
-          updateColegiadoPendiente,
+          updateData,
           pendienteId,
           setCambiosPendientes,
           isDenegada,
-      }}
+          isAdmin,
+        }}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -562,7 +629,7 @@ export default function DetallePendiente({ params, onVolver }) {
           setDatosAcademicos={setDatosAcademicos}
           editandoAcademico={editandoAcademico}
           setEditandoAcademico={setEditandoAcademico}
-          updateColegiadoPendiente={updateColegiadoPendiente}
+          updateColegiadoPendiente={updateData}
           pendienteId={pendienteId}
           setCambiosPendientes={setCambiosPendientes}
           readonly={isDenegada}
@@ -578,7 +645,7 @@ export default function DetallePendiente({ params, onVolver }) {
           setAgregarInstitucion={setAgregarInstitucion}
           editandoInstituciones={editandoInstituciones}
           setEditandoInstituciones={setEditandoInstituciones}
-          updateColegiadoPendiente={updateColegiadoPendiente}
+          updateColegiadoPendiente={updateData}
           pendienteId={pendienteId}
           setCambiosPendientes={setCambiosPendientes}
           readonly={isDenegada}
@@ -592,12 +659,30 @@ export default function DetallePendiente({ params, onVolver }) {
         updateDocumento={updateDocumento}
       />
 
-      <PaymentsSection
+      {!isAdmin && pendiente.pago==null&&pagosPendientes&& (
+                <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
+            >
+              <PagosColg
+                props={{
+                  handlePaymentComplete,
+                  tasaBcv,
+                  costoInscripcion,
+                  metodoPago,
+                }}
+              />
+        </motion.div>
+      )}
+
+      {/* <PaymentsSection
         documentosRequeridos={documentosRequeridos}
         handleVerDocumento={handleVerDocumento}
         pendiente={pendiente}
         updateDocumento={updateDocumento}
-      />
+      /> */}
 
       {/* Modals */}
       {mostrarConfirmacion && (
@@ -621,6 +706,7 @@ export default function DetallePendiente({ params, onVolver }) {
           handleRechazarSolicitud={handleRechazarSolicitud}
           handleDenegarSolicitud={handleDenegarSolicitud}
           onClose={() => setMostrarRechazo(false)}
+          isRechazada={isRechazada}
         />
       )}
 
@@ -640,6 +726,18 @@ export default function DetallePendiente({ params, onVolver }) {
           onClose={handleCerrarVistaDocumento}
           pendiente={pendiente}
         />
+      )}
+
+      {!isAdmin && pendiente.pago!=null&&!pagosPendientes&& (
+        <div className="w-full flex items-center justify-center">
+        <button
+          onClick={handleForward}
+          className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white p-4 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors "
+        >
+          <span>Reenviar Solicitud De Inscripcion</span>
+        </button>
+
+        </div>
       )}
     </div>
   );

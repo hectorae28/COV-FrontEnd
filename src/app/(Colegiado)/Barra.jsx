@@ -3,7 +3,7 @@
 import { Info, Notifications, Warning } from "@mui/icons-material";
 import { Menu } from "lucide-react";
 import PerfilDropdown from "../Components/PerfilDropdown";
-import useColegiadoUserStore from "@/utils/colegiadoUserStore";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 import { useBarraContext } from "@/app/(Colegiado)/BarraContext";
 
 export default function Barra({

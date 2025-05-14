@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import Image from "next/image";
-import PanelAdmin from "../PanelAdmin";
-import Colegiados from "../Colegiados";
 import BackgroundAnimation from "@/Components/Home/BackgroundAnimation";
 import InfoSection from "@/Components/Home/InfoSection";
+import { AnimatePresence, motion } from "framer-motion";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import Link from 'next/link';
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Colegiados from "../Colegiados";
+import PanelAdmin from "../PanelAdmin";
 
 export default function LoginScreen() {
   const [showLogin, setShowLogin] = useState(false);
@@ -123,18 +124,20 @@ export default function LoginScreen() {
                 >
                   <div className="relative mb-16 sm:mb-24 md:mb-32">
                     <div className="absolute inset-0"></div>
-                    <Image
-                      src="/assets/logo.png"
-                      alt="Logo Colegio de Odontólogos de Venezuela"
-                      width={300}
-                      height={80}
-                      className="relative drop-shadow-md object-contain max-w-full h-auto"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src =
-                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='80' fill='%23ffffff' /%3E%3Ctext x='50%' y='50%' fontSize='24' textAnchor='middle' dominantBaseline='middle' fill='%23D7008A'%3ECOV%3C/text%3E%3C/svg%3E";
-                      }}
-                    />
+                    <Link href="/">
+                      <Image
+                        src="/assets/logo.png"
+                        alt="Logo Colegio de Odontólogos de Venezuela"
+                        width={400}
+                        height={120}
+                        className="relative drop-shadow-md object-contain max-w-full h-auto cursor-pointer"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src =
+                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='80' fill='%23ffffff' /%3E%3Ctext x='50%' y='50%' fontSize='24' textAnchor='middle' dominantBaseline='middle' fill='%23D7008A'%3ECOV%3C/text%3E%3C/svg%3E";
+                        }}
+                      />
+                    </Link>
                   </div>
                 </motion.div>
 

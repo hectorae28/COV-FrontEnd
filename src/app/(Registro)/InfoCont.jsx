@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin } from "lucide-react";
+import getUnicodeFlagIcon from 'country-flag-icons/unicode'
 import phoneCodes from "@/app/Models/phoneCodes";
 
 // Datos de estados y ciudades de Venezuela
@@ -31,21 +32,10 @@ const venezuelaData = {
   "distrito capital": ["Caracas", "El Junquito", "Antimano", "La Pastora", "El Valle", "Coche", "Caricuao", "El Paraíso", "San Juan", "Catia", "Petare", "Chacao", "El Hatillo", "Baruta"]
 };
 
-// Componente para mostrar la bandera según el código de país
-function BanderaComponent({ countryCode }) {
-  // Convierte el código ISO (e.g. "VE") a sus puntos de código regionales
-  const base = 0x1F1E6; // punto de código de 'A'
-  const [first, second] = countryCode
-    .toUpperCase()
-    .split('')
-    .map(ch => base + (ch.charCodeAt(0) - 65));
-  return String.fromCodePoint(first, second); // e.g. "🇻🇪"
-}
-
 export default function InfoContacto({ formData, onInputChange, validationErrors, isProfileEdit }) {
   const [cities, setCities] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
-
+  console.log(phoneCodes.length)
   const handleChange = (e) => {
     const { name, value } = e.target;
     onInputChange({ [name]: value });
@@ -166,7 +156,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               >
                 {phoneCodes.map((code, index) => (
                   <option key={index} value={code.codigo}>
-                    {BanderaComponent({ countryCode: code.codigo_pais })} {code.codigo}
+                    {getUnicodeFlagIcon(code.codigo_pais)} {code.codigo}
                   </option>
                 ))}
               </select>
@@ -316,5 +306,19 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
         )}
       </div>
     </motion.div>
-  )
+  );
+}
+function BanderaComponent({ countryCode }) {
+  // Usar una biblioteca de banderas o un enfoque basado en imágenes
+  return (
+    <img 
+      src={`https://flagcdn.com/16x12/${countryCode.toLowerCase()}.png`}
+      srcSet={`https://flagcdn.com/32x24/${countryCode.toLowerCase()}.png 2x, 
+               https://flagcdn.com/48x36/${countryCode.toLowerCase()}.png 3x`}
+      width="16"
+      height="12"
+      alt={`Bandera de ${countryCode}`}
+      style={{ verticalAlign: 'middle', marginRight: '5px' }}
+    />
+  );
 }

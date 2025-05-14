@@ -130,9 +130,9 @@ export default function StatusAlerts({
                         <div>
                             <h3 className="text-yellow-800 font-medium">Solicitud rechazada</h3>
                             <p className="text-yellow-700 text-sm mt-1">
-                                Esta solicitud fue rechazada el {pendiente.fechaRechazo || "N/A"}.
+                                Esta solicitud fue rechazada el {pendiente.updated_at || "N/A"}.
                                 <br />
-                                Motivo: {pendiente.motivoRechazo || "No especificado"}
+                                Motivo: {pendiente.motivo_rechazo || "No especificado"}
                             </p>
                             <p className="text-yellow-600 text-xs mt-2">
                                 El solicitante puede realizar correcciones y volver a enviar la solicitud.

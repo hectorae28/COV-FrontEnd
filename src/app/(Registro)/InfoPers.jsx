@@ -5,13 +5,33 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
   const [age, setAge] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
   const [isAdult, setIsAdult] = useState(true);
+  const [identityCardError, setIdentityCardError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     onInputChange({ [name]: value });
+
     // Special handling for birth date to calculate age
     if (name === "birthDate") {
       calculateAge(value);
+    }
+
+    // Si cambia el tipo de documento, reiniciar el valor de identityCard
+    if (name === "documentType") {
+      onInputChange({
+        documentType: value,
+        identityCard: "",
+        idType: value === "cedula" ? "V" : ""
+      });
+    }
+
+    // Validate identity card length when it changes
+    if (name === "identityCard" && formData.documentType === "cedula") {
+      if (value.length > 0 && (value.length < 7 || value.length > 8)) {
+        setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
+      } else {
+        setIdentityCardError("");
+      }
     }
   };
 
@@ -31,23 +51,20 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     ) {
       calculatedAge--;
     }
-
     // Verificar si es mayor de edad
     const isUserAdult = calculatedAge >= 18;
     setIsAdult(isUserAdult);
-
     onInputChange({
       age: calculatedAge.toString(),
       birthDate: isUserAdult ? birthDate : ""
     });
-
     setAge(calculatedAge.toString());
   };
 
   // Validate form when formData changes
   useEffect(() => {
     const requiredFields = [
-      "nationality",
+      "documentType",
       "identityCard",
       "firstName",
       "firstLastName",
@@ -55,7 +72,20 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       "gender",
       "maritalStatus"
     ];
-    const isValid = requiredFields.every(field => formData[field] && formData[field].trim() !== "");
+
+    // Check if identity card meets the length requirement for cédula
+    let isIdentityCardValid = true;
+    if (formData.documentType === "cedula" && formData.identityCard) {
+      isIdentityCardValid = formData.identityCard.length >= 7 && formData.identityCard.length <= 8;
+
+      if (!isIdentityCardValid) {
+        setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
+      } else {
+        setIdentityCardError("");
+      }
+    }
+
+    const isValid = requiredFields.every(field => formData[field] && formData[field].trim() !== "") && isIdentityCardValid;
     setIsFormValid(isValid);
   }, [formData]);
 
@@ -63,6 +93,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
   const isFieldEmpty = (fieldName) => {
     return validationErrors && validationErrors[fieldName];
   };
+
+  // Determinar si es pasaporte para la validación
+  const isPasaporte = formData.documentType === "pasaporte";
 
   return (
     <motion.div
@@ -72,10 +105,10 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       className="space-y-6"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Nationality */}
+        {/* Tipo de Documento (anteriormente Nacionalidad) */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            Nacionalidad
+            Tipo de Documento
             <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="relative">
@@ -83,24 +116,24 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               // En modo perfil, no editable
               <input
                 type="text"
-                value={formData.nationality === "venezolana" ? "Venezolana" : "Extranjera"}
+                value={formData.documentType === "cedula" ? "Cédula" : "Pasaporte"}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
                 disabled
               />
             ) : (
               // En modo normal, editable
               <select
-                name="nationality"
-                value={formData.nationality}
+                name="documentType"
+                value={formData.documentType}
                 onChange={handleChange}
-                className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("nationality") ? "border-red-500 bg-red-50" : "border-gray-200"
+                className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("documentType") ? "border-red-500 bg-red-50" : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
               >
                 <option value="" disabled>
-                  Seleccionar Nacionalidad
+                  Tipo de Documento
                 </option>
-                <option value="venezolana">Venezolana</option>
-                <option value="extranjera">Extranjera</option>
+                <option value="cedula">Cédula</option>
+                <option value="pasaporte">Pasaporte</option>
               </select>
             )}
             {!isProfileEdit && (
@@ -118,56 +151,74 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           {isProfileEdit && (
             <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
           )}
-          {isFieldEmpty("nationality") && !isProfileEdit && (
+          {isFieldEmpty("documentType") && !isProfileEdit && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        {/* Identity Card */}
+        {/* Identity Card / Passport */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            Número de Identificación
+            {isPasaporte ? "Número de Pasaporte" : "Número de Identificación"}
             <span className="text-red-500 ml-1">*</span>
           </label>
           {isProfileEdit ? (
             // En modo perfil, no editable
             <input
               type="text"
-              value={`${formData.idType} - ${formData.identityCard}`}
+              value={isPasaporte ? formData.identityCard : `${formData.idType} - ${formData.identityCard}`}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
               disabled
             />
           ) : (
-            // En modo normal, editable
-            <div className="flex items-center relative">
-              <select
-                name="idType"
-                value={formData.idType}
-                onChange={handleChange}
-                className="h-full px-4 pr-10 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700 appearance-none"
-                style={{ height: "48px" }}
-              >
-                <option value="V">V</option>
-                <option value="E">E</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-10">
-                <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path>
-                </svg>
-              </div>
+            // En modo normal, editable según tipo de documento
+            isPasaporte ? (
+              // Caso Pasaporte: Solo campo de texto para el número
               <input
                 type="text"
                 name="identityCard"
                 value={formData.identityCard}
-                maxLength={8}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "");
-                  handleChange({ target: { name: "identityCard", value } });
-                }}
-                className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                placeholder="Ingrese su número de identificación"
+                maxLength={15}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"
+                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                placeholder="Ingrese su número de pasaporte"
                 style={{ height: "48px" }}
               />
-            </div>
+            ) : (
+              // Caso Cédula: Selector de V/E + campo numérico
+              <div className="flex items-center relative">
+                <select
+                  name="idType"
+                  value={formData.idType}
+                  onChange={handleChange}
+                  className="h-full px-4 pr-10 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700 appearance-none"
+                  style={{ height: "48px" }}
+                >
+                  <option value="V">V</option>
+                  <option value="E">E</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-10">
+                  <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  name="identityCard"
+                  value={formData.identityCard}
+                  minLength={7}
+                  maxLength={8}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    handleChange({ target: { name: "identityCard", value } });
+                  }}
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") || identityCardError ? "border-red-500 bg-red-50" : "border-gray-200"
+                    } rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                  placeholder="Ingrese su número de cédula"
+                  style={{ height: "48px" }}
+                />
+              </div>
+            )
           )}
           {isProfileEdit && (
             <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
@@ -175,8 +226,13 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           {isFieldEmpty("identityCard") && !isProfileEdit && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
+          {identityCardError && !isProfileEdit && formData.documentType === "cedula" && (
+            <p className="mt-1 text-xs text-red-500">{identityCardError}</p>
+          )}
         </div>
       </div>
+
+      {/* Rest of the component remains the same */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* First Name */}
         <div>

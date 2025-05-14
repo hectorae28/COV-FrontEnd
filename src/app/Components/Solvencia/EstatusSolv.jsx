@@ -2,7 +2,7 @@
 
 import { Calendar, AlertCircle, CheckCircle } from "lucide-react";
 import { Warning } from "@mui/icons-material";
-import useColegiadoUserStore from "@/utils/colegiadoUserStore";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSoon }) {
   const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser)

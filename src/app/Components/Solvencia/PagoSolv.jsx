@@ -3,55 +3,12 @@
 import PagosColg from "@/app/Components/PagosModal";
 import { Info } from "lucide-react";
 import { useState, useEffect } from "react";
-import useColegiadoUserStore from "@/utils/colegiadoUserStore";
-import { pagoSolvencia } from "@/api/endpoints/pago";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
+import { pagoSolvencia } from "@/api/endpoints/solicitud";
 import { fetchMe } from "@/api/endpoints/colegiado";
 
 export default function SolvenciaPago({ props }) {
-  /*const initialState = {
-    tipo_profesion: "",
-    nationality: "",
-    identityCard: "",
-    firstName: "",
-    secondName: "",
-    firstLastName: "",
-    secondLastName: "",
-    birthPlace: "",
-    birthDate: "",
-    gender: "",
-    age: "",
-    maritalStatus: "",
-    email: "",
-    countryCode: "+58",
-    phoneNumber: "",
-    homePhone: "",
-    address: "",
-    city: "",
-    state: "",
-    collegeNumber: "",
-    professionalField: "",
-    institutionName: "",
-    institutionAddress: "",
-    institutionPhone: "",
-    clinicName: "",
-    clinicAddress: "",
-    clinicPhone: "",
-    selectedOption: "",
-    graduateInstitute: "",
-    universityTitle: "",
-    mainRegistrationNumber: "",
-    mainRegistrationDate: "",
-    mppsRegistrationNumber: "",
-    mppsRegistrationDate: "",
-    titleIssuanceDate: "",
-    ci: null,
-    rif: null,
-    titulo: null,
-    mpps: null,
-  };*/
-
   const [isSuccess, setIsSuccess] = useState(false);
-  //const [formData, setFormData] = useState(initialState);
   const [costoSolvencia, setCostoSolvencia] = useState(0);
   const [validationErrors, setValidationErrors] = useState({});
   const costos = useColegiadoUserStore((store) => store.costos);

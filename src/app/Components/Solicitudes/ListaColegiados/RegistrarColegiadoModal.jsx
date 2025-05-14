@@ -11,9 +11,7 @@ import InfoContacto from "@/app/(Registro)/InfoCont";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
 import InfoPersonal from "@/app/(Registro)/InfoPers";
 import PagosColg from "@/app/Components/PagosModal";
-import ListaColegiadosData from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
 import api from "@/api/api";
-import { useSession } from "next-auth/react";
 
 export default function RegistroColegiados({
   isAdmin = true,
@@ -21,8 +19,6 @@ export default function RegistroColegiados({
   onRegistroExitoso,
 }) {
 
-  const { data: session } = useSession();
-  const addColegiadoPendiente = ListaColegiadosData(state => state.addColegiadoPendiente);
 
   // Estado para seguimiento de pasos
   const [pasoActual, setPasoActual] = useState(1);

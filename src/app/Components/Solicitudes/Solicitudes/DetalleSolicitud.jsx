@@ -34,53 +34,128 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
   // Estados para formularios
   const [motivoRechazo, setMotivoRechazo] = useState("")
   const [observaciones, setObservaciones] = useState("")
-
+  
   // Obtener datos de la solicitud
   useEffect(() => {
     if (solicitudes && solicitudId) {
       const solicitudEncontrada = solicitudes.find(s => s.id === solicitudId)
       
       if (solicitudEncontrada) {
-        setSolicitud(solicitudEncontrada)
-        setObservaciones(solicitudEncontrada.observaciones || "")
+        // Process the solicitudEncontrada to handle the new data structure
+        const solicitudProcesada = procesarSolicitud(solicitudEncontrada)
+        setSolicitud(solicitudes[0])
+        setObservaciones(solicitudProcesada.observaciones || "")
       }
       
       setIsLoading(false)
     }
   }, [solicitudId, solicitudes])
+  console.log({solicitud})
+
+  // Add this function to process the solicitud and extract itemsSolicitud from detalles_solicitud
+  const procesarSolicitud = (solicitudOriginal) => {
+    const resultado = {
+      ...solicitudOriginal,
+      itemsSolicitud: []
+    }
+    
+    if (solicitudOriginal.detalles_solicitud) {
+      Object.entries(solicitudOriginal.detalles_solicitud).forEach(([tipoSolicitud, detalle]) => {
+        if (detalle && typeof detalle === 'object') {
+          resultado.itemsSolicitud.push({
+            id: detalle.id || `${tipoSolicitud}_${solicitudOriginal.id}`,
+            nombre: detalle.tipo_solicitud || tipoSolicitud.charAt(0).toUpperCase() + tipoSolicitud.slice(1),
+            descripcion: `Solicitud de ${tipoSolicitud}`,
+            costo: detalle.id_costo,
+            exonerado: detalle.estado === "exonerado",
+            pagado: detalle.estado === "aprobado" || detalle.estado === "completado",
+            pagadoParcialmente: detalle.estado === "pago_parcial",
+            tipoSolicitud: tipoSolicitud,
+            estado: detalle.estado || "pendiente"
+          })
+        }
+      })
+    }
+    
+    // Ensure we have the basic fields needed for rendering
+    resultado.tipo_solicitud = resultado.tipo_solicitud || "Solicitud Unificada"
+    resultado.estado = resultado.estado || determinarEstadoGeneral(resultado.itemsSolicitud)
+    resultado.fecha = new Date(resultado.created_at).toLocaleDateString() || new Date().toLocaleDateString()
+    resultado.colegiadoNombre = solicitudOriginal.colegiado || "Colegiado"
+    
+    return resultado
+  }
+
+  // Helper function to determine the overall estado
+  const determinarEstadoGeneral = (items) => {
+    if (!items || items.length === 0) return "Pendiente"
+    
+    // If all items are approved or completed
+    if (items.every(item => item.estado === "aprobado" || item.estado === "completado")) {
+      return "Aprobada"
+    }
+    
+    // If all items are exonerated
+    if (items.every(item => item.estado === "exonerado")) {
+      return "Exonerada"
+    }
+    
+    // If any item is rejected
+    if (items.some(item => item.estado === "rechazado")) {
+      return "Rechazada"
+    }
+    
+    // Default is pending
+    return "Pendiente"
+  }
 
   // Calcular totales
   const calcularTotales = (solicitudData) => {
-    if (!solicitudData?.itemsSolicitud) return { totalOriginal: 0, totalExonerado: 0, totalPendiente: 0, totalPagado: 0 }
+    if (!solicitudData?.itemsSolicitud || solicitudData.itemsSolicitud.length === 0) {
+      return { 
+        totalOriginal: 0, 
+        totalExonerado: 0, 
+        totalPendiente: 0, 
+        totalPagado: 0,
+        todoExonerado: false,
+        todoPagado: false
+      }
+    }
     
-    const totalOriginal = solicitudData.itemsSolicitud.reduce((sum, item) => sum + item.costo, 0)
-    const totalExonerado = solicitudData.itemsSolicitud.reduce((sum, item) => sum + (item.exonerado ? item.costo : 0), 0)
-    
-    // Cálculo mejorado para pagos parciales
+    let totalOriginal = 0
+    let totalExonerado = 0
     let totalPendiente = 0
     let totalPagado = 0
     
+    // Process each item
     solicitudData.itemsSolicitud.forEach(item => {
-      if (item.exonerado) {
-        // No hacer nada, ya se contabilizó en totalExonerado
-      } else if (item.pagado) {
-        // Ítems completamente pagados
-        totalPagado += item.costo
-      } else if (item.pagadoParcialmente) {
-        // Ítems parcialmente pagados
+      const costoItem = item.id_costo || 0
+      totalOriginal += costoItem
+      
+      if (item.exonerado || item.estado === "exonerado") {
+        totalExonerado += costoItem
+      } else if (item.pagado || item.estado === "aprobado" || item.estado === "completado") {
+        totalPagado += costoItem
+      } else if (item.pagadoParcialmente || item.status === "pago_parcial") {
         const montoPagado = item.montoPagado || 0
         totalPagado += montoPagado
-        totalPendiente += item.costo - montoPagado
+        totalPendiente += costoItem - montoPagado
       } else {
-        // Ítems sin pagar
-        totalPendiente += item.costo
+        totalPendiente += costoItem
       }
     })
     
-    const todoExonerado = totalOriginal === totalExonerado || solicitudData?.estado === "Exonerada"
-    const todoPagado = totalPendiente === 0 && !todoExonerado
+    const todoExonerado = totalExonerado === totalOriginal || solicitudData.status === "Exonerada"
+    const todoPagado = totalPendiente === 0 && !todoExonerado && totalOriginal > 0
     
-    return { totalOriginal, totalExonerado, totalPendiente, totalPagado, todoExonerado, todoPagado }
+    return { 
+      totalOriginal, 
+      totalExonerado, 
+      totalPendiente, 
+      totalPagado, 
+      todoExonerado, 
+      todoPagado 
+    }
   }
   
   const totales = calcularTotales(solicitud)
@@ -93,7 +168,7 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
       
       const solicitudActualizada = {
         ...solicitud,
-        estado: "Aprobada",
+        status: "Aprobada",
         fechaAprobacion: new Date().toLocaleDateString(),
         aprobadoPor: "Admin",
         observaciones: observaciones
@@ -121,7 +196,7 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
       
       const solicitudActualizada = {
         ...solicitud,
-        estado: "Rechazada",
+        status: "Rechazada",
         fechaRechazo: new Date().toLocaleDateString(),
         rechazadoPor: "Admin",
         motivoRechazo: motivoRechazo,
@@ -313,7 +388,7 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
       )}
       
       {/* Observaciones - solo en estado pendiente */}
-      {solicitud.estado === 'Pendiente' && (
+      {solicitud.status === 'Pendiente' && (
         <div className="bg-white rounded-lg shadow-md p-4 mb-5">
           <h2 className="text-base font-medium text-gray-900 mb-3">Observaciones</h2>
           <textarea
@@ -328,7 +403,7 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
       
       {/* Botones adicionales */}
       <div className="flex flex-wrap gap-3">
-        {solicitud.estado === 'Aprobada' && solicitud.comprobantePago && (
+        {solicitud.status === 'Aprobada' && solicitud.comprobantePago && (
           <button className="bg-blue-600 text-white px-3 py-2 rounded-md flex items-center gap-2 hover:bg-blue-700 transition-colors text-sm">
             <Download size={16} />
             <span>Descargar comprobante</span>

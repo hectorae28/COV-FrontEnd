@@ -1,5 +1,5 @@
 import SessionInfo from "@/Components/SessionInfo"
-import { Calendar, CheckCircle, Mail, MapPin, Phone, PlusCircle, User,GraduationCap } from "lucide-react"
+import { Calendar, CheckCircle, Mail, MapPin, Phone, PlusCircle, User, GraduationCap } from "lucide-react"
 
 export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmarTitulo }) {
     // Función para obtener iniciales del nombre
@@ -40,9 +40,9 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
 
                         <div className="mt-4 md:mt-0 flex flex-wrap justify-center md:justify-end gap-2">
                             <span
-                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colegiado.solvente ? 'bg-green-100 text-green-800 font-bold' : 'bg-red-100 text-red-800'}`}
+                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colegiado.solvencia_status ? 'bg-green-100 text-green-800 font-bold' : 'bg-red-100 text-red-800'}`}
                             >
-                                {colegiado.solvente ? 'Solvente' : 'No Solvente'}
+                                {colegiado.solvencia_status ? 'Solvente' : 'No Solvente'}
                             </span>
 
                             <span
@@ -96,12 +96,12 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
                         {/* Información del creador del registro */}
                         {colegiado.recaudos.user_admin_create_username && (
                             <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
-                                <SessionInfo creador={{username:colegiado.recaudos.user_admin_create_username,fecha:colegiado.recaudos.created_at}} variant="compact" />
+                                <SessionInfo creador={{ username: colegiado.recaudos.user_admin_create_username, fecha: colegiado.recaudos.created_at }} variant="compact" />
                             </div>
                         )}
                         {colegiado.recaudos.user_admin_update_username && (
                             <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
-                                <SessionInfo creador={{username:colegiado.recaudos.user_admin_update_username,fecha:colegiado.recaudos.created_at, tipo:"aprobado"}} variant="compact" />
+                                <SessionInfo creador={{ username: colegiado.recaudos.user_admin_update_username, fecha: colegiado.recaudos.created_at, tipo: "aprobado" }} variant="compact" />
                             </div>
                         )}
                     </div>
@@ -115,7 +115,7 @@ export default function ColegiadoCard({ colegiado, onNuevaSolicitud, onConfirmar
                             <span>Nueva solicitud</span>
                         </button>
 
-                        {!colegiado.tituloEntregado && (
+                        {!colegiado.titulo && (
                             <button
                                 onClick={onConfirmarTitulo}
                                 className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-green-700 transition-colors"

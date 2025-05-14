@@ -1,8 +1,8 @@
 "use client"
+import SessionInfo from "@/Components/SessionInfo"
 import { CheckCircle, ChevronRight, Clock, X } from "lucide-react"
 import { useState } from "react"
 import SeleccionarSolicitudesStep from "./StepsSeleccionarSolic"
-import SessionInfo from "@/Components/SessionInfo"
 
 export default function CrearSolicitudModal({
   onClose,
@@ -10,7 +10,8 @@ export default function CrearSolicitudModal({
   colegiados = [],
   colegiadoPreseleccionado = null,
   onVerDetalle,
-  session
+  session,
+  tipoSolicitud = null,
 }) {
   // Estado para almacenar la solicitud creada
   const [solicitudCreada, setSolicitudCreada] = useState(null)
@@ -22,25 +23,25 @@ export default function CrearSolicitudModal({
       name: "Usuario del sistema",
       email: "usuario@sistema.com",
       role: "user",
-      isAdmin: false
-    };
+      isAdmin: false,
+    }
 
     // Agregar la información del creador a la solicitud
     const solicitudConCreador = {
       ...nuevaSolicitud,
       creador: {
-        username: userInfo.name || userInfo.email?.split('@')[0] || "Usuario",
+        username: userInfo.name || userInfo.email?.split("@")[0] || "Usuario",
         email: userInfo.email,
         esAdmin: userInfo.role === "admin" || userInfo.isAdmin || false,
         fecha: new Date().toISOString(),
-        tipo: 'creado' // Indica que es una creación, no una aprobación
-      }
-    };
+        tipo: "creado", // Indica que es una creación, no una aprobación
+      },
+    }
 
     // Actualizar estado local y enviar al componente padre
-    setSolicitudCreada(solicitudConCreador);
-    onSolicitudCreada(solicitudConCreador);
-  };
+    setSolicitudCreada(solicitudConCreador)
+    onSolicitudCreada(solicitudConCreador)
+  }
 
   // Función para ir a la vista de detalle de la solicitud
   const handleVerDetalle = () => {
@@ -56,16 +57,23 @@ export default function CrearSolicitudModal({
   const esContextoColegiado = !!colegiadoPreseleccionado
 
   return (
-    <div className="fixed inset-0 bg-black/60 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 overflow-hidden">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold text-gray-800">
-            {solicitudCreada ? "" : "Nueva solicitud"}
+            {solicitudCreada
+              ? ""
+              : tipoSolicitud === "multiple"
+                ? "Nueva solicitud múltiple"
+                : tipoSolicitud === "constancia"
+                  ? "Nueva solicitud de constancia"
+                  : tipoSolicitud === "carnet"
+                    ? "Nueva solicitud de carnet"
+                    : tipoSolicitud === "especializacion"
+                      ? "Nueva solicitud de especialización"
+                      : "Nueva solicitud"}
           </h2>
-          <button
-            onClick={onClose}
-            className="cursor-pointer text-gray-500 hover:text-gray-700"
-          >
+          <button onClick={onClose} className="cursor-pointer text-gray-500 hover:text-gray-700">
             <X size={24} />
           </button>
         </div>
@@ -77,9 +85,7 @@ export default function CrearSolicitudModal({
                 <CheckCircle size={44} className="text-green-600" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-center text-[#41023B] mb-4">
-              ¡Solicitud registrada correctamente!
-            </h3>
+            <h3 className="text-xl font-bold text-center text-[#41023B] mb-4">¡Solicitud registrada correctamente!</h3>
             <div className="bg-[#f8f9fa] p-5 rounded-xl border border-gray-200 mb-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -123,7 +129,6 @@ export default function CrearSolicitudModal({
                     />
                   </div>
                 )}
-
               </div>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
@@ -149,12 +154,15 @@ export default function CrearSolicitudModal({
             mostrarSeleccionColegiado={!esContextoColegiado}
             onFinalizarSolicitud={handleSolicitudCreada}
             onClose={onClose}
-            creadorInfo={session?.user || {
-              name: "Usuario del sistema",
-              email: "usuario@sistema.com",
-              role: "user",
-              isAdmin: false
-            }}
+            tipoSolicitudPreseleccionado={tipoSolicitud}
+            creadorInfo={
+              session?.user || {
+                name: "Usuario del sistema",
+                email: "usuario@sistema.com",
+                role: "user",
+                isAdmin: false,
+              }
+            }
           />
         )}
       </div>

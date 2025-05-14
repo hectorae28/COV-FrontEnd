@@ -189,9 +189,6 @@ const NoticiaDetalle = () => {
                                                             item.imageUrl}
                                                         alt={item.title}
                                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                                        onError={(e) => {
-                                                            e.target.src = "/assets/placeholder-image.jpg";
-                                                        }}
                                                     />
                                                 </div>
                                                 <div className="flex-grow">

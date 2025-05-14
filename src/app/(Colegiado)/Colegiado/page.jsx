@@ -1,6 +1,5 @@
 "use client";
 import { fetchMe } from "@/api/endpoints/colegiado";
-import SolicitudesForm from "@/Components/Cards/MultipleSol/FormMult";
 import DashboardLayout from "@/Components/DashboardLayout";
 import SolvencyStatus from "@/Components/Solvencia/EstatusSolv";
 import SolvenciaPago from "@/Components/Solvencia/PagoSolv";
@@ -11,7 +10,7 @@ import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import useColegiadoUserStore from "@/utils/colegiadoUserStore";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
@@ -22,6 +21,7 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
   const [solvencyInfo, setSolvencyInfo] = useState(null);
+  const [selectedSolicitudType, setSelectedSolicitudType] = useState(null)
   // Datos de solvencia
   const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
   const setCostos = useColegiadoUserStore((state) => state.setCostos);
@@ -98,6 +98,20 @@ async function fetchUserAndSolvency() {
   }
 }
 
+  // Estado para controlar el modal a nivel de página
+  const [showModal, setShowModal] = useState(false)
+  const [solicitudTipo, setSolicitudTipo] = useState(null)
+
+  // Función para capturar el tipo de solicitud seleccionado desde las URLs
+  useEffect(() => {
+    // Verificar si hay un parámetro de tipo en la URL
+    const queryParams = new URLSearchParams(window.location.search)
+    const tipoParam = queryParams.get("tipo")
+
+    if (tipoParam && ["multiple", "constancia", "carnet", "especializacion"].includes(tipoParam)) {
+      setSelectedSolicitudType(tipoParam)
+    }
+  }, [])
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
@@ -125,15 +139,33 @@ async function fetchUserAndSolvency() {
 
   // Manejar clic en botón de pago
   const handlePayClick = () => {
-    setActiveTab("solvencia");
-  };
+    setActiveTab("solvencia")
+  }
 
-  // Manejar retorno al panel principal
-  const handleBackToPanel = () => {
-    setShowSolicitudForm(false);
-  };
+  // Función para volver al estado inicial (mostrar todas las solicitudes)
+  const handleBackToAllSolicitudes = () => {
+    setSelectedSolicitudType(null)
+
+    // Actualizar la URL sin el parámetro tipo
+    const url = new URL(window.location)
+    url.searchParams.delete("tipo")
+    window.history.pushState({}, "", url)
+  }
+
+  // Función para abrir el modal desde Cards
+  const handleOpenModal = (tipo) => {
+    setSolicitudTipo(tipo)
+    setShowModal(true)
+  }
+
+  // Función para manejar la creación de solicitud
+  const handleSolicitudCreada = (nuevaSolicitud) => {
+    console.log("Solicitud creada:", nuevaSolicitud)
+    // Aquí podrías agregar lógica adicional después de crear una solicitud
+  }
+
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>
   }
 
   return (
@@ -151,7 +183,22 @@ async function fetchUserAndSolvency() {
             {/* Sección de tarjetas (8/12 del ancho en xl, distribución variable en otros tamaños) */}
             <div className="md:col-span-2 lg:col-span-2 xl:col-span-8 flex items-center">
               <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm h-full w-full">
-                <Cards isSolvent={isSolvent} onCardClick={handleCardClick} />
+                {selectedSolicitudType && (
+                  <div className="mb-4">
+                    <button
+                      onClick={handleBackToAllSolicitudes}
+                      className="text-[#D7008A] hover:underline flex items-center text-sm"
+                    >
+                      ← Volver a todas las solicitudes
+                    </button>
+                  </div>
+                )}
+                <Cards
+                  isSolvent={isSolvent}
+                  session={session}
+                  selectedCardType={selectedSolicitudType}
+                  onModalOpen={handleOpenModal}
+                />
               </div>
             </div>
             {/* Sección de carnet (4/12 del ancho en xl) */}
@@ -162,7 +209,7 @@ async function fetchUserAndSolvency() {
             </div>
           </div>
           {/* Sección de tabla (12/12 del ancho total) */}
-          <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm">
+          <div className="bg-white/50 rounded-2xl p-4 sm:p-6 shadow-sm">
             <TablaHistorial isSolvent={isSolvent} />
           </div>
         </>
@@ -203,7 +250,7 @@ async function fetchUserAndSolvency() {
           </div>
 
           {/* Contenido según la pestaña activa */}
-          {activeTab === "solicitudes" && !showSolicitudForm ? (
+          {activeTab === "solicitudes" ? (
             <>
               {/* Estado de Solvencia (solo si no está solvente o está por vencer) */}
               {(!isSolvent || showSolvencyWarning) && (
@@ -219,9 +266,21 @@ async function fetchUserAndSolvency() {
                 {/* Sección de tarjetas */}
                 <div className="md:col-span-2 lg:col-span-2 xl:col-span-8 flex items-center">
                   <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm h-full w-full">
+                    {selectedSolicitudType && (
+                      <div className="mb-4">
+                        <button
+                          onClick={handleBackToAllSolicitudes}
+                          className="text-[#D7008A] hover:underline flex items-center text-sm"
+                        >
+                          ← Volver a todas las solicitudes
+                        </button>
+                      </div>
+                    )}
                     <Cards
                       isSolvent={isSolvent}
-                      onCardClick={handleCardClick}
+                      session={session}
+                      selectedCardType={selectedSolicitudType}
+                      onModalOpen={handleOpenModal}
                     />
                   </div>
                 </div>
@@ -239,80 +298,24 @@ async function fetchUserAndSolvency() {
             </>
           ) : null}
 
-          {/* Formulario de Solicitud Múltiple */}
-          {activeTab === "solicitudes" && showSolicitudForm && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <SolicitudesForm
-                  initialSolicitudTipo="multiple"
-                  onCancel={handleBackToPanel}
-                />
-              </div>
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl overflow-hidden shadow-md h-full">
-                  <div className="bg-gradient-to-b from-[#41023B] to-[#D7008A] p-4">
-                    <h2 className="text-white font-semibold text-lg">
-                      Información
-                    </h2>
-                  </div>
-                  <div className="p-5">
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-[#41023B]">
-                        Tipos de Solicitudes:
-                      </h3>
-
-                      <div className="space-y-3">
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <h4 className="font-medium text-[#D7008A]">
-                            Constancia
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Documento que certifica su inscripción y estado de
-                            solvencia con la institución.
-                          </p>
-                        </div>
-
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <h4 className="font-medium text-[#D7008A]">Carnet</h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Credencial oficial que lo identifica como miembro
-                            activo del Colegio de Odontólogos.
-                          </p>
-                        </div>
-
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <h4 className="font-medium text-[#D7008A]">
-                            Especialidad
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Certificación de especialidades odontológicas
-                            reconocidas por el Colegio.
-                          </p>
-                        </div>
-
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <h4 className="font-medium text-[#D7008A]">
-                            Múltiple
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Permite solicitar varios documentos en un solo
-                            proceso, ahorrando tiempo y gestiones.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Página de Pago de Solvencia */}
           {activeTab === "solvencia" && <SolvenciaPago props={{ setActiveTab }} />}
         </>
       )}
 
+      {/* Modal para crear solicitud - renderizado a nivel de página */}
+      {showModal && (
+        <CrearSolicitudModal
+          onClose={() => setShowModal(false)}
+          onSolicitudCreada={handleSolicitudCreada}
+          colegiadoPreseleccionado={colegiado}
+          mostrarSeleccionColegiado={false}
+          session={session}
+          tipoSolicitud={solicitudTipo}
+        />
+      )}
+
       <Chat />
     </DashboardLayout>
-  );
+  )
 }

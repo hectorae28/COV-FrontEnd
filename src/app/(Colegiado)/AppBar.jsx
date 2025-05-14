@@ -1,19 +1,18 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useState, useEffect } from "react";
 import {
     Description,
     EventNote,
-    School,
     Forum,
-    Inbox,
     Home,
-    Person,
+    Inbox,
+    School
 } from "@mui/icons-material";
-import useColegiadoUserStore from "@/utils/colegiadoUserStore";
-import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 export default function AppBar({ solvencyInfo }) {
     const [selectedItem, setSelectedItem] = useState("Inicio");
@@ -24,7 +23,7 @@ export default function AppBar({ solvencyInfo }) {
     useEffect(() => {
         if (pathname === "/") {
             setSelectedItem("Inicio");
-        } else if (pathname.includes("/solicitudes")) {
+        } else if (pathname.includes("/Solicitudes")) {
             setSelectedItem("Solicitudes");
         } else if (pathname.includes("/eventos")) {
             setSelectedItem("Eventos");
@@ -70,7 +69,7 @@ export default function AppBar({ solvencyInfo }) {
                     icon={<Description className="h-5 w-5" />}
                     text="Solicitudes"
                     active={selectedItem === "Solicitudes"}
-                    href="/solicitudes"
+                    href="/Solicitudes"
                 />
                 <Divider />
                 <SidebarItem

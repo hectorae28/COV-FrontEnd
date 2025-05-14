@@ -31,20 +31,20 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
 
                         <div>
                             <h1 className="text-xl font-bold text-gray-800 flex items-center">
-                                {solicitud.tipo}
-                                <span className={`ml-3 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${solicitud.estado === 'Pendiente'
+                                {solicitud.tipo_solicitud}
+                                <span className={`ml-3 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${solicitud.status === 'Pendiente'
                                     ? 'bg-yellow-100 text-yellow-800'
-                                    : solicitud.estado === 'Aprobada'
+                                    : solicitud.status === 'Aprobada'
                                         ? 'bg-green-100 text-green-800'
-                                        : solicitud.estado === 'Exonerada'
+                                        : solicitud.status === 'Exonerada'
                                             ? 'bg-teal-100 text-teal-800'
                                             : 'bg-red-100 text-red-800'
                                     }`}>
-                                    {solicitud.estado === 'Pendiente' && <Clock size={14} />}
-                                    {solicitud.estado === 'Aprobada' && <CheckCircle size={14} />}
-                                    {solicitud.estado === 'Exonerada' && <CheckCircle size={14} />}
-                                    {solicitud.estado === 'Rechazada' && <XCircle size={14} />}
-                                    {solicitud.estado}
+                                    {solicitud.status === 'Pendiente' && <Clock size={14} />}
+                                    {solicitud.status === 'Aprobada' && <CheckCircle size={14} />}
+                                    {solicitud.status === 'Exonerada' && <CheckCircle size={14} />}
+                                    {solicitud.status === 'Rechazada' && <XCircle size={14} />}
+                                    {solicitud.status}
                                 </span>
                             </h1>
                             <p className="text-sm text-gray-500">Referencia: {solicitud.referencia}</p>
@@ -92,7 +92,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
                     </div>
                 </div>
 
-                {/* Columna 2: Estado de pago */}
+                {/* Columna 2: status de pago */}
                 <div className="md:col-span-2 flex flex-col justify-between">
                     <div className="flex flex-col md:items-end">
                         {!todoExonerado && (
@@ -144,9 +144,9 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
                         )}
                     </div>
 
-                    {/* Botones de estado/acción */}
+                    {/* Botones de status/acción */}
                     <div className="mt-4 flex flex-wrap gap-2 md:justify-end">
-                        {solicitud.estado === 'Pendiente' && (
+                        {solicitud.status === 'Pendiente' && (
                             <>
                                 <button
                                     onClick={onAprobar}
@@ -169,8 +169,8 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
                 </div>
             </div>
 
-            {/* Información adicional basada en el estado */}
-            {solicitud.estado === 'Aprobada' && (
+            {/* Información adicional basada en el status */}
+            {solicitud.status === 'Aprobada' && (
                 <div className="bg-green-50 p-3 rounded-md mt-4">
                     <div className="flex items-start">
                         <CheckCircle className="text-green-600 h-5 w-5 mr-2 mt-0.5" />
@@ -185,7 +185,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
                 </div>
             )}
 
-            {solicitud.estado === 'Exonerada' && (
+            {solicitud.status === 'Exonerada' && (
                 <div className="bg-teal-50 p-3 rounded-md mt-4">
                     <div className="flex items-start">
                         <CheckCircle className="text-teal-600 h-5 w-5 mr-2 mt-0.5" />
@@ -200,7 +200,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
                 </div>
             )}
 
-            {solicitud.estado === 'Rechazada' && (
+            {solicitud.status === 'Rechazada' && (
                 <div className="bg-red-50 p-3 rounded-md mt-4">
                     <div className="flex items-start">
                         <XCircle className="text-red-600 h-5 w-5 mr-2 mt-0.5" />

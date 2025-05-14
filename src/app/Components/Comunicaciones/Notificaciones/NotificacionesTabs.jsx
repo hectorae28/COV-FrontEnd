@@ -4,8 +4,8 @@ import { Bell, EyeOff, Trash2 } from "lucide-react"
 
 export function NotificacionesTabs({ activeTab, onTabChange, counts, isMobile }) {
   const tabs = [
-    { id: "todas", label: "Todas", icon: <Bell className="h-4 w-4" />, count: counts.todas },
     { id: "no-leidas", label: "No leídas", icon: <EyeOff className="h-4 w-4" />, count: counts.noLeidas },
+    { id: "todas", label: "Todas", icon: <Bell className="h-4 w-4" />, count: counts.todas },
     { id: "papelera", label: "Papelera", icon: <Trash2 className="h-4 w-4" />, count: counts.papelera },
   ]
 
@@ -25,8 +25,8 @@ export function NotificacionesTabs({ activeTab, onTabChange, counts, isMobile })
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 className={`flex items-center justify-center gap-1 sm:gap-2 py-2 px-3 rounded-md transition-colors ${activeTab === tab.id
-                    ? "bg-white text-[#D7008A] shadow-sm"
-                    : "text-gray-600 hover:bg-gray-200 hover:text-gray-900"
+                  ? "bg-white text-[#D7008A] shadow-sm"
+                  : "text-gray-600 hover:bg-gray-200 hover:text-gray-900"
                   }`}
               >
                 <div className="flex items-center justify-center">

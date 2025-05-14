@@ -243,6 +243,7 @@ export function RejectModal({
     handleRechazarSolicitud,
     handleDenegarSolicitud,
     onClose,
+    isRechazada
 }) {
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
@@ -296,12 +297,14 @@ export function RejectModal({
                         >
                             Cancelar
                         </button>
-                        <button
-                            onClick={handleRechazarSolicitud}
-                            className="cursor-pointer px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:from-[#C40180] hover:to-[#C40180] transition-all shadow-sm font-medium"
-                        >
-                            Rechazar solicitud
-                        </button>
+                        {!isRechazada &&(
+                            <button
+                                onClick={handleRechazarSolicitud}
+                                className="cursor-pointer px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:from-[#C40180] hover:to-[#C40180] transition-all shadow-sm font-medium"
+                            >
+                                Rechazar solicitud
+                            </button>
+                        )}
                         <button
                             onClick={handleDenegarSolicitud}
                             className="cursor-pointer px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-600 hover:to-red-600 transition-all shadow-sm font-medium"
