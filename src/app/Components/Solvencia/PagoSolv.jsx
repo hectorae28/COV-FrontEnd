@@ -7,7 +7,7 @@ import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 import { pagoSolvencia } from "@/api/endpoints/pago";
 import { fetchMe } from "@/api/endpoints/colegiado";
 
-export default function SolvenciaPago() {
+export default function SolvenciaPago({ props }) {
   /*const initialState = {
     tipo_profesion: "",
     nationality: "",
@@ -57,6 +57,7 @@ export default function SolvenciaPago() {
   const costos = useColegiadoUserStore((store) => store.costos);
   const setColegiadoUser = useColegiadoUserStore((store) => store.setColegiadoUser);
   const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser);
+  const { setActiveTab } = props;
 
   useEffect(() => {
     if (colegiadoUser && colegiadoUser.costo_de_solvencia) {
@@ -70,6 +71,7 @@ export default function SolvenciaPago() {
       const pagoResult = await pagoSolvencia(detallesPagoSolvencia);
       const colegiadoResult = await fetchMe();
       setColegiadoUser(colegiadoResult.data);
+      setActiveTab("solicitudes");
       return [undefined, pagoResult]
     } catch(error) {
       return [error, undefined];
