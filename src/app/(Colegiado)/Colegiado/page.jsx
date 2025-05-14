@@ -20,12 +20,8 @@ export default function Home() {
   const [showTabs, setShowTabs] = useState(true); // Estado para mostrar/ocultar pestañas
   const [userInfo, setUserInfo] = useState(null);
   const { data: session, status } = useSession();
-  const [isSolvent, setIsSolvent] = useState(false); // Estado de solvencia
-  const [solvencyInfo, setSolvencyInfo] = useState({
-    date: session?.user.solvente,
-    amount: "7.00",
-    status: session?.user?.solvenciaStatus,
-  }); // Datos de solvencia
+  const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
+  const [solvencyInfo, setSolvencyInfo] = useState(null);
   // Datos de solvencia
   const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
   const setCostos = useColegiadoUserStore((state) => state.setCostos);
@@ -45,53 +41,80 @@ export default function Home() {
     setShowSolvencyWarning(today >= warningDate);
   };
 
-  async function fetchCostosAndUserData() {
-    try {
-      // Se asume que fetchDataSolicitudes y fetchMe son funciones existentes en tu proyecto
-      const costoResponse = await fetchDataSolicitudes("costo", `?es_vigente=true`);
-      const tasaBcvResponse = await fetchDataSolicitudes("tasa-bcv");
-      const costosData = costoResponse.data;
-      // Obtén el costo filtrando por "Solvencia"
-      const costo = Number(
-        costosData.filter(
-          (item) => item.tipo_costo_nombre === "Solvencia"
-        )[0].monto_usd
-      );
-      setCostos(costosData);
-      setTasaBcv(Number(tasaBcvResponse.data.rate))
-
-      const userResponse = await fetchMe(session);
-      const userData = userResponse.data;
-      setUserInfo(userData);
-      setColegiadoUser(userData);
-      setIsSolvent(userData.solvencia_status);
-      setSolvencyInfo({
-        date: userData.solvente,
-        amount: costo,
-        status: userData.solvencia_status,
-      });
-
-      if (userData) {
-        checkSolvencyStatus();
-      }
-    } catch (error) {
-      console.error("Error al obtener los datos:", error);
-    }
+  async function fetchCostos() {
+  try {
+    const response = await fetchDataSolicitudes("costo", "?es_vigente=true");
+    const costosData = response.data;
+    const costo = Number(
+      costosData.filter(
+        (item) => item.tipo_costo_nombre === "Solvencia"
+      )[0].monto_usd
+    );
+    setCostos(costosData);
+    return costo; // Return the Solvencia cost for potential use elsewhere
+  } catch (error) {
+    console.error("Error fetching costos:", error);
   }
+}
+
+// Separate method for fetching tasa BCV
+async function fetchTasaBcv() {
+  try {
+    const response = await fetchDataSolicitudes("tasa-bcv");
+    const tasaBcvData = Number(response.data.rate);
+    setTasaBcv(tasaBcvData);
+  } catch (error) {
+    console.error("Error fetching tasa BCV:", error);
+  }
+}
+
+// Separate method for fetching user data and solvency info
+async function fetchUserAndSolvency() {
+  try {
+    if (!session) return;
+    
+    const userResponse = await fetchMe(session);
+    const userData = userResponse.data;
+    
+    setUserInfo(userData);
+    setColegiadoUser(userData);
+    setIsSolvent(userData.solvencia_status);
+    
+    // Get costos from the store to calculate solvency amount
+    const costos = useColegiadoUserStore.getState().costos;
+    const costo = costos?.find(
+      (item) => item.tipo_costo_nombre === "Solvencia"
+    )?.monto_usd;
+    
+    setSolvencyInfo({
+      date: userData.solvente,
+      amount: Number(costo),
+      status: userData.solvencia_status,
+    });
+
+    checkSolvencyStatus();
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+  }
+}
+
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
-    const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24h check
+    const loadUserData = async () => {
+      // Fetch costos and tasa-bcv in parallel
+      await Promise.all([fetchCostos(), fetchTasaBcv()]);
+      // Fetch user data after costos are available
+      await fetchUserAndSolvency();
+    };
 
     if (session) {
-      fetchCostosAndUserData();
+      loadUserData();
     }
-
-    return () => clearInterval(intervalId);
   }, [session, status]);
 
   useEffect(() => {
-    checkSolvencyStatus();
+    fetchUserAndSolvency();
   }, [useColegiadoUserStore((state) => state.colegiadoUser.solvente)]);
 
   const handleCardClick = (cardId) => {
@@ -285,7 +308,7 @@ export default function Home() {
           )}
 
           {/* Página de Pago de Solvencia */}
-          {activeTab === "solvencia" && <SolvenciaPago />}
+          {activeTab === "solvencia" && <SolvenciaPago props={{ setActiveTab }} />}
         </>
       )}
 

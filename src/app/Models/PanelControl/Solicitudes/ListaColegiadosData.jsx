@@ -8,6 +8,8 @@ STORE: se almacenan los datos de los colegiados para el modulo administrativo
 
 const useDataListaColegiados = create((set, get) => ({
   colegiados: [],
+  colegiadosPagination: {},
+
   colegiadosPendientes: [],
   colegiadosPendientesPagination: {},
 
@@ -17,7 +19,9 @@ const useDataListaColegiados = create((set, get) => ({
   async initStore() {
     try {
       const colegiadosResponse = await fetchDataUsuario("colegiado");
-      set({ colegiados: colegiadosResponse.data });
+      set({ colegiados: colegiadosResponse.data.results });
+      set({ colegiadosPendientesPagination: colegiadosResponse.data });
+
 
       const pendientesResponse = await fetchDataUsuario("register");
       set({ colegiadosPendientes: pendientesResponse.data.results });
@@ -49,14 +53,34 @@ const useDataListaColegiados = create((set, get) => ({
     }
   },
 
+  fetchColegiados: async (page = 1, pageSize = 10, search = "", otrosFiltros = {}) => {
+    set({ loading: true });
+    try {
+      let params = `?page=${page}&page_size=${pageSize}`;
+      if (search) params += `&search=${encodeURIComponent(search)}`;
+      Object.entries(otrosFiltros).forEach(([key, value]) => {
+        if (value) params += `&${key}=${encodeURIComponent(value)}`;
+      });
+      const res = await fetchDataUsuario("colegiado", null, params);
+      set({
+        colegiados: res.data.results,
+        colegiadosPagination: res.data,
+        loading: false,
+      });
+    } catch (error) {
+      set({ loading: false, error: error.message || "Error al cargar pendientes" });
+    }
+  },
+
   // Funciones para obtener datos específicos
   getColegiado: async (id) => {
-    const res = await fetchDataUsuario(`register/${id}`);
+    const res = await fetchDataUsuario(`colegiado/${id}`);
     return res.data
   },
 
-  getColegiadoPendiente: (id) => {
-    return get().colegiadosPendientes.find((pend) => pend.id === id) || null;
+  getColegiadoPendiente: async (id) => {
+    const res = await fetchDataUsuario(`register/${id}`);
+    return res.data
   },
 
   // Funciones para obtener colecciones específicas de cada colegiado
@@ -114,16 +138,16 @@ const useDataListaColegiados = create((set, get) => ({
     return get().getColegiado(id);
   },
 
-  updateColegiadoPendiente: async(id, updatedData) => {
+  updateColegiadoPendiente: async(id, updatedData, docs) => {
     set((state) => ({
       colegiadosPendientes: state.colegiadosPendientes.map((pendiente) =>
         pendiente.id === id ? { ...pendiente, ...updatedData } : pendiente
       ),
     }));
 
-    const res = await patchDataUsuario(`register/${id}`,updatedData)
+    const res = await patchDataUsuario(`register/${id}`,updatedData,docs&&docs)
 
-    return get().getColegiadoPendiente(id);
+    return res.data;
   },
 
   // Funciones para eliminar entidades
@@ -206,12 +230,18 @@ const useDataListaColegiados = create((set, get) => ({
 
     // Crear un nombre completo con los datos disponibles
    
-    const res = await postDataUsuario(`colegiado`,{...datosRegistro, recaudos_id:pendienteId})
-    // Añadir el colegiado y eliminar el pendiente
-    get().addColegiado(res.data);
-    get().removeColegiadoPendiente(pendienteId);
-
-    return res;
+    postDataUsuario(`colegiado`,{...datosRegistro, recaudos_id:pendienteId}).then(
+      (res)=>{
+        // Añadir el colegiado y eliminar el pendiente
+        get().addColegiado(res.data);
+        get().removeColegiadoPendiente(pendienteId);
+        return res;
+      }
+    )
+    .catch((error)=>{
+      console.error("Error al aprobar la solicitud:", error);
+      return error;
+    })
   },
 
   // Funciones específicas

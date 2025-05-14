@@ -13,7 +13,6 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
     // Filtrar documentos para excluir comprobantes de pago
     const documentosRegulares =documentosRequeridos
-    console.log({documentosRegulares})
 
     // Función para validar archivo
     const validarArchivo = (file) => {
@@ -72,6 +71,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
     }
 
     const handleUpload = async () => {
+        console.log(documentoParaSubir)
         if (!selectedFile) {
             setError("Por favor seleccione un archivo para subir.")
             return
@@ -89,11 +89,16 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
             // Actualizar el documento
             if (updateDocumento) {
-                updateDocumento({
-                    ...documentoParaSubir,
-                    archivo: selectedFile.name,
-                    archivoUrl: uploadedFileUrl,
-                })
+                const Form = new FormData();
+                Form.append(`${documentoParaSubir.id}`, selectedFile)
+
+                // Check if this is a payment receipt
+                const isPaymentReceipt =
+                    documentoParaSubir.id.includes("comprobante_pago") ||
+                    documentoParaSubir.nombre.toLowerCase().includes("comprobante")
+
+                // Update the document
+                updateDocumento(Form)
             }
 
             // Cerrar modal después de subir
@@ -109,13 +114,10 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
     // Componente de tarjeta de documento reutilizable
     const DocumentCard = ({ documento }) => {
-        const tieneArchivo = !!documento
-
+        const tieneArchivo = !documento.requerido||(documento.requerido&&documento.url!==null)
         return (
             <div
-                className={`border rounded-lg ${tieneArchivo
-                    ? "border-gray-200 hover:border-[#C40180]"
-                    : "border-red-200 bg-red-50"
+                className={`border rounded-lg ${tieneArchivo ? "border-gray-200 hover:border-[#C40180]" : "border-red-200 bg-red-50"
                     } hover:shadow-md transition-all duration-200`}
             >
                 <div className="p-4">
@@ -150,20 +152,20 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                             {tieneArchivo ? (
                                 <button
                                     onClick={() => handleVerDocumento(documento)}
-                                    className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                                    className="cursor-pointer text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
                                     title="Ver documento"
                                 >
                                     <Eye size={18} />
                                 </button>
                             ) : (
-                                <span className="text-gray-400 p-2" title="No hay documento para ver">
+                                <span className="cursor-no-drop text-gray-400 p-2" title="No hay documento para ver">
                                     <Eye size={18} />
                                 </span>
                             )}
 
                             <button
                                 onClick={() => handleReemplazarDocumento(documento)}
-                                className={`${tieneArchivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}
+                                className={`${tieneArchivo ? "cursor-pointer text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} cursor-pointer p-2 rounded-full transition-colors`}
                                 title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
                             >
                                 {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
@@ -293,7 +295,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                                         </>
                                     ) : (
                                         <>
-                                            <Upload size={16} />
+                                            <Upload size={4} />
                                             <span>{documentoParaSubir.archivo ? "Actualizar documento" : "Subir documento"}</span>
                                         </>
                                     )}

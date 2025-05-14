@@ -1,14 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Check, Clock, Lock, Mail, MapPin, Phone } from "lucide-react";
-import { signIn } from "next-auth/react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useRef, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import Alert from "@/app/Components/Alert";
 import ForgotPasswordForm from "@/Components/Home/ForgotPasswordForm";
+import { motion } from "framer-motion";
+import { Clock, Lock, Mail, MapPin, Phone } from "lucide-react";
+import { signIn } from "next-auth/react";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export default function PanelAdmin({ onClose, isClosing }) {
   const [currentView, setCurrentView] = useState("login");
@@ -29,7 +28,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
     try{
       const Form = new FormData(formRef.current);
       const result = await signIn("credentials", {
-        username: Form.get("email").split("@")[0],
+        username: Form.get("email"),
         password: Form.get("password"),
         redirect: false,
       });

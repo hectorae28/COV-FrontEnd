@@ -340,11 +340,11 @@ export default function SeleccionarSolicitudesStep({
                 fechaCompletado: new Date().toLocaleDateString(),
                 // Información del creador
                 creador: {
-                    nombre: creadorInfo?.name || "Administrador",
-                    email: creadorInfo?.email || "admin@ejemplo.com",
-                    username: creadorInfo?.name,
-                    esAdmin: isAdmin,
-                    fecha: new Date().toISOString()
+                    username: creadorInfo?.name || "Usuario",
+                    email: creadorInfo?.email || "usuario@ejemplo.com",
+                    esAdmin: creadorInfo?.role === 'admin' || creadorInfo?.isAdmin || false,
+                    fecha: new Date().toISOString(),
+                    tipo: 'creado'
                 }
             }
             // Pasar la solicitud creada al componente padre
@@ -563,7 +563,7 @@ export default function SeleccionarSolicitudesStep({
                                                 <button
                                                     type="button"
                                                     onClick={() => eliminarDelCarrito(item.id)}
-                                                    className="text-red-500 hover:text-red-700"
+                                                    className="cursor-pointer text-red-500 hover:text-red-700"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
@@ -614,7 +614,7 @@ export default function SeleccionarSolicitudesStep({
                                 <button
                                     type="button"
                                     onClick={exonerarTodos}
-                                    className="text-sm text-blue-600 hover:text-blue-800"
+                                    className="cursor-pointer text-sm text-blue-600 hover:text-blue-800"
                                 >
                                     Exonerar todos
                                 </button>
@@ -663,14 +663,14 @@ export default function SeleccionarSolicitudesStep({
                 <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 mr-3"
+                    className="cursor-pointer px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 mr-3"
                 >
                     Cancelar
                 </button>
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`px-6 py-2 bg-[#C40180] text-white rounded-md ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#590248]'
+                    className={`cursor-pointer px-6 py-2 bg-[#C40180] text-white rounded-md ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#590248]'
                         }`}
                 >
                     {isSubmitting ? 'Procesando...' : 'Continuar'}

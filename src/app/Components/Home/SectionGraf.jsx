@@ -1,7 +1,7 @@
 "use client"
-import { useState } from "react"
-import { BarChart3, TrendingUp, TrendingDown } from "lucide-react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import { BarChart3, TrendingDown, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 // Componente personalizado para el tooltip
 const CustomTooltip = ({ active, payload, label }) => {
@@ -14,7 +14,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     }
     return (
       <div className="bg-white p-3 border shadow-md rounded-md">
-        <p className="font-medium text-sm">{label}</p>
+        <p className=" font-medium text-sm">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-sm" style={{ color: statusColors[entry.dataKey] || '#333' }}>
             <span className="font-bold">{entry.name}: </span>
@@ -85,19 +85,19 @@ const SectionGraf = ({ datos, estadisticasSolicitudes, tendencia }) => {
           {/* Filtros de tiempo */}
           <div className="flex bg-gray-100 rounded-md">
             <button 
-              className={`px-3 py-1 text-sm rounded-md ${filtroTiempo === 'dia' ? 'bg-[#C40180] text-white' : 'text-gray-600'}`}
+              className={`cursor-pointer px-3 py-1 text-sm rounded-md ${filtroTiempo === 'dia' ? 'bg-[#C40180] text-white' : 'text-gray-600'}`}
               onClick={() => setFiltroTiempo('dia')}
             >
               Día
             </button>
             <button 
-              className={`px-3 py-1 text-sm rounded-md ${filtroTiempo === 'semana' ? 'bg-[#C40180] text-white' : 'text-gray-600'}`}
+              className={`cursor-pointer px-3 py-1 text-sm rounded-md ${filtroTiempo === 'semana' ? 'bg-[#C40180] text-white' : 'text-gray-600'}`}
               onClick={() => setFiltroTiempo('semana')}
             >
               Semana
             </button>
             <button 
-              className={`px-3 py-1 text-sm rounded-md ${filtroTiempo === 'mes' ? 'bg-[#C40180] text-white' : 'text-gray-600'}`}
+              className={`cursor-pointer px-3 py-1 text-sm rounded-md ${filtroTiempo === 'mes' ? 'bg-[#C40180] text-white' : 'text-gray-600'}`}
               onClick={() => setFiltroTiempo('mes')}
             >
               Mes

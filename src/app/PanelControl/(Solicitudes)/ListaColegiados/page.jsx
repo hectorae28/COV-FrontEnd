@@ -20,15 +20,14 @@ import { useEffect, useState } from "react";
 
 export default function ListaColegiadosPage() {
   // Estado del store de Zustand
-  const {
-    colegiados,
-    colegiadosPendientes,
-    colegiadosPendientesPagination,
-    fetchPendientes,
-    loading,
-    getColegiado,
-    getColegiadoPendiente,
-  } = useDataListaColegiados();
+    const initStore = useDataListaColegiados((state)=>state.initStore)
+    const colegiados = useDataListaColegiados((state)=>state.colegiados)
+    const colegiadosPendientes = useDataListaColegiados((state)=>state.colegiadosPendientes)
+    const colegiadosPendientesPagination = useDataListaColegiados((state)=>state.colegiadosPendientesPagination)
+    const fetchPendientes = useDataListaColegiados((state)=>state.fetchPendientes)
+    const loading = useDataListaColegiados((state)=>state.loading)
+    const getColegiado = useDataListaColegiados((state)=>state.getColegiado)
+    const getColegiadoPendiente = useDataListaColegiados((state)=>state.getColegiadoPendiente)
 
   // Estado local de UI
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,6 +58,16 @@ export default function ListaColegiadosPage() {
   // Nuevo estado para ordenamiento de colegiados registrados
   const [ordenFechaRegistrados, setOrdenFechaRegistrados] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
   const [recordsPerPage, setRecordsPerPage] = useState(10);
+  useEffect(()=>{
+    const LoadInitStore= async()=>{
+      try{
+          await initStore()
+      }catch(e){
+        console.error(e)
+      }
+    }
+    LoadInitStore()
+  },[])
 
   useEffect(() => {
     const filtros = {};
@@ -92,14 +101,15 @@ export default function ListaColegiadosPage() {
         filtros.pago_exonerado = "true"
       }
     }
-    if(filtroEstado!=="todos"){
-      if(filtroEstado === "rechazados"){
+    if(filtroEstadoPendiente!=="todos"){
+      if(filtroEstadoPendiente === "rechazados"){
         filtros.status = "rechazados"
-      } else if(filtroEstado === "pendientes"){
-        filtroEstado.status = "revisando"
+      } else if(filtroEstadoPendiente === "pendientes"){
+        filtros.status = "revisando"
       }
     }
-    console.log({ currentPage, recordsPerPage, searchTerm, filtros });
+    filtros.especialidad=filtroEspecialidad
+    console.log({filtros})
     fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros);
   }, [
     currentPage,
@@ -110,7 +120,9 @@ export default function ListaColegiadosPage() {
     fechaDesde,
     fechaHasta,
     ordenFecha,
-    filtroEtiqueta
+    filtroEtiqueta,
+    filtroEspecialidad,
+    filtroEstadoPendiente
   ]);
 
   const verDetalleColegiado = (id) => {
@@ -182,10 +194,9 @@ export default function ListaColegiadosPage() {
       />
     );
   }
-
   // Vista principal de la lista
   return (
-    <div className="w-full px-4 md:px-10 py-10 md:py-12">
+    <div className="select-none cursor-default w-full px-4 md:px-10 py-10 md:py-12">
       {/* Header con título */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
@@ -335,7 +346,7 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Estado de solvencia</p>
               <div className="flex gap-2">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstado === "todos"
                       ? "bg-purple-100 text-purple-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -345,7 +356,7 @@ export default function ListaColegiadosPage() {
                   Todos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstado === "solventes"
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -355,7 +366,7 @@ export default function ListaColegiadosPage() {
                   Solventes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstado === "No Solvente"
                       ? "bg-red-100 text-red-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -365,7 +376,7 @@ export default function ListaColegiadosPage() {
                   No Solventes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstado === "solicitudes"
                       ? "bg-blue-100 text-blue-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -382,7 +393,7 @@ export default function ListaColegiadosPage() {
               <select
                 value={filtroEspecialidad}
                 onChange={(e) => setFiltroEspecialidad(e.target.value)}
-                className="px-4 py-2 rounded-lg text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="cursor-pointer px-4 py-2 rounded-lg text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="todas">Todas las especialidades</option>
                 <option value="Odontología general">Odontología general</option>
@@ -408,7 +419,7 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Fecha de solicitud</p>
               <div className="flex gap-2">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroFecha === "todas"
                       ? "bg-purple-100 text-purple-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -418,7 +429,7 @@ export default function ListaColegiadosPage() {
                   Todas
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroFecha === "semana"
                       ? "bg-blue-100 text-blue-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -428,7 +439,7 @@ export default function ListaColegiadosPage() {
                   Última semana
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroFecha === "mes"
                       ? "bg-indigo-100 text-indigo-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -471,7 +482,7 @@ export default function ListaColegiadosPage() {
                       setFechaDesde("");
                       setFechaHasta("");
                     }}
-                    className="mt-4 text-gray-500 hover:text-red-500"
+                    className="cursor-pointer mt-4 text-gray-500 hover:text-red-500"
                     title="Limpiar fechas"
                   >
                     <X size={18} />
@@ -483,7 +494,7 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Estado</p>
               <div className="flex gap-2 flex-wrap">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstadoPendiente === "todos"
                       ? "bg-purple-100 text-purple-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -493,7 +504,7 @@ export default function ListaColegiadosPage() {
                   Todos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstadoPendiente === "pendientes"
                       ? "bg-blue-100 text-blue-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -503,7 +514,7 @@ export default function ListaColegiadosPage() {
                   Pendientes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEstadoPendiente === "rechazados"
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -518,7 +529,7 @@ export default function ListaColegiadosPage() {
               <p className="text-xs text-gray-500 mb-1">Etiquetas</p>
               <div className="flex gap-2 flex-wrap">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEtiqueta === "todos"
                       ? "bg-purple-100 text-purple-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -528,19 +539,17 @@ export default function ListaColegiadosPage() {
                   Todos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEtiqueta === "documentosIncompletos"
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
-                  onClick={() =>
-                    setFiltroEtiqueta("documentosIncompletos")
-                  }
+                  onClick={() => setFiltroEtiqueta("documentosIncompletos")}
                 >
                   Documentos Incompletos
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEtiqueta === "pagosPendientes"
                       ? "bg-red-100 text-red-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -550,7 +559,7 @@ export default function ListaColegiadosPage() {
                   Pagos Pendientes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  className={`cursor-pointer px-4 py-2 rounded-full text-sm font-medium ${
                     filtroEtiqueta === "pagosExonerados"
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -604,7 +613,7 @@ export default function ListaColegiadosPage() {
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                           <button
-                            className="flex items-center justify-center gap-1 w-full"
+                            className="cursor-pointer flex items-center justify-center gap-1 w-full"
                             onClick={toggleOrdenFechaRegistrados}
                           >
                             Fecha Registro
@@ -630,24 +639,35 @@ export default function ListaColegiadosPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {colegiados.map((colegiado) => (
-                        <tr key={colegiado.id} className="hover:bg-gray-50">
+                      {colegiados.map((colegiado, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="font-medium text-gray-900">
-                              {colegiado.nombre || "-"}
+                              {colegiado.recaudos.persona.nombre || "-"}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                            {colegiado.cedula || "-"}
+                            {colegiado.recaudos.persona.identificacion || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                            {colegiado.numeroRegistro || "-"}
+                            {colegiado.recaudos.num_registro_principal || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                            {colegiado.fechaRegistro || "-"}
+                            {colegiado.recaudos.fecha_registro_principal || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
-                            {colegiado.especialidad || "-"}
+                            {colegiado.especialidades.map(
+                              (especialidad, index) => (
+                                <div key={index} >
+                                  <span >
+                                    {especialidad?.nombre == undefined
+                                      ? "-"
+                                      : especialidad?.nombre}
+                                  </span>
+                                  <br />
+                                </div>
+                              )
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span
@@ -718,7 +738,7 @@ export default function ListaColegiadosPage() {
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                           <button
-                            className="flex items-center justify-center gap-1 w-full"
+                            className="cursor-pointer flex items-center justify-center gap-1 w-full"
                             onClick={toggleOrdenFecha}
                           >
                             Fecha solicitud
@@ -792,32 +812,38 @@ export default function ListaColegiadosPage() {
                               ) : (
                                 <>
                                   <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${!pendiente.archivos_faltantes.tiene_faltantes
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                                  }`}
-                              >
-                                {!pendiente.archivos_faltantes.tiene_faltantes ? (
-                                  <>
-                                    <CheckCircle size={12} /> Documentos
-                                    Completos
-                                  </>
-                                ) : (
-                                  <>
-                                    <XCircle size={12} /> Documentos Incompletos
-                                  </>
-                                )}
-                              </span>
-                                  {pendiente.pago === null && pendiente.pago_exonerado && (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-1 sm:mt-0 sm:ml-2">
-                                      <XCircle size={12} /> Pagos Exonerado
-                                    </span>
-                                  )}
-                                  {pendiente.pago === null && !pendiente.pago_exonerado && (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
-                                      <XCircle size={12} /> Pagos Pendientes
-                                    </span>
-                                  )}
+                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      !pendiente.archivos_faltantes
+                                        .tiene_faltantes
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-yellow-100 text-yellow-800"
+                                    }`}
+                                  >
+                                    {!pendiente.archivos_faltantes
+                                      .tiene_faltantes ? (
+                                      <>
+                                        <CheckCircle size={12} /> Documentos
+                                        Completos
+                                      </>
+                                    ) : (
+                                      <>
+                                        <XCircle size={12} /> Documentos
+                                        Incompletos
+                                      </>
+                                    )}
+                                  </span>
+                                  {pendiente.pago === null &&
+                                    pendiente.pago_exonerado && (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mt-1 sm:mt-0 sm:ml-2">
+                                        <XCircle size={12} /> Pagos Exonerado
+                                      </span>
+                                    )}
+                                  {pendiente.pago === null &&
+                                    !pendiente.pago_exonerado && (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mt-1 sm:mt-0 sm:ml-2">
+                                        <XCircle size={12} /> Pagos Pendientes
+                                      </span>
+                                    )}
                                 </>
                               )}
                             </div>

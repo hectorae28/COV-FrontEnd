@@ -42,14 +42,15 @@ export default function SessionInfo({ creador, className = "", variant = "defaul
         }
     };
 
-    // Determinar el texto y el color según el tipo de acción
+    // Determinar el texto según el tipo de acción y el rol del usuario
     const getActionText = () => {
         if (creador.tipo === 'aprobado') {
-            // Solo los administradores pueden aprobar
             return "Aprobado por administrador";
         } else {
-            // Puede ser creado por usuario o administrador
-            return creador.esAdmin ? "Creado por administrador" : "Creado por usuario";
+            // Verificar si es admin usando la propiedad esAdmin
+            return creador.esAdmin
+                ? "Creado por administrador"
+                : "Creado por usuario";
         }
     };
 

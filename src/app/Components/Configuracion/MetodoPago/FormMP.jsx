@@ -168,7 +168,7 @@ export default function FormularioMetodoPago({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Tipo de método de pago */}
-      <div className="mb-6">
+      <div className="select-none cursor-defaul mb-6">
         <h3 className="text-lg font-medium text-[#41023B] mb-3">Tipo de método de pago</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {tiposMetodosPago.map((tipo) => (
@@ -314,7 +314,7 @@ export default function FormularioMetodoPago({
                 name="moneda"
                 value={formData.moneda}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
+                className="cursor-pointer w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
               >
                 <option value="USD">Dólar (USD)</option>
                 <option value="VES">Bolívar (VES)</option>
@@ -369,7 +369,7 @@ export default function FormularioMetodoPago({
                     <button
                       type="button"
                       onClick={() => setFormData({...formData, logo_url: null, logo_file: null})}
-                      className="absolute top-0 right-0 bg-red-600 text-white rounded-bl-lg p-0.5"
+                      className="cursor-pointer absolute top-0 right-0 bg-red-600 text-white rounded-bl-lg p-0.5"
                     >
                       <X size={12} />
                     </button>
@@ -387,7 +387,7 @@ export default function FormularioMetodoPago({
                 name="activo"
                 checked={formData.activo}
                 onChange={handleChange}
-                className="h-5 w-5 text-green-600 focus:ring-green-500 border-green-300 rounded"
+                className="cursor-pointer h-5 w-5 text-green-600 focus:ring-green-500 border-green-300 rounded"
               />
               <label htmlFor="activo" className="ml-3 text-sm font-medium text-green-800">
                 Método de pago activo
@@ -564,13 +564,13 @@ export default function FormularioMetodoPago({
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+          className="cursor-pointer px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
         >
           Cancelar
         </button>
         <motion.button
           type="submit"
-          className="px-6 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-lg shadow-sm hover:shadow-md"
+          className="cursor-pointer px-6 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-lg shadow-sm hover:shadow-md"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >

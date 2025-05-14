@@ -4,6 +4,7 @@ import { X, Download, FileText, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function DocumentViewerModal({ documento, onClose, pendiente }) {
+    console.log({documento})
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
@@ -25,7 +26,7 @@ export default function DocumentViewerModal({ documento, onClose, pendiente }) {
         const timer = setTimeout(() => {
             if (isExonerado) {
                 setLoading(false)
-            } else if (!documento.archivoUrl) {
+            } else if (!documento.url) {
                 setError("No se pudo cargar el documento. URL no disponible.")
                 setLoading(false)
             } else {
@@ -102,17 +103,17 @@ export default function DocumentViewerModal({ documento, onClose, pendiente }) {
                                 </div>
                             </div>
                         </div>
-                    ) : documento.archivoUrl ? (
+                    ) : documento.url ? (
                         <div className="h-full flex items-center justify-center min-h-[400px]">
-                            {documento.archivoUrl.endsWith(".pdf") ? (
+                            {documento.url.endsWith(".pdf") ? (
                                 <iframe
-                                    src={documento.archivoUrl}
+                                    src={process.env.NEXT_PUBLIC_BACK_HOST+documento.url}
                                     className="w-full h-full border-0 rounded"
                                     title={documento.nombre}
                                 ></iframe>
                             ) : (
                                 <img
-                                    src={documento.archivoUrl || "/placeholder.svg"}
+                                    src={process.env.NEXT_PUBLIC_BACK_HOST+documento.url || "/placeholder.svg"}
                                     alt={documento.nombre}
                                     className="max-h-full max-w-full object-contain"
                                 />
@@ -138,11 +139,11 @@ export default function DocumentViewerModal({ documento, onClose, pendiente }) {
                                     : "No hay archivo disponible"}
                         </p>
                     </div>
-                    {documento.archivoUrl && !isExonerado && (
+                    {documento.url && !isExonerado && (
                         <div
-                            href={documento.archivoUrl}
+                            href={process.env.NEXT_PUBLIC_BACK_HOST+documento.url}
                             download={documento.archivo || "documento"}
-                            className="px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A00160] transition-colors flex items-center gap-2"
+                            className=" cursor-pointer px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A00160] transition-colors flex items-center gap-2"
                             target="_blank"
                             rel="noopener noreferrer"
                         >

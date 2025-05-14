@@ -1,8 +1,8 @@
 "use client"
-
 import { CheckCircle, ChevronRight, Clock, X } from "lucide-react"
 import { useState } from "react"
 import SeleccionarSolicitudesStep from "./StepsSeleccionarSolic"
+import SessionInfo from "@/Components/SessionInfo"
 
 export default function CrearSolicitudModal({
   onClose,
@@ -12,29 +12,28 @@ export default function CrearSolicitudModal({
   onVerDetalle,
   session
 }) {
-
   // Estado para almacenar la solicitud creada
   const [solicitudCreada, setSolicitudCreada] = useState(null)
 
   // Función para manejar la creación de solicitud
   const handleSolicitudCreada = (nuevaSolicitud) => {
-    // Crear datos del usuario administrador directamente
-    const userInfo = {
-      name: "Administrador",
-      email: "admin@ejemplo.com",
-      role: "admin",
-      isAdmin: true
+    // Usar la información de la sesión actual
+    const userInfo = session?.user || {
+      name: "Usuario del sistema",
+      email: "usuario@sistema.com",
+      role: "user",
+      isAdmin: false
     };
 
     // Agregar la información del creador a la solicitud
     const solicitudConCreador = {
       ...nuevaSolicitud,
       creador: {
-        nombre: userInfo.name || "Usuario",
+        username: userInfo.name || userInfo.email?.split('@')[0] || "Usuario",
         email: userInfo.email,
-        username: userInfo.name,
-        esAdmin: true,
-        fecha: new Date().toISOString()
+        esAdmin: userInfo.role === "admin" || userInfo.isAdmin || false,
+        fecha: new Date().toISOString(),
+        tipo: 'creado' // Indica que es una creación, no una aprobación
       }
     };
 
@@ -65,12 +64,11 @@ export default function CrearSolicitudModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="cursor-pointer text-gray-500 hover:text-gray-700"
           >
             <X size={24} />
           </button>
         </div>
-
         {/* Contenido del modal */}
         {solicitudCreada ? (
           <div className="p-6 md:p-8">
@@ -79,11 +77,9 @@ export default function CrearSolicitudModal({
                 <CheckCircle size={44} className="text-green-600" />
               </div>
             </div>
-
             <h3 className="text-xl font-bold text-center text-[#41023B] mb-4">
               ¡Solicitud registrada correctamente!
             </h3>
-
             <div className="bg-[#f8f9fa] p-5 rounded-xl border border-gray-200 mb-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -120,30 +116,26 @@ export default function CrearSolicitudModal({
                 </div>
                 {solicitudCreada.creador && (
                   <div className="sm:col-span-2">
-                    <p className="text-sm text-gray-500">Creado por</p>
-                    <p className="font-medium text-gray-800 flex items-center">
-                      {solicitudCreada.creador.nombre}
-                      {solicitudCreada.creador.esAdmin && (
-                        <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">Admin</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-500">{new Date(solicitudCreada.creador.fecha).toLocaleString()}</p>
+                    <SessionInfo
+                      creador={solicitudCreada.creador}
+                      variant="compact"
+                      className="justify-center md:justify-start"
+                    />
                   </div>
                 )}
+
               </div>
             </div>
-
             <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
               <button
                 onClick={onClose}
-                className="order-2 sm:order-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+                className="cursor-pointer order-2 sm:order-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center justify-center"
               >
                 Cerrar
               </button>
-
               <button
                 onClick={handleVerDetalle}
-                className="order-1 sm:order-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all duration-300"
+                className="cursor-pointer order-1 sm:order-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all duration-300"
               >
                 <span>Ver detalles</span>
                 <ChevronRight size={16} />
@@ -157,11 +149,11 @@ export default function CrearSolicitudModal({
             mostrarSeleccionColegiado={!esContextoColegiado}
             onFinalizarSolicitud={handleSolicitudCreada}
             onClose={onClose}
-            creadorInfo={{
-              name: "Administrador",
-              email: "admin@ejemplo.com",
-              role: "admin",
-              isAdmin: true
+            creadorInfo={session?.user || {
+              name: "Usuario del sistema",
+              email: "usuario@sistema.com",
+              role: "user",
+              isAdmin: false
             }}
           />
         )}

@@ -124,7 +124,7 @@ export default function ListaSolicitudes() {
 
   // Vista principal de lista
   return (
-    <div className="w-full px-4 md:px-10 py-10 md:py-12">
+    <div className="select-none cursor-default w-full px-4 md:px-10 py-10 md:py-12">
       {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
@@ -171,7 +171,7 @@ export default function ListaSolicitudes() {
               setColegiadoSeleccionado(null);
               setShowModal(true);
             }}
-            className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
+            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
           >
             <PlusCircle size={20} />
             <span>Nueva solicitud</span>
@@ -191,7 +191,7 @@ export default function ListaSolicitudes() {
             <span className="text-xs text-gray-500 block mb-1">Estado</span>
             <div className="flex flex-wrap gap-2">
               <button
-                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "todas"
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "todas"
                   ? "bg-purple-100 text-purple-800"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
@@ -200,7 +200,7 @@ export default function ListaSolicitudes() {
                 Todas
               </button>
               <button
-                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "pendientes"
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "pendientes"
                   ? "bg-yellow-100 text-yellow-800"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
@@ -209,7 +209,7 @@ export default function ListaSolicitudes() {
                 Pendientes
               </button>
               <button
-                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "aprobadas"
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "aprobadas"
                   ? "bg-green-100 text-green-800"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
@@ -219,7 +219,7 @@ export default function ListaSolicitudes() {
               </button>
 
               <button
-                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "rechazadas"
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "rechazadas"
                   ? "bg-red-100 text-red-800"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
@@ -234,7 +234,7 @@ export default function ListaSolicitudes() {
             <span className="text-xs text-gray-500 block mb-1">Costo</span>
             <div className="flex flex-wrap gap-2">
               <button
-                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "todas"
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "todas"
                   ? "bg-purple-100 text-purple-800"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
@@ -243,7 +243,7 @@ export default function ListaSolicitudes() {
                 Todas
               </button>
               <button
-                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "conCosto"
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "conCosto"
                   ? "bg-blue-100 text-blue-800"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
@@ -252,7 +252,7 @@ export default function ListaSolicitudes() {
                 Con costo
               </button>
               <button
-                className={`px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "sinCosto"
+                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "sinCosto"
                   ? "bg-teal-100 text-teal-800"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
@@ -366,13 +366,13 @@ export default function ListaSolicitudes() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
                           {(solicitud.estado === 'Aprobada' && solicitud.costo > 0) && (
-                            <button className="text-blue-600 hover:text-blue-800">
+                            <button className="cursor-pointer text-blue-600 hover:text-blue-800">
                               <Download size={16} />
                             </button>
                           )}
                           <button
                             onClick={() => verDetalleSolicitud(solicitud.id)}
-                            className="text-[#C40180] hover:text-[#590248] flex items-center justify-end gap-1"
+                            className="cursor-pointer text-[#C40180] hover:text-[#590248] flex items-center justify-end gap-1"
                           >
                             {solicitud.estado === 'Pendiente' ? 'Revisar' : 'Ver'}
                             <ChevronRight size={16} />

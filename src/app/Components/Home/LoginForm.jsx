@@ -25,7 +25,7 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
     try{
       const Form = new FormData(formRef.current);
       const result = await signIn("credentials", {
-        username: Form.get("email").split("@")[0],
+        username: Form.get("email"),
         password: Form.get("password"),
         redirect: false,
       });

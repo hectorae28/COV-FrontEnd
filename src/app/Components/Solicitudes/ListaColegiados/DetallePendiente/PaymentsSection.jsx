@@ -100,11 +100,15 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
 
             // Actualizar el documento
             if (updateDocumento) {
-                updateDocumento({
+                // Create the updated document object with all necessary properties
+                const updatedDoc = {
                     ...documentoParaSubir,
                     archivo: selectedFile.name,
                     archivoUrl: uploadedFileUrl,
-                })
+                }
+
+                // This will trigger the pagosPendientes update in the parent component
+                updateDocumento(updatedDoc)
             }
 
             // Cerrar modal después de subir
@@ -126,10 +130,10 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
         return (
             <div
                 className={`border rounded-lg ${exonerado
-                    ? "border-green-200 bg-green-50"
-                    : tieneArchivo
-                        ? "border-gray-200 hover:border-[#C40180]"
-                        : "border-red-200 bg-red-50"
+                        ? "border-green-200 bg-green-50"
+                        : tieneArchivo
+                            ? "border-gray-200 hover:border-[#C40180]"
+                            : "border-red-200 bg-red-50"
                     } hover:shadow-md transition-all duration-200`}
             >
                 <div className="p-4">
@@ -148,9 +152,7 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
                                 <div>
                                     <h3 className="font-medium text-gray-900 flex items-center">
                                         {exonerado ? "Exoneración de Pago" : documento.nombre}
-                                        {documento.requerido && !exonerado && (
-                                            <span className="text-red-500 ml-1">*</span>
-                                        )}
+                                        {documento.requerido && !exonerado && <span className="text-red-500 ml-1">*</span>}
                                     </h3>
                                     <p className="text-xs text-gray-500">
                                         {exonerado ? "Pago exonerado administrativamente" : documento.descripcion}
@@ -266,9 +268,7 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {comprobantesPago && comprobantesPago.length > 0 && !pendiente?.exoneracionPagos?.fecha ? (
-                    comprobantesPago.map((documento) => (
-                        <ComprobanteCard key={documento.id} documento={documento} />
-                    ))
+                    comprobantesPago.map((documento) => <ComprobanteCard key={documento.id} documento={documento} />)
                 ) : !pendiente?.exoneracionPagos?.fecha ? (
                     <div className="col-span-2 bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">
                         <CreditCard size={40} className="text-gray-300 mb-3" />
@@ -347,7 +347,7 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
                             <div className="flex justify-end gap-3 mt-6">
                                 <button
                                     onClick={() => setDocumentoParaSubir(null)}
-                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                                    className="cursor-pointer px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
                                     disabled={isUploading}
                                 >
                                     Cancelar
@@ -355,7 +355,7 @@ export default function PaymentsSection({ documentosRequeridos, handleVerDocumen
                                 <button
                                     onClick={handleUpload}
                                     disabled={!selectedFile || isUploading}
-                                    className={`px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${!selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
+                                    className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${!selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
                                         }`}
                                 >
                                     {isUploading ? (

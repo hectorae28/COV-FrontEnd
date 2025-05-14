@@ -8,7 +8,7 @@ export default function TablaInformacionPersonal({ colegiado }) {
   }
 
   // Para mostrar el nombre completo
-  const nombreCompleto = `${colegiado.persona.nombre} ${colegiado.persona.segundo_nombre || ''} ${colegiado.persona.primer_apellido} ${colegiado.persona.segundo_apellido || ''}`.trim()
+  const nombreCompleto = `${colegiado.recaudos.persona.nombre} ${colegiado.recaudos.persona.segundo_nombre || ''} ${colegiado.recaudos.persona.primer_apellido} ${colegiado.recaudos.persona.segundo_apellido || ''}`.trim()
 
   return (
     <div className="space-y-6">
@@ -18,8 +18,8 @@ export default function TablaInformacionPersonal({ colegiado }) {
           <div className="flex justify-center">
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-2">Estado de solvencia</p>
-              <p className={`font-bold text-xl ${colegiado.solvente ? 'text-green-600' : 'text-red-600'} flex items-center justify-center`}>
-                {colegiado.solvente ? (
+              <p className={`font-bold text-xl ${colegiado.solvencia_status ? 'text-green-600' : 'text-red-600'} flex items-center justify-center`}>
+                {colegiado.solvencia_status ? (
                   <>
                     <CheckCircle size={20} className="mr-2" />
                     Solvente
@@ -50,32 +50,32 @@ export default function TablaInformacionPersonal({ colegiado }) {
             </div>
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Cédula</p>
-              <p className="font-medium text-gray-800">{colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}</p>
+              <p className="font-medium text-gray-800">{colegiado.recaudos.persona.nacionalidad}-{colegiado.recaudos.persona.identificacion}</p>
             </div>
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</p>
-              <p className="font-medium text-gray-800">{formatearFecha(colegiado.persona.fecha_nacimiento)}</p>
+              <p className="font-medium text-gray-800">{formatearFecha(colegiado.recaudos.persona.fecha_nacimiento)}</p>
             </div>
           </div>
           <div className="space-y-4">
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</p>
-              <p className="font-medium text-gray-800">{colegiado.persona.correo}</p>
+              <p className="font-medium text-gray-800">{colegiado.recaudos.persona.correo}</p>
             </div>
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono</p>
-              <p className="font-medium text-gray-800">{colegiado.persona.telefono_movil}</p>
+              <p className="font-medium text-gray-800">{colegiado.recaudos.persona.telefono_movil}</p>
             </div>
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección</p>
-              <p className="font-medium text-gray-800">{colegiado.persona.direccion.referencia}, {colegiado.persona.direccion.estado}</p>
+              <p className="font-medium text-gray-800">{colegiado.recaudos.persona.direccion.referencia}, {colegiado.recaudos.persona.direccion.estado}</p>
             </div>
           </div>
           <div className="space-y-4">
             <div className="bg-gray-50 p-3 rounded-md">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Título entregado en oficina</p>
-              <p className={`font-medium flex items-center ${colegiado.tituloEntregado ? 'text-green-600' : 'text-yellow-600'}`}>
-                {colegiado.tituloEntregado ? (
+              <p className={`font-medium flex items-center ${colegiado.titulo ? 'text-green-600' : 'text-yellow-600'}`}>
+                {colegiado.titulo ? (
                   <>
                     <CheckCircle size={16} className="mr-1" />
                     Sí, entregado
