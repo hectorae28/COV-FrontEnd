@@ -1,23 +1,54 @@
 "use client";
-import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { CreditCard, DollarSign, Check, X, ArrowLeft } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function PagosColg({ props }) {
-  const { handlePaymentComplete, tasaBcv, costoInscripcion, metodoPago } = props;
+  const { costo, allowMultiplePayments, handlePago } =
+    props;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(null);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
-  const [paymentAmount, setPaymentAmount] = useState(costoInscripcion);
+  const [paymentAmount, setPaymentAmount] = useState(costo);
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [montoEnBs, setMontoEnBs] = useState((parseFloat(costoInscripcion) * tasaBcv).toFixed(2));
+  const [tasaBCV, setTasaBCV] = useState(0);
+  const [metodoDePago, setMetodoDePago] = useState([]);
+
+  
+  
+  const getTasa = async () => {
+    try {
+      const tasa = await fetchDataSolicitudes("tasa-bcv");
+      setTasaBCV(tasa.data.rate);
+      setMontoEnBs((parseFloat(costo) * tasaBCV).toFixed(2));
+    } catch (error) {
+      console.log(`Ha ocurrido un error: ${error}`)
+    }
+  }
+
+  const getMetodosDePago = async () => {
+    try {
+      const metodos = await fetchDataSolicitudes("metodo-de-pago");
+      setMetodoDePago(metodos.data);
+    } catch (error) {
+      console.log(`Ha ocurrido un error: ${error}`)
+    }
+  }
+
+  useEffect(() => {
+    getTasa();
+    getMetodosDePago();
+  }, [tasaBCV])
+  const [montoEnBs, setMontoEnBs] = useState((parseFloat(costo) * tasaBCV).toFixed(2));
   const [showMethodSelection, setShowMethodSelection] = useState(false);
 
   // Verificar si hay más de 4 métodos de pago para cambiar el estilo de visualización
-  const showAsList = metodoPago.length > 4;
+  const showAsList = metodoDePago.length > 4;
 
   // PayPal fee calculation
   const calculatePaypalFee = (amount) => {
@@ -36,7 +67,7 @@ export default function PagosColg({ props }) {
       referenceNumber,
       paymentFile,
       totalAmount: paymentMethod === "bdv" ? montoEnBs : paypalAmount,
-      metodo_de_pago: metodoPago.find(
+      metodo_de_pago: metodoDePago.find(
         (m) => m.datos_adicionales.slug === paymentMethod
       ),
     });
@@ -57,12 +88,13 @@ export default function PagosColg({ props }) {
 
   // Manejar la selección de método de pago
   const handleSelectPaymentMethod = (slug) => {
+    debugger
     setPaymentMethod(slug);
     setShowMethodSelection(false); // Cerrar automáticamente después de seleccionar
   };
 
   return (
-    <div className="w-full">
+    <div id="pagos-modal" className="w-full">
       <div className="mb-8 text-center">
         <h2 className="text-2xl font-bold text-[#41023B] mb-2">
           Registro de Pago
@@ -89,7 +121,7 @@ export default function PagosColg({ props }) {
           {/* Exchange rate */}
           <div className="bg-[#D7008A]/10 px-3 py-2 rounded-lg border border-[#D7008A]">
             <p className="text-sm font-bold text-[#41023B]">
-              USD$ 1 = {tasaBcv} bs
+              USD$ 1 = {tasaBCV} bs
             </p>
           </div>
         </div>
@@ -98,7 +130,7 @@ export default function PagosColg({ props }) {
         <div className="text-center mb-8">
           <p className="text-lg text-gray-600">Monto a pagar:</p>
           <p className="text-4xl font-bold text-[#D7008A]">
-            USD$ {costoInscripcion}
+            USD$ {costo}
           </p>
           <p className="text-xl font-medium text-gray-700 mt-2">
             Monto en Bs: {montoEnBs}
@@ -127,17 +159,17 @@ export default function PagosColg({ props }) {
                       <div className="flex items-center">
                         <img
                           src={
-                            metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url
-                              ? metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url.startsWith("/")
-                                ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url}`
-                                : metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url
+                            metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url
+                              ? metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url.startsWith("/")
+                                ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url}`
+                                : metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod)?.logo_url
                               : "/placeholder.svg"
                           }
-                          alt={metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.nombre}
+                          alt={metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod)?.nombre}
                           className="w-10 h-10 mr-3 object-contain"
                         />
                         <div>
-                          <p className="font-medium text-gray-900">{metodoPago.find(m => m.datos_adicionales.slug === paymentMethod)?.nombre}</p>
+                          <p className="font-medium text-gray-900">{metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod)?.nombre}</p>
                           <p className="text-xs text-gray-500">Método de pago seleccionado</p>
                         </div>
                       </div>
@@ -187,10 +219,10 @@ export default function PagosColg({ props }) {
                   {/* Methods grid - Versión más compacta y ordenada */}
                   <div className="p-3">
                     <div className="flex flex-wrap justify-center gap-2">
-                      {metodoPago.map((metodo, index) => {
+                      {metodoDePago.map((metodo, index) => {
                         // Calcular ancho basado en cantidad de métodos
                         let widthClass = "";
-                        const totalMetodos = metodoPago.length;
+                        const totalMetodos = metodoDePago.length;
 
                         if (totalMetodos <= 4) {
                           // Si hay 4 o menos, todos en una fila
@@ -216,7 +248,10 @@ export default function PagosColg({ props }) {
                                 ? "border-[#D7008A] ring-1 ring-[#D7008A] bg-[#D7008A]/5"
                                 : "border-gray-200 hover:border-[#D7008A]"
                               }`}
-                            onClick={() => handleSelectPaymentMethod(metodo.datos_adicionales.slug)}
+                            onClick={() => handleSelectPaymentMethod({
+                              nombre: metodo.datos_adicionales.slug,
+                              metodoId: metodo.id
+                            })}
                             whileHover={{ y: -2, scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
@@ -253,7 +288,7 @@ export default function PagosColg({ props }) {
         ) : (
           // Vista original de botones para 4 métodos o menos
           <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
-            {metodoPago.map((metodo, index) => (
+            {metodoDePago.map((metodo, index) => (
               <button
                 key={index}
                 className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
@@ -263,7 +298,10 @@ export default function PagosColg({ props }) {
                     ? 'ring-2 ring-offset-2 ring-[#D7008A]'
                     : ''
                   }`}
-                onClick={() => setPaymentMethod(metodo.datos_adicionales.slug)}
+                onClick={() => setPaymentMethod({
+                              nombre: metodo.datos_adicionales.slug,
+                              metodoId: metodo.id
+                            })}
               >
                 <img
                   src={
@@ -285,7 +323,7 @@ export default function PagosColg({ props }) {
         {/* Conditional content based on payment method */}
         {paymentMethod && (
           <div className="mt-6 border-t pt-6">
-            {paymentMethod === "bdv" ? (
+            {paymentMethod.nombre === "bdv" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Banco de Venezuela information */}
                 <div className="space-y-4">
@@ -507,13 +545,14 @@ export default function PagosColg({ props }) {
 
                       <div className="mt-4 flex justify-center">
                         <PaypalPaymentComponent
-                          totalPendiente={parseFloat(costoInscripcion)}
-                          exchangeRate={tasaBcv}
+                          totalPendiente={parseFloat(costo)}
                           onPaymentInfoChange={(info) => {
                             setPaymentAmount(info.montoPago);
-                            setMontoEnBs(info.montoEnBs);
                           }}
-                          allowMultiplePayments={false}
+                          allowMultiplePayments={allowMultiplePayments} // Set this to false for single payment mode
+                          metodoDePagoId={paymentMethod.metodoId}
+                          handlePago={(detallesPago) => handlePago(detallesPago)}
+                          tasaBCV={tasaBCV}
                         />
                       </div>
                     </div>

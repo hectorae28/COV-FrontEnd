@@ -1,6 +1,6 @@
 import api from "../api";
 
-export const fetchMe = async (session) => {
+export const fetchMe = async (session = null) => {
     try {
         const data = api.get('usuario/me/', {
             headers: {

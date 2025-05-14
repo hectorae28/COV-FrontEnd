@@ -10,58 +10,113 @@ import Cards from "../Cards";
 import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import useColegiadoUserStore from "@/utils/colegiadoUserStore";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
   const [showSolicitudForm, setShowSolicitudForm] = useState(false);
   const [showSolvencyWarning, setShowSolvencyWarning] = useState(false); // Estado para la advertencia
   const [showTabs, setShowTabs] = useState(true); // Estado para mostrar/ocultar pestañas
-  const [userInfo, setUser_info] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
   const { data: session, status } = useSession();
   const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
+  const [solvencyInfo, setSolvencyInfo] = useState(null);
   // Datos de solvencia
+  const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
+  const setCostos = useColegiadoUserStore((state) => state.setCostos);
+  const setTasaBcv = useColegiadoUserStore((state) => state.setTasaBcv);
+  const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
+
+  const checkSolvencyStatus = () => {
+    if (!colegiadoUser) return;
+    
+    const today = new Date();
+    const [year, month, day] = colegiadoUser.solvente.split("-").map(Number);
+    const solvencyDate = new Date(year, month - 1, day);
+
+    const warningDate = new Date(solvencyDate);
+    warningDate.setDate(warningDate.getDate() - 14);
+
+    setShowSolvencyWarning(today >= warningDate);
+  };
+
+  async function fetchCostos() {
+  try {
+    const response = await fetchDataSolicitudes("costo", "?es_vigente=true");
+    const costosData = response.data;
+    const costo = Number(
+      costosData.filter(
+        (item) => item.tipo_costo_nombre === "Solvencia"
+      )[0].monto_usd
+    );
+    setCostos(costosData);
+    return costo; // Return the Solvencia cost for potential use elsewhere
+  } catch (error) {
+    console.error("Error fetching costos:", error);
+  }
+}
+
+// Separate method for fetching tasa BCV
+async function fetchTasaBcv() {
+  try {
+    const response = await fetchDataSolicitudes("tasa-bcv");
+    const tasaBcvData = Number(response.data.rate);
+    setTasaBcv(tasaBcvData);
+  } catch (error) {
+    console.error("Error fetching tasa BCV:", error);
+  }
+}
+
+// Separate method for fetching user data and solvency info
+async function fetchUserAndSolvency() {
+  try {
+    if (!session) return;
+    
+    const userResponse = await fetchMe(session);
+    const userData = userResponse.data;
+    
+    setUserInfo(userData);
+    setColegiadoUser(userData);
+    setIsSolvent(userData.solvencia_status);
+    
+    // Get costos from the store to calculate solvency amount
+    const costos = useColegiadoUserStore.getState().costos;
+    const costo = costos?.find(
+      (item) => item.tipo_costo_nombre === "Solvencia"
+    )?.monto_usd;
+    
+    setSolvencyInfo({
+      date: userData.solvente,
+      amount: Number(costo),
+      status: userData.solvencia_status,
+    });
+
+    checkSolvencyStatus();
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+  }
+}
 
 
   // Calcular estado de solvencia basado en la fecha actual y la fecha de vencimiento
   useEffect(() => {
-    if (status === "loading") return;
-    const checkSolvencyStatus = () => {
-      const today = new Date();
-      const [day, month, year] = solvencyInfo.date.split("-").map(Number);
-      const solvencyDate = new Date(year, month - 1, day);
-
-      const warningDate = new Date(solvencyDate);
-      warningDate.setDate(warningDate.getDate() - 14);
-
-      if (today > solvencyDate) {
-        setIsSolvent(false);
-      } else if (today >= warningDate) {
-        setShowSolvencyWarning(true);
-      } else {
-        setShowSolvencyWarning(false);
-      }
+    const loadUserData = async () => {
+      // Fetch costos and tasa-bcv in parallel
+      await Promise.all([fetchCostos(), fetchTasaBcv()]);
+      // Fetch user data after costos are available
+      await fetchUserAndSolvency();
     };
-    if (userInfo) {
-      checkSolvencyStatus();
-    }
-
-    const intervalId = setInterval(checkSolvencyStatus, 86400000); // 24 horas
 
     if (session) {
-      fetchMe(session)
-        .then((response) => {
-          setUser_info(response.data);
-        })
-        .catch((error) => console.log(error));
+      loadUserData();
     }
-    return () => clearInterval(intervalId);
-  }, [ session, status]);
+  }, [session, status]);
 
-  const solvencyInfo = {
-    date: userInfo?.solvente,
-    amount: "7.00",
-  };
-  // Manejar clic en card
+  useEffect(() => {
+    fetchUserAndSolvency();
+  }, [useColegiadoUserStore((state) => state.colegiadoUser.solvente)]);
+
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {
       setShowSolicitudForm(true);
@@ -83,7 +138,6 @@ export default function Home() {
 
   return (
     <DashboardLayout
-      solvencyInfo={solvencyInfo.date}
       isSolvent={isSolvent}
       showSolvencyWarning={showSolvencyWarning}
       userInfo={userInfo}
@@ -115,31 +169,37 @@ export default function Home() {
       ) : (
         <>
           {/* Pestañas de navegación cuando se necesitan mostrar */}
+          
           <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => {
-                setActiveTab("solicitudes");
-                setShowSolicitudForm(false);
-              }}
-              className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "solicitudes"
-                  ? "text-[#D7008A] border-b-2 border-[#D7008A]"
-                  : "text-gray-500 hover:text-[#41023B]"
-              }`}
-            >
-              Panel Principal
-            </button>
+            {(!isSolvent || showSolvencyWarning) && 
+              <button
+                onClick={() => {
+                  setActiveTab("solicitudes");
+                  setShowSolicitudForm(false);
+                }}
+                className={`px-4 py-2 font-medium text-sm ${
+                  activeTab === "solicitudes"
+                    ? "text-[#D7008A] border-b-2 border-[#D7008A]"
+                    : "text-gray-500 hover:text-[#41023B]"
+                }`}
+              >
+                Panel Principal
+              </button>
+            }
+            
 
-            <button
-              onClick={() => setActiveTab("solvencia")}
-              className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "solvencia"
-                  ? "text-[#D7008A] border-b-2 border-[#D7008A]"
-                  : "text-gray-500 hover:text-[#41023B]"
-              }`}
-            >
-              Pago de Solvencia
-            </button>
+            {(!isSolvent || showSolvencyWarning) && 
+              <button
+                onClick={() => setActiveTab("solvencia")}
+                className={`px-4 py-2 font-medium text-sm ${
+                  activeTab === "solvencia"
+                    ? "text-[#D7008A] border-b-2 border-[#D7008A]"
+                    : "text-gray-500 hover:text-[#41023B]"
+                }`}
+              >
+                Pago de Solvencia
+              </button>
+            }            
           </div>
 
           {/* Contenido según la pestaña activa */}
@@ -148,11 +208,9 @@ export default function Home() {
               {/* Estado de Solvencia (solo si no está solvente o está por vencer) */}
               {(!isSolvent || showSolvencyWarning) && (
                 <SolvencyStatus
-                  isSolvent={isSolvent}
-                  solvencyDate={solvencyInfo.date}
-                  solvencyAmount={solvencyInfo.amount}
+                  solvencyAmount={colegiadoUser.costo_de_solvencia}
                   onPayClick={handlePayClick}
-                  isExpiringSoon={showSolvencyWarning && isSolvent}
+                  isExpiringSoon={showSolvencyWarning}
                 />
               )}
 
@@ -250,7 +308,7 @@ export default function Home() {
           )}
 
           {/* Página de Pago de Solvencia */}
-          {activeTab === "solvencia" && <SolvenciaPago />}
+          {activeTab === "solvencia" && <SolvenciaPago props={{ setActiveTab }} />}
         </>
       )}
 

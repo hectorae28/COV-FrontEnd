@@ -29,7 +29,6 @@ const ResetPassword = ({params}) => {
       return;
      }
     setIsLoading(true);
-    console.log(values);
     api.get("/usuario/csrf/").then((csrf) => {
         api.post(`/usuario/reset-password/${token}/`, values, {
             headers: {
