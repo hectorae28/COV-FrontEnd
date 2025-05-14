@@ -1,20 +1,21 @@
 "use client"
 
+import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
+import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
+import { colegiados as colegiadosIniciales, solicitudes as solicitudesIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
 import { motion } from "framer-motion"
 import {
   CheckCircle,
-  ChevronRight,
   Clock,
-  Download,
+  FileCheck,
   Filter,
   PlusCircle,
   Search,
-  XCircle,
-  FileCheck,
   Shield,
-  User
+  User,
+  XCircle
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState,useMemo } from "react"
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
 import { solicitudes as solicitudesIniciales, colegiados as colegiadosIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
@@ -31,7 +32,7 @@ export default function ListaSolicitudes() {
   // Estados para la navegación interna
   const [vistaActual, setVistaActual] = useState("lista") // lista, detalleSolicitud
   const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null)
-  const [filtroEstado, setFiltroEstado] = useState("todas") // todas, pendientes, aprobadas, rechazadas, exoneradas
+  const [tabActual, setTabActual] = useState("todas") // todas, pendientes, aprobadas, rechazadas
   const [filtroCosto, setFiltroCosto] = useState("todas") // todas, conCosto, sinCosto
 
   // Cargar datos iniciales
@@ -44,40 +45,50 @@ export default function ListaSolicitudes() {
     }, 1000);
   }, []);
 
-  // Filtrar solicitudes basado en búsqueda y filtros
-  const solicitudesFiltradas = solicitudes
-    .filter(solicitud => {
-      const matchesSearch =
-        solicitud.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        solicitud.colegiadoNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        solicitud.referencia.toLowerCase().includes(searchTerm.toLowerCase())
+  // Conteo de solicitudes por estado para los tabs
+  const conteoSolicitudes = useMemo(() => ({
+    pendientes: solicitudes.filter(s => s.estado === "Pendiente").length,
+    aprobadas: solicitudes.filter(s => s.estado === "Aprobada").length,
+    rechazadas: solicitudes.filter(s => s.estado === "Rechazada").length,
+    exoneradas: solicitudes.filter(s => s.estado === "Exonerada").length
+  }), [solicitudes]);
 
-      const matchesEstado =
-        filtroEstado === "todas" ||
-        (filtroEstado === "pendientes" && solicitud.estado === "Pendiente") ||
-        (filtroEstado === "aprobadas" && solicitud.estado === "Aprobada") ||
-        (filtroEstado === "rechazadas" && solicitud.estado === "Rechazada") ||
-        (filtroEstado === "exoneradas" && solicitud.estado === "Exonerada")
+  // Filtrar solicitudes basado en búsqueda, tab actual y filtro de costo
+  const solicitudesFiltradas = useMemo(() => {
+    return solicitudes
+      .filter(solicitud => {
+        const matchesSearch =
+          searchTerm === "" ||
+          solicitud.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          solicitud.colegiadoNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          solicitud.referencia.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const matchesCosto =
-        filtroCosto === "todas" ||
-        (filtroCosto === "conCosto" && solicitud.costo > 0) ||
-        (filtroCosto === "sinCosto" && solicitud.costo === 0)
+        const matchesTab =
+          tabActual === "todas" ||
+          (tabActual === "pendientes" && solicitud.estado === "Pendiente") ||
+          (tabActual === "aprobadas" && solicitud.estado === "Aprobada") ||
+          (tabActual === "rechazadas" && solicitud.estado === "Rechazada") ||
+          (tabActual === "exoneradas" && solicitud.estado === "Exonerada")
 
-      return matchesSearch && matchesEstado && matchesCosto
-    })
-    // Ordenar por fecha (de más reciente a más antigua)
-    .sort((a, b) => {
-      // Convertir fechas de formato DD/MM/YYYY a objetos Date
-      const [diaA, mesA, anioA] = a.fecha.split('/');
-      const [diaB, mesB, anioB] = b.fecha.split('/');
+        const matchesCosto =
+          filtroCosto === "todas" ||
+          (filtroCosto === "conCosto" && solicitud.costo > 0) ||
+          (filtroCosto === "sinCosto" && solicitud.costo === 0)
 
-      const fechaA = new Date(anioA, mesA - 1, diaA);
-      const fechaB = new Date(anioB, mesB - 1, diaB);
+        return matchesSearch && matchesTab && matchesCosto
+      })
+      .sort((a, b) => {
+        // Convertir fechas de formato DD/MM/YYYY a objetos Date
+        const [diaA, mesA, anioA] = a.fecha.split('/');
+        const [diaB, mesB, anioB] = b.fecha.split('/');
 
-      // Ordenar descendente (más reciente primero)
-      return fechaB - fechaA;
-    });
+        const fechaA = new Date(anioA, mesA - 1, diaA);
+        const fechaB = new Date(anioB, mesB - 1, diaB);
+
+        // Ordenar descendente (más reciente primero)
+        return fechaB - fechaA;
+      });
+  }, [solicitudes, searchTerm, tabActual, filtroCosto]);
 
   // Función para ver detalle de una solicitud
   const verDetalleSolicitud = (id) => {
@@ -100,7 +111,10 @@ export default function ListaSolicitudes() {
   }
 
   // Función para abrir el modal con un colegiado preseleccionado
-  const abrirModalParaColegiado = (colegiadoId) => {
+  const abrirModalParaColegiado = (event, colegiadoId) => {
+    // Detener la propagación para evitar que el clic llegue a la fila
+    event.stopPropagation();
+
     const colegiado = colegiados.find(c => c.id === colegiadoId)
     setColegiadoSeleccionado(colegiado)
     setShowModal(true)
@@ -182,89 +196,100 @@ export default function ListaSolicitudes() {
         </div>
       </div>
 
-      {/* Filtros adicionales */}
+      {/* Tabs para filtrar por estado */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex overflow-x-auto">
+            <button
+              onClick={() => setTabActual("todas")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "todas"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+            >
+              Todas las solicitudes
+            </button>
+            <button
+              onClick={() => setTabActual("pendientes")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "pendientes"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+            >
+              Pendientes
+              {conteoSolicitudes.pendientes > 0 && (
+                <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolicitudes.pendientes}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("aprobadas")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "aprobadas"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+            >
+              Aprobadas
+              {conteoSolicitudes.aprobadas > 0 && (
+                <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolicitudes.aprobadas}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("rechazadas")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "rechazadas"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+            >
+              Rechazadas
+              {conteoSolicitudes.rechazadas > 0 && (
+                <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolicitudes.rechazadas}
+                </span>
+              )}
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Filtros de costo - mostrar en todos los tabs */}
       <div className="mb-6">
         <div className="flex items-center mb-2">
           <Filter size={16} className="mr-2 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Filtros</span>
+          <span className="text-sm font-medium text-gray-700">Filtros de costo</span>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <div>
-            <span className="text-xs text-gray-500 block mb-1">Estado</span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "todas"
-                  ? "bg-purple-100 text-purple-800"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                onClick={() => setFiltroEstado("todas")}
-              >
-                Todas
-              </button>
-              <button
-                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "pendientes"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                onClick={() => setFiltroEstado("pendientes")}
-              >
-                Pendientes
-              </button>
-              <button
-                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "aprobadas"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                onClick={() => setFiltroEstado("aprobadas")}
-              >
-                Aprobadas
-              </button>
-
-              <button
-                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroEstado === "rechazadas"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                onClick={() => setFiltroEstado("rechazadas")}
-              >
-                Rechazadas
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <span className="text-xs text-gray-500 block mb-1">Costo</span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "todas"
-                  ? "bg-purple-100 text-purple-800"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                onClick={() => setFiltroCosto("todas")}
-              >
-                Todas
-              </button>
-              <button
-                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "conCosto"
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                onClick={() => setFiltroCosto("conCosto")}
-              >
-                Con costo
-              </button>
-              <button
-                className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "sinCosto"
-                  ? "bg-teal-100 text-teal-800"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                onClick={() => setFiltroCosto("sinCosto")}
-              >
-                Exonerada
-              </button>
-            </div>
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "todas"
+                ? "bg-purple-100 text-purple-800"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            onClick={() => setFiltroCosto("todas")}
+          >
+            Todas
+          </button>
+          <button
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "conCosto"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            onClick={() => setFiltroCosto("conCosto")}
+          >
+            Con costo
+          </button>
+          <button
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "sinCosto"
+                ? "bg-teal-100 text-teal-800"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            onClick={() => setFiltroCosto("sinCosto")}
+          >
+            Exonerada
+          </button>
         </div>
       </div>
 
@@ -277,8 +302,30 @@ export default function ListaSolicitudes() {
         <>
           {/* Lista de solicitudes */}
           {solicitudesFiltradas.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">
-              No se encontraron solicitudes con los criterios de búsqueda
+            <div className="bg-white rounded-lg shadow-md p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                {tabActual === "pendientes" && <Clock className="h-8 w-8 text-yellow-500" />}
+                {tabActual === "aprobadas" && <CheckCircle className="h-8 w-8 text-green-500" />}
+                {tabActual === "rechazadas" && <XCircle className="h-8 w-8 text-red-500" />}
+                {tabActual === "todas" && <Search className="h-8 w-8 text-gray-400" />}
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                {tabActual === "pendientes" && "No hay solicitudes pendientes"}
+                {tabActual === "aprobadas" && "No hay solicitudes aprobadas"}
+                {tabActual === "rechazadas" && "No hay solicitudes rechazadas"}
+                {tabActual === "todas" && "No se encontraron solicitudes"}
+                {filtroCosto !== "todas" && (
+                  <span>
+                    {" "}
+                    {filtroCosto === "conCosto" ? "con costo" : "exoneradas"}
+                  </span>
+                )}
+              </h3>
+              <p className="text-gray-500 mb-6">
+                {searchTerm
+                  ? "Intenta cambiar los criterios de búsqueda"
+                  : "Puede crear una nueva solicitud usando el botón superior"}
+              </p>
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -300,14 +347,15 @@ export default function ListaSolicitudes() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Estado
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Acciones
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {solicitudesFiltradas.map((solicitud) => (
-                    <tr key={solicitud.id} className="hover:bg-gray-50">
+                    <tr
+                      key={solicitud.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => verDetalleSolicitud(solicitud.id)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-medium text-gray-900">{solicitud.tipo}</div>
                         <div className="text-xs text-gray-500 md:hidden">
@@ -316,7 +364,7 @@ export default function ListaSolicitudes() {
                         <div className="text-xs text-gray-500 mt-1">
                           {solicitud.costo > 0 ? `${solicitud.costo.toFixed(2)}` : 'Sin costo'}
                         </div>
-                        {/* Mostrar información del creador (NUEVO) */}
+                        {/* Mostrar información del creador */}
                         {solicitud.creador && (
                           <div className="flex items-center mt-1 text-xs text-gray-500">
                             {solicitud.creador.esAdmin ? (
@@ -338,8 +386,8 @@ export default function ListaSolicitudes() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{solicitud.colegiadoNombre}</div>
                         <button
-                          className="text-xs text-[#C40180] hover:underline mt-1"
-                          onClick={() => abrirModalParaColegiado(solicitud.colegiadoId)}
+                          className="cursor-grab text-xs text-[#C40180] hover:underline mt-1"
+                          onClick={(e) => abrirModalParaColegiado(e, solicitud.colegiadoId)}
                         >
                           + Nueva solicitud
                         </button>
@@ -352,12 +400,12 @@ export default function ListaSolicitudes() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${solicitud.estado === 'Pendiente'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : solicitud.estado === 'Aprobada'
-                            ? 'bg-green-100 text-green-800'
-                            : solicitud.estado === 'Exonerada'
-                              ? 'bg-teal-100 text-teal-800'
-                              : 'bg-red-100 text-red-800'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : solicitud.estado === 'Aprobada'
+                              ? 'bg-green-100 text-green-800'
+                              : solicitud.estado === 'Exonerada'
+                                ? 'bg-teal-100 text-teal-800'
+                                : 'bg-red-100 text-red-800'
                           }`}>
                           {solicitud.estado === 'Pendiente' && <Clock size={12} />}
                           {solicitud.estado === 'Aprobada' && <CheckCircle size={12} />}
@@ -365,22 +413,6 @@ export default function ListaSolicitudes() {
                           {solicitud.estado === 'Rechazada' && <XCircle size={12} />}
                           {solicitud.estado}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
-                          {(solicitud.estado === 'Aprobada' && solicitud.costo > 0) && (
-                            <button className="cursor-pointer text-blue-600 hover:text-blue-800">
-                              <Download size={16} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => verDetalleSolicitud(solicitud.id)}
-                            className="cursor-pointer text-[#C40180] hover:text-[#590248] flex items-center justify-end gap-1"
-                          >
-                            {solicitud.estado === 'Pendiente' ? 'Revisar' : 'Ver'}
-                            <ChevronRight size={16} />
-                          </button>
-                        </div>
                       </td>
                     </tr>
                   ))}
