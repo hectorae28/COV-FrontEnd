@@ -6,15 +6,98 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
   const [isFormValid, setIsFormValid] = useState(false);
   const [isAdult, setIsAdult] = useState(true);
   const [identityCardError, setIdentityCardError] = useState("");
+  const [days, setDays] = useState([]);
+
+  // Constantes para los meses en español
+  const months = [
+    { value: "01", label: "Enero" },
+    { value: "02", label: "Febrero" },
+    { value: "03", label: "Marzo" },
+    { value: "04", label: "Abril" },
+    { value: "05", label: "Mayo" },
+    { value: "06", label: "Junio" },
+    { value: "07", label: "Julio" },
+    { value: "08", label: "Agosto" },
+    { value: "09", label: "Septiembre" },
+    { value: "10", label: "Octubre" },
+    { value: "11", label: "Noviembre" },
+    { value: "12", label: "Diciembre" }
+  ];
+
+  // Generación de años (desde 100 años atrás hasta el año actual menos 18)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => {
+    const year = currentYear - 18 - i;
+    return { value: year.toString(), label: year.toString() };
+  });
+
+  // Estado para almacenar la fecha seleccionada por partes
+  const [birthDateParts, setBirthDateParts] = useState({
+    year: "",
+    month: "",
+    day: ""
+  });
+
+  // Función para capitalizar texto (primera letra después de espacio)
+  const capitalizeText = (text) => {
+    if (!text) return "";
+    return text
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  // Función para validar caracteres en nombres y apellidos
+  const validateNameChars = (value) => {
+  // Usamos una expresión regular más permisiva que acepte letras, apóstrofes y espacios
+  const regex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ'\s]+$/;
+  return regex.test(value);
+};
+
+  // Actualizar días según el mes y año seleccionados
+  useEffect(() => {
+    if (birthDateParts.month && birthDateParts.year) {
+      const daysInMonth = new Date(
+        parseInt(birthDateParts.year), 
+        parseInt(birthDateParts.month), 
+        0
+      ).getDate();
+      
+      const daysArray = Array.from({ length: daysInMonth }, (_, i) => {
+        const day = i + 1;
+        return {
+          value: day < 10 ? `0${day}` : day.toString(),
+          label: day.toString()
+        };
+      });
+      
+      setDays(daysArray);
+      
+      // Si el día seleccionado es mayor que los días disponibles en el mes, resetear el día
+      if (birthDateParts.day && parseInt(birthDateParts.day) > daysInMonth) {
+        setBirthDateParts(prev => ({ ...prev, day: "" }));
+      }
+    }
+  }, [birthDateParts.month, birthDateParts.year]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    onInputChange({ [name]: value });
+    let processedValue = value;
 
-    // Special handling for birth date to calculate age
-    if (name === "birthDate") {
-      calculateAge(value);
-    }
+    // Aplicar capitalización y validación según el campo
+    if (["firstName", "secondName", "firstLastName", "secondLastName"].includes(name)) {
+  // Permitimos escribir espacios, pero eliminamos espacios dobles al procesar
+  // No bloqueamos la entrada si hay espacios dobles
+  processedValue = value.replace(/\s{2,}/g, ' ');
+  processedValue = capitalizeText(processedValue);
+  
+  // Solo retornamos si hay caracteres no permitidos (que no sean espacios)
+  if (processedValue && !validateNameChars(processedValue)) {
+    return;
+  }
+}
+
+    onInputChange({ [name]: processedValue });
 
     // Si cambia el tipo de documento, reiniciar el valor de identityCard
     if (name === "documentType") {
@@ -31,6 +114,26 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
       } else {
         setIdentityCardError("");
+      }
+    }
+
+    // Manejar los cambios en las partes de la fecha de nacimiento
+    if (["birthDateYear", "birthDateMonth", "birthDateDay"].includes(name)) {
+      const newBirthDateParts = {
+        ...birthDateParts,
+        [name.replace("birthDate", "").toLowerCase()]: value
+      };
+      
+      setBirthDateParts(newBirthDateParts);
+      
+      // Si tenemos las tres partes, construir la fecha completa
+      if (newBirthDateParts.year && newBirthDateParts.month && newBirthDateParts.day) {
+        const fullDate = `${newBirthDateParts.year}-${newBirthDateParts.month}-${newBirthDateParts.day}`;
+        calculateAge(fullDate);
+      } else {
+        setAge("");
+        setIsAdult(true);
+        onInputChange({ birthDate: "", age: "" });
       }
     }
   };
@@ -60,6 +163,14 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     });
     setAge(calculatedAge.toString());
   };
+
+  // Inicializar las partes de la fecha a partir de formData.birthDate cuando se carga el componente
+  useEffect(() => {
+    if (formData.birthDate) {
+      const [year, month, day] = formData.birthDate.split('-');
+      setBirthDateParts({ year, month, day });
+    }
+  }, []);
 
   // Validate form when formData changes
   useEffect(() => {
@@ -158,7 +269,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         {/* Identity Card / Passport */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            {isPasaporte ? "Número de Pasaporte" : "Número de Identificación"}
+            {isPasaporte ? "Pasaporte" : "Identificación"}
             <span className="text-red-500 ml-1">*</span>
           </label>
           {isProfileEdit ? (
@@ -181,7 +292,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                placeholder="Ingrese su número de pasaporte"
+                placeholder="Ingrese Pasaporte"
                 style={{ height: "48px" }}
               />
             ) : (
@@ -232,7 +343,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         </div>
       </div>
 
-      {/* Rest of the component remains the same */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* First Name */}
         <div>
@@ -331,24 +441,102 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           />
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Birth Date - Siempre editable */}
+      
+      {/* Nueva fila con tres columnas para fecha de nacimiento, género y estado civil */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Fecha de Nacimiento (con selectores separados) */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Fecha de Nacimiento
-            {formData.age && formData.age > 0 && ` (Mayor de Edad)`}
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="relative">
-            <input
-              type="date"
-              name="birthDate"
-              value={formData.birthDate}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${(!isAdult && formData.birthDate) || isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
-              max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-            />
+          <div className="grid grid-cols-3 gap-2">
+            {/* Selector de año */}
+            <div className="relative">
+              <select
+                name="birthDateYear"
+                value={birthDateParts.year}
+                onChange={handleChange}
+                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              >
+                <option value="" disabled>
+                  Año
+                </option>
+                {years.map(year => (
+                  <option key={`year-${year.value}`} value={year.value}>
+                    {year.label}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                <svg
+                  className="fill-current h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* Selector de mes */}
+            <div className="relative">
+              <select
+                name="birthDateMonth"
+                value={birthDateParts.month}
+                onChange={handleChange}
+                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              >
+                <option value="" disabled>
+                  Mes
+                </option>
+                {months.map(month => (
+                  <option key={`month-${month.value}`} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                <svg
+                  className="fill-current h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* Selector de día */}
+            <div className="relative">
+              <select
+                name="birthDateDay"
+                value={birthDateParts.day}
+                onChange={handleChange}
+                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              >
+                <option value="" disabled>
+                  Día
+                </option>
+                {days.map(day => (
+                  <option key={`day-${day.value}`} value={day.value}>
+                    {day.label}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                <svg
+                  className="fill-current h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
+            </div>
           </div>
           {isFieldEmpty("birthDate") && (
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
@@ -357,7 +545,8 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Debe ser mayor de edad (18 años o más)</p>
           )}
         </div>
-        {/* Gender - Siempre editable */}
+        
+        {/* Género */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Género
@@ -392,42 +581,43 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-      </div>
-      {/* Marital Status as dropdown - Siempre editable */}
-      <div>
-        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-          Estado Civil
-          <span className="text-red-500 ml-1">*</span>
-        </label>
-        <div className="relative">
-          <select
-            name="maritalStatus"
-            value={formData.maritalStatus}
-            onChange={handleChange}
-            className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("maritalStatus") ? "border-red-500 bg-red-50" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-          >
-            <option value="" disabled>
-              Seleccionar Estado Civil
-            </option>
-            <option value="soltero">Soltero</option>
-            <option value="casado">Casado</option>
-            <option value="divorciado">Divorciado</option>
-            <option value="viudo">Viudo</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <svg
-              className="fill-current h-4 w-4"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
+        
+        {/* Estado Civil */}
+        <div>
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Estado Civil
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="relative">
+            <select
+              name="maritalStatus"
+              value={formData.maritalStatus}
+              onChange={handleChange}
+              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("maritalStatus") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
-              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-            </svg>
+              <option value="" disabled>
+                Seleccionar Estado Civil
+              </option>
+              <option value="soltero">Soltero</option>
+              <option value="casado">Casado</option>
+              <option value="divorciado">Divorciado</option>
+              <option value="viudo">Viudo</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg
+                className="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
           </div>
+          {isFieldEmpty("maritalStatus") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
-        {isFieldEmpty("maritalStatus") && (
-          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-        )}
       </div>
     </motion.div>
   );

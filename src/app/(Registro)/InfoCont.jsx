@@ -1,55 +1,82 @@
-import React, { useState, useEffect } from "react";
+import CountryFlag from "@/Shared/CountryFlag";
+import PhoneEstData from "@/Shared/EstadoData";
+import phoneCodes from "@/Shared/TelefonoData";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin } from "lucide-react";
-import getUnicodeFlagIcon from 'country-flag-icons/unicode'
-import phoneCodes from "@/app/Models/phoneCodes";
+import { ChevronDown, Mail, MapPin, Phone, Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-// Datos de estados y ciudades de Venezuela
-const venezuelaData = {
-  "amazonas": ["Puerto Ayacucho", "La Esmeralda", "San Fernando de Atabapo", "Maroa", "San Juan de Manapiare", "San Carlos de Río Negro", "Isla Ratón"],
-  "anzoátegui": ["Barcelona", "Puerto La Cruz", "El Tigre", "Anaco", "Puerto Píritu", "Lechería", "Cantaura", "Clarines", "Onoto", "Pariaguán", "San José de Guanipa", "Aragua de Barcelona", "El Chaparro", "Valle de Guanape", "Soledad", "San Mateo", "Guanta", "Boca de Uchire", "Santa Ana", "Mapire"],
-  "apure": ["San Fernando de Apure", "Guasdualito", "Achaguas", "El Amparo", "Elorza", "Mantecal", "Bruzual", "San Juan de Payara", "Biruaca", "El Nula"],
-  "aragua": ["Maracay", "Turmero", "La Victoria", "El Limón", "Cagua", "Villa de Cura", "Palo Negro", "Santa Cruz de Aragua", "Las Tejerías", "San Mateo", "San Casimiro", "Camatagua", "El Consejo", "Ocumare de la Costa", "Colonia Tovar", "Barbacoas", "San Sebastián", "Magdaleno"],
-  "barinas": ["Barinas", "Barinitas", "Socopó", "Ciudad Bolivia", "Santa Bárbara", "Sabaneta", "Barrancas", "Libertad", "Obispos", "Pedraza", "Ciudad de Nutrias", "El Cantón", "Arismendi"],
-  "bolívar": ["Ciudad Bolívar", "Ciudad Guayana", "Upata", "Guasipati", "El Callao", "Tumeremo", "Caicara del Orinoco", "El Dorado", "El Palmar", "El Manteco", "Ciudad Piar", "San Félix", "Puerto Ordaz", "Santa Elena de Uairén", "Maripa", "El Pao"],
-  "carabobo": ["Valencia", "Puerto Cabello", "Guacara", "Los Guayos", "Morón", "San Diego", "Naguanagua", "Tocuyito", "Mariara", "Güigüe", "Tacarigua", "Bejuma", "Miranda", "Montalbán", "Urama", "San Joaquín"],
-  "cojedes": ["San Carlos", "Tinaquillo", "El Baúl", "Libertad", "Las Vegas", "El Pao", "Tinaco", "Macapo", "La Sierra", "La Aguadita", "Apartaderos"],
-  "delta amacuro": ["Tucupita", "Pedernales", "Curiapo", "Sierra Imataca", "Piacoa", "Casacoima", "San José de Amacuro"],
-  "falcón": ["Coro", "Punto Fijo", "Santa Ana de Coro", "Dabajuro", "Tucacas", "Chichiriviche", "Morón", "La Vela de Coro", "Pueblo Nuevo", "Puerto Cumarebo", "Píritu", "Tocópero", "Mirimire", "Jacura", "Santa Cruz de Bucaral", "Churuguara", "Cabure", "San Juan de los Cayos"],
-  "guárico": ["San Juan de los Morros", "Valle de la Pascua", "Calabozo", "Altagracia de Orituco", "Zaraza", "Camaguán", "Las Mercedes", "El Socorro", "Tucupido", "Chaguaramas", "Ortiz", "Guardatinajas", "San José de Guaribe", "Santa María de Ipire"],
-  "lara": ["Barquisimeto", "Cabudare", "Carora", "Quíbor", "El Tocuyo", "Duaca", "Sarare", "Siquisique", "Sanare", "Río Claro", "Humocaro Alto", "Humocaro Bajo", "Cubiro", "Curarigua", "Guarico"],
-  "mérida": ["Mérida", "Ejido", "El Vigía", "Tovar", "Mucuchíes", "Bailadores", "Santa Cruz de Mora", "Timotes", "Lagunillas", "Tabay", "Aricagua", "Santo Domingo", "Pueblo Llano", "Mucurubá", "Torondoy", "Zea", "Chiguará", "La Azulita"],
-  "miranda": ["Los Teques", "Guatire", "Guarenas", "Ocumare del Tuy", "Charallave", "Higuerote", "Santa Teresa del Tuy", "Cúa", "Caucagua", "San José de los Altos", "Carrizal", "San Antonio de los Altos", "Baruta", "El Hatillo", "Petare", "Río Chico", "Santa Lucía", "Cúpira", "San Francisco de Yare"],
-  "monagas": ["Maturín", "Caripito", "Punta de Mata", "Temblador", "Aragua de Maturín", "Quiriquire", "Aguasay", "Barrancas del Orinoco", "Caripe", "San Antonio de Maturín", "Caicara de Maturín", "Santa Bárbara", "Jusepin", "Tropical"],
-  "nueva esparta": ["La Asunción", "Porlamar", "Pampatar", "Juan Griego", "Punta de Piedras", "San Juan Bautista", "Santa Ana", "El Valle del Espíritu Santo", "Villa Rosa", "La Plaza de Paraguachí", "Las Guevaras", "Las Hernández", "Pedro González"],
-  "portuguesa": ["Guanare", "Acarigua", "Araure", "Biscucuy", "Guanarito", "Ospino", "Papelón", "Píritu", "Villa Bruzual", "Agua Blanca", "Turén", "Santa Rosalía", "Chabasquén", "San Rafael de Onoto", "Boconoíto"],
-  "sucre": ["Cumaná", "Carúpano", "Güiria", "Río Caribe", "Araya", "Tunapuy", "Irapa", "Casanay", "San Antonio del Golfo", "El Pilar", "Yaguaraparo", "Cariaco", "Marigüitar", "San José de Aerocuar"],
-  "táchira": ["San Cristóbal", "Táriba", "La Grita", "San Antonio del Táchira", "Rubio", "Capacho", "Colón", "Pregonero", "Umuquena", "Michelena", "Lobatera", "Ureña", "Delicias", "San Juan de Colón", "Santa Ana del Táchira", "San Simón", "Queniquea", "San Josecito", "Palmira", "Abejales"],
-  "trujillo": ["Trujillo", "Valera", "Boconó", "Betijoque", "Escuque", "Sabana de Mendoza", "Motatán", "Pampanito", "Pampán", "Carache", "Monay", "La Puerta", "Santa Ana de Trujillo", "La Quebrada", "Jajó", "Santiago", "Carvajal"],
-  "vargas": ["La Guaira", "Catia La Mar", "Maiquetía", "Naiguatá", "Caraballeda", "Macuto", "Carayaca", "El Junko", "Caruao", "La Sabana"],
-  "yaracuy": ["San Felipe", "Yaritagua", "Chivacoa", "Nirgua", "Aroa", "Cocorote", "Urachiche", "Guama", "Sabana de Parra", "Boraure", "Yumare", "Farriar", "Marín", "San Pablo", "Guararito"],
-  "zulia": ["Maracaibo", "Cabimas", "Ciudad Ojeda", "San Carlos del Zulia", "Santa Rita", "Machiques", "La Villa del Rosario", "San Rafael del Moján", "La Concepción", "Casigua El Cubo", "Mene Grande", "Lagunillas", "El Vigía", "Caja Seca", "Bobures", "Bachaquero", "El Chivo", "El Guayabo", "Encontrados", "Sinamaica"],
-  "distrito capital": ["Caracas", "El Junquito", "Antimano", "La Pastora", "El Valle", "Coche", "Caricuao", "El Paraíso", "San Juan", "Catia", "Petare", "Chacao", "El Hatillo", "Baruta"]
+
+// Función para capitalizar la primera letra de cada palabra
+const capitalizeWords = (text) => {
+  if (!text) return '';
+  return text
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 };
 
 export default function InfoContacto({ formData, onInputChange, validationErrors, isProfileEdit }) {
   const [cities, setCities] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
-  console.log(phoneCodes.length)
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+  
+  // Ordenamos los códigos telefónicos alfabéticamente por nombre de país
+  const sortedPhoneCodes = useMemo(() => {
+    return [...phoneCodes].sort((a, b) => a.pais.localeCompare(b.pais));
+  }, []);
+  
+  // Filtramos los códigos telefónicos según el término de búsqueda
+  // Permitimos búsqueda por nombre de país o por código telefónico
+  const filteredPhoneCodes = useMemo(() => {
+    if (!searchTerm.trim()) return sortedPhoneCodes;
+    const searchLower = searchTerm.toLowerCase();
+    return sortedPhoneCodes.filter(code => 
+      code.pais.toLowerCase().includes(searchLower) || 
+      code.codigo.includes(searchTerm)
+    );
+  }, [sortedPhoneCodes, searchTerm]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    onInputChange({ [name]: value });
-    // Si cambia el estado, actualizar las ciudades disponibles y resetear la ciudad seleccionada
-    if (name === "state") {
-      onInputChange({ city: "" });
+    
+    if (name === "address") {
+      // Capitalizamos la primera letra de cada palabra en la dirección
+      onInputChange({ [name]: capitalizeWords(value) });
+    } else if (name === "state") {
+      onInputChange({ [name]: value, city: "" });
+    } else {
+      onInputChange({ [name]: value });
     }
   };
+
+  // Manejador para seleccionar un código de país
+  const handleSelectCountry = (code) => {
+    onInputChange({ countryCode: code.codigo });
+    setIsCountryDropdownOpen(false);
+    setSearchTerm('');
+  };
+
+  // Cerrar el dropdown cuando se hace clic fuera de él
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsCountryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Actualizar las ciudades cuando cambia el estado
   useEffect(() => {
     if (formData.state) {
       const normalizedState = formData.state.toLowerCase();
-      setCities(venezuelaData[normalizedState] || []);
+      setCities(PhoneEstData[normalizedState] || []);
     } else {
       setCities([]);
     }
@@ -80,7 +107,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
     setIsFormValid(isValid);
   }, [formData]);
 
-  const venezuelanStates = Object.keys(venezuelaData).map(state =>
+  const venezuelanStates = Object.keys(PhoneEstData).map(state =>
     state.charAt(0).toUpperCase() + state.slice(1)
   );
 
@@ -145,29 +172,70 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="flex items-center relative">
-            {/* Select for country code with flags */}
-            <div className="relative">
-              <select
-                name="countryCode"
-                value={formData.countryCode}
-                onChange={handleChange}
-                className="h-full px-4 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700 appearance-none"
-                style={{ height: "48px" }}
+            {/* Selector de código de país mejorado con búsqueda */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                className="h-12 px-3 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700 flex items-center"
               >
-                {phoneCodes.map((code, index) => (
-                  <option key={index} value={code.codigo}>
-                    {getUnicodeFlagIcon(code.codigo_pais)} {code.codigo}
-                  </option>
-                ))}
-              </select>
-              {/* Flecha personalizada */}
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path>
-                </svg>
-              </div>
+                <div className="mr-2 flex items-center justify-center">
+                  <CountryFlag 
+                    countryCode={
+                      (sortedPhoneCodes.find(c => c.codigo === formData.countryCode) || {}).codigo_pais || ''
+                    } 
+                  />
+                </div>
+                <span className="mx-1">{formData.countryCode || '+58'}</span>
+                <ChevronDown size={16} className="ml-1" />
+              </button>
+              
+              {isCountryDropdownOpen && (
+                <div className="absolute left-0 z-10 mt-1 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 max-h-80 overflow-y-auto">
+                  <div className="p-2 border-b">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Buscar por país o código..."
+                        className="w-full pl-8 pr-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#D7008A]"
+                      />
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="py-1">
+                    {filteredPhoneCodes.map((code, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleSelectCountry(code)}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      >
+                        <div className="mr-2 flex items-center justify-center w-6">
+                          <CountryFlag countryCode={code.codigo_pais} />
+                        </div>
+                        <span className="mr-2 w-12 inline-block">{code.codigo}</span>
+                        <span className="truncate">{code.pais}</span>
+                      </button>
+                    ))}
+                    {filteredPhoneCodes.length === 0 && (
+                      <div className="px-4 py-2 text-sm text-gray-500">No se encontraron resultados</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            {/* Input for phone number */}
+            
+            {/* Input para número de teléfono */}
             <input
               type="tel"
               name="phoneNumber"
@@ -176,9 +244,12 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
                 const value = e.target.value.replace(/\D/g, "");
                 handleChange({ target: { name: "phoneNumber", value } });
               }}
-              maxLength={phoneCodes.find(c => c.codigo === formData.countryCode)?.longitud || 10}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("phoneNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+              maxLength={
+                sortedPhoneCodes.find(c => c.codigo === formData.countryCode)?.longitud || 10
+              }
+              className={`w-full px-4 py-3 border ${
+                isFieldEmpty("phoneNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
               placeholder="Ingrese su número de teléfono"
               style={{ height: "48px" }}
             />
@@ -210,7 +281,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
         </div>
       </div>
 
-      {/* State and City - Ambos editables en cualquier modo */}
+      {/* State and City */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* State */}
         <div>
@@ -223,8 +294,9 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               name="state"
               value={formData.state || ''}
               onChange={handleChange}
-              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              className={`cursor-pointer w-full px-4 py-3 border ${
+                isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="">Seleccionar Estado</option>
               {venezuelanStates.map((state) => (
@@ -247,7 +319,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        {/* Ciudad - Siempre editable, pero depende del estado seleccionado */}
+        {/* Ciudad - depende del estado seleccionado */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
             Ciudad
@@ -258,8 +330,9 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
               name="city"
               value={formData.city || ''}
               onChange={handleChange}
-              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700 ${!formData.state ? 'bg-white' : ''}`}
+              className={`cursor-pointer w-full px-4 py-3 border ${
+                isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700 ${!formData.state ? 'bg-white' : ''}`}
             >
               <option value="">Seleccionar Ciudad</option>
               {cities.map((city) => (
@@ -284,7 +357,7 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
         </div>
       </div>
 
-      {/* Home Address */}
+      {/* Home Address - Capitaliza la primera letra de cada palabra */}
       <div>
         <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Dirección de Habitación
@@ -295,8 +368,9 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
             name="address"
             value={formData.address || ''}
             onChange={handleChange}
-            className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("address") ? "border-red-500 bg-red-50" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] min-h-[100px]`}
+            className={`w-full pl-10 pr-4 py-3 border ${
+              isFieldEmpty("address") ? "border-red-500 bg-red-50" : "border-gray-200"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] min-h-[100px]`}
             placeholder="Ingrese su dirección completa"
           />
           <MapPin className="absolute left-3 top-4 text-gray-400" />
@@ -306,19 +380,5 @@ export default function InfoContacto({ formData, onInputChange, validationErrors
         )}
       </div>
     </motion.div>
-  );
-}
-function BanderaComponent({ countryCode }) {
-  // Usar una biblioteca de banderas o un enfoque basado en imágenes
-  return (
-    <img 
-      src={`https://flagcdn.com/16x12/${countryCode.toLowerCase()}.png`}
-      srcSet={`https://flagcdn.com/32x24/${countryCode.toLowerCase()}.png 2x, 
-               https://flagcdn.com/48x36/${countryCode.toLowerCase()}.png 3x`}
-      width="16"
-      height="12"
-      alt={`Bandera de ${countryCode}`}
-      style={{ verticalAlign: 'middle', marginRight: '5px' }}
-    />
   );
 }

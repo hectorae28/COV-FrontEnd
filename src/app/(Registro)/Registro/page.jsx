@@ -16,8 +16,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 // Import step components
-import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import api from "@/api/api";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import Alert from "@/app/Components/Alert";
 import Head from "next/head";
 import PagosColg from "../../Components/PagosModal";
 import DocsRequirements from "../DocsRequirements";
@@ -25,7 +26,6 @@ import InfoColegiado from "../InfoColg";
 import InfoContacto from "../InfoCont";
 import InfoLaboral from "../InfoLab";
 import InfoPersonal from "../InfoPers";
-import Alert from "@/app/Components/Alert";
 
 const steps = [
   {
@@ -618,18 +618,6 @@ export default function RegistrationForm(props) {
                           recibido tu información y pronto nos pondremos en
                           contacto contigo.
                         </p>
-                        <button
-                          onClick={() => {
-                            setIsComplete(false);
-                            setShowPaymentScreen(false);
-                            setCurrentStep(1);
-                            setFormData(initialState);
-                            setIsIntentionalSubmit(false);
-                          }}
-                          className="px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl hover:opacity-90 transition-all"
-                        >
-                          Iniciar nuevo registro
-                        </button>
                       </motion.div>
                     ) : showPaymentScreen ? (
                       <motion.div
@@ -638,6 +626,21 @@ export default function RegistrationForm(props) {
                         transition={{ duration: 0.5 }}
                         className="relative z-10 p-8"
                       >
+                        {/* Botón de regresar en la esquina superior izquierda */}
+                        <div className="absolute top-4 left-4">
+                          <button
+                            type="button"
+                            onClick={() => setShowPaymentScreen(false)}
+                            disabled={isSubmitting}
+                            className="px-4 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
+                          >
+                            <span className="flex items-center justify-center">
+                              <ChevronLeft className="w-5 h-5 mr-1" />
+                              Regresar
+                            </span>
+                          </button>
+                        </div>
+
                         {error && (
                           <Alert type="alert">{error.detail}</Alert>
                         )}
@@ -651,7 +654,7 @@ export default function RegistrationForm(props) {
                             }}
                           />
                         )}
-                        <div className="flex flex-col space-y-4 mt-6">
+                        <div className="flex flex-col space-y-4 mt-12">
                           <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
                             <label className="flex items-center space-x-3 cursor-pointer">
                               <input
@@ -673,8 +676,8 @@ export default function RegistrationForm(props) {
                             </label>
                           </div>
                         </div>
-                        {pagarLuego && (
-                          <div className="flex justify-center p-6 gap-6">
+                        <div className="flex justify-center p-6 gap-6">
+                          {pagarLuego && (
                             <button
                               type="button"
                               onClick={handlePaymentComplete}
@@ -709,18 +712,8 @@ export default function RegistrationForm(props) {
                                 "Completar Registro"
                               )}
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => setShowPaymentScreen(false)}
-                              disabled={isSubmitting}
-                              className="px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
-                            >
-                                <span className="flex items-center justify-center">
-                                  Regresar
-                                </span>
-                            </button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </motion.div>
                     ) : (
                       <form onSubmit={handleSubmit} className="relative z-10">
