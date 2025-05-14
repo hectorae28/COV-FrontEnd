@@ -1,7 +1,5 @@
 "use client"
 import { TIPOS_SOLICITUD } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
-import AssignmentInd from "@mui/icons-material/AssignmentInd"
-import LibraryAddCheck from "@mui/icons-material/LibraryAddCheck"
 import { Check, FileCheck, FileText, Search, ShoppingCart, Trash2, User } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -214,7 +212,7 @@ export default function SeleccionarSolicitudesStep({
                 // Y agregamos automáticamente al carrito
                 const tipoInfo = TIPOS_SOLICITUD[tipo]
                 const nuevoItem = {
-                    id: `${tipoInfo.codigo}-${Date.now()}`,
+                    id: `${tipoInfo.codigo}`,
                     tipo: tipo,
                     subtipo: null,
                     nombre: tipoInfo.nombre,
@@ -249,7 +247,7 @@ export default function SeleccionarSolicitudesStep({
             setSubtiposConstanciaSeleccionados((prev) => [...prev, subtipo.nombre])
             // Y agregamos al carrito - Constancias no tienen documentos requeridos
             const nuevoItem = {
-                id: `${subtipo.codigo}-${Date.now()}`,
+                id: `${subtipo.codigo}`,
                 tipo: "Constancia",
                 subtipo: subtipo.nombre,
                 nombre: `Constancia: ${subtipo.nombre}`,
