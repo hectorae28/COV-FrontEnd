@@ -1,5 +1,5 @@
 "use client";
-import { AccountBalance, AccountCircle, Assessment, Assignment, Celebration, ChevronRight, ContactPage, DescriptionRounded, ExpandMore, FactCheck, Forum, Group, Handshake, Home, House, Message, Newspaper, NoteAdd, Notifications, RequestQuote, Settings, Web } from "@mui/icons-material";
+import { AccountBalance, PersonRounded, Assessment, Assignment, Celebration, ChevronRight, ContactPage, DescriptionRounded, ExpandMore, Forum, Group, Handshake, Home, House, Message, Newspaper, NoteAdd, Notifications, RequestQuote, Settings, Web } from "@mui/icons-material";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -143,7 +143,7 @@ const menuItems = [
       title: "Configuración",
       icon: <Settings className="h-5 w-5" />,
       routes: [
-        { path: "/PanelControl/Usuarios", title: "Usuarios", icon: <AccountCircle className="h-5 w-5" /> },
+        { path: "/PanelControl/Usuarios", title: "Usuarios", icon: <PersonRounded className="h-5 w-5" /> },
         { path: "/PanelControl/Grupos", title: "Grupos", icon: <Group className="h-5 w-5" /> },
         { path: "/PanelControl/MetodoPago", title: "Metodos de Pagos", icon: <RequestQuote className="h-5 w-5" /> },
       ],

@@ -1,29 +1,97 @@
+import institucionesList from "@/Shared/InstitucionesData";
+import EstadoData from "@/Shared/EstadoData";
 import { motion } from "framer-motion";
-import { Briefcase, BriefcaseBusiness, Phone, Plus, Trash2 } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, Phone, Plus, Trash2, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
-import institucionesList from "@/app/Models/institucionesList";
+
+// Función para capitalizar cada palabra de un texto
+const capitalizarPalabras = (texto) => {
+  if (!texto) return "";
+  return texto
+    .split(' ')
+    .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+    .join(' ');
+};
+
+// Función para formatear número de teléfono local
+const formatearTelefonoLocal = (value) => {
+  if (!value) return '';
+  // Eliminar todos los caracteres no numéricos
+  const digits = value.replace(/\D/g, '');
+  
+  // Si tiene suficientes dígitos, formatear como 0212 123 4567
+  if (digits.length >= 4) {
+    const areaCode = digits.substring(0, 4);
+    const firstPart = digits.substring(4, 7);
+    const secondPart = digits.substring(7, 11);
+    
+    if (digits.length <= 4) {
+      return areaCode;
+    } else if (digits.length <= 7) {
+      return `${areaCode} ${firstPart}`;
+    } else {
+      return `${areaCode} ${firstPart} ${secondPart}`;
+    }
+  }
+  
+  return digits;
+};
 
 export default function InfoLaboral({ formData, onInputChange, validationErrors }) {
-  // Lista de tipos de instituciones
-
+  // Lista de estados ordenados alfabéticamente
+  const estados = Object.keys(EstadoData).sort().map(capitalizarPalabras);
+  
   // Estado para manejar el estado laboral
   const [workStatus, setWorkStatus] = useState(formData.workStatus || "labora");
 
   // Estado para manejar múltiples registros laborales
   const [registros, setRegistros] = useState(
     formData.laboralRegistros && formData.laboralRegistros.length > 0
-      ? formData.laboralRegistros
+      ? formData.laboralRegistros.map(registro => ({
+          ...registro,
+          // Asegurar que los campos tengan el formato correcto
+          institutionName: capitalizarPalabras(registro.institutionName || ""),
+          institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
+          cargo: capitalizarPalabras(registro.cargo || ""),
+          selectedEstado: registro.selectedEstado || "",
+          selectedCiudad: registro.selectedCiudad || ""
+        }))
       : [
         {
           id: 1,
           institutionType: formData.institutionType || "",
-          institutionName: formData.institutionName || "",
-          institutionAddress: formData.institutionAddress || "",
+          institutionName: capitalizarPalabras(formData.institutionName || ""),
+          institutionAddress: capitalizarPalabras(formData.institutionAddress || ""),
           institutionPhone: formData.institutionPhone || "",
-          cargo: formData.cargo || "",
+          cargo: capitalizarPalabras(formData.cargo || ""),
+          selectedEstado: formData.selectedEstado || "",
+          selectedCiudad: formData.selectedCiudad || ""
         }
       ]
   );
+
+  // Estados para manejar ciudades disponibles para cada registro
+  const [ciudadesDisponibles, setCiudadesDisponibles] = useState({});
+
+  // Actualizar ciudades disponibles cuando cambia el estado seleccionado
+  useEffect(() => {
+    const nuevosCiudadesDisponibles = {};
+    
+    registros.forEach(registro => {
+      if (registro.selectedEstado) {
+        // Convertir el estado seleccionado a minúsculas para buscar en el objeto EstadoData
+        const estadoKey = registro.selectedEstado.toLowerCase();
+        if (EstadoData[estadoKey]) {
+          // Ordenar ciudades alfabéticamente y capitalizar cada palabra
+          nuevosCiudadesDisponibles[registro.id] = EstadoData[estadoKey]
+            .sort()
+            .map(ciudad => capitalizarPalabras(ciudad));
+        }
+      }
+    });
+    
+    setCiudadesDisponibles(nuevosCiudadesDisponibles);
+  }, [registros]);
 
   // Actualizar workStatus cuando cambie en formData
   useEffect(() => {
@@ -45,6 +113,8 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
         institutionAddress: "N/A",
         institutionPhone: "N/A",
         cargo: "N/A",
+        selectedEstado: "N/A",
+        selectedCiudad: "N/A",
         laboralRegistros: []
       });
     } else {
@@ -56,45 +126,58 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
     }
   };
 
-  // Format phone number - only adds + at beginning
-  const formatPhone = (value) => {
-    if (!value) return '+';
-    // Remove all non-digit characters except the initial + if present
-    if (value.startsWith('+')) {
-      const digits = value.substring(1).replace(/\D/g, '');
-      return `+${digits}`;
-    } else {
-      const digits = value.replace(/\D/g, '');
-      return `+${digits}`;
-    }
-  };
-
   // Manejar cambios en un registro específico
   const handleRegistroChange = (index, field, value) => {
-    // Si es el campo de teléfono, formatear el valor
-    if (field === "institutionPhone") {
-      value = formatPhone(value);
-    }
     const nuevosRegistros = [...registros];
-    nuevosRegistros[index] = {
-      ...nuevosRegistros[index],
-      [field]: value
-    };
-    setRegistros(nuevosRegistros);
+    const registro = nuevosRegistros[index];
+
+    // Aplicar formato según el campo
+    if (field === "institutionName" || field === "cargo") {
+      value = capitalizarPalabras(value);
+    } else if (field === "institutionPhone") {
+      value = formatearTelefonoLocal(value);
+    } else if (field === "selectedEstado") {
+      // Al cambiar el estado, resetear la ciudad
+      registro.selectedCiudad = "";
+    }
+    
+    // Actualizar el campo en el registro
+    registro[field] = value;
+    
     // Actualizar los campos principales con el primer registro (para compatibilidad)
     if (index === 0) {
       onInputChange({ [field]: value });
     }
+    
     // Actualizar el array completo de registros
+    setRegistros(nuevosRegistros);
     onInputChange({ laboralRegistros: nuevosRegistros });
   };
 
-  // Inicializar el campo de teléfono con + cuando recibe foco
-  const handlePhoneFocus = (index) => {
-    const registro = registros[index];
-    if (!registro.institutionPhone) {
-      handleRegistroChange(index, "institutionPhone", "+");
+  // Manejar cambios en la dirección (después de seleccionar estado y ciudad)
+  const handleDireccionChange = (index, value) => {
+    const nuevosRegistros = [...registros];
+    const registro = nuevosRegistros[index];
+    
+    // Formatear la dirección con la primera letra de cada palabra en mayúscula
+    const direccionFormateada = capitalizarPalabras(value);
+    
+    // Construir la dirección completa con el formato: "Ciudad, Estado - Dirección específica"
+    if (registro.selectedEstado && registro.selectedCiudad) {
+      const direccionCompleta = `${registro.selectedCiudad}, ${registro.selectedEstado} - ${direccionFormateada}`;
+      registro.institutionAddress = direccionCompleta;
+    } else {
+      registro.institutionAddress = direccionFormateada;
     }
+    
+    // Actualizar los campos principales con el primer registro (para compatibilidad)
+    if (index === 0) {
+      onInputChange({ institutionAddress: registro.institutionAddress });
+    }
+    
+    // Actualizar el array completo de registros
+    setRegistros(nuevosRegistros);
+    onInputChange({ laboralRegistros: nuevosRegistros });
   };
 
   // Agregar un nuevo registro laboral
@@ -108,7 +191,9 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
         institutionName: "",
         institutionAddress: "",
         institutionPhone: "",
-        cargo: ""
+        cargo: "",
+        selectedEstado: "",
+        selectedCiudad: ""
       }
     ];
     setRegistros(nuevosRegistros);
@@ -129,7 +214,9 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
           institutionName: nuevosRegistros[0].institutionName,
           institutionAddress: nuevosRegistros[0].institutionAddress,
           institutionPhone: nuevosRegistros[0].institutionPhone,
-          cargo: nuevosRegistros[0].cargo
+          cargo: nuevosRegistros[0].cargo,
+          selectedEstado: nuevosRegistros[0].selectedEstado,
+          selectedCiudad: nuevosRegistros[0].selectedCiudad
         });
       }
     }
@@ -309,10 +396,9 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
                       type="tel"
                       value={registro.institutionPhone || ''}
                       onChange={(e) => handleRegistroChange(index, "institutionPhone", e.target.value)}
-                      onFocus={() => handlePhoneFocus(index)}
                       className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty(registro, "institutionPhone") ? "border-red-500 bg-red-50" : "border-gray-200"
                         } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                      placeholder="+584241234567"
+                      placeholder="0212 123 4567"
                     />
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   </div>
@@ -320,28 +406,126 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
                     <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                   <p className="mt-1 text-xs text-gray-500">
-                    Ingrese código de área y número. Ej: +584241234567
+                    Ingrese código de área y número. Ej: 0212 123 4567
                   </p>
                 </div>
               </div>
 
-              {/* Dirección de Institución */}
-              <div className="mt-3">
+              {/* Dirección de Institución - Selección por pasos */}
+              <div className="mt-4">
                 <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                   Dirección de Institución
                   <span className="text-red-500 ml-1">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={registro.institutionAddress}
-                  onChange={(e) => handleRegistroChange(index, "institutionAddress", e.target.value)}
-                  className={`w-full px-4 py-3 border ${isFieldEmpty(registro, "institutionAddress") ? "border-red-500 bg-red-50" : "border-gray-200"
-                    } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                  placeholder="Dirección completa de la institución"
-                />
-                {isFieldEmpty(registro, "institutionAddress") && (
-                  <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-                )}
+                
+                {/* Selección en dos pasos (Estado y Ciudad) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                  {/* Paso 1: Selección de Estado */}
+                  <div>
+                    <label className="mb-2 text-xs font-medium text-gray-700">
+                      Estado
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={registro.selectedEstado || ""}
+                        onChange={(e) => handleRegistroChange(index, "selectedEstado", e.target.value)}
+                        className={`cursor-pointer w-full px-4 py-3 border ${
+                          isFieldEmpty(registro, "selectedEstado") ? "border-red-500 bg-red-50" : "border-gray-200"
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                      >
+                        <option value="" disabled>Seleccione un estado</option>
+                        {estados.map((estado) => (
+                          <option key={estado} value={estado}>
+                            {estado}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg
+                          className="fill-current h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                      </div>
+                    </div>
+                    {isFieldEmpty(registro, "selectedEstado") && (
+                      <p className="mt-1 text-xs text-red-500">Debe seleccionar un estado</p>
+                    )}
+                  </div>
+                  
+                  {/* Paso 2: Selección de Ciudad */}
+                  <div>
+                    <label className={`mb-2 text-xs font-medium ${registro.selectedEstado ? "text-gray-700" : "text-gray-400"}`}>
+                      Ciudad
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={registro.selectedCiudad || ""}
+                        onChange={(e) => handleRegistroChange(index, "selectedCiudad", e.target.value)}
+                        className={`cursor-pointer w-full px-4 py-3 border ${
+                          isFieldEmpty(registro, "selectedCiudad") ? "border-red-500 bg-red-50" : "border-gray-200"
+                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${
+                          registro.selectedEstado ? "text-gray-700" : "text-gray-400 bg-gray-50"
+                        }`}
+                        disabled={!registro.selectedEstado}
+                      >
+                        <option value="" disabled>Seleccione una ciudad</option>
+                        {ciudadesDisponibles[registro.id]?.map((ciudad) => (
+                          <option key={ciudad} value={ciudad}>
+                            {ciudad}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg
+                          className="fill-current h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                      </div>
+                    </div>
+                    {isFieldEmpty(registro, "selectedCiudad") && registro.selectedEstado && (
+                      <p className="mt-1 text-xs text-red-500">Debe seleccionar una ciudad</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Dirección específica */}
+                <div className={registro.selectedEstado && registro.selectedCiudad ? "" : "opacity-50"}>
+                  <label className="mb-2 text-xs font-medium text-gray-700">
+                    Dirección específica
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={
+                        // Extraer solo la parte específica de la dirección
+                        registro.institutionAddress && registro.selectedEstado && registro.selectedCiudad
+                          ? registro.institutionAddress.split(' - ')[1] || ''
+                          : registro.institutionAddress || ''
+                      }
+                      onChange={(e) => handleDireccionChange(index, e.target.value)}
+                      disabled={!(registro.selectedEstado && registro.selectedCiudad)}
+                      className={`w-full pl-10 pr-4 py-3 border ${
+                        isFieldEmpty(registro, "institutionAddress") ? "border-red-500 bg-red-50" : "border-gray-200"
+                      } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] ${
+                        registro.selectedEstado && registro.selectedCiudad ? "text-gray-700" : "text-gray-400 bg-gray-50"
+                      }`}
+                      placeholder="Calle, Avenida, Edificio, Piso, Oficina"
+                    />
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
+                  {isFieldEmpty(registro, "institutionAddress") && (
+                    <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+                  )}
+                </div>
               </div>
             </div>
           ))}

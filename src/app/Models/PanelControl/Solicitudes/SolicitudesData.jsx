@@ -1,5 +1,3 @@
-// SolicitudesData.jsx - Archivo central de datos para solicitudes
-
 // Datos de ejemplo de colegiados para el dropdown
 export const colegiados = [
     {

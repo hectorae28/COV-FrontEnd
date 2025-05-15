@@ -1,8 +1,6 @@
+import { fetchDataUsuario, patchDataUsuario, postDataUsuario } from "@/api/endpoints/colegiado";
+import { fetchSolicitudes } from "@/api/endpoints/solicitud";
 import { create } from "zustand";
-import { colegiados } from "../app/Models/PanelControl/Solicitudes/SolicitudesData";
-import { fetchDataUsuario, patchDataUsuario,postDataUsuario } from "@/api/endpoints/colegiado";
-import {fetchSolicitudes} from "@/api/endpoints/solicitud"
-
 /*
 STORE: se almacenan los datos de los colegiados para el modulo administrativo
 */
@@ -249,9 +247,8 @@ const useDataListaColegiados = create((set, get) => ({
     set((state) => ({
       colegiados: state.colegiados.map((colegiado) => {
         if (colegiado.id === colegiadoId) {
-          const solicitudId = `${colegiadoId}-${
-            colegiado.solicitudes.length + 1
-          }`;
+          const solicitudId = `${colegiadoId}-${colegiado.solicitudes.length + 1
+            }`;
           return {
             ...colegiado,
             solicitudes: [

@@ -1,23 +1,23 @@
 "use client"
 
+import SessionInfo from "@/Components/SessionInfo"
 import { motion } from "framer-motion"
 import {
-    CheckCircle,
-    XCircle,
     AlertCircle,
+    AlertTriangle,
+    Calendar,
+    CheckCircle,
     Clock,
+    CreditCard,
+    GraduationCap,
     Mail,
     Phone,
     User,
-    Calendar,
-    CreditCard,
-    AlertTriangle,
     UserX,
-    GraduationCap,
+    XCircle,
 } from "lucide-react"
-import SessionInfo from "@/Components/SessionInfo"
 
-export default function ProfileCard({props}) {
+export default function ProfileCard({ props }) {
     const {
         pendiente,
         obtenerIniciales,
@@ -30,8 +30,11 @@ export default function ProfileCard({props}) {
         setMostrarExoneracion,
         isRechazada,
         isDenegada,
-        isAdmin
-    } = props
+        isAdmin,
+        setShowReportModal,
+        docsApproved
+    } = props;
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -56,7 +59,7 @@ export default function ProfileCard({props}) {
                         </div>
                         <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
                             {/* Estados de la solicitud */}
-                            
+
                             {isRechazada && isAdmin ? (
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
                                     <AlertTriangle size={12} className="mr-1" />
@@ -65,9 +68,9 @@ export default function ProfileCard({props}) {
                             ) : isDenegada && isAdmin ? (
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
                                     <UserX size={12} className="mr-1" />
-                                    Denegada
+                                    Anulada
                                 </span>
-                            ) :isAdmin&& (
+                            ) : isAdmin && (
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                                     <Clock size={12} className="mr-1" />
                                     Pendiente de aprobación
@@ -133,8 +136,8 @@ export default function ProfileCard({props}) {
                         {/* Información del creador del registro */}
                         {pendiente.user_admin_create_username && isAdmin && (
                             <div className="bg-gray-50 p-2 rounded-md col-span-2 mt-4 w-full">
-                                    <SessionInfo creador={{username:pendiente.user_admin_create_username,fecha:pendiente.created_at}} variant="compact" />
-                                
+                                <SessionInfo creador={{ username: pendiente.user_admin_create_username, fecha: pendiente.created_at }} variant="compact" />
+
                             </div>
                         )}
 
@@ -160,7 +163,7 @@ export default function ProfileCard({props}) {
                                 <div className="flex items-start">
                                     <UserX size={18} className="text-red-600 mr-2 mt-0.5" />
                                     <div>
-                                        <p className="text-sm font-medium text-red-800">Denegada por: {pendiente.user_admin_update_username}</p>
+                                        <p className="text-sm font-medium text-red-800">Anulada por: {pendiente.user_admin_update_username}</p>
                                         <p className="text-xs text-red-700">Fecha: {pendiente.updated_at}</p>
                                         <p className="text-xs text-red-700 mt-1">Motivo: {pendiente.motivo_rechazo}</p>
                                     </div>
@@ -172,17 +175,17 @@ export default function ProfileCard({props}) {
                     {/* Solo mostrar botones si NO está denegada */}
                     {!isDenegada && isAdmin && (
                         <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                            {/* Mostrar botón de aprobar tanto para pendientes como para rechazadas */}
+                            {/* Botón de aprobación con condición actualizada */}
                             <button
                                 onClick={() => setMostrarConfirmacion(true)}
-                                disabled={!documentosCompletos || (pagosPendientes && !pendiente?.exoneracionPagos?.fecha)}
-                                className={`cursor-pointer bg-gradient-to-r ${!documentosCompletos || (pagosPendientes && !pendiente?.exoneracionPagos?.fecha)
-                                        ? "from-gray-400 to-gray-500 cursor-not-allowed"
-                                        : "from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                                disabled={!docsApproved || (pagosPendientes && !pendiente?.exoneracionPagos?.fecha)}
+                                className={`cursor-pointer bg-gradient-to-r ${!docsApproved || (pagosPendientes && !pendiente?.exoneracionPagos?.fecha)
+                                    ? "from-gray-400 to-gray-500 cursor-not-allowed"
+                                    : "from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
                                     } text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-sm font-medium`}
                                 title={
-                                    !documentosCompletos
-                                        ? "Complete todos los documentos requeridos para aprobar"
+                                    !docsApproved
+                                        ? "Debe aprobar todos los documentos para continuar"
                                         : pagosPendientes && !pendiente?.exoneracionPagos?.fecha
                                             ? "Complete el pago o exonere el pago para aprobar"
                                             : "Aprobar solicitud"
@@ -199,7 +202,7 @@ export default function ProfileCard({props}) {
                                     } text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all duration-300 shadow-sm font-medium`}
                             >
                                 <XCircle size={18} />
-                                <span>{isRechazada ? "Denegar solicitud" : "Rechazar solicitud"}</span>
+                                <span>{isRechazada ? "Anular solicitud" : "Rechazar solicitud"}</span>
                             </button>
 
                             {/* Botón para exonerar pagos (solo si hay pagos pendientes) */}
@@ -212,6 +215,14 @@ export default function ProfileCard({props}) {
                                     <span>Exonerar pagos</span>
                                 </button>
                             )}
+
+                            <button
+                                onClick={() => setShowReportModal(true)}
+                                className="cursor-pointer bg-gradient-to-r from-red-700 to-red-800 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all duration-300 shadow-sm font-medium"
+                            >
+                                <AlertTriangle size={18} />
+                                <span>Reportar ilegalidad</span>
+                            </button>
                         </div>
                     )}
                 </div>
