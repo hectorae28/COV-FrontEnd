@@ -1,11 +1,10 @@
 "use client"
 
 import { fetchMe } from "@/api/endpoints/colegiado"
-import { colegiado, solicitudes as solicitudesIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesColegiadosData"
+import { solicitudes as solicitudesIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesColegiadosData"
 import DashboardLayout from "@/Components/DashboardLayout"
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
-import {convertJsonToFormData} from "@/store/SolicitudesStore.jsx"
 import { motion } from "framer-motion"
 import {
     CheckCircle,
@@ -18,6 +17,9 @@ import {
 } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { useEffect, useState, useMemo } from "react"
+import {useSolicitudesStore,convertJsonToFormData} from "@/store/SolicitudesStore.jsx"
+import useColegiadoUserStore from "@/store/colegiadoUserStore"
+
 
 export default function ListaSolicitudesColegiado() {
     // Estados para manejar los datos
@@ -34,9 +36,28 @@ export default function ListaSolicitudesColegiado() {
     const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null)
     const [tabActual, setTabActual] = useState("pendientes") 
     const [filtroCosto, setFiltroCosto] = useState("todas") 
+    const [solicitudCreada, setSolicitudCreada] = useState(null)
+
+    const fetchTiposSolicitud = useSolicitudesStore((state) => state.fetchTiposSolicitud)
+    const addSolicitud = useSolicitudesStore((state) => state.addSolicitud);
+    const Colegiado = useColegiadoUserStore((state) => state.colegiadoUser);
+
+
 
     // Obtener la sesión
     const { data: session, status } = useSession()
+
+    const loadTiposSolicitud = async () => {
+        try {
+          await fetchTiposSolicitud();
+        } catch (error) {
+          console.error("Error al cargar tipos de solicitud:", error);
+        }
+      };
+    
+      useEffect(() => {
+        loadTiposSolicitud();
+      }, []); 
 
     // Efecto para cargar la información del usuario
     useEffect(() => {
@@ -136,10 +157,11 @@ export default function ListaSolicitudesColegiado() {
         setSolicitudSeleccionadaId(null);
     };
 
-  const handleSolicitudCreada = (nuevaSolicitud) => {
-    console.log({nuevaSolicitud})
-    const formatSolicitud= convertJsonToFormData(nuevaSolicitud)
-    console.log(formatSolicitud)
+  const handleSolicitudCreada = async (nuevaSolicitud) => {
+    console.log("Solicitud creada:", nuevaSolicitud)
+    console.log(convertJsonToFormData(nuevaSolicitud))
+    const solCreada= await addSolicitud(nuevaSolicitud)
+    setSolicitudCreada(solCreada)
     //setSolicitudes(prev => [nuevaSolicitud, ...prev]); // Añadir al principio del array
   }
 
@@ -455,12 +477,13 @@ export default function ListaSolicitudesColegiado() {
                 {/* Modal para crear nueva solicitud */}
                 {showModal && (
                     <CrearSolicitudModal
-                        onClose={() => setShowModal(false)}
+                        onClose={() => {setShowModal(false); setSolicitudCreada(null);}}
                         onSolicitudCreada={handleSolicitudCreada}
-                        colegiadoPreseleccionado={colegiado}
+                        colegiadoPreseleccionado={Colegiado}
                         onVerDetalle={verDetalleSolicitud}
                         session={session}
                         mostrarSeleccionColegiado={false}
+                        solicitudCreada={solicitudCreada}
                     />
                 )}
             </div>

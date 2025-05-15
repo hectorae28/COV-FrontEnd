@@ -16,22 +16,40 @@ import {
 import { useEffect, useState,useMemo } from "react"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
 import { solicitudes as solicitudesIniciales, colegiados as colegiadosIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
-import {convertJsonToFormData} from "@/store/SolicitudesStore.jsx"
+import {useSolicitudesStore} from "@/store/SolicitudesStore.jsx"
+import useColegiadoUserStore from "@/store/colegiadoUserStore"
 export default function ListaSolicitudes() {
   // Estados para manejar los datos
   const [solicitudes, setSolicitudes] = useState([])
+  const fetchTiposSolicitud = useSolicitudesStore((state) => state.fetchTiposSolicitud)
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [showModal, setShowModal] = useState(false)
   const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(null)
   const [colegiados, setColegiados] = useState([])
-
+  const user = useColegiadoUserStore((state) => state.colegiadoUser);
+  const addSolicitud = useSolicitudesStore((state) => state.addSolicitud);
+  
   // Estados para la navegación interna
   const [vistaActual, setVistaActual] = useState("lista") // lista, detalleSolicitud
+  const [solicitudCreada, setSolicitudCreada] = useState(null)
+
   const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null)
   const [tabActual, setTabActual] = useState("todas") // todas, pendientes, aprobadas, rechazadas
   const [filtroCosto, setFiltroCosto] = useState("todas") // todas, conCosto, sinCosto
-
+  
+  const loadTiposSolicitud = async () => {
+    try {
+      await fetchTiposSolicitud();
+    } catch (error) {
+      console.error("Error al cargar tipos de solicitud:", error);
+    }
+  };
+  
+  // Efecto para cargar los tipos de solicitud al montar el componente
+  useEffect(() => {
+    loadTiposSolicitud();
+  }, []); // Solo se ejecuta al montar el componente
   // Cargar datos iniciales
   useEffect(() => {
     // Simulando carga de datos con un pequeño retraso
@@ -41,7 +59,7 @@ export default function ListaSolicitudes() {
       setIsLoading(false);
     }, 1000);
   }, []);
-
+  
   // Conteo de solicitudes por estado para los tabs
   const conteoSolicitudes = useMemo(() => ({
     pendientes: solicitudes.filter(s => s.estado === "Pendiente").length,
@@ -100,10 +118,12 @@ export default function ListaSolicitudes() {
   }
 
   // Función para manejar la creación exitosa de una nueva solicitud
-  const handleSolicitudCreada = (nuevaSolicitud) => {
-    console.log({nuevaSolicitud})
-    const formatSolicitud= convertJsonToFormData(nuevaSolicitud)
-    console.log(formatSolicitud)
+  const handleSolicitudCreada = async (nuevaSolicitud) => {
+    console.log("Solicitud creada:", nuevaSolicitud)
+    const solCreada= await addSolicitud({...nuevaSolicitud, creador:{id:user.id}})
+    setSolicitudCreada(
+      solCreada
+    )
     //setSolicitudes(prev => [nuevaSolicitud, ...prev]); // Añadir al principio del array
   }
 
@@ -426,6 +446,7 @@ export default function ListaSolicitudes() {
           onClose={() => {
             setShowModal(false);
             setColegiadoSeleccionado(null);
+            setSolicitudCreada(null)
           }}
           onSolicitudCreada={handleSolicitudCreada}
           colegiados={colegiados}
@@ -439,6 +460,7 @@ export default function ListaSolicitudes() {
               isAdmin: true
             }
           }}
+          solicitudCreada={solicitudCreada}
         />
       )}
     </div>

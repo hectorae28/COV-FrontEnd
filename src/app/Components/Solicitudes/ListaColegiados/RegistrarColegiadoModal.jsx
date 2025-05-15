@@ -240,7 +240,11 @@ export default function RegistroColegiados({
         formData.fondo_negro_titulo_bachiller
       );
     }
-    !pagarLuego
+    console.log(!pagarLuego&&!exonerarPagos)
+    console.log(pagarLuego,exonerarPagos);
+    
+    
+    (!pagarLuego&&!exonerarPagos)
       ? Form.append(
           "pago",
           JSON.stringify({
@@ -251,6 +255,7 @@ export default function RegistroColegiados({
           })
         )
       : Form.append("pago", null);
+    exonerarPagos && Form.append("pago_exonerado", true)
     try {
       const response = await api.post("usuario/register/", Form, {
         headers: {
@@ -260,12 +265,16 @@ export default function RegistroColegiados({
       if (response.status === 201) {
         setPasoActual(7);
         onRegistroExitoso();
+        setIsSubmitting(false);
+
       }
     } catch (error) {
       console.error(
         "Error al enviar los datos:",
         error.response?.data || error
       );
+      setIsSubmitting(false);
+
     } finally {
       setIsSubmitting(false);
     }

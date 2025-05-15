@@ -12,35 +12,12 @@ export default function CrearSolicitudModal({
   onVerDetalle,
   session,
   tipoSolicitud = null,
+  solicitudCreada,
+  isAdmin=false
 }) {
-  // Estado para almacenar la solicitud creada
-  const [solicitudCreada, setSolicitudCreada] = useState(null)
-
   // Función para manejar la creación de solicitud
   const handleSolicitudCreada = (nuevaSolicitud) => {
-    // Usar la información de la sesión actual
-    const userInfo = session?.user || {
-      name: "Usuario del sistema",
-      email: "usuario@sistema.com",
-      role: "user",
-      isAdmin: false,
-    }
-
-    // Agregar la información del creador a la solicitud
-    const solicitudConCreador = {
-      ...nuevaSolicitud,
-      creador: {
-        username: userInfo.name || userInfo.email?.split("@")[0] || "Usuario",
-        email: userInfo.email,
-        esAdmin: userInfo.role === "admin" || userInfo.isAdmin || false,
-        fecha: new Date().toISOString(),
-        tipo: "creado", // Indica que es una creación, no una aprobación
-      },
-    }
-
-    // Actualizar estado local y enviar al componente padre
-    setSolicitudCreada(solicitudConCreador)
-    onSolicitudCreada(solicitudConCreador)
+    onSolicitudCreada(nuevaSolicitud)
   }
 
   // Función para ir a la vista de detalle de la solicitud
@@ -80,56 +57,13 @@ export default function CrearSolicitudModal({
         {/* Contenido del modal */}
         {solicitudCreada ? (
           <div className="p-6 md:p-8">
-            <div className="flex items-center justify-center mb-6">
-              <div className="bg-green-100 p-4 rounded-full">
-                <CheckCircle size={44} className="text-green-600" />
+            <div className="py-16">
+              <div className="flex items-center justify-center">
+                <div className="bg-green-100 p-4 rounded-full">
+                  <CheckCircle size={44} className="text-green-600" />
+                </div>
               </div>
-            </div>
-            <h3 className="text-xl font-bold text-center text-[#41023B] mb-4">¡Solicitud registrada correctamente!</h3>
-            <div className="bg-[#f8f9fa] p-5 rounded-xl border border-gray-200 mb-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Tipo</p>
-                  <p className="font-medium text-gray-800">{solicitudCreada.tipo}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Colegiado</p>
-                  <p className="font-medium text-gray-800">{solicitudCreada.colegiadoNombre}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Referencia</p>
-                  <p className="font-medium text-gray-800">{solicitudCreada.referencia}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Estado</p>
-                  <p className="font-medium flex items-center">
-                    {solicitudCreada.estadoPago === "Exonerado" ? (
-                      <>
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800 mr-1">
-                          <CheckCircle size={14} />
-                          Exonerada
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-1">
-                          <Clock size={14} />
-                          Pendiente
-                        </span>
-                      </>
-                    )}
-                  </p>
-                </div>
-                {solicitudCreada.creador && (
-                  <div className="sm:col-span-2">
-                    <SessionInfo
-                      creador={solicitudCreada.creador}
-                      variant="compact"
-                      className="justify-center md:justify-start"
-                    />
-                  </div>
-                )}
-              </div>
+              <h3 className="text-xl font-bold text-center text-[#41023B]">¡Solicitud registrada correctamente!</h3>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
               <button
@@ -163,6 +97,7 @@ export default function CrearSolicitudModal({
                 isAdmin: false,
               }
             }
+            isAdmin={isAdmin}
           />
         )}
       </div>
