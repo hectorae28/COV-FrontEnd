@@ -1,10 +1,16 @@
 "use client"
 
-import { FileText, Eye, RefreshCcw, AlertCircle, Upload, X } from "lucide-react"
-import { motion } from "framer-motion"
-import { useState, useRef } from "react"
+import { motion } from "framer-motion";
+import { AlertCircle, Eye, FileText, RefreshCcw, Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
+import DocumentVerificationSwitch from "./DocumentVerificationSwitch";
 
-export default function DocumentsSection({ documentosRequeridos, handleVerDocumento, updateDocumento }) {
+export default function DocumentsSection({ 
+  documentosRequeridos, 
+  handleVerDocumento, 
+  updateDocumento,
+  onDocumentStatusChange
+}) {
     const [documentoParaSubir, setDocumentoParaSubir] = useState(null)
     const [selectedFile, setSelectedFile] = useState(null)
     const [isUploading, setIsUploading] = useState(false)
@@ -12,7 +18,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
     const fileInputRef = useRef(null)
 
     // Filtrar documentos para excluir comprobantes de pago
-    const documentosRegulares =documentosRequeridos
+    const documentosRegulares = documentosRequeridos
 
     // Función para validar archivo
     const validarArchivo = (file) => {
@@ -107,68 +113,135 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
     // Componente de tarjeta de documento reutilizable
     const DocumentCard = ({ documento }) => {
-        const tieneArchivo = !documento.requerido||(documento.requerido&&documento.url!==null)
-        return (
-            <div
-                className={`border rounded-lg ${tieneArchivo ? "border-gray-200 hover:border-[#C40180]" : "border-red-200 bg-red-50"
-                    } hover:shadow-md transition-all duration-200`}
-            >
-                <div className="p-4">
-                    <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                            <div className="flex items-center mb-2">
-                                <div className={`${tieneArchivo ? "bg-[#F9E6F3]" : "bg-red-100"} p-2 rounded-md mr-3`}>
-                                    <FileText className={tieneArchivo ? "text-[#C40180]" : "text-red-500"} size={20} />
-                                </div>
-                                <div>
-                                    <h3 className="font-medium text-gray-900 flex items-center">
-                                        {documento?.nombre}
-                                        {documento?.requerido && <span className="text-red-500 ml-1">*</span>}
-                                    </h3>
-                                    <p className="text-xs text-gray-500">{documento?.descripcion}</p>
-                                </div>
-                            </div>
-
-                            {/* Mensaje cuando no hay archivo */}
-                            {!tieneArchivo && (
-                                <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
-                                    <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
-                                    <span>
-                                        Falta documento.{" "}
-                                        {documento?.requerido && "Este documento es requerido para completar el registro."}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="flex items-center space-x-1">
-                            {tieneArchivo ? (
-                                <button
-                                    onClick={() => handleVerDocumento(documento)}
-                                    className="cursor-pointer text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                                    title="Ver documento"
-                                >
-                                    <Eye size={18} />
-                                </button>
-                            ) : (
-                                <span className="cursor-no-drop text-gray-400 p-2" title="No hay documento para ver">
-                                    <Eye size={18} />
-                                </span>
-                            )}
-
-                            <button
-                                onClick={() => handleReemplazarDocumento(documento)}
-                                className={`${tieneArchivo ? "cursor-pointer text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} cursor-pointer p-2 rounded-full transition-colors`}
-                                title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
-                            >
-                                {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
-                            </button>
-                        </div>
-                    </div>
+    const tieneArchivo = !documento.requerido || (documento.requerido && documento.url !== null);
+    
+    // Manejar cambio de estado del documento
+    const handleStatusChange = (updatedDocument) => {
+      // Actualizar el documento con su nuevo estado
+      if (onDocumentStatusChange) {
+        // Esto pasa la información actualizada a DetallePendiente
+        onDocumentStatusChange(updatedDocument);
+        
+        // También podemos guardar en el backend aquí si es necesario
+        if (updateDocumento) {
+          // Creamos FormData para enviar solo los campos de estado
+          const documentData = {
+            [`${updatedDocument.id}_status`]: updatedDocument.status,
+          };
+          
+          // Si hay motivo de rechazo, también lo enviamos
+          if (updatedDocument.status === 'rejected' && updatedDocument.rejectionReason) {
+            documentData[`${updatedDocument.id}_rejection_reason`] = updatedDocument.rejectionReason;
+          }
+          
+          // Enviamos al backend
+          updateDocumento(documentData);
+        }
+      }
+    };
+    
+    return (
+      <div
+        className={`border rounded-lg ${
+          tieneArchivo 
+            ? documento.status === 'approved'
+              ? "border-green-200 bg-green-50"
+              : documento.status === 'rejected'
+                ? "border-red-200 bg-red-50"
+                : "border-gray-200 hover:border-[#C40180]" 
+            : "border-red-200 bg-red-50"
+        } hover:shadow-md transition-all duration-200`}
+      >
+        <div className="p-4">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <div className="flex items-center mb-2">
+                <div className={`${
+                  tieneArchivo 
+                    ? documento.status === 'approved'
+                      ? "bg-green-100"
+                      : documento.status === 'rejected'
+                        ? "bg-red-100"
+                        : "bg-[#F9E6F3]" 
+                    : "bg-red-100"
+                } p-2 rounded-md mr-3`}>
+                  <FileText 
+                    className={
+                      tieneArchivo 
+                        ? documento.status === 'approved'
+                          ? "text-green-600"
+                          : documento.status === 'rejected'
+                            ? "text-red-500"
+                            : "text-[#C40180]" 
+                        : "text-red-500"
+                    } 
+                    size={20} 
+                  />
                 </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 flex items-center">
+                    {documento?.nombre}
+                    {documento?.requerido && <span className="text-red-500 ml-1">*</span>}
+                  </h3>
+                  <p className="text-xs text-gray-500">{documento?.descripcion}</p>
+                </div>
+              </div>
+
+              {/* Mensaje cuando no hay archivo */}
+              {!tieneArchivo && (
+                <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
+                  <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Falta documento.{" "}
+                    {documento?.requerido && "Este documento es requerido para completar el registro."}
+                  </span>
+                </div>
+              )}
+              
+              {/* Switch de verificación solo si hay archivo */}
+              {tieneArchivo && (
+                <div className="mt-3">
+                  <DocumentVerificationSwitch 
+                    documento={documento}
+                    onChange={handleStatusChange}
+                    readOnly={documento.isReadOnly}
+                  />
+                </div>
+              )}
             </div>
-        )
-    }
+
+            <div className="flex items-center space-x-1">
+              {tieneArchivo ? (
+                <button
+                  onClick={() => handleVerDocumento(documento)}
+                  className="cursor-pointer text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
+                  title="Ver documento"
+                >
+                  <Eye size={18} />
+                </button>
+              ) : (
+                <span className="cursor-no-drop text-gray-400 p-2" title="No hay documento para ver">
+                  <Eye size={18} />
+                </span>
+              )}
+
+              {/* Botón de reemplazo solo visible si el documento no está aprobado o fue rechazado */}
+              {(!documento.status || documento.status !== 'approved' || !documento.isReadOnly) && (
+                <button
+                  onClick={() => handleReemplazarDocumento(documento)}
+                  className={`${tieneArchivo ? "cursor-pointer text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} cursor-pointer p-2 rounded-full transition-colors`}
+                  title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
+                >
+                  {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 
     return (
         <motion.div
@@ -188,7 +261,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {documentosRegulares  ? (
+                {documentosRegulares ? (
                     documentosRegulares.map((documento, index) => (
                         <DocumentCard key={index} documento={documento} />
                     ))

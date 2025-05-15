@@ -151,9 +151,9 @@ export default function StatusAlerts({
                     <div className="flex items-start">
                         <UserX size={24} className="text-red-500 mr-3 mt-0.5 flex-shrink-0" />
                         <div>
-                            <h3 className="text-red-800 font-medium">Solicitud denegada permanentemente</h3>
+                            <h3 className="text-red-800 font-medium">Solicitud Anulada permanentemente</h3>
                             <p className="text-red-700 text-sm mt-1">
-                                Esta solicitud fue denegada el {pendiente.fechaDenegacion || "N/A"}.
+                                Esta solicitud fue Anulada el {pendiente.fechaDenegacion || "N/A"}.
                                 <br />
                                 Motivo: {pendiente.motivoDenegacion || "No especificado"}
                             </p>

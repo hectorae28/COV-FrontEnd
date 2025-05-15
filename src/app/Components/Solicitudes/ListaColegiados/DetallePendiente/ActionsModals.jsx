@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
 import { motion } from "framer-motion"
-import { CheckCircle, ChevronLeft, ChevronRight, XCircle, AlertOctagon, X } from "lucide-react"
+import { AlertOctagon, CheckCircle, ChevronLeft, ChevronRight, X, XCircle } from "lucide-react"
+import { useState } from "react"
 
 // Modal de Aprobación
 export function ApprovalModal({
@@ -83,8 +83,8 @@ export function ApprovalModal({
                                 <div>
                                     <h4 className="text-red-800 font-medium text-sm">Documentación incompleta</h4>
                                     <p className="text-red-700 text-xs mt-1">
-                                        La solicitud no puede ser aprobada porque faltan documentos requeridos. Asegúrese de que todos los
-                                        documentos estén completos antes de aprobar.
+                                        La solicitud no puede ser aprobada porque no todos los documentos han sido aprobados. 
+                                        Por favor revise y apruebe todos los documentos antes de continuar.
                                     </p>
                                 </div>
                             </div>
@@ -174,8 +174,8 @@ export function ApprovalModal({
                                     !documentosCompletos || (pendiente && pendiente.pagosPendientes && !pendiente.exoneracionPagos?.fecha)
                                 }
                                 className={`cursor-pointer px-4 py-2 flex items-center ${documentosCompletos && (!pendiente || !pendiente.pagosPendientes || pendiente.exoneracionPagos?.fecha)
-                                        ? "bg-green-600 hover:bg-green-700"
-                                        : "bg-gray-400 cursor-not-allowed"
+                                    ? "bg-green-600 hover:bg-green-700"
+                                    : "bg-gray-400 cursor-not-allowed"
                                     } text-white rounded-md transition-colors`}
                             >
                                 Continuar
@@ -243,8 +243,41 @@ export function RejectModal({
     handleRechazarSolicitud,
     handleDenegarSolicitud,
     onClose,
-    isRechazada
+    isRechazada,
+    documentosRechazados = [] // Nueva prop para mostrar documentos rechazados
 }) {
+    // Lista de motivos predefinidos para rechazos o denegaciones
+    const motivosPredefinidos = [
+        "Administración",
+        "Documentación incompleta o incorrecta",
+        "Información personal inconsistente",
+        "Título profesional no válido",
+        "Registro del MPPS no verificable",
+        "Inconsistencia en la identificación",
+        "Error en la documentación académica",
+        "Falta de comprobante de pago",
+        "No cumple con los requisitos del colegio",
+        "Información falsa o adulterada",
+        "Sanciones éticas previas"
+    ];
+
+    // Estado para controlar si se seleccionó un motivo predefinido
+    const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
+    const [motivoPersonalizado, setMotivoPersonalizado] = useState("");
+    const [usarMotivoPersonalizado, setUsarMotivoPersonalizado] = useState(false);
+
+    // Actualizar el motivo final cuando cambia la selección o el texto personalizado
+    const actualizarMotivoFinal = (tipo, valor) => {
+        if (tipo === "predefinido") {
+            setMotivoSeleccionado(valor);
+            setMotivoRechazo(valor);
+            setUsarMotivoPersonalizado(false);
+        } else {
+            setMotivoPersonalizado(valor);
+            setMotivoRechazo(valor);
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <motion.div
@@ -264,31 +297,85 @@ export function RejectModal({
                         .
                     </p>
 
+                    {/* Resumen de documentos rechazados */}
+                    {documentosRechazados.length > 0 && (
+                        <div className="mb-4">
+                            <p className="text-sm font-medium text-red-700 mb-2">Documentos rechazados:</p>
+                            <div className="bg-red-50 p-3 rounded-md border border-red-100 max-h-40 overflow-y-auto">
+                                {documentosRechazados.map((doc, index) => (
+                                    <div key={index} className="mb-2 pb-2 border-b border-red-100 last:border-0">
+                                        <p className="font-medium text-red-800 text-sm">{doc.nombre}</p>
+                                        <p className="text-xs text-red-700">{doc.motivo}</p>
+                                    </div>
+                                ))}
+                                {documentosRechazados.length === 0 && (
+                                    <p className="text-sm text-gray-500 italic">No hay documentos rechazados</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="bg-yellow-50 p-3 rounded-md border border-yellow-100 mb-4">
                         <h4 className="text-sm font-medium text-yellow-800 mb-1 flex items-center">
-                            <AlertOctagon size={16} className="mr-1" /> Diferencia entre rechazar y denegar
+                            <AlertOctagon size={16} className="mr-1" /> Diferencia entre rechazar y Anular
                         </h4>
                         <p className="text-xs text-yellow-700">
                             • <strong>Rechazar:</strong> Permite correcciones futuras. El solicitante puede volver a intentarlo.
-                            <br />• <strong>Denegar:</strong> Rechazo definitivo. No se permitirán más acciones sobre esta solicitud.
+                            <br />• <strong>Anular:</strong> Rechazo definitivo. No se permitirán más acciones sobre esta solicitud.
                         </p>
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Motivo del rechazo o denegación <span className="text-red-500">*</span>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Seleccione un motivo <span className="text-red-500">*</span>
                         </label>
-                        <textarea
-                            value={motivoRechazo}
-                            onChange={(e) => setMotivoRechazo(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-200 focus:border-red-500 transition-all"
-                            placeholder="Ingrese el motivo del rechazo o denegación"
-                            rows="3"
-                        ></textarea>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Este motivo será enviado al solicitante por correo electrónico y quedará registrado en el sistema.
-                        </p>
+                        <select
+                            value={motivoSeleccionado}
+                            onChange={(e) => actualizarMotivoFinal("predefinido", e.target.value)}
+                            className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-200 focus:border-red-500 transition-all"
+                            disabled={usarMotivoPersonalizado}
+                        >
+                            <option value="">Seleccione un motivo...</option>
+                            {motivosPredefinidos.map((motivo, index) => (
+                                <option key={index} value={motivo}>{motivo}</option>
+                            ))}
+                        </select>
                     </div>
+
+                    <div className="flex items-center mb-3">
+                        <input
+                            type="checkbox"
+                            id="motivoPersonalizado"
+                            checked={usarMotivoPersonalizado}
+                            onChange={() => setUsarMotivoPersonalizado(!usarMotivoPersonalizado)}
+                            className="h-4 w-4 text-purple-600 rounded border-gray-300"
+                        />
+                        <label htmlFor="motivoPersonalizado" className="ml-2 text-sm text-gray-700">
+                            Otro motivo
+                        </label>
+                    </div>
+
+                    {usarMotivoPersonalizado && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Motivo personalizado
+                            </label>
+                            <textarea
+                                value={motivoPersonalizado}
+                                onChange={(e) => actualizarMotivoFinal("personalizado", e.target.value)}
+                                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-200 focus:border-red-500 transition-all"
+                                placeholder="Ingrese el motivo específico del rechazo o denegación"
+                                rows="3"
+                            ></textarea>
+                        </div>
+                    )}
+
+                    <p className="text-xs text-gray-500 mt-1 mb-4">
+                        Este motivo será enviado al solicitante por correo electrónico y quedará registrado en el sistema.
+                        {documentosRechazados.length > 0 && (
+                          " Además, se incluirán los motivos de rechazo de cada documento rechazado."
+                        )}
+                    </p>
 
                     <div className="flex flex-col sm:flex-row justify-center gap-3">
                         <button
@@ -297,19 +384,21 @@ export function RejectModal({
                         >
                             Cancelar
                         </button>
-                        {!isRechazada &&(
+                        {!isRechazada && (
                             <button
                                 onClick={handleRechazarSolicitud}
-                                className="cursor-pointer px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:from-[#C40180] hover:to-[#C40180] transition-all shadow-sm font-medium"
+                                disabled={!motivoRechazo.trim()}
+                                className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:from-[#C40180] hover:to-[#C40180] transition-all shadow-sm font-medium ${!motivoRechazo.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 Rechazar solicitud
                             </button>
                         )}
                         <button
                             onClick={handleDenegarSolicitud}
-                            className="cursor-pointer px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-600 hover:to-red-600 transition-all shadow-sm font-medium"
+                            disabled={!motivoRechazo.trim()}
+                            className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-600 hover:to-red-600 transition-all shadow-sm font-medium ${!motivoRechazo.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            Denegar solicitud
+                            Anular solicitud
                         </button>
                     </div>
                 </div>
@@ -326,6 +415,38 @@ export function ExonerationModal({
     handleExonerarPagos,
     onClose,
 }) {
+    // Lista de motivos predefinidos para exoneración
+    const motivosExoneracion = [
+        "Administración",
+        "Convenio institucional",
+        "Situación socioeconómica",
+        "Méritos académicos excepcionales",
+        "Proyecto de investigación aprobado",
+        "Participación en programas de servicio",
+        "Personal del colegio",
+        "Programa especial de reinscripción",
+        "Decisión de junta directiva",
+        "Caso especial aprobado por el presidente",
+        "Condición médica especial"
+    ];
+
+    // Estado para controlar si se seleccionó un motivo predefinido
+    const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
+    const [motivoPersonalizado, setMotivoPersonalizado] = useState("");
+    const [usarMotivoPersonalizado, setUsarMotivoPersonalizado] = useState(false);
+
+    // Actualizar el motivo final cuando cambia la selección o el texto personalizado
+    const actualizarMotivoFinal = (tipo, valor) => {
+        if (tipo === "predefinido") {
+            setMotivoSeleccionado(valor);
+            setMotivoExoneracion(valor);
+            setUsarMotivoPersonalizado(false);
+        } else {
+            setMotivoPersonalizado(valor);
+            setMotivoExoneracion(valor);
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
             <motion.div
@@ -358,19 +479,50 @@ export function ExonerationModal({
                         </div>
                     </div>
 
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Motivo de exoneración <span className="text-red-500">*</span>
+                            Seleccione motivo de exoneración <span className="text-red-500">*</span>
                         </label>
-                        <textarea
-                            value={motivoExoneracion}
-                            onChange={(e) => setMotivoExoneracion(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-[#D7008A]"
-                            rows={4}
-                            placeholder="Ingrese el motivo por el cual se exoneran los pagos..."
-                            required
-                        ></textarea>
+                        <select
+                            value={motivoSeleccionado}
+                            onChange={(e) => actualizarMotivoFinal("predefinido", e.target.value)}
+                            className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#D7008A] focus:border-[#D7008A] transition-all"
+                            disabled={usarMotivoPersonalizado}
+                        >
+                            <option value="">Seleccione un motivo...</option>
+                            {motivosExoneracion.map((motivo, index) => (
+                                <option key={index} value={motivo}>{motivo}</option>
+                            ))}
+                        </select>
                     </div>
+
+                    <div className="flex items-center mb-3">
+                        <input
+                            type="checkbox"
+                            id="exoneracionPersonalizada"
+                            checked={usarMotivoPersonalizado}
+                            onChange={() => setUsarMotivoPersonalizado(!usarMotivoPersonalizado)}
+                            className="h-4 w-4 text-purple-600 rounded border-gray-300"
+                        />
+                        <label htmlFor="exoneracionPersonalizada" className="ml-2 text-sm text-gray-700">
+                            Otro motivo
+                        </label>
+                    </div>
+
+                    {usarMotivoPersonalizado && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Motivo personalizado
+                            </label>
+                            <textarea
+                                value={motivoPersonalizado}
+                                onChange={(e) => actualizarMotivoFinal("personalizado", e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-[#D7008A]"
+                                rows={4}
+                                placeholder="Ingrese el motivo específico por el cual se exoneran los pagos..."
+                            ></textarea>
+                        </div>
+                    )}
 
                     <div className="flex justify-end gap-3 mt-6">
                         <button

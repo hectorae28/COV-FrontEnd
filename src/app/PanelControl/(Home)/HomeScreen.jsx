@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 
 // Importar los componentes separados
-import SectionSolict from "../../Components/Home/SectionSolict"
-import SectionMessag from "../../Components/Home/SectionMessag"
 import SectionAccesD from "../../Components/Home/SectionAccesD"
 import SectionGraf from "../../Components/Home/SectionGraf"
+import SectionMessag from "../../Components/Home/SectionMessag"
+import SectionPendientes from "../../Components/Home/SectionPendientes"
+import SectionSolict from "../../Components/Home/SectionSolict"
 
 // Componente principal Home
 export default function Home() {
@@ -117,9 +118,9 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="select-none cursor-default max-w-8xl mx-auto flex flex-col gap-8 py-8 px-4 mt-20 mb-10">
+    <div className="select-none cursor-default max-w-8xl mx-auto flex flex-col gap-8 py-8 px-4 mt-28">
       {/* Cabecera de bienvenida */}
-      <div className="text-center mb-4">
+      <div className="text-center">
         <h2 className="text-5xl font-bold bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text">
           Bienvenido
         </h2>
@@ -135,19 +136,19 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {/* Widgets en grid responsivo - 3 columnas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Solicitudes - 1ra columna */}
-            <SectionSolict solicitudes={ultimasSolicitudes} />
-
-            {/* Mensajes - 2da columna */}
-            <SectionMessag mensajes={ultimosMensajes} />
-
-            {/* Accesos Rápidos - 3ra columna */}
+          {/* Accesos Rápidos - Ahora centrados en la parte superior */}
+          <div className="">
             <SectionAccesD />
           </div>
 
-          {/* Gráfico de tendencia con integración de estadísticas */}
+          {/* Widgets en grid responsivo - 3 columnas reordenadas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <SectionPendientes />
+            <SectionSolict solicitudes={ultimasSolicitudes} />
+            <SectionMessag mensajes={ultimosMensajes} />
+          </div>
+
+          {/* Gráfico */}
           <SectionGraf
             datos={datosTendencia}
             estadisticasSolicitudes={estadisticasSolicitudes}
