@@ -20,9 +20,9 @@ const nextConfig = {
                 port: '8000',
                 pathname: '/**',
             },
-            {//https://interior-responses-philips-allied.trycloudflare.com
+            {//https://pdf-jersey-neighbor-excited.trycloudflare.com
                 protocol: "https",
-                hostname: "interior-responses-philips-allied.trycloudflare.com",
+                hostname: "pdf-jersey-neighbor-excited.trycloudflare.com",
                 pathname: '/**',
 
             }

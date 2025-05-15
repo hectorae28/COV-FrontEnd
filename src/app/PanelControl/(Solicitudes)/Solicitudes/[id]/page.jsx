@@ -11,16 +11,35 @@ import { useEffect, useState } from "react"
 
 // Componentes importados
 import PagosColg from "@/app/Components/Solicitudes/Solicitudes/PagosModalSolic"
-import ConfirmacionModal from "./ConfirmacionModal"
-import DocumentosSection from "./DocumentosSection"
-import DocumentViewer from "./DocumentViewer"
-import SolicitudHeader from "./HeaderSolic"
-import HistorialPagosSection from "./HistorialPagosSection"
-import RechazoModal from "./RechazoModal"
-import ServiciosSection from "./ServiciosSection"
+import ConfirmacionModal from "@/Components/Solicitudes/Solicitudes/ConfirmacionModal"
+import DocumentosSection from "@/Components/Solicitudes/Solicitudes/DocumentosSection"
+import DocumentViewer from "@/Components/Solicitudes/Solicitudes/DocumentViewer"
+import SolicitudHeader from "@/Components/Solicitudes/Solicitudes/HeaderSolic"
+import HistorialPagosSection from "@/Components/Solicitudes/Solicitudes/HistorialPagosSection"
+import RechazoModal from "@/Components/Solicitudes/Solicitudes/RechazoModal"
+import ServiciosSection from "@/Components/Solicitudes/Solicitudes/ServiciosSection"
+import { useRouter } from "next/navigation"
+import { solicitudes  } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
+import { useParams } from "next/navigation";
 
-export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, actualizarSolicitud }) {
+
+export default function DetalleSolicitud() {
   // Estados principales
+  const params = useParams();
+  
+  // Si tu ruta es /usuarios/[id], puedes acceder así:
+  const { id } = params;
+  console.log({id})
+  const router = useRouter();
+  const solicitudId = "5"
+  console.log({solicitudId,solicitudes})
+  const onVolver = () => {
+    router.back()
+  }
+  const actualizarSolicitud = (solicitudActualizada) => {
+    alert("Solicitud actualizada:", solicitudActualizada);
+  };
+  
   const [solicitud, setSolicitud] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [alertaExito, setAlertaExito] = useState(null)

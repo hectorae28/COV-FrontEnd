@@ -2,7 +2,7 @@
 import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado";
 import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
 import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal";
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import useDataListaColegiados from "@/store/ListaColegiadosData";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

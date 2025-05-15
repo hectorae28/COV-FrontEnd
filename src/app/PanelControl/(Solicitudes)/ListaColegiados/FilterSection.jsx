@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 export default function FilterSection({
     tabActivo,
     filtroFecha,
