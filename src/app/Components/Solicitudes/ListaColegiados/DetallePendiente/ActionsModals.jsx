@@ -83,7 +83,7 @@ export function ApprovalModal({
                                 <div>
                                     <h4 className="text-red-800 font-medium text-sm">Documentación incompleta</h4>
                                     <p className="text-red-700 text-xs mt-1">
-                                        La solicitud no puede ser aprobada porque no todos los documentos han sido aprobados. 
+                                        La solicitud no puede ser aprobada porque no todos los documentos han sido aprobados.
                                         Por favor revise y apruebe todos los documentos antes de continuar.
                                     </p>
                                 </div>
@@ -297,6 +297,16 @@ export function RejectModal({
                         .
                     </p>
 
+                    <div className="bg-yellow-50 p-3 rounded-md border border-yellow-100 mb-4">
+                        <h4 className="text-sm font-medium text-yellow-800 mb-1 flex items-center">
+                            <AlertOctagon size={16} className="mr-1" /> Diferencia entre rechazar y Anular
+                        </h4>
+                        <p className="text-xs text-yellow-700">
+                            • <strong>Rechazar:</strong> Permite correcciones futuras. El solicitante puede volver a intentarlo.
+                            <br />• <strong>Anular:</strong> Rechazo definitivo. No se permitirán más acciones sobre esta solicitud.
+                        </p>
+                    </div>
+
                     {/* Resumen de documentos rechazados */}
                     {documentosRechazados.length > 0 && (
                         <div className="mb-4">
@@ -314,16 +324,6 @@ export function RejectModal({
                             </div>
                         </div>
                     )}
-
-                    <div className="bg-yellow-50 p-3 rounded-md border border-yellow-100 mb-4">
-                        <h4 className="text-sm font-medium text-yellow-800 mb-1 flex items-center">
-                            <AlertOctagon size={16} className="mr-1" /> Diferencia entre rechazar y Anular
-                        </h4>
-                        <p className="text-xs text-yellow-700">
-                            • <strong>Rechazar:</strong> Permite correcciones futuras. El solicitante puede volver a intentarlo.
-                            <br />• <strong>Anular:</strong> Rechazo definitivo. No se permitirán más acciones sobre esta solicitud.
-                        </p>
-                    </div>
 
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -373,7 +373,7 @@ export function RejectModal({
                     <p className="text-xs text-gray-500 mt-1 mb-4">
                         Este motivo será enviado al solicitante por correo electrónico y quedará registrado en el sistema.
                         {documentosRechazados.length > 0 && (
-                          " Además, se incluirán los motivos de rechazo de cada documento rechazado."
+                            " Además, se incluirán los motivos de rechazo de cada documento rechazado."
                         )}
                     </p>
 
