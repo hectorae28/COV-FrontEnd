@@ -57,3 +57,13 @@ export const pagoSolvencia = async (detallesPagoSolvencia) => {
         throw error;
     }
 }
+
+export const solicitarSolvenciaEspecial = async (detallesSolvenciaEspecial) => {
+    try {
+        const data = api.post('solicitudes/solicitar_costo_solvencia/', detallesSolvenciaEspecial)
+        return data;
+    } catch (error) {
+        console.error("Ha ocurrido un error: ", error);
+        throw error;
+    }
+}
