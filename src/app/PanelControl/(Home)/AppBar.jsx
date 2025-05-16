@@ -109,7 +109,7 @@ const menuItems = [
     config: {
       title: "Cursos y Eventos",
       icon: <Celebration className="h-5 w-5" />,
-      path: "/PanelControl/CursosEventos",
+      path: "/PanelControl/Eventos",
       isDirectNav: true
     }
   },

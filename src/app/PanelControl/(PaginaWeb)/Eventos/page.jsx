@@ -1,58 +1,147 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
+import { useEffect, useState } from "react";
+import EventCardWrapper from "@/app/(Site)/(Eventos)/Eventos/page";
+import api from "@/api/api";
 
-export default function ContactPage() {
+export default function DashboardEventos() {
+  const [eventos, setEventos] = useState([]);
+  const [eventoEditando, setEventoEditando] = useState(null);
+
+  const [formValues, setFormValues] = useState({
+    title: "",
+    date: "",
+    hora_inicio: "",
+    location: "",
+    image: "",
+    link: "#",
+  });
+
+  const cargarEventos = async () => {
+    try {
+      const res = await api.get("/eventos/evento/");
+      setEventos(res.data);
+    } catch (err) {
+      console.error("Error cargando eventos", err);
+    }
+  };
+
+  useEffect(() => {
+    cargarEventos();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (eventoEditando) {
+        await api.patch(`/eventos/evento/${eventoEditando.id}/`, formValues);
+      } else {
+        await api.post("/eventos/evento/", formValues);
+      }
+      setFormValues({ title: "", date: "", hora_inicio: "", location: "", image: "", link: "#" });
+      setEventoEditando(null);
+      cargarEventos();
+    } catch (err) {
+      console.error("Error guardando evento", err);
+    }
+  };
+
+  const handleEditar = (evento) => {
+    setEventoEditando(evento);
+    setFormValues({
+      title: evento.title || evento.nombre,
+      date: evento.date || evento.fecha,
+      hora_inicio: evento.hora_inicio || "",
+      location: evento.location || evento.lugar,
+      image: evento.image || evento.cover_url,
+      link: evento.link || evento.link || "#",
+    });
+  };
+
+  const handleEliminar = async (id) => {
+    try {
+      await api.delete(`/eventos/evento/${id}/`);
+      cargarEventos();
+    } catch (err) {
+      console.error("Error eliminando evento", err);
+    }
+  };
+
   return (
-    <div className="w-full px-4 md:px-10 py-10 md:py-12">
-      {/* Header Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className="text-center mb-8 md:mb-10 mt-16 md:mt-22"
-      >
-        <motion.h1
-          className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
-        >
-          Sección Eventos
-        </motion.h1>
-        <motion.p
-          className="mt-4 max-w-full mx-auto text-gray-600 text-base md:text-lg"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-        >
-          Gestión de contenidos de la sección <span className="font-bold text-[#C40180]">Eventos</span> del sitio web del Colegio Odontológico de Venezuela
-        </motion.p>
-      </motion.div>
+    <div className="min-h-screen bg-gray-100 p-6 mt-28">
+      <h1 className="text-3xl font-bold text-[#C40180] mb-6">Panel de Administración de Eventos</h1>
 
-      {/* Basic Content Section */}
-      <div className="w-full bg-white rounded-xl shadow-xl overflow-hidden p-6 md:p-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Información de Contacto</h2>
-        <div className="space-y-4 text-gray-600">
-          <p>Aquí puedes encontrar toda la información de contacto del Colegio Odontológico de Venezuela.</p>
-          <p>Para cualquier consulta, por favor utiliza los siguientes canales:</p>
-          
-          <div className="mt-6 space-y-3">
-            <div>
-              <h3 className="font-semibold text-gray-700">Teléfono:</h3>
-              <p>+58 212-555-1234</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        {/* Formulario */}
+        <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
+          {[
+            { label: "Título", name: "title" },
+            { label: "Fecha", name: "date", type: "date" },
+            { label: "Hora de Inicio", name: "hora_inicio", type: "time" },
+            { label: "Ubicación", name: "location" },
+            { label: "URL de Imagen", name: "image" },
+            { label: "Link de Inscripción", name: "link" },
+          ].map(({ label, name, type = "text" }) => (
+            <div key={name}>
+              <label className="block text-sm font-medium text-gray-700">{label}</label>
+              <input
+                type={type}
+                name={name}
+                value={formValues[name] || ""}
+                onChange={handleChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-700">Email:</h3>
-              <p>contacto@odontologico.org</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-700">Dirección:</h3>
-              <p>Av. Principal, Edificio Colegio Odontológico, Caracas, Venezuela</p>
-            </div>
-          </div>
+          ))}
+          <button
+            type="submit"
+            className="w-full py-2 px-4 rounded-md font-semibold text-white bg-[#C40180] hover:bg-[#a80166]"
+          >
+            {eventoEditando ? "Actualizar Evento" : "Crear Evento"}
+          </button>
+        </form>
+
+        {/* Vista previa */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Vista previa</h2>
+          <EventCardWrapper {...formValues} />
         </div>
       </div>
+
+      {/* Lista de eventos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {eventos.map((evento) => (
+          <div key={evento.id} className="relative group">
+            <EventCardWrapper
+              title={evento.title || evento.nombre}
+              date={evento.date || evento.fecha}
+              hora_inicio={evento.hora_inicio}
+              location={evento.location || evento.lugar}
+              image={evento.image || evento.cover_url}
+              link={evento.link}
+            />
+            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+              <button
+                onClick={() => handleEditar(evento)}
+                className="bg-blue-500 text-white px-2 py-1 text-sm rounded"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => handleEliminar(evento.id)}
+                className="bg-red-500 text-white px-2 py-1 text-sm rounded"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
-  )
+  );
 }
