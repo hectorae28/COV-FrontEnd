@@ -5,9 +5,10 @@ import { Tab } from "@headlessui/react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-// Import our new components
+// Import components
 import EventForm from "@/app/components/PaginaWeb/CursosEventos/EventForm";
 import EventList from "@/app/components/PaginaWeb/CursosEventos/EventList";
+import FormBuilder from "@/app/Components/PaginaWeb/CursosEventos/FormInscripcion/FormBuilder";
 
 const initialValues = {
   title: "",
@@ -28,6 +29,10 @@ export default function DashboardEventos() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(true);
   const [filteredData, setFilteredData] = useState([]);
+  
+  // Nuevo estado para manejar el formulario
+  const [showFormBuilder, setShowFormBuilder] = useState(false);
+  const [currentFormItem, setCurrentFormItem] = useState(null);
 
   useEffect(() => {
     const currentData = tabIndex === 0 ? eventos : cursos;
@@ -106,8 +111,39 @@ export default function DashboardEventos() {
     resetForm();
   };
 
+  // Funciones para el constructor de formularios
+  const handleFormBuilder = (item) => {
+    setCurrentFormItem(item);
+    setShowFormBuilder(true);
+  };
+
+  const handleSaveForm = (updatedItem) => {
+    // Actualizar el item con el formulario
+    if (tabIndex === 0) {
+      setEventos(prev => prev.map(item => 
+        item.id === updatedItem.id ? updatedItem : item
+      ));
+    } else {
+      setCursos(prev => prev.map(item => 
+        item.id === updatedItem.id ? updatedItem : item
+      ));
+    }
+    setShowFormBuilder(false);
+  };
+
+  // Si estamos mostrando el constructor de formularios
+  if (showFormBuilder) {
+    return (
+      <FormBuilder 
+        item={currentFormItem} 
+        onBack={() => setShowFormBuilder(false)}
+        onSave={handleSaveForm}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen px-4 md:px-10 mt-28 pb-8">
+    <div className="min-h-screen px-4 md:px-10 mt-36 pb-8">
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -181,6 +217,7 @@ export default function DashboardEventos() {
               editingId={editingId}
               handleSelect={handleSelect}
               handleDelete={handleDelete}
+              handleFormBuilder={handleFormBuilder}
             />
           </div>
         </div>
