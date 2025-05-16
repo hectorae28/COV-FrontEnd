@@ -2,17 +2,7 @@ import { create } from "zustand";
 
 const useColegiadoUserStore = create((set, get) => (
     {
-        colegiadoUser: {
-            email: "",
-            first_name: "",
-            last_name: "",
-            solvencia_status: null,
-            solvente: "",
-            username: "",
-            id: null,
-            requiere_solvencia_esp: null,
-            costo_de_solvencia: null
-        },
+        colegiadoUser: null,
         costos: [],
         tasaBcv: null,
 

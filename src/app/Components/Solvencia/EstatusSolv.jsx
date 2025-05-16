@@ -26,7 +26,7 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
     "" : "Su costo esta siendo calculado";
 
   const mensajeDeCosto = colegiadoUser.requiere_solvencia_esp ?
-    costoEspecialMessage : `Monto; ${colegiadoUser.costo_de_solvencia}`;
+    costoEspecialMessage : `Monto: ${colegiadoUser.costo_de_solvencia}`;
 
   const mostraBoton = () => {
     if (colegiadoUser.requiere_solvencia_esp && !colegiadoUser.puede_pedir_costo_especial) {
