@@ -20,8 +20,16 @@ import {useSolicitudesStore} from "@/store/SolicitudesStore.jsx"
 import useColegiadoUserStore from "@/store/colegiadoUserStore"
 export default function ListaSolicitudes() {
   // Estados para manejar los datos
-  const [solicitudes, setSolicitudes] = useState([])
-  const fetchTiposSolicitud = useSolicitudesStore((state) => state.fetchTiposSolicitud)
+  //const [solicitudes, setSolicitudes] = useState([])
+  //const fetchTiposSolicitud = useSolicitudesStore((state) => state.fetchTiposSolicitud)
+  const initStore = useSolicitudesStore((state) => state.initStore)
+  const solicitudes = useSolicitudesStore((state)=>state.solicitudes)
+  const solicitudesPagination = useSolicitudesStore((state)=>state.solicitudesPagination)
+
+  const solicitudesAbiertas = useSolicitudesStore((state)=>state.solicitudesAbiertas)
+  const solicitudesAbiertasPagination = useSolicitudesStore((state)=>state.solicitudesAbiertasPagination)
+  const solicitudesCerradas = useSolicitudesStore((state)=>state.solicitudesCerradas)
+  const solicitudesCerradasPagination = useSolicitudesStore((state)=>state.solicitudesCerradasPagination)
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [showModal, setShowModal] = useState(false)
@@ -40,7 +48,7 @@ export default function ListaSolicitudes() {
   
   const loadTiposSolicitud = async () => {
     try {
-      await fetchTiposSolicitud();
+      await initStore();
     } catch (error) {
       console.error("Error al cargar tipos de solicitud:", error);
     }
@@ -59,14 +67,8 @@ export default function ListaSolicitudes() {
       setIsLoading(false);
     }, 1000);
   }, []);
+  console.log({solicitudesAbiertas,solicitudesAbiertasPagination,solicitudesCerradas,solicitudesCerradasPagination})
   
-  // Conteo de solicitudes por estado para los tabs
-  const conteoSolicitudes = useMemo(() => ({
-    pendientes: solicitudes.filter(s => s.estado === "Pendiente").length,
-    aprobadas: solicitudes.filter(s => s.estado === "Aprobada").length,
-    rechazadas: solicitudes.filter(s => s.estado === "Rechazada").length,
-    exoneradas: solicitudes.filter(s => s.estado === "Exonerada").length
-  }), [solicitudes]);
 
   // Filtrar solicitudes basado en búsqueda, tab actual y filtro de costo
   const solicitudesFiltradas = useMemo(() => {
@@ -80,7 +82,7 @@ export default function ListaSolicitudes() {
 
         const matchesTab =
           tabActual === "todas" ||
-          (tabActual === "pendientes" && solicitud.estado === "Pendiente") ||
+          (tabActual === "revisando" && solicitud.estado === "Pendiente") ||
           (tabActual === "aprobadas" && solicitud.estado === "Aprobada") ||
           (tabActual === "rechazadas" && solicitud.estado === "Rechazada") ||
           (tabActual === "exoneradas" && solicitud.estado === "Exonerada")
@@ -145,16 +147,6 @@ export default function ListaSolicitudes() {
   }
 
   // Renderizado condicional basado en la vista actual
-  if (vistaActual === "detalleSolicitud") {
-    return (
-      <DetalleSolicitud
-        solicitudId={solicitudSeleccionadaId}
-        onVolver={volverALista}
-        solicitudes={solicitudes}
-        actualizarSolicitud={actualizarSolicitud}
-      />
-    )
-  }
 
   // Vista principal de lista
   return (
@@ -227,44 +219,30 @@ export default function ListaSolicitudes() {
               Todas las solicitudes
             </button>
             <button
-              onClick={() => setTabActual("pendientes")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "pendientes"
+              onClick={() => setTabActual("abierta")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "abierta"
                   ? "border-[#C40180] text-[#C40180]"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
-              Pendientes
-              {conteoSolicitudes.pendientes > 0 && (
+              Abiertas
+              {solicitudesAbiertasPagination.count > 0 && (
                 <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {conteoSolicitudes.pendientes}
+                  {solicitudesAbiertasPagination.count}
                 </span>
               )}
             </button>
             <button
-              onClick={() => setTabActual("aprobadas")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "aprobadas"
+              onClick={() => setTabActual("cerradas")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "cerradas"
                   ? "border-[#C40180] text-[#C40180]"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
-              Aprobadas
-              {conteoSolicitudes.aprobadas > 0 && (
+              Cerradas
+              {solicitudesCerradasPagination.count > 0 && (
                 <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {conteoSolicitudes.aprobadas}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setTabActual("rechazadas")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "rechazadas"
-                  ? "border-[#C40180] text-[#C40180]"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-            >
-              Rechazadas
-              {conteoSolicitudes.rechazadas > 0 && (
-                <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {conteoSolicitudes.rechazadas}
+                  {solicitudesCerradasPagination.count}
                 </span>
               )}
             </button>
@@ -321,13 +299,13 @@ export default function ListaSolicitudes() {
           {solicitudesFiltradas.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                {tabActual === "pendientes" && <Clock className="h-8 w-8 text-yellow-500" />}
+                {tabActual === "revisando" && <Clock className="h-8 w-8 text-yellow-500" />}
                 {tabActual === "aprobadas" && <CheckCircle className="h-8 w-8 text-green-500" />}
                 {tabActual === "rechazadas" && <XCircle className="h-8 w-8 text-red-500" />}
                 {tabActual === "todas" && <Search className="h-8 w-8 text-gray-400" />}
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                {tabActual === "pendientes" && "No hay solicitudes pendientes"}
+                {tabActual === "revisando" && "No hay solicitudes pendientes"}
                 {tabActual === "aprobadas" && "No hay solicitudes aprobadas"}
                 {tabActual === "rechazadas" && "No hay solicitudes rechazadas"}
                 {tabActual === "todas" && "No se encontraron solicitudes"}
@@ -461,6 +439,7 @@ export default function ListaSolicitudes() {
             }
           }}
           solicitudCreada={solicitudCreada}
+          isAdmin={true}
         />
       )}
     </div>

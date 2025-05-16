@@ -72,7 +72,7 @@ export default function CrearSolicitudModal({
               >
                 Cerrar
               </button>
-              <Link href={isAdmin?`/PanelControl/Solicitudes/${solicitudCreada.id}`:`/Colegiado/solicitudes/${solicitudCreada.id}`}>
+              <Link href={isAdmin?`/PanelControl/Solicitudes/${solicitudCreada.id}`:`/Colegiado/Solicitudes/${solicitudCreada.id}`}>
                 <div
                   onClick={handleVerDetalle}
                   className="cursor-pointer order-1 sm:order-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all duration-300"

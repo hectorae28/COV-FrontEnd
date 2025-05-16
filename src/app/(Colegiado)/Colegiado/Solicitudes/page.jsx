@@ -1,7 +1,7 @@
 "use client"
 
 import { fetchMe } from "@/api/endpoints/colegiado"
-import { solicitudes as solicitudesIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesColegiadosData"
+import { colegiado, solicitudes as solicitudesIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesColegiadosData"
 import DashboardLayout from "@/Components/DashboardLayout"
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
@@ -158,11 +158,8 @@ export default function ListaSolicitudesColegiado() {
     };
 
   const handleSolicitudCreada = async (nuevaSolicitud) => {
-    console.log("Solicitud creada:", nuevaSolicitud)
-    console.log(convertJsonToFormData(nuevaSolicitud))
-    const solCreada= await addSolicitud(nuevaSolicitud)
+    const solCreada= await addSolicitud({...nuevaSolicitud, colegiadoId:Colegiado.colegiado_id})
     setSolicitudCreada(solCreada)
-    //setSolicitudes(prev => [nuevaSolicitud, ...prev]); // Añadir al principio del array
   }
 
     const actualizarSolicitud = (solicitudActualizada) => {
@@ -214,17 +211,6 @@ export default function ListaSolicitudesColegiado() {
 
     // Contenido principal basado en la vista actual
     const renderContent = () => {
-        if (vistaActual === "detalleSolicitud") {
-            return (
-                <DetalleSolicitud
-                    solicitudId={solicitudSeleccionadaId}
-                    onVolver={volverALista}
-                    solicitudes={solicitudes}
-                    actualizarSolicitud={actualizarSolicitud}
-                />
-            );
-        }
-
         // Vista principal de lista
         return (
             <div className="select-none cursor-default w-full px-4 md:px-10">
@@ -484,6 +470,7 @@ export default function ListaSolicitudesColegiado() {
                         session={session}
                         mostrarSeleccionColegiado={false}
                         solicitudCreada={solicitudCreada}
+                        isAdmin={false}
                     />
                 )}
             </div>
@@ -492,13 +479,8 @@ export default function ListaSolicitudesColegiado() {
 
     // Renderizado final con DashboardLayout
     return (
-        <DashboardLayout
-            isSolvent={isSolvent}
-            showSolvencyWarning={showSolvencyWarning}
-            userInfo={userInfo}
-            session={session}
-        >
+        <>
             {renderContent()}
-        </DashboardLayout>
+        </>
     );
 }

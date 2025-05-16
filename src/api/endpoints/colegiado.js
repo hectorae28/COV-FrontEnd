@@ -2,7 +2,7 @@ import api from "../api";
 
 export const fetchMe = async (session = null) => {
     try {
-        const data = api.get('usuario/me/', {
+        const data = api.get('usuario/me/', session&&{
             headers: {
                 Authorization: `Bearer ${session?.user?.access}`,
             },

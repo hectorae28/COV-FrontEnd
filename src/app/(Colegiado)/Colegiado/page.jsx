@@ -170,11 +170,12 @@ async function fetchUserAndSolvency() {
   }
 
   return (
-    <DashboardLayout
-      isSolvent={isSolvent}
-      showSolvencyWarning={showSolvencyWarning}
-      userInfo={userInfo}
-    >
+    // <DashboardLayout
+    //   isSolvent={isSolvent}
+    //   showSolvencyWarning={showSolvencyWarning}
+    //   userInfo={userInfo}
+    // 
+    <>
       {/* Contenido principal sin pestañas cuando el usuario está completamente solvente */}
       {!showTabs ? (
         <>
@@ -316,6 +317,7 @@ async function fetchUserAndSolvency() {
       )}
 
       <Chat />
-    </DashboardLayout>
+      {/* </DashboardLayout> */}
+      </>
   )
 }

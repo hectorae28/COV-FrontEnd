@@ -110,9 +110,19 @@ export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
 export const useSolicitudesStore = create((set, get) => ({
   solicitudes: [],
   solicitudesPagination: {},
+  solicitudesAbiertas: [],
+  solicitudesAbiertasPagination: {},
+  solicitudesCerradas: [],
+  solicitudesCerradasPagination: {},
   tipos_solicitud: TIPOS_SOLICITUD,
   loading: false,
   error: null,
+
+  initStore: async () => {
+    await get().fetchTiposSolicitud();
+    await get().fetchSolicitudes("cerrada");
+    await get().fetchSolicitudes("abierta");
+  },
   
   fetchTiposSolicitud: async () => {
     set({ loading: true });
@@ -159,10 +169,10 @@ export const useSolicitudesStore = create((set, get) => ({
     }
   },
   
-  fetchSolicitudes: async (page = 1, pageSize = 10, filtros = {}) => {
+  fetchSolicitudes: async (estado,page = 1, pageSize = 10, filtros = {}) => {
     set({ loading: true });
     try {
-      let params = `?page=${page}&page_size=${pageSize}`;
+      let params = `?page=${page}&page_size=${pageSize}&status=${estado}`;
       
       Object.entries(filtros).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -170,13 +180,22 @@ export const useSolicitudesStore = create((set, get) => ({
         }
       });
       
-      const res = await fetchSolicitudes("solicitud", params);
-      set({
-        solicitudes: res.data.results,
-        solicitudesPagination: res.data,
-        loading: false
-      });
-      return res.data;
+      const res = await fetchSolicitudes("solicitud_unida", params);
+      if (estado === "cerrada") {
+        set({
+          solicitudesCerradas: res.data.results,
+          solicitudesCerradasPagination: res.data,
+          loading: false
+        });
+        return res.data;
+      }else{
+        set({
+          solicitudesAbiertas: res.data.results,
+          solicitudesAbiertasPagination: res.data,
+          loading: false
+        });
+        return res.data;
+      }
     } catch (error) {
       set({ 
         loading: false, 
