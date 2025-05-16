@@ -6,7 +6,7 @@ const DetallesDynamic = async({params}) => {
 
   return (
     <>
-        <DetalleSolicitud props={{id, isAdmin: true}} />
+        <DetalleSolicitud props={{id, isAdmin: false}} />
     </>
   )
 }

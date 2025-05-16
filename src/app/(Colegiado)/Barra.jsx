@@ -11,7 +11,6 @@ export default function Barra({
   isSolvent,
   userInfo,
   showSolvencyWarning,
-  session
 }) {
   const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser)
   // Manejo seguro del contexto con valores por defecto
@@ -86,7 +85,7 @@ export default function Barra({
             <Notifications fontSize="medium" />
           </button>
 
-          <PerfilDropdown userInfo={userInfo} session={session} />
+          <PerfilDropdown userInfo={userInfo} />
         </div>
       </div>
     </div>

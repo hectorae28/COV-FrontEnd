@@ -11,21 +11,34 @@ import { useEffect, useState } from "react"
 
 // Componentes importados
 import PagosColg from "@/app/Components/Solicitudes/Solicitudes/PagosModalSolic"
-import ConfirmacionModal from "./ConfirmacionModal"
-import DocumentosSection from "./DocumentosSection"
-import DocumentViewer from "./DocumentViewer"
-import SolicitudHeader from "./HeaderSolic"
-import HistorialPagosSection from "./HistorialPagosSection"
-import RechazoModal from "./RechazoModal"
-import ServiciosSection from "./ServiciosSection"
+import ConfirmacionModal from "@/Components/Solicitudes/Solicitudes/ConfirmacionModal"
+import DocumentosSection from "@/Components/Solicitudes/Solicitudes/DocumentsManagerComponent"
+import DocumentViewerModal from "@/Components/Solicitudes/ListaColegiados/DetallePendiente/DocumentViewerModal.jsx"
+import SolicitudHeader from "@/Components/Solicitudes/Solicitudes/HeaderSolic"
+import HistorialPagosSection from "@/Components/Solicitudes/Solicitudes/HistorialPagosSection"
+import RechazoModal from "@/Components/Solicitudes/Solicitudes/RechazoModal"
+import ServiciosSection from "@/Components/Solicitudes/Solicitudes/ServiciosSection"
+import { useSolicitudesStore } from "@/store/SolicitudesStore"
+import transformBackendData from "@/utils/formatDataSolicitudes"
+import { useRouter } from "next/navigation"
 
-export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, actualizarSolicitud }) {
-  // Estados principales
+
+export default function DetalleSolicitud({props}) {
+  const {id, isAdmin} = props
+  console.log(props)
+  const router = useRouter();
+  const onVolver = () => {
+    router.back()
+  }
+  const actualizarSolicitud = (solicitudActualizada) => {
+    alert("Solicitud actualizada:", solicitudActualizada);
+  };
+  const getSolicitudById = useSolicitudesStore((state) => state.getSolicitudById);
+  
   const [solicitud, setSolicitud] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [alertaExito, setAlertaExito] = useState(null)
   
-  console.log({solicitud})
   // Estados de modales
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
   const [mostrarRechazo, setMostrarRechazo] = useState(false)
@@ -36,19 +49,17 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
   const [motivoRechazo, setMotivoRechazo] = useState("")
   const [observaciones, setObservaciones] = useState("")
 
-  // Obtener datos de la solicitud
+  const loadSolicitudById = async () => {
+    const solicitud = await getSolicitudById(id)
+    //setSolicitud(solicitud)
+    setSolicitud(transformBackendData(solicitud));
+    setIsLoading(false)
+  }
+
   useEffect(() => {
-    if (solicitudes && solicitudId) {
-      const solicitudEncontrada = solicitudes.find(s => s.id === solicitudId)
-      
-      if (solicitudEncontrada) {
-        setSolicitud(solicitudEncontrada)
-        setObservaciones(solicitudEncontrada.observaciones || "")
-      }
-      
-      setIsLoading(false)
-    }
-  }, [solicitudId, solicitudes])
+    loadSolicitudById()
+  }, [])
+
 
   // Calcular totales
   const calcularTotales = (solicitudData) => {
@@ -145,6 +156,7 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
   
   // Función para iniciar proceso de pago
   const handleIniciarPago = () => {
+    console.log({solicitud})
     if (totales.totalPendiente === 0) {
       alert("No hay montos pendientes por pagar")
       return
@@ -290,12 +302,17 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
         totales={totales}
         onAprobar={() => setMostrarConfirmacion(true)}
         onRechazar={() => setMostrarRechazo(true)}
+        isAdmin={isAdmin}
       />
       
       {/* Documentos requeridos */}
       <DocumentosSection 
-        solicitud={solicitud}
+        solicitud={solicitud} 
         onVerDocumento={handleVerDocumento}
+        updateDocumento={(formData) => {
+          // Implement API call to update document
+          console.log("Updating document with formData:", formData);
+        }}
       />
       
       {/* Servicios solicitados */}
@@ -362,9 +379,10 @@ export default function DetalleSolicitud({ solicitudId, onVolver, solicitudes, a
       
       {/* Modal para ver documento */}
       {documentoSeleccionado && (
-        <DocumentViewer 
-          documento={documentoSeleccionado}
+        <DocumentViewerModal 
+          documento={{url:documentoSeleccionado}}
           onClose={() => setDocumentoSeleccionado(null)}
+          pendiente={null}
         />
       )}
       

@@ -399,7 +399,7 @@ export default function SeleccionarSolicitudesStep({
                 referencia: `REF-${Date.now().toString().slice(-6)}`,
                 costo: totalCarrito,
                 documentosRequeridos: todosDocumentosRequeridos,
-                documentosAdjuntos: documentosAdjuntos,//Object.keys(documentosAdjuntos).map(key => documentosAdjuntos[key] || "documento.pdf"),
+                documentosAdjuntos: documentosAdjuntos,
                 itemsSolicitud: itemsCarrito,
                 comprobantePago: null,
                 estadoPago: todoExonerado ? "Exonerado" : "Pendiente de verificación",

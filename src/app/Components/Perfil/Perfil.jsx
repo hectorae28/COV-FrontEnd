@@ -17,7 +17,7 @@ import InfoContacto from "@/app/(Registro)/InfoCont";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
 import InfoPersonal from "@/app/(Registro)/InfoPers";
 
-import TabNavigation from "@/app/(Colegiado)/Perfil/TabNavigation";
+import TabNavigation from "@/app/(Colegiado)/Colegiado/Perfil/TabNavigation";
 
 // Importamos el contexto para actualizar el título de la barra
 import { useBarraContext } from "@/app/(Colegiado)/BarraContext";

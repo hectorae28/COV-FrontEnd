@@ -3,6 +3,7 @@ import SessionInfo from "@/Components/SessionInfo"
 import { CheckCircle, ChevronRight, Clock, X } from "lucide-react"
 import { useState } from "react"
 import SeleccionarSolicitudesStep from "./StepsSeleccionarSolic"
+import Link from "next/link"
 
 export default function CrearSolicitudModal({
   onClose,
@@ -19,7 +20,6 @@ export default function CrearSolicitudModal({
   const handleSolicitudCreada = (nuevaSolicitud) => {
     onSolicitudCreada(nuevaSolicitud)
   }
-
   // Función para ir a la vista de detalle de la solicitud
   const handleVerDetalle = () => {
     if (onVerDetalle) {
@@ -65,20 +65,22 @@ export default function CrearSolicitudModal({
               </div>
               <h3 className="text-xl font-bold text-center text-[#41023B]">¡Solicitud registrada correctamente!</h3>
             </div>
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
+            <div className="flex flex-col sm:flex-row-reverse sm:justify-between gap-3">
               <button
                 onClick={onClose}
                 className="cursor-pointer order-2 sm:order-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center justify-center"
               >
                 Cerrar
               </button>
-              <button
-                onClick={handleVerDetalle}
-                className="cursor-pointer order-1 sm:order-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all duration-300"
-              >
-                <span>Ver detalles</span>
-                <ChevronRight size={16} />
-              </button>
+              <Link href={isAdmin?`/PanelControl/Solicitudes/${solicitudCreada.id}`:`/Colegiado/solicitudes/${solicitudCreada.id}`}>
+                <div
+                  onClick={handleVerDetalle}
+                  className="cursor-pointer order-1 sm:order-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all duration-300"
+                >
+                  <span>Ver detalles</span>
+                  <ChevronRight size={16} />
+                </div>
+              </Link>
             </div>
           </div>
         ) : (

@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { fetchSolicitudes } from "@/api/endpoints/solicitud";
 import { postDataSolicitud, patchDataSolicitud } from "@/api/endpoints/solicitud";
 
-const TIPOS_SOLICITUD = {
+export const TIPOS_SOLICITUD = {
     Carnet: {
         id: "carnet",
         nombre: "Carnet",

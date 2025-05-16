@@ -3,6 +3,7 @@ import { fetchMe } from "@/api/endpoints/colegiado";
 import DashboardLayout from "@/Components/DashboardLayout";
 import SolvencyStatus from "@/Components/Solvencia/EstatusSolv";
 import SolvenciaPago from "@/Components/Solvencia/PagoSolv";
+import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Cards from "../Cards";
@@ -173,7 +174,6 @@ async function fetchUserAndSolvency() {
       isSolvent={isSolvent}
       showSolvencyWarning={showSolvencyWarning}
       userInfo={userInfo}
-      session={session}
     >
       {/* Contenido principal sin pestañas cuando el usuario está completamente solvente */}
       {!showTabs ? (

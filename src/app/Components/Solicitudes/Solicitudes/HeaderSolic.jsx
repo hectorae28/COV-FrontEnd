@@ -8,7 +8,7 @@ import {
     Shield
 } from "lucide-react"
 
-const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
+const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar, isAdmin=false }) => {
     const {
         totalExonerado,
         totalPagado,
@@ -17,6 +17,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
         todoExonerado,
         todoPagado
     } = totales
+    const isEspecialidad = solicitud.itemsSolicitud.some(item => item.tipo === 'Especialización')
 
     return (
         <div className="select-none cursor-default bg-white rounded-lg shadow-md p-4 mb-5">
@@ -31,20 +32,20 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
 
                         <div>
                             <h1 className="text-xl font-bold text-gray-800 flex items-center">
-                                {solicitud.tipo_solicitud}
+                                Solicitud
                                 <span className={`ml-3 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${solicitud.status === 'Pendiente'
                                     ? 'bg-yellow-100 text-yellow-800'
-                                    : solicitud.status === 'Aprobada'
+                                    : solicitud.estado === 'Aprobada'
                                         ? 'bg-green-100 text-green-800'
-                                        : solicitud.status === 'Exonerada'
+                                        : solicitud.estado === 'Exonerada'
                                             ? 'bg-teal-100 text-teal-800'
                                             : 'bg-red-100 text-red-800'
                                     }`}>
-                                    {solicitud.status === 'Pendiente' && <Clock size={14} />}
-                                    {solicitud.status === 'Aprobada' && <CheckCircle size={14} />}
-                                    {solicitud.status === 'Exonerada' && <CheckCircle size={14} />}
-                                    {solicitud.status === 'Rechazada' && <XCircle size={14} />}
-                                    {solicitud.status}
+                                    {solicitud.estado === 'Pendiente' && <Clock size={14} />}
+                                    {solicitud.estado === 'Aprobada' && <CheckCircle size={14} />}
+                                    {solicitud.estado === 'Exonerada' && <CheckCircle size={14} />}
+                                    {solicitud.estado === 'Rechazada' && <XCircle size={14} />}
+                                    {solicitud.estado}
                                 </span>
                             </h1>
                             <p className="text-sm text-gray-500">Referencia: {solicitud.referencia}</p>
@@ -67,7 +68,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
                                 </div>
 
                                 {/* Información del creador - AÑADIDO */}
-                                {solicitud.creador && (
+                                {solicitud.creador && isAdmin&& (
                                     <div className="flex items-center col-span-2 mt-1">
                                         {solicitud.creador.esAdmin ? (
                                             <Shield className="text-purple-500 h-4 w-4 mr-1.5" />
@@ -146,7 +147,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar }) => {
 
                     {/* Botones de status/acción */}
                     <div className="mt-4 flex flex-wrap gap-2 md:justify-end">
-                        {solicitud.status === 'Pendiente' && (
+                        {solicitud.estado === 'Pendiente' && isAdmin && isEspecialidad && (
                             <>
                                 <button
                                     onClick={onAprobar}

@@ -266,7 +266,7 @@ export default function DocumentViewerModal({ documento, onClose, pendiente, rea
               ) : (
                 <img
                   src={process.env.NEXT_PUBLIC_BACK_HOST + documento.url || "/placeholder.svg"}
-                  alt={documento.nombre}
+                  alt={documento.nombre||""}
                   className="max-h-full max-w-full object-contain"
                 />
               )}
