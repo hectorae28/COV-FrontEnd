@@ -108,11 +108,11 @@ export default function AppBar({ solvencyInfo }) {
                             <span className="text-md text-gray-300 mb-2">Estado:</span>
                             <span className="text-[16px] font-semibold text-white">
                                 <span
-                                    className={colegiadoUser.solvencia_status ? "text-green-400" : "text-red-400"}
+                                    className={colegiadoUser?.solvencia_status ? "text-green-400" : "text-red-400"}
                                 >
-                                    {colegiadoUser.solvencia_status ? "Solvente" : "No Solvente"}
+                                    {colegiadoUser?.solvencia_status ? "Solvente" : "No Solvente"}
                                 </span>{" "}
-                                hasta: {colegiadoUser.solvente}
+                                hasta: {colegiadoUser?.solvente}
                             </span>
                         </div>
                     </div>

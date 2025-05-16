@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { useEffect, useState, useMemo } from "react"
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 export default function ListaSolicitudesColegiado() {
     // Estados para manejar los datos
@@ -33,36 +34,33 @@ export default function ListaSolicitudesColegiado() {
     const [vistaActual, setVistaActual] = useState("lista") 
     const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null)
     const [tabActual, setTabActual] = useState("pendientes") 
-    const [filtroCosto, setFiltroCosto] = useState("todas") 
+    const [filtroCosto, setFiltroCosto] = useState("todas")
+    const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
+    const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
 
     // Obtener la sesión
     const { data: session, status } = useSession()
 
+    const getColegiadoData = async () => {
+        try {
+            if (!session) return;
+            const userResponse = await fetchMe(session);
+            const userData = userResponse.data;
+            setUserInfo(userData);
+            setColegiadoUser(userData);
+            setIsSolvent(userData.solvencia_status);
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+        }
+    }
+
     // Efecto para cargar la información del usuario
     useEffect(() => {
         if (status === "loading") return;
+        if(!colegiadoUser) getColegiadoData();
 
-        if (session) {
-            fetchMe(session)
-                .then((response) => {
-                    setUserInfo(response.data);
-
-                    if (response.data?.solvente) {
-                        const today = new Date();
-                        const [day, month, year] = response.data.solvente.split("-").map(Number);
-                        const solvencyDate = new Date(year, month - 1, day);
-                        const warningDate = new Date(solvencyDate);
-                        warningDate.setDate(warningDate.getDate() - 14);
-
-                        if (today > solvencyDate) {
-                            setIsSolvent(false);
-                        } else if (today >= warningDate) {
-                            setShowSolvencyWarning(true);
-                        }
-                    }
-                })
-                .catch((error) => console.error("Error fetching user info:", error));
-        }
+        setUserInfo(colegiadoUser);        
+        setIsSolvent(colegiadoUser?.solvencia_status);
     }, [session, status]);
 
     // Cargar datos iniciales de solicitudes
@@ -246,15 +244,20 @@ export default function ListaSolicitudesColegiado() {
                         </div>
                     </div>
 
-                    <div className="flex gap-4 w-full md:w-auto">
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
-                        >
-                            <PlusCircle size={20} />
-                            <span>Nueva solicitud</span>
-                        </button>
-                    </div>
+                    {
+                        colegiadoUser?.solvencia_status && (
+                            <div className="flex gap-4 w-full md:w-auto">
+                                <button
+                                    onClick={() => setShowModal(true)}
+                                    className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
+                                >
+                                    <PlusCircle size={20} />
+                                    <span>Nueva solicitud</span>
+                                </button>
+                            </div>
+                        )
+                    }
+                    
                 </div>
 
                 {/* Tabs para filtrar por estado */}
@@ -470,7 +473,6 @@ export default function ListaSolicitudesColegiado() {
     // Renderizado final con DashboardLayout
     return (
         <DashboardLayout
-            isSolvent={isSolvent}
             showSolvencyWarning={showSolvencyWarning}
             userInfo={userInfo}
             session={session}

@@ -32,7 +32,7 @@ export default function Home() {
     if (!colegiadoUser) return;
     
     const today = new Date();
-    const [year, month, day] = colegiadoUser.solvente.split("-").map(Number);
+    const [year, month, day] = colegiadoUser?.solvente.split("-").map(Number);
     const solvencyDate = new Date(year, month - 1, day);
 
     const warningDate = new Date(solvencyDate);
@@ -129,7 +129,7 @@ async function fetchUserAndSolvency() {
 
   useEffect(() => {
     fetchUserAndSolvency();
-  }, [useColegiadoUserStore((state) => state.colegiadoUser.solvente)]);
+  }, [useColegiadoUserStore((state) => state.colegiadoUser?.solvente)]);
 
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {
@@ -255,7 +255,7 @@ async function fetchUserAndSolvency() {
               {/* Estado de Solvencia (solo si no está solvente o está por vencer) */}
               {(!isSolvent || showSolvencyWarning) && (
                 <SolvencyStatus
-                  solvencyAmount={colegiadoUser.costo_de_solvencia}
+                  solvencyAmount={colegiadoUser?.costo_de_solvencia}
                   onPayClick={handlePayClick}
                   isExpiringSoon={showSolvencyWarning}
                 />

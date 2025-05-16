@@ -5,7 +5,6 @@ import { useState } from "react";
 
 export default function DashboardLayout({
   children,
-  isSolvent,
   userInfo,
   showSolvencyWarning,
   session,
@@ -44,7 +43,6 @@ export default function DashboardLayout({
       >
         <Barra
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-          isSolvent={isSolvent}
           userInfo={userInfo}
           showSolvencyWarning={showSolvencyWarning}
           session={session}
