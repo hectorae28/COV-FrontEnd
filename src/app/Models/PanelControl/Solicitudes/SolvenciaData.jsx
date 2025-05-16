@@ -1,6 +1,3 @@
-// SolvenciasData.jsx - Datos de ejemplo para la sección de solvencias
-
-// Datos de ejemplo de colegiados para el dropdown (reutilizados de SolicitudesData)
 export const colegiados = [
     {
         id: "1",
@@ -22,7 +19,6 @@ export const colegiados = [
     },
 ];
 
-// Datos de ejemplo de solvencias
 export const solvencias = [
     {
         id: "1",
@@ -32,15 +28,9 @@ export const solvencias = [
         fecha: "15/04/2025",
         estado: "Revisión",
         descripcion: "Solvencia profesional para trámites legales",
-        referencia: "SOLV-PROF-2025-001",
-        costo: 50,
+        costo: null, // Pendiente de asignación de costo
         exonerado: false,
         observaciones: "",
-        documentosRequeridos: ["Cédula de identidad", "Comprobante de pago", "Certificado de inscripción"],
-        documentosAdjuntos: {
-            cedula_de_identidad: "cedula_maria.pdf",
-            comprobante_de_pago: "comprobante_pago_maria.pdf"
-        },
         tipoId: "profesional",
         creador: {
             nombre: "Administrador",
@@ -57,25 +47,12 @@ export const solvencias = [
         fecha: "10/04/2025",
         estado: "Aprobada",
         descripcion: "Solvencia para ejercicio profesional",
-        referencia: "SOLV-EJER-2025-002",
         costo: 75,
         exonerado: false,
         fechaAprobacion: "12/04/2025",
         fechaVencimiento: "2026-04-12",
         aprobadoPor: "Admin",
         observaciones: "Aprobada con todos los documentos verificados",
-        documentosRequeridos: [
-            "Cédula de identidad",
-            "Comprobante de pago",
-            "Certificado de inscripción",
-            "Constancia de trabajo vigente"
-        ],
-        documentosAdjuntos: {
-            cedula_de_identidad: "cedula_juan.pdf",
-            comprobante_de_pago: "comprobante_pago_juan.pdf",
-            certificado_de_inscripcion: "certificado_juan.pdf",
-            constancia_de_trabajo_vigente: "constancia_trabajo_juan.pdf"
-        },
         certificadoUrl: "/solvencias/certificado-2.pdf",
         comprobantesPago: [
             {
@@ -103,24 +80,11 @@ export const solvencias = [
         fecha: "05/04/2025",
         estado: "Rechazada",
         descripcion: "Solvencia para especialidad en ortodoncia",
-        referencia: "SOLV-ESP-2025-003",
         costo: 100,
         exonerado: false,
         fechaRechazo: "08/04/2025",
         rechazadoPor: "Admin",
-        motivoRechazo: "Documentación incompleta. Falta título de especialista original.",
-        documentosRequeridos: [
-            "Cédula de identidad",
-            "Comprobante de pago",
-            "Certificado de especialidad",
-            "Título de especialista",
-            "Constancia de trabajo vigente"
-        ],
-        documentosAdjuntos: {
-            cedula_de_identidad: "cedula_carlos.pdf",
-            comprobante_de_pago: "comprobante_pago_carlos.pdf",
-            certificado_de_especialidad: "certificado_carlos.pdf"
-        },
+        motivoRechazo: "Información incorrecta o faltante",
         tipoId: "especialidad",
         creador: {
             nombre: "Asistente",
@@ -137,18 +101,12 @@ export const solvencias = [
         fecha: "01/04/2025",
         estado: "Aprobada",
         descripcion: "Solvencia profesional para concurso público",
-        referencia: "SOLV-PROF-2025-004",
         costo: 0,
         exonerado: true,
         fechaAprobacion: "02/04/2025",
         fechaVencimiento: "2026-04-02",
         aprobadoPor: "Admin",
         observaciones: "Exonerada por ser miembro de la directiva",
-        documentosRequeridos: ["Cédula de identidad", "Comprobante de pago", "Certificado de inscripción"],
-        documentosAdjuntos: {
-            cedula_de_identidad: "cedula_maria_2.pdf",
-            certificado_de_inscripcion: "certificado_maria.pdf"
-        },
         certificadoUrl: "/solvencias/certificado-4.pdf",
         tipoId: "profesional",
         creador: {
@@ -166,21 +124,9 @@ export const solvencias = [
         fecha: "20/03/2025",
         estado: "Revisión",
         descripcion: "Solvencia para ejercicio en institución pública",
-        referencia: "SOLV-EJER-2025-005",
         costo: 75,
         exonerado: false,
         observaciones: "",
-        documentosRequeridos: [
-            "Cédula de identidad",
-            "Comprobante de pago",
-            "Certificado de inscripción",
-            "Constancia de trabajo vigente"
-        ],
-        documentosAdjuntos: {
-            cedula_de_identidad: "cedula_juan_2.pdf",
-            comprobante_de_pago: "comprobante_pago_juan_2.pdf",
-            certificado_de_inscripcion: "certificado_juan_2.pdf"
-        },
         tipoId: "ejercicio",
         creador: {
             nombre: "Asistente",
@@ -197,19 +143,12 @@ export const solvencias = [
         fecha: "15/03/2025",
         estado: "Aprobada",
         descripcion: "Solvencia profesional para trámites internacionales",
-        referencia: "SOLV-PROF-2025-006",
         costo: 50,
         exonerado: false,
         fechaAprobacion: "17/03/2025",
         fechaVencimiento: "2026-03-17",
         aprobadoPor: "Admin",
         observaciones: "Aprobación expedita por urgencia declarada",
-        documentosRequeridos: ["Cédula de identidad", "Comprobante de pago", "Certificado de inscripción"],
-        documentosAdjuntos: {
-            cedula_de_identidad: "cedula_carlos_2.pdf",
-            comprobante_de_pago: "comprobante_pago_carlos_2.pdf",
-            certificado_de_inscripcion: "certificado_carlos_2.pdf"
-        },
         certificadoUrl: "/solvencias/certificado-6.pdf",
         comprobantesPago: [
             {
@@ -237,27 +176,12 @@ export const solvencias = [
         fecha: "10/03/2025",
         estado: "Aprobada",
         descripcion: "Solvencia para especialidad en endodoncia",
-        referencia: "SOLV-ESP-2025-007",
         costo: 100,
         exonerado: false,
         fechaAprobacion: "14/03/2025",
         fechaVencimiento: "2026-03-14",
         aprobadoPor: "Admin",
         observaciones: "Todos los documentos verificados correctamente",
-        documentosRequeridos: [
-            "Cédula de identidad",
-            "Comprobante de pago",
-            "Certificado de especialidad",
-            "Título de especialista",
-            "Constancia de trabajo vigente"
-        ],
-        documentosAdjuntos: {
-            cedula_de_identidad: "cedula_maria_3.pdf",
-            comprobante_de_pago: "comprobante_pago_maria_2.pdf",
-            certificado_de_especialidad: "certificado_especialidad_maria.pdf",
-            titulo_de_especialista: "titulo_especialista_maria.pdf",
-            constancia_de_trabajo_vigente: "constancia_trabajo_maria.pdf"
-        },
         certificadoUrl: "/solvencias/certificado-7.pdf",
         comprobantesPago: [
             {
@@ -275,6 +199,44 @@ export const solvencias = [
             email: "admin@cov.org",
             esAdmin: true,
             fecha: "2025-03-10T14:45:00Z"
+        }
+    },
+    {
+        id: "8",
+        tipo: "Solvencia Profesional",
+        colegiadoId: "2",
+        colegiadoNombre: "Juan Pérez",
+        fecha: "12/04/2025",
+        estado: "Revisión",
+        descripcion: "Solvencia profesional para registro en clínica",
+        costo: null, // Pendiente de asignación de costo
+        exonerado: false,
+        observaciones: "",
+        tipoId: "profesional",
+        creador: {
+            nombre: "Administrador",
+            email: "admin@cov.org",
+            esAdmin: true,
+            fecha: "2025-04-12T09:15:00Z"
+        }
+    },
+    {
+        id: "9",
+        tipo: "Solvencia de Especialidad",
+        colegiadoId: "3",
+        colegiadoNombre: "Carlos Ramírez",
+        fecha: "11/04/2025",
+        estado: "Revisión",
+        descripcion: "Solvencia para especialidad en cirugía maxilofacial",
+        costo: null, // Pendiente de asignación de costo
+        exonerado: false,
+        observaciones: "",
+        tipoId: "especialidad",
+        creador: {
+            nombre: "Asistente",
+            email: "asistente@cov.org",
+            esAdmin: false,
+            fecha: "2025-04-11T15:45:00Z"
         }
     }
 ];

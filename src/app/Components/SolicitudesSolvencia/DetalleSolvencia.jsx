@@ -1,460 +1,680 @@
-"use client"
+"use client";
 import {
-    AlertCircle,
-    CheckCircle,
-    ChevronLeft,
-    Download,
-    MessageSquare,
-    X
-} from "lucide-react"
-import { useEffect, useState } from "react"
+  AlertCircle,
+  Ban,
+  Check,
+  CheckCircle,
+  ChevronLeft,
+  Clock,
+  DollarSign,
+  Download,
+  User,
+  Calendar,
+  X,
+  Shield,
+  Clock3,
+  ArrowRight
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Componentes importados
-import ConfirmacionModal from "./ConfirmacionModal"
-import DocumentosSection from "./DocumentosSection"
-import DocumentViewer from "./DocumentViewer"
-import HistorialPagosSection from "./HistorialPagosSection"
-import PagosModalSolv from "./PagosModalSolv"
-import RechazoModal from "./RechazoModal"
-import SolvenciaHeader from "./SolvenciaHeader"
+import ConfirmacionModal from "./ConfirmacionModal";
+import RechazoModal from "./RechazoModal";
+import ExoneracionModal from "./ExoneracionModal";
 
 export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, actualizarSolvencia }) {
-    // Estados principales
-    const [solvencia, setSolvencia] = useState(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const [alertaExito, setAlertaExito] = useState(null)
-
-    // Estados de modales
-    const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
-    const [mostrarRechazo, setMostrarRechazo] = useState(false)
-    const [mostrarModalPagos, setMostrarModalPagos] = useState(false)
-    const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null)
-
-    // Estados para formularios
-    const [motivoRechazo, setMotivoRechazo] = useState("")
-    const [observaciones, setObservaciones] = useState("")
-    const [fechaVencimiento, setFechaVencimiento] = useState("")
-
-    // Obtener datos de la solvencia
-    useEffect(() => {
-        if (solvencias && solvenciaId) {
-            const solvenciaEncontrada = solvencias.find(s => s.id === solvenciaId)
-
-            if (solvenciaEncontrada) {
-                setSolvencia(solvenciaEncontrada)
-                setObservaciones(solvenciaEncontrada.observaciones || "")
-
-                // Si tiene fecha de vencimiento, establecerla
-                if (solvenciaEncontrada.fechaVencimiento) {
-                    setFechaVencimiento(solvenciaEncontrada.fechaVencimiento)
-                } else {
-                    // Por defecto, establecer fecha de vencimiento a 1 año desde la fecha actual
-                    const hoy = new Date()
-                    const unAnioDelante = new Date(hoy.setFullYear(hoy.getFullYear() + 1))
-                    const formato = unAnioDelante.toISOString().split('T')[0] // formato YYYY-MM-DD
-                    setFechaVencimiento(formato)
-                }
+  // Estados principales
+  const [solvencia, setSolvencia] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [alertaExito, setAlertaExito] = useState(null);
+  
+  // Estados de modales
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [mostrarRechazo, setMostrarRechazo] = useState(false);
+  const [mostrarExoneracion, setMostrarExoneracion] = useState(false);
+  
+  // Estados para formularios
+  // MODIFICADO: Ya no usamos un estado único para la fecha, sino componentes separados
+  const [diaVencimiento, setDiaVencimiento] = useState("");
+  const [mesVencimiento, setMesVencimiento] = useState("");
+  const [anioVencimiento, setAnioVencimiento] = useState("");
+  const [costoNuevo, setCostoNuevo] = useState("");
+  
+  // Arrays para selects de fecha
+  const dias = Array.from({ length: 31 }, (_, i) => i + 1);
+  const meses = [
+    { valor: 1, nombre: "Enero" },
+    { valor: 2, nombre: "Febrero" },
+    { valor: 3, nombre: "Marzo" },
+    { valor: 4, nombre: "Abril" },
+    { valor: 5, nombre: "Mayo" },
+    { valor: 6, nombre: "Junio" },
+    { valor: 7, nombre: "Julio" },
+    { valor: 8, nombre: "Agosto" },
+    { valor: 9, nombre: "Septiembre" },
+    { valor: 10, nombre: "Octubre" },
+    { valor: 11, nombre: "Noviembre" },
+    { valor: 12, nombre: "Diciembre" }
+  ];
+  const anioActual = new Date().getFullYear();
+  const anios = Array.from({ length: 10 }, (_, i) => anioActual + i);
+  
+  // Obtener datos de la solvencia
+  useEffect(() => {
+    if (solvencias && solvenciaId) {
+      const solvenciaEncontrada = solvencias.find(s => s.id === solvenciaId);
+      
+      if (solvenciaEncontrada) {
+        setSolvencia(solvenciaEncontrada);        
+        
+        // Si tiene fecha de vencimiento, establecerla en los campos separados
+        if (solvenciaEncontrada.fechaVencimiento) {
+          try {
+            // Intentar parsear la fecha (podría estar en formato ISO o en formato DD/MM/YYYY)
+            let fechaObj;
+            if (solvenciaEncontrada.fechaVencimiento.includes('-')) {
+              // Formato ISO YYYY-MM-DD
+              fechaObj = new Date(solvenciaEncontrada.fechaVencimiento);
+            } else if (solvenciaEncontrada.fechaVencimiento.includes('/')) {
+              // Formato DD/MM/YYYY
+              const [dia, mes, anio] = solvenciaEncontrada.fechaVencimiento.split('/');
+              fechaObj = new Date(anio, mes - 1, dia);
             }
-
-            setIsLoading(false)
-        }
-    }, [solvenciaId, solvencias])
-
-    // Calcular totales
-    const calcularTotales = (solvenciaData) => {
-        if (!solvenciaData) {
-            return {
-                totalOriginal: 0,
-                totalExonerado: 0,
-                totalPendiente: 0,
-                totalPagado: 0,
-                todoExonerado: false,
-                todoPagado: false
+            
+            if (fechaObj && !isNaN(fechaObj.getTime())) {
+              setDiaVencimiento(fechaObj.getDate());
+              setMesVencimiento(fechaObj.getMonth() + 1);
+              setAnioVencimiento(fechaObj.getFullYear());
             }
+          } catch (error) {
+            console.error("Error al parsear fecha de vencimiento:", error);
+          }
+        } else {
+          // Por defecto, establecer fecha de vencimiento a 1 año desde la fecha actual
+          const hoy = new Date();
+          const unAnioDelante = new Date(hoy.setFullYear(hoy.getFullYear() + 1));
+          setDiaVencimiento(unAnioDelante.getDate());
+          setMesVencimiento(unAnioDelante.getMonth() + 1);
+          setAnioVencimiento(unAnioDelante.getFullYear());
         }
+      }
+      
+      setIsLoading(false);
+    }
+  }, [solvenciaId, solvencias]);
 
-        const costo = solvenciaData.costo || 0
-        const exonerado = solvenciaData.exonerado || false
-        const pagado = solvenciaData.estado === "Aprobada"
+  // Función para validar la fecha de vencimiento seleccionada
+  const validarFechaVencimiento = () => {
+    if (!diaVencimiento || !mesVencimiento || !anioVencimiento) {
+      alert("Debe seleccionar una fecha de vencimiento completa");
+      return false;
+    }
+    
+    // Validar que la fecha sea válida (por ejemplo, 30/02 no es válido)
+    const fechaObj = new Date(anioVencimiento, mesVencimiento - 1, diaVencimiento);
+    if (
+      fechaObj.getFullYear() !== parseInt(anioVencimiento) ||
+      fechaObj.getMonth() !== parseInt(mesVencimiento) - 1 ||
+      fechaObj.getDate() !== parseInt(diaVencimiento)
+    ) {
+      alert("La fecha seleccionada no es válida");
+      return false;
+    }
+    
+    return true;
+  };
 
-        return {
-            totalOriginal: costo,
-            totalExonerado: exonerado ? costo : 0,
-            totalPendiente: !exonerado && !pagado ? costo : 0,
-            totalPagado: pagado && !exonerado ? costo : 0,
-            todoExonerado: exonerado,
-            todoPagado: pagado && !exonerado
-        }
+  // Función para formatear la fecha de vencimiento
+  const obtenerFechaVencimientoFormateada = () => {
+    // Formato YYYY-MM-DD para almacenamiento
+    return `${anioVencimiento}-${mesVencimiento.toString().padStart(2, '0')}-${diaVencimiento.toString().padStart(2, '0')}`;
+  };
+
+  // Función para actualizar el costo asignado
+  const handleAsignarCosto = () => {
+    if (!costoNuevo || parseFloat(costoNuevo) <= 0) {
+      alert("Por favor ingrese un monto válido mayor a cero");
+      return;
     }
 
-    const totales = calcularTotales(solvencia)
-
-    // Función para aprobar la solvencia
-    const handleAprobarSolvencia = async () => {
-        try {
-            // Validar que la fecha de vencimiento sea válida
-            if (!fechaVencimiento) {
-                alert("Debe seleccionar una fecha de vencimiento")
-                return
-            }
-
-            // Simular llamada a API
-            await new Promise(resolve => setTimeout(resolve, 800))
-
-            const fechaActual = new Date().toLocaleDateString()
-            const solvenciaActualizada = {
-                ...solvencia,
-                estado: "Aprobada",
-                fechaAprobacion: fechaActual,
-                fechaVencimiento: fechaVencimiento,
-                aprobadoPor: "Admin",
-                observaciones: observaciones,
-                certificadoUrl: `/solvencias/certificado-${solvencia.id}.pdf` // URL simulada de certificado
-            }
-
-            actualizarSolvencia(solvenciaActualizada)
-            setSolvencia(solvenciaActualizada)
-            setMostrarConfirmacion(false)
-            mostrarAlerta("exito", "La solvencia ha sido aprobada correctamente")
-        } catch (error) {
-            console.error("Error al aprobar solvencia:", error)
-        }
+    try {
+      const solvenciaActualizada = {
+        ...solvencia,
+        costo: parseFloat(costoNuevo),
+        exonerado: false
+      };
+      
+      actualizarSolvencia(solvenciaActualizada);
+      setSolvencia(solvenciaActualizada);
+      mostrarAlerta("exito", "Se ha asignado el costo correctamente");
+    } catch (error) {
+      console.error("Error al asignar costo:", error);
+      mostrarAlerta("alerta", "Ocurrió un error al procesar la solicitud");
     }
-
-    // Función para rechazar la solvencia
-    const handleRechazarSolvencia = async () => {
-        try {
-            if (!motivoRechazo.trim()) {
-                alert("Debe ingresar un motivo de rechazo")
-                return
-            }
-
-            // Simular llamada a API
-            await new Promise(resolve => setTimeout(resolve, 800))
-
-            const solvenciaActualizada = {
-                ...solvencia,
-                estado: "Rechazada",
-                fechaRechazo: new Date().toLocaleDateString(),
-                rechazadoPor: "Admin",
-                motivoRechazo: motivoRechazo,
-                observaciones: observaciones
-            }
-
-            actualizarSolvencia(solvenciaActualizada)
-            setSolvencia(solvenciaActualizada)
-            setMostrarRechazo(false)
-            mostrarAlerta("alerta", "La solvencia ha sido rechazada")
-        } catch (error) {
-            console.error("Error al rechazar solvencia:", error)
-        }
+  };
+  
+  // Función para exonerar el pago
+  const handleExonerarPago = (motivo) => {
+    try {
+      const solvenciaActualizada = {
+        ...solvencia,
+        costo: 0,
+        exonerado: true,
+        motivoExoneracion: motivo
+      };
+      
+      actualizarSolvencia(solvenciaActualizada);
+      setSolvencia(solvenciaActualizada);
+      setMostrarExoneracion(false);
+      mostrarAlerta("exito", "La solvencia ha sido exonerada de pago");
+    } catch (error) {
+      console.error("Error al exonerar pago:", error);
+      mostrarAlerta("alerta", "Ocurrió un error al procesar la exoneración");
     }
-
-    // Función para ver un documento
-    const handleVerDocumento = (documento) => {
-        setDocumentoSeleccionado(documento)
+  };
+  
+  // Función para aprobar la solvencia
+  const handleAprobarSolvencia = async () => {
+    try {
+      // Validar que la fecha de vencimiento sea válida
+      if (!validarFechaVencimiento()) {
+        return;
+      }
+      
+      // Obtener fecha de vencimiento formateada
+      const fechaVencimientoFormateada = obtenerFechaVencimientoFormateada();
+      
+      // Simular llamada a API
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const fechaActual = new Date().toLocaleDateString();
+      const solvenciaActualizada = {
+        ...solvencia,
+        estado: "Aprobada",
+        fechaAprobacion: fechaActual,
+        fechaVencimiento: fechaVencimientoFormateada,
+        aprobadoPor: "Admin",
+        certificadoUrl: `/solvencias/certificado-${solvencia.id}.pdf`
+      };
+      
+      actualizarSolvencia(solvenciaActualizada);
+      setSolvencia(solvenciaActualizada);
+      setMostrarConfirmacion(false);
+      mostrarAlerta("exito", "La solvencia ha sido aprobada correctamente");
+    } catch (error) {
+      console.error("Error al aprobar solvencia:", error);
     }
-
-    // Función para iniciar proceso de pago
-    const handleIniciarPago = () => {
-        if (totales.totalPendiente === 0) {
-            alert("No hay montos pendientes por pagar")
-            return
-        }
-
-        setMostrarModalPagos(true)
+  };
+  
+  // Función para rechazar la solvencia
+  const handleRechazarSolvencia = async (motivo) => {
+    try {
+      if (!motivo) {
+        alert("Debe ingresar un motivo de rechazo");
+        return;
+      }
+      
+      // Simular llamada a API
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const solvenciaActualizada = {
+        ...solvencia,
+        estado: "Rechazada",
+        fechaRechazo: new Date().toLocaleDateString(),
+        rechazadoPor: "Admin",
+        motivoRechazo: motivo,
+      };
+      
+      actualizarSolvencia(solvenciaActualizada);
+      setSolvencia(solvenciaActualizada);
+      setMostrarRechazo(false);
+      mostrarAlerta("alerta", "La solvencia ha sido rechazada");
+    } catch (error) {
+      console.error("Error al rechazar solvencia:", error);
     }
-
-    // Función que se ejecuta cuando se completa un pago
-    const handlePaymentComplete = (pagoInfo) => {
-        // Actualizar solvencia con el pago
-        const solvenciaActualizada = {
-            ...solvencia,
-            estadoPago: "Pagado",
-            comprobantesPago: [...(solvencia.comprobantesPago || []), {
-                id: `pago_${new Date().getTime()}`,
-                archivo: pagoInfo.archivo,
-                fecha: pagoInfo.fecha,
-                monto: pagoInfo.monto,
-                metodoPago: pagoInfo.metodoPago,
-                referencia: pagoInfo.referencia
-            }]
-        }
-
-        actualizarSolvencia(solvenciaActualizada)
-        setSolvencia(solvenciaActualizada)
-        setMostrarModalPagos(false)
-        mostrarAlerta("exito", "El pago se ha registrado correctamente")
-    }
-
-    // Función para mostrar alertas temporales
-    const mostrarAlerta = (tipo, mensaje) => {
-        setAlertaExito({
-            tipo: tipo,
-            mensaje: mensaje
-        })
-
-        // Limpiar alerta después de un tiempo
-        setTimeout(() => {
-            setAlertaExito(null)
-        }, 5000)
-    }
-
-    // Renderizar estado de carga
-    if (isLoading) {
-        return (
-            <div className="w-full px-4 md:px-10 py-10 md:py-12 flex justify-center items-center min-h-[70vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
-            </div>
-        )
-    }
-
-    // Renderizar mensaje de error si no se encuentra la solvencia
-    if (!solvencia) {
-        return (
-            <div className="w-full px-4 md:px-10 py-10 md:py-12">
-                <div className="bg-red-50 text-red-700 p-4 rounded-md">
-                    No se pudo encontrar la información de la solvencia.
-                </div>
-                <button
-                    onClick={onVolver}
-                    className="mt-4 inline-flex items-center text-[#C40180] hover:underline"
-                >
-                    <ChevronLeft size={20} className="mr-1" />
-                    Volver a la lista de solvencias
-                </button>
-            </div>
-        )
-    }
-
+  };
+  
+  // Función para mostrar alertas temporales
+  const mostrarAlerta = (tipo, mensaje) => {
+    setAlertaExito({
+      tipo: tipo,
+      mensaje: mensaje
+    });
+    
+    // Limpiar alerta después de un tiempo
+    setTimeout(() => {
+      setAlertaExito(null);
+    }, 5000);
+  };
+  
+  // Renderizado principal
+  if (isLoading) {
     return (
-        <div className="w-full px-4 md:px-10 py-6 md:py-28">
-            {/* Botón de regreso */}
-            <div className="mb-4">
-                <button
-                    onClick={onVolver}
-                    className="cursor-pointer text-sm text-[#590248] hover:text-[#C40180] flex items-center"
-                >
-                    <ChevronLeft size={20} className="mr-1" />
-                    Volver a la lista de solvencias
-                </button>
-            </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
+      </div>
+    );
+  }
 
-            {/* Alertas de éxito o información */}
-            {alertaExito && (
-                <div className={`mb-4 p-3 rounded-md flex items-start justify-between ${alertaExito.tipo === "exito"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}>
-                    <div className="flex items-center">
-                        {alertaExito.tipo === "exito" ? (
-                            <CheckCircle size={18} className="mr-2 flex-shrink-0" />
-                        ) : (
-                            <AlertCircle size={18} className="mr-2 flex-shrink-0" />
-                        )}
-                        <span>{alertaExito.mensaje}</span>
-                    </div>
-                    <button
-                        onClick={() => setAlertaExito(null)}
-                        className={alertaExito.tipo === "exito" ? "text-green-700" : "text-yellow-700"}
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-            )}
+  if (!solvencia) {
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Solvencia no encontrada</h2>
+        <button
+          onClick={onVolver}
+          className="inline-flex items-center text-[#C40180] hover:text-[#590248] transition-colors"
+        >
+          <ChevronLeft className="mr-2" size={20} />
+          Volver a la lista
+        </button>
+      </div>
+    );
+  }
 
-            {/* Encabezado de solvencia */}
-            <SolvenciaHeader
-                solvencia={solvencia}
-                totales={totales}
-                onAprobar={() => setMostrarConfirmacion(true)}
-                onRechazar={() => setMostrarRechazo(true)}
-            />
-
-            {/* Documentos requeridos */}
-            <DocumentosSection
-                solvencia={solvencia}
-                onVerDocumento={handleVerDocumento}
-            />
-
-            {/* Historial de pagos */}
-            {solvencia.comprobantesPago && solvencia.comprobantesPago.length > 0 && (
-                <HistorialPagosSection
-                    comprobantes={solvencia.comprobantesPago}
-                    onVerDocumento={handleVerDocumento}
-                />
-            )}
-
-            {/* Observaciones y configuración - solo en estado revisión */}
-            {solvencia.estado === 'Revisión' && (
-                <div className="bg-white rounded-lg shadow-md p-4 mb-5">
-                    <h2 className="text-base font-medium text-gray-900 mb-3">Observaciones y configuración</h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                        <div>
-                            <label className="block text-sm text-gray-700 mb-1">Observaciones</label>
-                            <textarea
-                                value={observaciones}
-                                onChange={(e) => setObservaciones(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-md text-sm"
-                                placeholder="Agregue observaciones o notas sobre esta solvencia..."
-                                rows="3"
-                            ></textarea>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm text-gray-700 mb-1">Fecha de vencimiento</label>
-                            <input
-                                type="date"
-                                value={fechaVencimiento}
-                                onChange={(e) => setFechaVencimiento(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-md text-sm"
-                                min={new Date().toISOString().split('T')[0]}
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                                La solvencia será válida hasta esta fecha.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="mb-4">
-                        <div className="flex items-center">
-                            <input
-                                id="exonerar"
-                                type="checkbox"
-                                checked={solvencia.exonerado || false}
-                                onChange={() => {
-                                    const solvenciaActualizada = {
-                                        ...solvencia,
-                                        exonerado: !solvencia.exonerado,
-                                        costo: !solvencia.exonerado ? 0 :
-                                            solvencia.tipoId === 'profesional' ? 50 :
-                                                solvencia.tipoId === 'ejercicio' ? 75 : 100
-                                    };
-                                    actualizarSolvencia(solvenciaActualizada);
-                                    setSolvencia(solvenciaActualizada);
-                                }}
-                                className="h-4 w-4 text-[#C40180] focus:ring-[#C40180] border-gray-300 rounded"
-                            />
-                            <label htmlFor="exonerar" className="ml-2 block text-sm text-gray-700">
-                                Exonerar de pago
-                            </label>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1 ml-6">
-                            Al marcar esta opción, se exonerará el costo de la solvencia.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <button
-                                onClick={handleIniciarPago}
-                                disabled={totales.totalPendiente === 0}
-                                className={`cursor-pointer w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm ${totales.totalPendiente > 0
-                                        ? "bg-[#C40180] text-white hover:bg-[#A00060]"
-                                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                    }`}
-                            >
-                                <Download size={16} />
-                                <span>Registrar pago</span>
-                            </button>
-                        </div>
-
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setMostrarRechazo(true)}
-                                className="cursor-pointer flex-1 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600"
-                            >
-                                Rechazar
-                            </button>
-                            <button
-                                onClick={() => setMostrarConfirmacion(true)}
-                                className="cursor-pointer flex-1 bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600"
-                            >
-                                Aprobar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Descargar certificado - solo para solvencias aprobadas */}
-            {solvencia.estado === 'Aprobada' && (
-                <div className="bg-white rounded-lg shadow-md p-4 mb-5">
-                    <h2 className="text-base font-medium text-gray-900 mb-3">Certificado de solvencia</h2>
-
-                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                        <div>
-                            <h3 className="font-medium text-green-800">Certificado disponible</h3>
-                            <p className="text-sm text-gray-600">
-                                El certificado fue generado el {solvencia.fechaAprobacion} y es válido hasta {solvencia.fechaVencimiento}.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Botones adicionales */}
-            <div className="flex flex-wrap gap-3">
-                <button className="cursor-pointer bg-gradient-to-t from-[#D7008A] to-[#41023B] text-white px-3 py-2 rounded-md flex items-center gap-2 hover:bg-purple-700 transition-colors text-sm">
-                    <MessageSquare size={16} />
-                    <span>Enviar mensaje al colegiado</span>
-                </button>
-            </div>
-
-            {/* Modal de confirmación para aprobación */}
-            {mostrarConfirmacion && (
-                <ConfirmacionModal
-                    onCancel={() => setMostrarConfirmacion(false)}
-                    onConfirm={handleAprobarSolvencia}
-                    titulo="Confirmar aprobación de solvencia"
-                    mensaje="¿Está seguro que desea aprobar esta solvencia? Una vez aprobada, se generará el certificado correspondiente."
-                />
-            )}
-
-            {/* Modal de rechazo */}
-            {mostrarRechazo && (
-                <RechazoModal
-                    motivoRechazo={motivoRechazo}
-                    setMotivoRechazo={setMotivoRechazo}
-                    onCancel={() => setMostrarRechazo(false)}
-                    onConfirm={handleRechazarSolvencia}
-                />
-            )}
-
-            {/* Modal para ver documento */}
-            {documentoSeleccionado && (
-                <DocumentViewer
-                    documento={documentoSeleccionado}
-                    onClose={() => setDocumentoSeleccionado(null)}
-                />
-            )}
-
-            {/* Modal de pagos */}
-            {mostrarModalPagos && (
-                <div className="fixed inset-0 bg-black/60 bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-                        <div className="flex justify-between items-center p-4 border-b">
-                            <h3 className="text-lg font-medium text-gray-900">
-                                Registrar pago de solvencia
-                            </h3>
-                            <button
-                                onClick={() => setMostrarModalPagos(false)}
-                                className="cursor-pointer text-gray-500 hover:text-gray-700"
-                            >
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-auto p-4">
-                            <PagosModalSolv
-                                onPaymentComplete={handlePaymentComplete}
-                                totalPendiente={totales.totalPendiente}
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6 mt-28">
+      {/* Header con botón de volver y estado */}
+      <div className="max-w-6xl mx-auto mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <button
+            onClick={onVolver}
+            className="inline-flex items-center text-gray-600 hover:text-[#C40180] "
+          >
+            <ChevronLeft className="mr-2" size={20} />
+            <span>Volver a la lista</span>
+          </button>
+          <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${
+            solvencia.estado === 'Revisión'
+              ? 'bg-yellow-100 text-yellow-800'
+              : solvencia.estado === 'Aprobada'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+          }`}>
+            {solvencia.estado === 'Revisión' && <Clock size={16} />}
+            {solvencia.estado === 'Aprobada' && <CheckCircle size={16} />}
+            {solvencia.estado === 'Rechazada' && <X size={16} />}
+            {solvencia.estado}
+          </div>
         </div>
-    )
+
+        {/* Alertas */}
+        {alertaExito && (
+          <div className={`mt-4 p-4 rounded-xl flex items-center justify-between shadow-md ${
+            alertaExito.tipo === "exito" ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"
+          }`}>
+            <div className="flex items-center">
+              {alertaExito.tipo === "exito" ? (
+                <CheckCircle className="mr-2" size={20} />
+              ) : (
+                <AlertCircle className="mr-2" size={20} />
+              )}
+              <span className="font-medium">{alertaExito.mensaje}</span>
+            </div>
+            <button
+              onClick={() => setAlertaExito(null)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Contenido principal */}
+      <div className="max-w-6xl mx-auto">
+        {/* Cabecera de la solvencia con estilo moderno */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 text-[#590248]">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold mb-1">
+                {solvencia.tipo}
+              </h1>
+              <p className="text-[#590248] flex items-center">
+                <Calendar size={16} className="mr-1" />
+                Solicitada el: {solvencia.fecha}
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              {solvencia.estado === "Aprobada" && solvencia.certificadoUrl && (
+                <button
+                  onClick={() => window.open(solvencia.certificadoUrl, '_blank')}
+                  className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-lg transition-colors"
+                >
+                  <Download className="mr-2" size={18} />
+                  Descargar Certificado
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Grid principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Columna 1: Información del colegiado */}
+          <div>
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6 border-l-4 border-[#D7008A] mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center ">
+                <User className="mr-2 text-[#590248] bg-[#590248]/20 rounded-full px-2 py-0.5 w-10 h-10 "/>
+                Información del Colegiado
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500">Nombre</p>
+                  <p className="font-medium text-gray-900 text-lg">{solvencia.colegiadoNombre}</p>
+                </div>
+                
+                {/* Información del creador */}
+                {solvencia.creador && (
+                  <div className="pt-3 mt-3 border-t border-gray-100">
+                    <p className="text-sm text-gray-500 mb-2">Creada por</p>
+                    <div className="flex items-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
+                        solvencia.creador.esAdmin ? "bg-[#590248]/20" : "bg-gray-100"
+                      }`}>
+                        <Shield size={20} className={solvencia.creador.esAdmin ? "text-[#590248]" : "text-gray-600"} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{solvencia.creador.nombre}</p>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <span>{solvencia.creador.email}</span>
+                          {solvencia.creador.esAdmin && (
+                            <span className="ml-2 px-2 py-0.5 bg-[#590248]/20 text-[#590248] text-xs rounded-full">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Panel de fechas */}
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6 mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <Calendar className="mr-2 text-[#590248]" size={22} />
+                Fechas
+              </h2>
+              <div className="space-y-3">                
+                {solvencia.fechaAprobacion && (
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                      <CheckCircle size={20} className="text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Fecha de aprobación</p>
+                      <p className="font-medium text-gray-900">{solvencia.fechaAprobacion}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {solvencia.fechaVencimiento && (
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
+                      <Calendar size={20} className="text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Fecha de vencimiento</p>
+                      <p className="font-medium text-gray-900">{solvencia.fechaVencimiento}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {solvencia.fechaRechazo && (
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                      <X size={20} className="text-red-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Fecha de rechazo</p>
+                      <p className="font-medium text-gray-900">{solvencia.fechaRechazo}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Columna 2 + 3: Detalles y acciones (ocupa 2 columnas) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Panel principal con costo y acciones */}
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+              {/* Información de costo con fondo degradado */}
+              <div className={`bg-gradient-to-r ${
+                solvencia.exonerado 
+                  ? "from-teal-500 to-teal-700" 
+                  : solvencia.costo === null 
+                    ? "from-[#D7008A] to-[#41023B]"
+                    : "from-[#D7008A] to-[#41023B]"
+              } p-6 text-white`}>
+                <h2 className="text-xl font-semibold mb-2 flex items-center">
+                  <DollarSign className="mr-2" size={24} />
+                  {solvencia.costo !== null 
+                    ? "Información de Pago" 
+                    : "Asignación de Costo"}
+                </h2>
+                
+                {solvencia.costo !== null ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <p className="text-white/80 mb-1">Costo de la solvencia</p>
+                      <div className="text-3xl font-bold">
+                        {solvencia.exonerado ? (
+                          <span>Exonerado</span>
+                        ) : (
+                          <span>${solvencia.costo.toFixed(2)}</span>
+                        )}
+                      </div>
+                      
+                      {solvencia.motivoExoneracion && (
+                        <div className="mt-2 inline-flex items-center text-sm bg-white/20 rounded-full px-3 py-1">
+                          <Ban size={14} className="mr-1" />
+                          <span>Motivo: {solvencia.motivoExoneracion}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="mb-3">Esta solvencia requiere que se le asigne un costo o se exonere de pago.</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Acciones principales o formulario de costo */}
+              <div className="p-6">
+                {/* Asignación de costo si es necesario */}
+                {solvencia.costo === null && (
+                  <div className="space-y-6">
+                    <div className="bg-[white p-6 rounded-xl border border-[#41023B] shadow-sm hover:shadow transition-shadow">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        Asignación de Costo
+                      </h3>
+                      
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Monto a cobrar ($)
+                        </label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-4 py-2.5 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-lg">
+                            $
+                          </span>
+                          <input
+                            type="text"
+                            value={costoNuevo}
+                            onChange={(e) => {
+                              // Permitir solo números y punto decimal
+                              const value = e.target.value.replace(/[^0-9.]/g, '');
+                              setCostoNuevo(value);
+                            }}
+                            className="flex-1 rounded-r-md px-4 py-2.5 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Ingrese el monto en dólares que se cobrará por esta solvencia.
+                        </p>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                          onClick={handleAsignarCosto}
+                          disabled={!costoNuevo || parseFloat(costoNuevo) <= 0}
+                          className={`flex-1 inline-flex items-center justify-center px-4 py-2.5 
+                            ${!costoNuevo || parseFloat(costoNuevo) <= 0 
+                              ? 'bg-gray-300 cursor-not-allowed' 
+                              : 'bg-gradient-to-r from-[#D7008A] to-[#41023B] hover:from-blue-700 hover:to-blue-800'}
+                            text-white rounded-lg transition-colors text-base font-medium`}
+                        >
+                          <DollarSign className="mr-2" size={20} />
+                          Asignar Costo
+                        </button>
+                        
+                        <button
+                          onClick={() => setMostrarExoneracion(true)}
+                          className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors text-base font-medium"
+                        >
+                          <CheckCircle className="mr-2" size={20} />
+                          Exonerar de Pago
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Acciones para solvencias en revisión con costo asignado */}
+                {solvencia.estado === "Revisión" && solvencia.costo !== null && (
+                  <div className="space-y-6">
+                    {/* MODIFICADO: Selector de fecha de vencimiento con selects */}
+                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <Calendar className="mr-2 text-orange-600" size={20} />
+                        Fecha de vencimiento
+                      </h3>
+                      <div className="mb-4">
+                        {/* NUEVO: Selects para día, mes y año */}
+                        <div className="grid grid-cols-3 gap-3">
+                          {/* Select para día */}
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Día</label>
+                            <select
+                              value={diaVencimiento}
+                              onChange={(e) => setDiaVencimiento(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#C40180] focus:border-[#C40180]"
+                            >
+                              <option value="">Día</option>
+                              {dias.map(dia => (
+                                <option key={dia} value={dia}>{dia}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          {/* Select para mes */}
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Mes</label>
+                            <select
+                              value={mesVencimiento}
+                              onChange={(e) => setMesVencimiento(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#C40180] focus:border-[#C40180]"
+                            >
+                              <option value="">Mes</option>
+                              {meses.map(mes => (
+                                <option key={mes.valor} value={mes.valor}>{mes.nombre}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          {/* Select para año */}
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Año</label>
+                            <select
+                              value={anioVencimiento}
+                              onChange={(e) => setAnioVencimiento(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#C40180] focus:border-[#C40180]"
+                            >
+                              <option value="">Año</option>
+                              {anios.map(anio => (
+                                <option key={anio} value={anio}>{anio}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500">
+                          La solvencia será válida hasta esta fecha
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Acciones para solvencias en revisión */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <button
+                        onClick={() => setMostrarConfirmacion(true)}
+                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-colors font-medium text-base"
+                      >
+                        <Check className="mr-2" size={20} />
+                        Aprobar Solvencia
+                      </button>
+                      
+                      <button
+                        onClick={() => setMostrarExoneracion(true)}
+                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors font-medium text-base"
+                      >
+                        <CheckCircle className="mr-2" size={20} />
+                        Exonerar
+                      </button>
+                      
+                      <button
+                        onClick={() => setMostrarRechazo(true)}
+                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-colors font-medium text-base"
+                      >
+                        <X className="mr-2" size={20} />
+                        Rechazar
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Información adicional - Motivo de rechazo */}
+                {solvencia.estado === "Rechazada" && solvencia.motivoRechazo && (
+                  <div className="bg-red-50 p-6 rounded-xl border border-red-200">
+                    <h3 className="text-lg font-medium text-red-800 mb-3 flex items-center">
+                      <X className="mr-2" size={20} />
+                      Motivo del Rechazo
+                    </h3>
+                    <p className="text-red-700">{solvencia.motivoRechazo}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modales */}
+      {mostrarConfirmacion && (
+        <ConfirmacionModal
+          onCancel={() => setMostrarConfirmacion(false)}
+          onConfirm={handleAprobarSolvencia}
+          titulo="Confirmar Aprobación"
+          mensaje="¿Está seguro que desea aprobar esta solvencia? Una vez aprobada, no podrá revertir esta acción."
+        />
+      )}
+
+      {mostrarRechazo && (
+        <RechazoModal
+          onCancel={() => setMostrarRechazo(false)}
+          onConfirm={handleRechazarSolvencia}
+        />
+      )}
+
+      {mostrarExoneracion && (
+        <ExoneracionModal
+          onCancel={() => setMostrarExoneracion(false)}
+          onConfirm={handleExonerarPago}
+        />
+      )}
+    </div>
+  );
 }

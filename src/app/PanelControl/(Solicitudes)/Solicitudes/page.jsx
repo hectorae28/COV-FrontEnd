@@ -1,6 +1,9 @@
 "use client"
 
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
+import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
+import { colegiados as colegiadosIniciales, solicitudes as solicitudesIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
+import { convertJsonToFormData } from "@/store/SolicitudesStore.jsx"
 import { motion } from "framer-motion"
 import {
   CheckCircle,
@@ -13,11 +16,9 @@ import {
   User,
   XCircle
 } from "lucide-react"
-import { useEffect, useState,useMemo } from "react"
-import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
-import { solicitudes as solicitudesIniciales, colegiados as colegiadosIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
-import {convertJsonToFormData} from "@/store/SolicitudesStore.jsx"
+import { useEffect, useMemo, useState } from "react"
 export default function ListaSolicitudes() {
+  
   // Estados para manejar los datos
   const [solicitudes, setSolicitudes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -101,8 +102,8 @@ export default function ListaSolicitudes() {
 
   // Función para manejar la creación exitosa de una nueva solicitud
   const handleSolicitudCreada = (nuevaSolicitud) => {
-    console.log({nuevaSolicitud})
-    const formatSolicitud= convertJsonToFormData(nuevaSolicitud)
+    console.log({ nuevaSolicitud })
+    const formatSolicitud = convertJsonToFormData(nuevaSolicitud)
     console.log(formatSolicitud)
     //setSolicitudes(prev => [nuevaSolicitud, ...prev]); // Añadir al principio del array
   }
@@ -200,8 +201,8 @@ export default function ListaSolicitudes() {
             <button
               onClick={() => setTabActual("todas")}
               className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "todas"
-                  ? "border-[#C40180] text-[#C40180]"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-[#C40180] text-[#C40180]"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               Todas las solicitudes
@@ -209,8 +210,8 @@ export default function ListaSolicitudes() {
             <button
               onClick={() => setTabActual("pendientes")}
               className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "pendientes"
-                  ? "border-[#C40180] text-[#C40180]"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-[#C40180] text-[#C40180]"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               Pendientes
@@ -223,8 +224,8 @@ export default function ListaSolicitudes() {
             <button
               onClick={() => setTabActual("aprobadas")}
               className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "aprobadas"
-                  ? "border-[#C40180] text-[#C40180]"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-[#C40180] text-[#C40180]"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               Aprobadas
@@ -237,8 +238,8 @@ export default function ListaSolicitudes() {
             <button
               onClick={() => setTabActual("rechazadas")}
               className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "rechazadas"
-                  ? "border-[#C40180] text-[#C40180]"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-[#C40180] text-[#C40180]"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
               Rechazadas
@@ -262,8 +263,8 @@ export default function ListaSolicitudes() {
         <div className="flex flex-wrap gap-2">
           <button
             className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "todas"
-                ? "bg-purple-100 text-purple-800"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              ? "bg-purple-100 text-purple-800"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             onClick={() => setFiltroCosto("todas")}
           >
@@ -271,8 +272,8 @@ export default function ListaSolicitudes() {
           </button>
           <button
             className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "conCosto"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              ? "bg-blue-100 text-blue-800"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             onClick={() => setFiltroCosto("conCosto")}
           >
@@ -280,8 +281,8 @@ export default function ListaSolicitudes() {
           </button>
           <button
             className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "sinCosto"
-                ? "bg-teal-100 text-teal-800"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              ? "bg-teal-100 text-teal-800"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             onClick={() => setFiltroCosto("sinCosto")}
           >
@@ -397,12 +398,12 @@ export default function ListaSolicitudes() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${solicitud.estado === 'Pendiente'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : solicitud.estado === 'Aprobada'
-                              ? 'bg-green-100 text-green-800'
-                              : solicitud.estado === 'Exonerada'
-                                ? 'bg-teal-100 text-teal-800'
-                                : 'bg-red-100 text-red-800'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : solicitud.estado === 'Aprobada'
+                            ? 'bg-green-100 text-green-800'
+                            : solicitud.estado === 'Exonerada'
+                              ? 'bg-teal-100 text-teal-800'
+                              : 'bg-red-100 text-red-800'
                           }`}>
                           {solicitud.estado === 'Pendiente' && <Clock size={12} />}
                           {solicitud.estado === 'Aprobada' && <CheckCircle size={12} />}

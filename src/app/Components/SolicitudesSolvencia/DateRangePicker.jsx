@@ -1,4 +1,3 @@
-
 const DateRangePicker = ({ fechaInicio, fechaFin, setFechaInicio, setFechaFin }) => {
     return (
         <div className="flex flex-col sm:flex-row gap-3 items-center">

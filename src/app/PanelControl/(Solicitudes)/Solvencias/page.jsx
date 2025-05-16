@@ -10,12 +10,10 @@ import {
   CheckCircle,
   ChevronDown,
   Clock,
-  Download,
-  Filter,
+  CreditCard,
   PlusCircle,
   Search,
   Shield,
-  User,
   XCircle
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -29,11 +27,13 @@ export default function ListaSolvencias() {
   const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(null)
   const [colegiados, setColegiados] = useState([])
   const [showDateFilter, setShowDateFilter] = useState(false)
-
+  const [filtroEstado, setFiltroEstado] = useState("todos") // todos, revision, aprobadas, rechazadas
+  const [filtroCreador, setFiltroCreador] = useState("todos") // todos, admin, colegiado
+  
   // Estados para la navegación interna
   const [vistaActual, setVistaActual] = useState("lista") // lista, detalleSolvencia
   const [solvenciaSeleccionadaId, setSolvenciaSeleccionadaId] = useState(null)
-  const [tabActual, setTabActual] = useState("todas") // todas, revision, aprobadas, rechazadas
+  const [tabActual, setTabActual] = useState("revision") // todas, revision, aprobadas, rechazadas, admin, colegiado
   const [filtroCosto, setFiltroCosto] = useState("todas") // todas, conCosto, sinCosto
   
   // Estados para filtros de fecha
@@ -62,11 +62,37 @@ export default function ListaSolvencias() {
   }, [solvencias, isLoading, tabActual]);
 
   // Conteo de solvencias por estado para los tabs
-  const conteoSolvencias = useMemo(() => ({
-    revision: solvencias.filter(s => s.estado === "Revisión").length,
-    aprobadas: solvencias.filter(s => s.estado === "Aprobada").length,
-    rechazadas: solvencias.filter(s => s.estado === "Rechazada").length,
-  }), [solvencias]);
+
+const conteoSolvencias = useMemo(() => ({
+  // En "todas" solo contar las que no están aprobadas ni rechazadas
+  todas: solvencias.filter(s => s.estado !== "Aprobada" && s.estado !== "Rechazada").length,
+  // En "revision" solo contar las en estado de Revisión
+  revision: solvencias.filter(s => s.estado === "Revisión").length,
+  // En "aprobadas" solo contar las aprobadas
+  aprobadas: solvencias.filter(s => s.estado === "Aprobada").length,
+  // En "rechazadas" solo contar las rechazadas
+  rechazadas: solvencias.filter(s => s.estado === "Rechazada").length,
+  // En "admin" solo contar las creadas por admin que no estén aprobadas ni rechazadas
+  admin: solvencias.filter(s => 
+    s.creador?.esAdmin && 
+    s.estado !== "Aprobada" && 
+    s.estado !== "Rechazada"
+  ).length,
+  
+  // En "colegiado" solo contar las creadas por colegiado que no estén aprobadas ni rechazadas
+  colegiado: solvencias.filter(s => 
+    !s.creador?.esAdmin && 
+    s.estado !== "Aprobada" && 
+    s.estado !== "Rechazada"
+  ).length,
+  
+  // En "solicitud_costo" contar todas las que tienen costo null
+  solicitudCosto: solvencias.filter(s => s.costo === null).length,
+  
+  // Conteos adicionales que puedan ser útiles
+  conCosto: solvencias.filter(s => s.costo > 0).length,
+  sinCosto: solvencias.filter(s => s.costo === 0 || s.exonerado).length
+}), [solvencias]);
 
   // Convertir string de fecha (formato DD/MM/YYYY) a objeto Date
   const parseStringToDate = (dateString) => {
@@ -75,58 +101,110 @@ export default function ListaSolvencias() {
     return new Date(anio, mes - 1, dia);
   }
 
-  // Filtrar solvencias basado en búsqueda, tab actual, filtro de costo y rango de fechas
+  // Filtrar solvencias basado en búsqueda, tab actual y rango de fechas
   const solvenciasFiltradas = useMemo(() => {
-    return solvencias
-      .filter(solvencia => {
-        // Filtro de búsqueda
-        const matchesSearch =
-          searchTerm === "" ||
-          solvencia.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          solvencia.colegiadoNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          solvencia.referencia.toLowerCase().includes(searchTerm.toLowerCase())
+  return solvencias
+    .filter(solvencia => {
+      // Filtro de búsqueda
+      const matchesSearch =
+        searchTerm === "" ||
+        solvencia.colegiadoNombre.toLowerCase().includes(searchTerm.toLowerCase())
 
-        // Filtro por tab/estado
-        const matchesTab =
-          tabActual === "todas" ||
-          (tabActual === "revision" && solvencia.estado === "Revisión") ||
-          (tabActual === "aprobadas" && solvencia.estado === "Aprobada") ||
-          (tabActual === "rechazadas" && solvencia.estado === "Rechazada")
-
-        // Filtro por costo
-        const matchesCosto =
-          filtroCosto === "todas" ||
-          (filtroCosto === "conCosto" && solvencia.costo > 0) ||
-          (filtroCosto === "sinCosto" && solvencia.costo === 0)
-
-        // Filtro por rango de fechas
-        let matchesFechas = true;
-        if (fechaInicio && fechaFin) {
-          const fechaSolvencia = parseStringToDate(solvencia.fecha);
-          const inicio = parseStringToDate(fechaInicio);
-          const fin = parseStringToDate(fechaFin);
-          
-          if (fechaSolvencia && inicio && fin) {
-            // Ajustar fin para incluir todo el día
-            fin.setHours(23, 59, 59, 999);
-            matchesFechas = fechaSolvencia >= inicio && fechaSolvencia <= fin;
-          }
+      // Filtro por tab/estado principal (SIMPLIFICADO - ya no incluye "todas")
+      let matchesTab = true;
+      
+      // Lógica para cada pestaña
+      if (tabActual === "admin") {
+        // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
+        matchesTab = solvencia.creador?.esAdmin === true && 
+                    solvencia.estado !== "Aprobada" && 
+                    solvencia.estado !== "Rechazada";
+        
+        // Si hay filtro específico de estado, aplicarlo
+        if (filtroEstado !== "todos") {
+          matchesTab = solvencia.creador?.esAdmin === true && solvencia.estado === (
+            filtroEstado === "revision" ? "Revisión" : 
+            filtroEstado === "aprobadas" ? "Aprobada" : 
+            "Rechazada"
+          );
         }
+      } else if (tabActual === "colegiado") {
+        // En "colegiado" mostrar solo las que no estén aprobadas ni rechazadas y no sean creadas por admin
+        matchesTab = solvencia.creador?.esAdmin === false && 
+                    solvencia.estado !== "Aprobada" && 
+                    solvencia.estado !== "Rechazada";
+        
+        // Si hay filtro específico de estado, aplicarlo
+        if (filtroEstado !== "todos") {
+          matchesTab = solvencia.creador?.esAdmin === false && solvencia.estado === (
+            filtroEstado === "revision" ? "Revisión" : 
+            filtroEstado === "aprobadas" ? "Aprobada" : 
+            "Rechazada"
+          );
+        }
+      } else if (tabActual === "solicitud_costo") {
+        // En "solicitud_costo" mostrar solo las que tengan costo null
+        matchesTab = solvencia.costo === null;
+      } else if (tabActual === "revision") {
+        // En "revisión" mostrar solo las que estén en revisión
+        matchesTab = solvencia.estado === "Revisión";
+        
+        // Aplicar filtro de creador si está activo
+        if (filtroCreador !== "todos") {
+          matchesTab = matchesTab && (
+            filtroCreador === "admin" ? solvencia.creador?.esAdmin === true :
+            solvencia.creador?.esAdmin === false
+          );
+        }
+      } else if (tabActual === "aprobadas") {
+        // En "aprobadas" mostrar solo las que estén aprobadas
+        matchesTab = solvencia.estado === "Aprobada";
+        
+        // Aplicar filtro de creador si está activo
+        if (filtroCreador !== "todos") {
+          matchesTab = matchesTab && (
+            filtroCreador === "admin" ? solvencia.creador?.esAdmin === true :
+            solvencia.creador?.esAdmin === false
+          );
+        }
+      } else if (tabActual === "rechazadas") {
+        // En "rechazadas" mostrar solo las que estén rechazadas
+        matchesTab = solvencia.estado === "Rechazada";
+        
+        // Aplicar filtro de creador si está activo
+        if (filtroCreador !== "todos") {
+          matchesTab = matchesTab && (
+            filtroCreador === "admin" ? solvencia.creador?.esAdmin === true :
+            solvencia.creador?.esAdmin === false
+          );
+        }
+      }
 
-        return matchesSearch && matchesTab && matchesCosto && matchesFechas;
-      })
-      .sort((a, b) => {
-        // Convertir fechas de formato DD/MM/YYYY a objetos Date
-        const [diaA, mesA, anioA] = a.fecha.split('/');
-        const [diaB, mesB, anioB] = b.fecha.split('/');
+      // Filtro por rango de fechas
+      let matchesFechas = true;
+      if (fechaInicio && fechaFin) {
+        const fechaSolvencia = parseStringToDate(solvencia.fecha);
+        const inicio = parseStringToDate(fechaInicio);
+        const fin = parseStringToDate(fechaFin);
+        
+        if (fechaSolvencia && inicio && fin) {
+          fin.setHours(23, 59, 59, 999);
+          matchesFechas = fechaSolvencia >= inicio && fechaSolvencia <= fin;
+        }
+      }
 
-        const fechaA = new Date(anioA, mesA - 1, diaA);
-        const fechaB = new Date(anioB, mesB - 1, diaB);
+      return matchesSearch && matchesTab && matchesFechas;
+    })
+    .sort((a, b) => {
+      const [diaA, mesA, anioA] = a.fecha.split('/');
+      const [diaB, mesB, anioB] = b.fecha.split('/');
 
-        // Ordenar según la preferencia (ascendente o descendente)
-        return ordenFecha === "desc" ? fechaB - fechaA : fechaA - fechaB;
-      });
-  }, [solvencias, searchTerm, tabActual, filtroCosto, fechaInicio, fechaFin, ordenFecha]);
+      const fechaA = new Date(anioA, mesA - 1, diaA);
+      const fechaB = new Date(anioB, mesB - 1, diaB);
+
+      return ordenFecha === "desc" ? fechaB - fechaA : fechaA - fechaB;
+    });
+}, [solvencias, searchTerm, tabActual, filtroEstado, filtroCreador, fechaInicio, fechaFin, ordenFecha]);
 
   // Función para ver detalle de una solvencia
   const verDetalleSolvencia = (id) => {
@@ -220,7 +298,7 @@ export default function ListaSolvencias() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Buscar por tipo, colegiado o referencia..."
+              placeholder="Buscar por colegiado..."
               className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -230,6 +308,8 @@ export default function ListaSolvencias() {
         </div>
 
         <div className="flex gap-4 w-full md:w-auto">
+
+
           <button
             onClick={() => setShowDateFilter(!showDateFilter)}
             className="cursor-pointer border border-gray-300 bg-white text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors w-full md:w-auto justify-center"
@@ -288,101 +368,121 @@ export default function ListaSolvencias() {
       )}
 
       {/* Tabs para filtrar por estado */}
-      <div className="mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex overflow-x-auto">
-            <button
-              onClick={() => setTabActual("todas")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "todas"
-                  ? "border-[#C40180] text-[#C40180]"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-            >
-              Todas las solvencias
-            </button>
-            <button
-              onClick={() => setTabActual("revision")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "revision"
-                  ? "border-[#C40180] text-[#C40180]"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-            >
-              En revisión
-              {conteoSolvencias.revision > 0 && (
-                <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {conteoSolvencias.revision}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setTabActual("aprobadas")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "aprobadas"
-                  ? "border-[#C40180] text-[#C40180]"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-            >
-              Aprobadas
-              {conteoSolvencias.aprobadas > 0 && (
-                <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {conteoSolvencias.aprobadas}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setTabActual("rechazadas")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "rechazadas"
-                  ? "border-[#C40180] text-[#C40180]"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-            >
-              Rechazadas
-              {conteoSolvencias.rechazadas > 0 && (
-                <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {conteoSolvencias.rechazadas}
-                </span>
-              )}
-            </button>
-          </nav>
+<div className="mb-6">
+  <div className="border-b border-gray-200">
+    <nav className="-mb-px flex flex-wrap">
+      <button
+        onClick={() => setTabActual("revision")}
+        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+          tabActual === "revision"
+            ? "border-[#C40180] text-[#C40180]"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+        }`}
+      >
+        En revisión
+        {conteoSolvencias.revision > 0 && (
+          <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            {conteoSolvencias.revision}
+          </span>
+        )}
+      </button>
+      <button
+        onClick={() => setTabActual("aprobadas")}
+        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+          tabActual === "aprobadas"
+            ? "border-[#C40180] text-[#C40180]"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+        }`}
+      >
+        Aprobadas
+        {conteoSolvencias.aprobadas > 0 && (
+          <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            {conteoSolvencias.aprobadas}
+          </span>
+        )}
+      </button>
+      <button
+        onClick={() => setTabActual("rechazadas")}
+        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+          tabActual === "rechazadas"
+            ? "border-[#C40180] text-[#C40180]"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+        }`}
+      >
+        Rechazadas
+        {conteoSolvencias.rechazadas > 0 && (
+          <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            {conteoSolvencias.rechazadas}
+          </span>
+        )}
+      </button>
+      <button
+        onClick={() => setTabActual("admin")}
+        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+          tabActual === "admin"
+            ? "border-[#C40180] text-[#C40180]"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+        }`}
+      >
+        Creado por Admin
+        {conteoSolvencias.admin > 0 && (
+          <span className="ml-2 bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            {conteoSolvencias.admin}
+          </span>
+        )}
+      </button>
+      <button
+        onClick={() => setTabActual("colegiado")}
+        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+          tabActual === "colegiado"
+            ? "border-[#C40180] text-[#C40180]"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+        }`}
+      >
+        Creado por Colegiado
+        {conteoSolvencias.colegiado > 0 && (
+          <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            {conteoSolvencias.colegiado}
+          </span>
+        )}
+      </button>
+      <button
+        onClick={() => setTabActual("solicitud_costo")}
+        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+          tabActual === "solicitud_costo"
+            ? "border-[#C40180] text-[#C40180]"
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+        }`}
+      >
+        <div className="flex items-center">
+          <span>Solicitud de Costo</span>
+          {conteoSolvencias.solicitudCosto > 0 && (
+            <span className={`ml-2 ${
+              tabActual === "solicitud_costo"
+                ? "bg-[#C40180] text-white"
+                : "bg-red-500 text-white"
+            } text-xs px-2 py-0.5 rounded-full`}>
+              {conteoSolvencias.solicitudCosto}
+            </span>
+          )}
         </div>
-      </div>
-
-      {/* Filtros de costo - mostrar en todos los tabs */}
-      <div className="mb-6">
-        <div className="flex items-center mb-2">
-          <Filter size={16} className="mr-2 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Filtros de costo</span>
+      </button>
+    </nav>
+  </div>
+</div>
+      
+      {/* Mensaje informativo para solicitudes de costo */}
+      {tabActual === "solicitud_costo" && (
+        <div className="mb-6 flex items-center bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+          <div className="mr-2 bg-indigo-100 rounded-full p-1">
+            <CreditCard size={20} className="text-indigo-600" />
+          </div>
+          <div>
+            <p className="text-sm text-indigo-800 font-medium">Solicitudes pendientes de asignación de costo</p>
+            <p className="text-xs text-indigo-700">Estas solicitudes requieren que se les asigne un costo o se exoneren de pago.</p>
+          </div>
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "todas"
-                ? "bg-purple-100 text-purple-800"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            onClick={() => setFiltroCosto("todas")}
-          >
-            Todas
-          </button>
-          <button
-            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "conCosto"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            onClick={() => setFiltroCosto("conCosto")}
-          >
-            Con costo
-          </button>
-          <button
-            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "sinCosto"
-                ? "bg-teal-100 text-teal-800"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            onClick={() => setFiltroCosto("sinCosto")}
-          >
-            Sin costo
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Estado de carga */}
       {isLoading ? (
@@ -398,14 +498,16 @@ export default function ListaSolvencias() {
                 {tabActual === "revision" && <Clock className="h-8 w-8 text-yellow-500" />}
                 {tabActual === "aprobadas" && <CheckCircle className="h-8 w-8 text-green-500" />}
                 {tabActual === "rechazadas" && <XCircle className="h-8 w-8 text-red-500" />}
+                {tabActual === "solicitud_costo" && <CreditCard className="h-8 w-8 text-indigo-500" />}
                 {tabActual === "todas" && <Search className="h-8 w-8 text-gray-400" />}
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 {tabActual === "revision" && "No hay solvencias en revisión"}
                 {tabActual === "aprobadas" && "No hay solvencias aprobadas"}
                 {tabActual === "rechazadas" && "No hay solvencias rechazadas"}
+                {tabActual === "solicitud_costo" && "No hay solicitudes pendientes de costo"}
                 {tabActual === "todas" && "No se encontraron solvencias"}
-                {filtroCosto !== "todas" && (
+                {filtroCosto !== "todas" && tabActual === "todas" && (
                   <span>
                     {" "}
                     {filtroCosto === "conCosto" ? "con costo" : "sin costo"}
@@ -424,16 +526,10 @@ export default function ListaSolvencias() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tipo
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Colegiado
                     </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                      Referencia
-                    </th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                      Fecha
+                      Fecha de Vencimiento
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Estado
@@ -447,61 +543,45 @@ export default function ListaSolvencias() {
                       className="hover:bg-gray-50 cursor-pointer"
                       onClick={() => verDetalleSolvencia(solvencia.id)}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="font-medium text-gray-900">{solvencia.tipo}</div>
-                        <div className="text-xs text-gray-500 md:hidden">
-                          Ref: {solvencia.referencia}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {solvencia.costo > 0 ? `${solvencia.costo.toFixed(2)}` : 'Sin costo'}
-                        </div>
-                        {/* Mostrar información del creador */}
-                        {solvencia.creador && (
-                          <div className="flex items-center justify-center mt-1 text-xs text-gray-500">
-                            {solvencia.creador.esAdmin ? (
-                              <Shield size={12} className="mr-1 text-purple-500" />
-                            ) : (
-                              <User size={12} className="mr-1 text-gray-400" />
-                            )}
-                            <span>
-                              Creado por {solvencia.creador.nombre || "Usuario"}
-                              {solvencia.creador.esAdmin && (
-                                <span className="ml-1 text-xs bg-purple-100 text-purple-800 px-1 py-0.5 rounded text-[10px]">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col items-center">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="text-sm text-gray-900">{solvencia.colegiadoNombre}</div>
+                            {solvencia.creador && solvencia.creador.esAdmin && (
+                              <div className="flex items-center">
+                                <Shield size={14} className="text-purple-500" />
+                                <span className="ml-1 text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">
                                   Admin
                                 </span>
-                              )}
-                            </span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="text-sm text-gray-900">{solvencia.colegiadoNombre}</div>
-                        <button
-                          className="cursor-grab text-xs text-[#C40180] hover:underline mt-1"
-                          onClick={(e) => abrirModalParaColegiado(e, solvencia.colegiadoId)}
-                        >
-                          + Nueva solvencia
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                        <div className="text-sm text-gray-500">{solvencia.referencia}</div>
+                          <button
+                            className="text-xs text-[#C40180] hover:underline"
+                            onClick={(e) => abrirModalParaColegiado(e, solvencia.colegiadoId)}
+                          >
+                            + Nueva solvencia
+                          </button>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                        <div className="text-sm text-gray-500">{solvencia.fecha}</div>
+                        <div className="text-sm text-gray-500">{solvencia.fechaVencimiento || "No establecida"}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          solvencia.estado === 'Revisión'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : solvencia.estado === 'Aprobada'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                          {solvencia.estado === 'Revisión' && <Clock size={12} />}
-                          {solvencia.estado === 'Aprobada' && <CheckCircle size={12} />}
-                          {solvencia.estado === 'Rechazada' && <XCircle size={12} />}
-                          {solvencia.estado}
-                        </span>
+                        <div className="flex flex-col items-center">
+                          <span className={`inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            solvencia.estado === 'Revisión'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : solvencia.estado === 'Aprobada'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                            {solvencia.estado === 'Revisión' && <Clock size={12} />}
+                            {solvencia.estado === 'Aprobada' && <CheckCircle size={12} />}
+                            {solvencia.estado === 'Rechazada' && <XCircle size={12} />}
+                            {solvencia.estado}
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ))}
