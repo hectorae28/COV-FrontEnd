@@ -17,6 +17,7 @@ import {
   XCircle
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function ListaSolvencias() {
   // Estados para manejar los datos
@@ -41,9 +42,19 @@ export default function ListaSolvencias() {
   const [fechaFin, setFechaFin] = useState("")
   const [ordenFecha, setOrdenFecha] = useState("desc") // asc, desc
 
+  const getSolicitudesDeSolvencia = async () => {
+        try {
+            const response = await fetchDataSolicitudes('list_solicitud_solvencias');
+            console.log(response.data);
+        } catch (error) {
+            console.error("Error fetching solicitudes:", error);
+        }
+    }
+
   // Cargar datos iniciales
-  useEffect(() => {
+  useEffect(() =>  {
     // Simulando carga de datos con un pequeño retraso
+    getSolicitudesDeSolvencia();
     setTimeout(() => {
       setColegiados(colegiadosIniciales);
       setSolvencias(solvenciasIniciales);
