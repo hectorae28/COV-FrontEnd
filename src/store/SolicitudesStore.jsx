@@ -63,13 +63,29 @@ export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
   let especializacion = 0;
 
   solicitudJson.itemsSolicitud.forEach(item => {
-    if (item.tipo === "Carnet") {
-      costo_solicitud_carnet = item.costo.id;
-    } else if (item.tipo === "Especializacion") {
-      costo_solicitud_especializacion = item.costo.id;
-      especializacion = 1;
-    } else if (item.tipo === "Constancia") {
-      constancias.push(item.codigo);
+    const tipoBase = item.tipo.toLowerCase();
+    
+    if (tipoBase === "carnet") {
+      item.carnet = {
+        costo: item.costo,
+        exonerado: item.exonerado || false
+      };
+    } 
+    else if (tipoBase === "especializacion") {
+      item.especializacion = {
+        costo: item.costo,
+        exonerado: item.exonerado || false
+      };
+    } 
+    else if (tipoBase === "constancia") {
+      if (!items.constancias) items.constancias = [];
+      
+      item.constancias.push({
+        subtipo: item.subtipo,
+        costo: item.costo,
+        exonerado: item.exonerado || false,
+        codigo: item.codigo
+      });
     }
   });
 
@@ -114,7 +130,9 @@ export const useSolicitudesStore = create((set, get) => ({
   solicitudesAbiertasPagination: {},
   solicitudesCerradas: [],
   solicitudesCerradasPagination: {},
-  pagosSolicitud:[],
+  pagosSolicititud:[],
+  solicitudesDeSolvencia: [],
+  solicitudesDeSolvenciaPagination: {},
   tipos_solicitud: TIPOS_SOLICITUD,
   loading: false,
   error: null,
@@ -278,15 +296,18 @@ export const useSolicitudesStore = create((set, get) => ({
     try {
       const res = await fetchSolicitudes(`pago`,"?solicitud="+id);
 
-      set({
-        pagosSolicitud: res.data,
+      set(state => ({
+        pagosSolicitud: state.pagosSolicitud.map(sol => 
+          sol.solicitud === id ? { ...sol, estado: nuevoEstado, observaciones } : sol
+        ),
         loading: false
-      })
+      }));
+      
       return res.data;
     } catch (error) {
       set({ 
         loading: false, 
-        error: error.message || "Error al cargar los pagos de la solicitud"
+        error: error.message || "Error al cargar solicitudes de solvencia"
       });
       throw error;
     }
@@ -313,5 +334,32 @@ export const useSolicitudesStore = create((set, get) => ({
       });
       throw error;
     }
-  }
+  },
+
+  fetchSolicitudesDeSolvencia: async (page = 1, pageSize = 10, filtros = {}) => {
+    set({ loading: true });
+    try {
+      let params = `?page=${page}&page_size=${pageSize}`;
+      
+      Object.entries(filtros).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params += `&${key}=${encodeURIComponent(value)}`;
+        }
+      });
+      
+      const res = await fetchSolicitudes("list_solicitud_solvencias", params);
+      set({
+        solicitudesDeSolvencia: res.data.results,
+        solicitudesDeSolvenciaPagination: res.data,
+        loading: false
+      });
+      return res.data;
+    } catch (error) {
+      set({ 
+        loading: false, 
+        error: error.message || "Error al cargar los pagos de la solicitud"
+      });
+      throw error;
+    }
+  },
 }));
