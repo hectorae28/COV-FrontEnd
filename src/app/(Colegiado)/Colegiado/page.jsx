@@ -37,7 +37,6 @@ export default function Home() {
 
     const warningDate = new Date(solvencyDate);
     warningDate.setDate(warningDate.getDate() - 14);
-
     setShowSolvencyWarning(today >= warningDate);
   };
 
