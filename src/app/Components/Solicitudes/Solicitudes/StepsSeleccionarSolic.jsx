@@ -79,7 +79,7 @@ export default function SeleccionarSolicitudesStep({
                         costo: tipoInfo.costo,
                         exonerado: false,
                         codigo: tipoInfo.codigo,
-                        documentosRequeridos: [...tipoInfo.documentosRequeridos],
+                        documentosRequeridos: tipoInfo.documentosRequeridos.map(doc => doc.displayName),
                     }
                     setItemsCarrito([nuevoItem])
                     actualizarTotal([nuevoItem])
@@ -108,7 +108,7 @@ export default function SeleccionarSolicitudesStep({
                 costo: tipoInfo.costo,
                 exonerado: false,
                 codigo: tipoInfo.codigo,
-                documentosRequeridos: [...tipoInfo.documentosRequeridos],
+                documentosRequeridos: tipoInfo.documentosRequeridos.map(doc => doc.displayName),
             }
             setItemsCarrito([...itemsCarrito, nuevoItem])
             actualizarTotal([...itemsCarrito, nuevoItem])
@@ -281,12 +281,12 @@ export default function SeleccionarSolicitudesStep({
     }
 
     // Manejar subida de archivos
-    const handleFileChange = (e, documentoId, itemId) => {
+    const handleFileChange = (e, itemId) => {
         const file = e.target.files[0]
         if (file) {
             setDocumentosAdjuntos((prev) => ({
                 ...prev,
-                [`${itemId}`]: file
+                [itemId]: file
             }))
         }
     }
@@ -698,12 +698,12 @@ export default function SeleccionarSolicitudesStep({
                                     size={14}
                                     className="text-gray-400 mr-1"
                                   />
-                                  <span className="text-xs">{doc}</span>
+                                  <span className="text-xs">{doc.displayName}</span>
                                   <input
                                     type="file"
                                     id={`documento-${item.id}-${index}`}
                                     onChange={(e) =>
-                                      handleFileChange(e, index, doc)
+                                      handleFileChange(e, doc.campo)
                                     }
                                     className="hidden"
                                     accept=".pdf,.jpg,.jpeg,.png"
@@ -712,16 +712,16 @@ export default function SeleccionarSolicitudesStep({
                                     htmlFor={`documento-${item.id}-${index}`}
                                     className="ml-2 text-xs text-blue-600 cursor-pointer hover:underline"
                                   >
-                                    {documentosAdjuntos[`${doc}-${index}`] ? (
+                                    {documentosAdjuntos[`${doc.campo}`] ? (
                                       <span className="text-green-600 flex items-center">
                                         <FileCheck size={14} className="mr-1" />
-                                        {documentosAdjuntos[`${doc}-${index}`]
+                                        {documentosAdjuntos[`${doc.campo}`]
                                           .name.length > 15
                                           ? documentosAdjuntos[
-                                              `${doc}-${index}`
+                                              `${doc.campo}`
                                             ].name.substring(0, 15) + "..."
                                           : documentosAdjuntos[
-                                              `${doc}-${index}`
+                                              `${doc.campo}`
                                             ].name}
                                       </span>
                                     ) : (

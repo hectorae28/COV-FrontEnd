@@ -1,7 +1,7 @@
 "use client";
 
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import useDataListaColegiados from "@/store/ListaColegiadosData.jsx";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";

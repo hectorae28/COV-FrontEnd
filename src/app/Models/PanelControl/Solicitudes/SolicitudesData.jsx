@@ -177,7 +177,10 @@ export const TIPOS_SOLICITUD = {
         costo: 75.00,
         codigo: "CARNET",
         descripcion: "Solicitud de carnet de identificación profesional",
-        documentosRequeridos: ["Foto tipo carnet", "Comprobante de pago"]
+        documentosRequeridos: [
+            { displayName: "Foto tipo carnet", campo: "foto" },
+            { displayName: "Comprobante de pago", campo: "comprobante" }
+        ]
     },
     Especializacion: {
         id: "especializacion",
@@ -185,15 +188,16 @@ export const TIPOS_SOLICITUD = {
         costo: 150.00,
         codigo: "ESPEC",
         descripcion: "Registro de título de especialización odontológica",
-        documentosRequeridos: ["Título de especialidad", "Copia de cédula", "Comprobante de pago"]
-    },
-    Solvencia: {
-        id: "solvencia",
-        nombre: "Solvencia",
-        costo: 50.00,
-        codigo: "SOLV",
-        descripcion: "Certificado de solvencia profesional",
-        documentosRequeridos: ["Comprobante de pago"]
+        documentosRequeridos: [
+            { displayName: "Título de Especialización", campo: "file_titulo_especializacion" },
+            { displayName: "Título de Especialización (Fondo Negro)", campo: "file_fondo_negro_titulo_especializacion" },
+            { displayName: "Título de Odontólogo", campo: "file_titulo_odontologo" },
+            { displayName: "Título de Odontólogo (Fondo Negro)", campo: "file_fondo_negro_titulo_odontologo" },
+            { displayName: "Cédula de Identidad Ampliada", campo: "file_cedula_ampliada" },
+            { displayName: "Fotos tipo Carnet", campo: "file_fotos_carnet" },
+            { displayName: "Comprobante de Solvencia", campo: "file_solvencia" },
+            { displayName: "Carta de Solicitud", campo: "file_carta_solicitud" }
+        ]
     },
     Constancia: {
         id: "constancia",
@@ -201,14 +205,17 @@ export const TIPOS_SOLICITUD = {
         costo: 0, // El costo dependerá del subtipo
         codigo: "CONST",
         descripcion: "Constancia profesional (requiere seleccionar tipo específico)",
-        documentosRequeridos: ["Copia de cédula", "Comprobante de pago"],
+        documentosRequeridos: [
+            { displayName: "Cédula de Identidad", campo: "file_cedula" },
+            { displayName: "Comprobante de pago", campo: "comprobante" }
+        ],
         subtipos: [
-            { nombre: "Inscripción del COV", costo: 60.00, codigo: "CONST-INSC" },
-            { nombre: "Solvencia", costo: 45.00, codigo: "CONST-SOLV" },
-            { nombre: "Libre ejercicio", costo: 55.00, codigo: "CONST-LIBRE" },
-            { nombre: "Declaración de habilitación", costo: 70.00, codigo: "CONST-HAB" },
-            { nombre: "Continuidad laboral", costo: 65.00, codigo: "CONST-CONT" },
-            { nombre: "Deontología odontológica", costo: 80.00, codigo: "CONST-DEONT" }
+            { campo: "inscripcion_cov", nombre: "Inscripción del COV", costo: 60.00, codigo: "CONST-INSC" },
+            { campo: "solvencia", nombre: "Solvencia", costo: 45.00, codigo: "CONST-SOLV" },
+            { campo: "libre_ejercicio", nombre: "Libre ejercicio", costo: 55.00, codigo: "CONST-LIBRE" },
+            { campo: "declaracion_habilitacion", nombre: "Declaración de habilitación", costo: 70.00, codigo: "CONST-HAB" },
+            { campo: "continuidad_laboral", nombre: "Continuidad laboral", costo: 65.00, codigo: "CONST-CONT" },
+            { campo: "deontologia_odontologica", nombre: "Deontología odontológica", costo: 80.00, codigo: "CONST-DEONT" }
         ]
     }
 };

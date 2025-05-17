@@ -2,10 +2,78 @@
 
 import { Calendar, AlertCircle, CheckCircle } from "lucide-react";
 import { Warning } from "@mui/icons-material";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
+import { solicitarSolvenciaEspecial } from "@/api/endpoints/solicitud";
+import { fetchMe } from "@/api/endpoints/colegiado";
 
-export default function SolvencyStatus({ isSolvent, solvencyDate, solvencyAmount, onPayClick, isExpiringSoon }) {
+export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSoon }) {
+  /*
+    Condicion para saber si el colegiado puede pedir costo especial:
+      - Si el colegiado es antiguo y no posee solvencia (requiere solvencia especial)
+    El colegiado puede solicitar el costo especial (crear la solicitud directamente) y el admin lo revisara
+    El admin ingresa el monto en la solicitud de solvencia (de lo contrario el monto llega -1.0)
+    
+    Boton de pago:
+      -Si el colegiado no requiere solvencia especial o si el costo es mayor a 0 se muestra el boton de pago
+      -Si el colegiado puede pedir el monto especial se muestra el boton de solicitar costo de solvencia
+      -Si el colegiado requiere la solvencia especial y el costo < 0, no mostrar nigun boton
+  */
+
+  const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
+  const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
+
+  const costoEspecialMessage = colegiadoUser.requiere_solvencia_esp && colegiadoUser.puede_pedir_costo_especial ? 
+    "" : "Su costo esta siendo calculado";
+
+  const mensajeDeCosto = colegiadoUser.requiere_solvencia_esp ?
+    costoEspecialMessage : `Monto: ${colegiadoUser.costo_de_solvencia}`;
+
+  const mostraBoton = () => {
+    if (colegiadoUser.requiere_solvencia_esp && !colegiadoUser.puede_pedir_costo_especial) {
+      return Math.floor(colegiadoUser.costo_de_solvencia) > 0
+    }
+    return true
+  }
+
+  const puedeMostrarBoton = mostraBoton();
+
+  const handleSolicitarMontoEspecial = async () => {
+    try {
+      const pagoResult = await solicitarSolvenciaEspecial({user_id: colegiadoUser.id});
+      const colegiadoResult = await fetchMe();
+      setColegiadoUser(colegiadoResult.data);
+      return [undefined, pagoResult]
+    } catch(error) {
+      return [error, undefined];
+    }
+  }
+
+  const botonDePago = () => {
+    if (!puedeMostrarBoton) return <></>;
+
+    if (colegiadoUser.requiere_solvencia_esp && colegiadoUser.puede_pedir_costo_especial) {
+      return (
+        <button
+          className="bg-gradient-to-b from-[#41023B] to-[#D7008A] text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition-colors"
+          onClick={() => handleSolicitarMontoEspecial()}
+        >
+          Solicitar costo de solvencia
+        </button>
+      )
+    }
+
+    return (
+      <button
+        onClick={onPayClick}
+        className="bg-gradient-to-b from-[#41023B] to-[#D7008A] text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition-colors"
+      >
+        {colegiadoUser.solvencia_status ? "Renovar Solvencia" : "Realizar Pago"}
+      </button>
+    )
+  }
+
   return (
-    <div className="w-full bg-white rounded-xl shadow-md overflow-hidden mb-6">
+    <div className="w-full bg-white rounded-xl shadow-md overflow-hidden mb-6" id="estado-de-solvencia">
       <div className="bg-gradient-to-b from-[#41023B] to-[#D7008A] p-4">
         <h2 className="text-white font-semibold text-lg">Estado de Solvencia</h2>
       </div>
@@ -13,7 +81,7 @@ export default function SolvencyStatus({ isSolvent, solvencyDate, solvencyAmount
       <div className="p-5">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
-            {isSolvent ? (
+            {colegiadoUser.solvencia_status ? (
               <>
                 {isExpiringSoon ? (
                   <div className="flex items-center text-amber-600 mb-2">
@@ -28,7 +96,7 @@ export default function SolvencyStatus({ isSolvent, solvencyDate, solvencyAmount
                 )}
                 <div className="flex items-center text-gray-700">
                   <Calendar size={16} className="mr-2" />
-                  <span>Válido hasta: <span className="font-semibold">{solvencyDate}</span></span>
+                  <span>Válido hasta: <span className="font-semibold">{colegiadoUser.solvente}</span></span>
                 </div>
                 {isExpiringSoon && (
                   <div className="text-amber-600 text-sm mt-2">
@@ -51,14 +119,9 @@ export default function SolvencyStatus({ isSolvent, solvencyDate, solvencyAmount
           
           <div className="flex flex-col items-end">
             <div className="text-gray-700 mb-2">
-              <span>Monto: <span className="font-semibold text-lg">${solvencyAmount}</span></span>
+              <span className="font-semibold text-lg">{mensajeDeCosto}</span>
             </div>
-            <button
-              onClick={onPayClick}
-              className="bg-gradient-to-b from-[#41023B] to-[#D7008A] text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition-colors"
-            >
-              {isSolvent ? "Renovar Solvencia" : "Realizar Pago"}
-            </button>
+            {botonDePago()}
           </div>
         </div>
       </div>

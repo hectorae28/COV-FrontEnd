@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, ChevronLeft, CheckCircle, X } from "lucide-react";
 import { useSession } from "next-auth/react";
-import useDataListaColegiados from "@/app/Models/PanelControl/Solicitudes/ListaColegiadosData";
+import useDataListaColegiados from "@/store/ListaColegiadosData";
 
 // Import components
 import PersonalInfoSection from "./PersonalInfoSection ";

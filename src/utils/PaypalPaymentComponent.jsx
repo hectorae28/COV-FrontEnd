@@ -2,32 +2,47 @@
 import PayPalProvider from "./paypalProvider"
 import { useState, useEffect } from "react"
 import { DollarSign } from "lucide-react"
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 function PaypalPaymentComponent({ 
   totalPendiente, 
-  exchangeRate, 
   onPaymentInfoChange,
-  allowMultiplePayments // Add this prop
+  allowMultiplePayments, // Add this prop
+  metodoDePagoId,
+  handlePago,
+  tasaBCV
 }) {
-  const [montoPago, setMontoPago] = useState("0.00")
-  const [montoEnBs, setMontoEnBs] = useState("0.00")
+  const [montoPago, setMontoPago] = useState("0.00");
+  const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser);
+  const [pagoDetalles, setPagoDetalles] = useState(null);
 
   // Existing useEffect remains unchanged
   useEffect(() => {
     if (totalPendiente) {
       setMontoPago(totalPendiente.toFixed(2))
-      setMontoEnBs((totalPendiente * exchangeRate).toFixed(2))
     } else {
       setMontoPago("0.00")
-      setMontoEnBs("0.00")
     }
-  }, [totalPendiente, exchangeRate])
+
+    if (!allowMultiplePayments) {
+      onPaymentInfoChange({
+        montoPago,
+      })
+    }
+
+    setPagoDetalles({
+      user_id: colegiadoUser.id,
+      metodo_de_pago_id: metodoDePagoId,
+      tasa_bcv: tasaBCV,
+      monto: parseFloat(montoPago),
+      costo: parseFloat(totalPendiente.toFixed(2))
+    });
+  }, [totalPendiente, montoPago])
 
   const handleMontoChange = (e) => {
     const value = e.target.value
     if (!value) {
       setMontoPago("0.00")
-      setMontoEnBs("0.00")
       return
     }
 
@@ -41,11 +56,10 @@ function PaypalPaymentComponent({
     }
 
     setMontoPago(value)
-    setMontoEnBs((numericValue * exchangeRate).toFixed(2))
     onPaymentInfoChange({
       montoPago,
-      montoEnBs,
     })
+    setPagoDetalles({...pagoDetalles, monto: montoPago})
   }
 
   const calculatePaypalFee = (amount) => {
@@ -56,16 +70,6 @@ function PaypalPaymentComponent({
   }
 
   const paypalAmount = calculatePaypalFee(montoPago)
-
-  // Add this useEffect to handle single payment mode
-  useEffect(() => {
-    if (!allowMultiplePayments) {
-      onPaymentInfoChange({
-        montoPago,
-        montoEnBs,
-      })
-    }
-  }, [montoPago, montoEnBs, allowMultiplePayments])
 
   return (
     <div className="space-y-4">
@@ -91,9 +95,6 @@ function PaypalPaymentComponent({
               placeholder="0.00"
             />
           </div>
-          <p className="text-xs text-blue-700 mt-1">
-            Equivalente a Bs {montoEnBs}
-          </p>
         </div>
       )}
 
@@ -117,7 +118,11 @@ function PaypalPaymentComponent({
           </div>
 
           <div className="mt-3 flex justify-center">
-            <PayPalProvider amount={paypalAmount} />
+            <PayPalProvider 
+              amount={paypalAmount}
+              pagoDetalles={pagoDetalles}
+              handlePago={(pagoDetalles) => handlePago(pagoDetalles)}
+            />
           </div>
         </div>
       </div>

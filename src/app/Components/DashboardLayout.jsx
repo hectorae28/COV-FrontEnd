@@ -5,8 +5,6 @@ import { useState } from "react";
 
 export default function DashboardLayout({
   children,
-  solvencyInfo,
-  isSolvent,
   userInfo,
   showSolvencyWarning,
   session,
@@ -32,7 +30,7 @@ export default function DashboardLayout({
         md:left-0
       `}
       >
-        <AppBar solvencyInfo={solvencyInfo} />
+        <AppBar/>
       </aside>
 
       {/* Contenido principal - responsive */}
@@ -45,8 +43,6 @@ export default function DashboardLayout({
       >
         <Barra
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-          solvencyInfo={solvencyInfo}
-          isSolvent={isSolvent}
           userInfo={userInfo}
           showSolvencyWarning={showSolvencyWarning}
           session={session}
