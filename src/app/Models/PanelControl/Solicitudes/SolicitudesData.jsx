@@ -1,5 +1,3 @@
-// SolicitudesData.jsx - Archivo central de datos para solicitudes
-
 // Datos de ejemplo de colegiados para el dropdown
 export const colegiados = [
     {
@@ -181,7 +179,6 @@ export const TIPOS_SOLICITUD = {
         descripcion: "Solicitud de carnet de identificación profesional",
         documentosRequeridos: [
             { displayName: "Foto tipo carnet", campo: "foto" },
-            { displayName: "Comprobante de pago", campo: "comprobante" }
         ]
     },
     Especializacion: {
@@ -209,15 +206,14 @@ export const TIPOS_SOLICITUD = {
         descripcion: "Constancia profesional (requiere seleccionar tipo específico)",
         documentosRequeridos: [
             { displayName: "Cédula de Identidad", campo: "file_cedula" },
-            { displayName: "Comprobante de pago", campo: "comprobante" }
         ],
         subtipos: [
-            { campo: "inscripcion_cov", nombre: "Inscripción del COV", costo: 60.00, codigo: "CONST-INSC" },
-            { campo: "solvencia", nombre: "Solvencia", costo: 45.00, codigo: "CONST-SOLV" },
-            { campo: "libre_ejercicio", nombre: "Libre ejercicio", costo: 55.00, codigo: "CONST-LIBRE" },
-            { campo: "declaracion_habilitacion", nombre: "Declaración de habilitación", costo: 70.00, codigo: "CONST-HAB" },
-            { campo: "continuidad_laboral", nombre: "Continuidad laboral", costo: 65.00, codigo: "CONST-CONT" },
-            { campo: "deontologia_odontologica", nombre: "Deontología odontológica", costo: 80.00, codigo: "CONST-DEONT" }
+            { codigo: "inscripcion_cov", nombre: "Inscripción del COV", costo: 60.00, },
+            { codigo: "solvencia", nombre: "Solvencia", costo: 45.00, },
+            { codigo: "libre_ejercicio", nombre: "Libre ejercicio", costo: 55.00, },
+            { codigo: "declaracion_habilitacion", nombre: "Declaración de habilitación", costo: 70.00, },
+            { codigo: "continuidad_laboral", nombre: "Continuidad laboral", costo: 65.00, },
+            { codigo: "deontologia_odontologica", nombre: "Deontología odontológica", costo: 80.00, }
         ]
     }
 };

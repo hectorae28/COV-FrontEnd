@@ -1,7 +1,7 @@
 "use client"
-import { TIPOS_SOLICITUD } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
-import AssignmentInd from "@mui/icons-material/AssignmentInd"
-import LibraryAddCheck from "@mui/icons-material/LibraryAddCheck"
+
+import {useSolicitudesStore} from "@/store/SolicitudesStore"
+import useDataListaColegiados from "@/store/ListaColegiadosData"
 import { Check, FileCheck, FileText, Search, ShoppingCart, Trash2, User } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -9,12 +9,15 @@ export default function SeleccionarSolicitudesStep({
     onFinalizarSolicitud,
     onClose,
     mostrarSeleccionColegiado = true,
-    colegiados = [],
     colegiadoPreseleccionado = null,
     creadorInfo,
     tipoSolicitudPreseleccionado = null,
+    isAdmin = false
 }) {
-    // Estado inicial del formulario
+    const tipos_solicitud = useSolicitudesStore((state) => state.tipos_solicitud)
+    const loading = useSolicitudesStore((state) => state.loading)
+    const colegiados = useDataListaColegiados((state) => state.colegiados)
+    const fetchColegiados = useDataListaColegiados((state) => state.fetchColegiados)
     const [formData, setFormData] = useState({
         colegiadoId: colegiadoPreseleccionado ? colegiadoPreseleccionado.id : "",
         urgente: false,
@@ -32,45 +35,60 @@ export default function SeleccionarSolicitudesStep({
     const [itemsCarrito, setItemsCarrito] = useState([])
     const [totalCarrito, setTotalCarrito] = useState(0)
 
-    // Si hay un colegiado preseleccionado, establecer el ID en el formulario
+
+    const fetchColegiadosData = async () => {
+        try {
+            await fetchColegiados(1,10,searchTerm);
+        } catch (error) {
+            console.error("Error al cargar colegiados:", error);
+        }
+    };
+
+    // Efecto para manejar el colegiado preseleccionado
     useEffect(() => {
         if (colegiadoPreseleccionado) {
             setFormData((prev) => ({
                 ...prev,
                 colegiadoId: colegiadoPreseleccionado.id,
-            }))
+            }));
         }
-    }, [colegiadoPreseleccionado])
-
+    }, [colegiadoPreseleccionado]);
     useEffect(() => {
+        fetchColegiadosData()
+    }, [searchTerm]);
+
+    // Efecto para manejar el tipo de solicitud preseleccionado
+    console.log({tipos_solicitud})
+    useEffect(() => {
+        if (!tipos_solicitud || !tipos_solicitud[0]?.costo) return;
+
         if (tipoSolicitudPreseleccionado) {
             // Convertir a formato correcto (primera letra mayúscula, resto minúsculas)
-            let tipoFormateado = ""
+            let tipoFormateado = "";
 
             // Manejo especial para "multiple" (se ignora, ya que es para selección múltiple)
             if (tipoSolicitudPreseleccionado === "multiple") {
-                // No seleccionamos nada específico para solicitud múltiple
-                return
+                return;
             }
 
             // Para tipos específicos:
             if (tipoSolicitudPreseleccionado === "constancia") {
-                tipoFormateado = "Constancia"
+                tipoFormateado = "Constancia";
             } else if (tipoSolicitudPreseleccionado === "carnet") {
-                tipoFormateado = "Carnet"
+                tipoFormateado = "Carnet";
             } else if (tipoSolicitudPreseleccionado === "especializacion") {
-                tipoFormateado = "Especializacion"
+                tipoFormateado = "Especializacion";
             }
 
             // Verificamos si existe el tipo y lo añadimos a los seleccionados
-            if (TIPOS_SOLICITUD[tipoFormateado]) {
+            if (tipos_solicitud[tipoFormateado]) {
                 // Pre-seleccionar el tipo en la lista de tipos
-                setTiposSeleccionados([tipoFormateado])
+                setTiposSeleccionados([tipoFormateado]);
 
                 // Si es una constancia, no hacemos nada más (el usuario debe seleccionar el subtipo)
                 if (tipoFormateado !== "Constancia") {
                     // Para los demás tipos, pre-agregar al carrito
-                    const tipoInfo = TIPOS_SOLICITUD[tipoFormateado]
+                    const tipoInfo = tipos_solicitud[tipoFormateado];
                     const nuevoItem = {
                         id: `${tipoInfo.codigo}-${Date.now()}`,
                         tipo: tipoFormateado,
@@ -79,14 +97,16 @@ export default function SeleccionarSolicitudesStep({
                         costo: tipoInfo.costo,
                         exonerado: false,
                         codigo: tipoInfo.codigo,
-                        documentosRequeridos: tipoInfo.documentosRequeridos.map(doc => doc.displayName),
-                    }
-                    setItemsCarrito([nuevoItem])
-                    actualizarTotal([nuevoItem])
+                        documentosRequeridos: tipoInfo.documentosRequeridos.map(
+                            (doc) => doc.displayName
+                        ),
+                    };
+                    setItemsCarrito([nuevoItem]);
+                    actualizarTotal([nuevoItem]);
                 }
             }
         }
-    }, [tipoSolicitudPreseleccionado])
+    }, [tipoSolicitudPreseleccionado, tipos_solicitud]);
 
     // Función para agregar un item al carrito
     const agregarAlCarrito = (tipo) => {
@@ -99,7 +119,7 @@ export default function SeleccionarSolicitudesStep({
             return
         } else {
             // Para otros tipos de solicitud
-            const tipoInfo = TIPOS_SOLICITUD[tipo]
+            const tipoInfo = tipos_solicitud[tipo]
             const nuevoItem = {
                 id: `${tipoInfo.codigo}-${Date.now()}`,
                 tipo: tipo,
@@ -118,7 +138,7 @@ export default function SeleccionarSolicitudesStep({
     // Función para actualizar el total del carrito
     const actualizarTotal = (items) => {
         const nuevoTotal = items.reduce((sum, item) => {
-            return sum + (item.exonerado ? 0 : item.costo)
+            return sum + (item.exonerado ? 0 : item.costo.monto)
         }, 0)
         setTotalCarrito(nuevoTotal)
     }
@@ -212,9 +232,9 @@ export default function SeleccionarSolicitudesStep({
                 // Si no está seleccionado, lo agregamos
                 setTiposSeleccionados([...tiposSeleccionados, tipo])
                 // Y agregamos automáticamente al carrito
-                const tipoInfo = TIPOS_SOLICITUD[tipo]
+                const tipoInfo = tipos_solicitud[tipo]
                 const nuevoItem = {
-                    id: `${tipoInfo.codigo}-${Date.now()}`,
+                    id: `${tipoInfo.codigo}`,
                     tipo: tipo,
                     subtipo: null,
                     nombre: tipoInfo.nombre,
@@ -249,7 +269,7 @@ export default function SeleccionarSolicitudesStep({
             setSubtiposConstanciaSeleccionados((prev) => [...prev, subtipo.nombre])
             // Y agregamos al carrito - Constancias no tienen documentos requeridos
             const nuevoItem = {
-                id: `${subtipo.codigo}-${Date.now()}`,
+                id: `${subtipo.codigo}`,
                 tipo: "Constancia",
                 subtipo: subtipo.nombre,
                 nombre: `Constancia: ${subtipo.nombre}`,
@@ -309,12 +329,7 @@ export default function SeleccionarSolicitudesStep({
     }
 
     // Filtrar colegiados por término de búsqueda
-    const colegiadosFiltrados = colegiados.filter(
-        (colegiado) =>
-            colegiado.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (colegiado.cedula && colegiado.cedula.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (colegiado.numeroRegistro && colegiado.numeroRegistro.toLowerCase().includes(searchTerm.toLowerCase())),
-    )
+    const colegiadosFiltrados = colegiados
 
     // Obtener el colegiado seleccionado
     const colegiadoSeleccionado = colegiadoPreseleccionado || colegiados.find((c) => c.id === formData.colegiadoId)
@@ -327,80 +342,110 @@ export default function SeleccionarSolicitudesStep({
         const nuevosErrores = {}
         if (!formData.colegiadoId) nuevosErrores.colegiadoId = "Debe seleccionar un colegiado"
         if (itemsCarrito.length === 0) nuevosErrores.items = "Debe agregar al menos un tipo de solicitud"
+        
+        const documentosFaltantes = []
+        itemsCarrito.forEach(item => {
+            item.documentosRequeridos.forEach(doc => {
+                const campo = doc.campo
+                if (!documentosAdjuntos[campo] || 
+                    (documentosAdjuntos[campo] instanceof File && documentosAdjuntos[campo].size === 0)) {
+                    documentosFaltantes.push(doc.displayName)
+                }
+            })
+        })
+        
+        if (documentosFaltantes.length > 0) {
+            nuevosErrores.documentos = {text: `Debe adjuntar los siguientes documentos:`, list: documentosFaltantes}
+        }
+        
         setErrors(nuevosErrores)
         return Object.keys(nuevosErrores).length === 0
     }
 
     // Manejar envío del formulario
     const handleSubmit = async (e) => {
-        e.preventDefault()
-        if (!validarFormulario()) return
-        setIsSubmitting(true)
-        try {
-            // Usamos creadorInfo en lugar de session
-            const isAdmin = creadorInfo?.role === "admin" || creadorInfo?.isAdmin || false
-
-            // Crear lista de documentos requeridos única (sin duplicados)
-            const todosDocumentosRequeridos = []
-            itemsCarrito.forEach((item) => {
-                item.documentosRequeridos.forEach((doc) => {
-                    if (!todosDocumentosRequeridos.includes(doc)) {
-                        todosDocumentosRequeridos.push(doc)
-                    }
-                })
-            })
-            // Determinar el tipo principal para mostrar
-            let tipoMostrar = ""
-            if (itemsCarrito.length > 1) {
-                tipoMostrar = `Solicitud múltiple (${itemsCarrito.length} ítems)`
-            } else if (itemsCarrito.length === 1) {
-                tipoMostrar = itemsCarrito[0].nombre
+      e.preventDefault();
+      if (!validarFormulario()) return;
+      setIsSubmitting(true);
+      try {
+        // Usamos creadorInfo en lugar de session
+        // Crear lista de documentos requeridos única (sin duplicados)
+        const todosDocumentosRequeridos = [];
+        itemsCarrito.forEach((item) => {
+          item.documentosRequeridos.forEach((doc) => {
+            if (!todosDocumentosRequeridos.includes(doc)) {
+              todosDocumentosRequeridos.push(doc);
             }
-
-            // Crear objeto de nueva solicitud
-            const nuevaSolicitud = {
-                id: `sol-${Date.now()}`,
-                tipo: tipoMostrar,
-                colegiadoId: formData.colegiadoId,
-                colegiadoNombre: colegiadoSeleccionado?.nombre || "Colegiado",
-                fecha: new Date().toLocaleDateString(),
-                estado: todoExonerado ? "Exonerada" : "Pendiente",
-                descripcion: formData.descripcion || "Solicitud de servicios al Colegio",
-                referencia: `REF-${Date.now().toString().slice(-6)}`,
-                costo: totalCarrito,
-                documentosRequeridos: todosDocumentosRequeridos,
-                documentosAdjuntos: documentosAdjuntos,//Object.keys(documentosAdjuntos).map(key => documentosAdjuntos[key] || "documento.pdf"),
-                itemsSolicitud: itemsCarrito,
-                comprobantePago: null,
-                estadoPago: todoExonerado ? "Exonerado" : "Pendiente de verificación",
-                fechaCompletado: new Date().toLocaleDateString(),
-                // Información del creador
-                creador: {
-                    username: creadorInfo?.name || "Usuario",
-                    email: creadorInfo?.email || "usuario@ejemplo.com",
-                    esAdmin: creadorInfo?.role === "admin" || creadorInfo?.isAdmin || false,
-                    fecha: new Date().toISOString(),
-                    tipo: "creado",
-                },
-            }
-            // Pasar la solicitud creada al componente padre
-            onFinalizarSolicitud(nuevaSolicitud)
-        } catch (error) {
-            console.error("Error al crear solicitud:", error)
-            setErrors({
-                general: "Ocurrió un error al procesar la solicitud. Inténtelo nuevamente.",
-            })
-        } finally {
-            setIsSubmitting(false)
+          });
+        });
+        // Determinar el tipo principal para mostrar
+        let tipoMostrar = "";
+        if (itemsCarrito.length > 1) {
+          tipoMostrar = `Solicitud múltiple (${itemsCarrito.length} ítems)`;
+        } else if (itemsCarrito.length === 1) {
+          tipoMostrar = itemsCarrito[0].nombre;
         }
-    }
+
+        // Crear objeto de nueva solicitud
+        const nuevaSolicitud = {
+          id: `sol-${Date.now()}`,
+          tipo: tipoMostrar,
+          colegiadoId: formData.colegiadoId,
+          colegiadoNombre:
+            colegiadoSeleccionado?.recaudos?.persona?.nombre ||
+            colegiadoSeleccionado?.firstname ||
+            "Colegiado",
+          fecha: new Date().toLocaleDateString(),
+          estado: todoExonerado ? "Exonerada" : "Pendiente",
+          descripcion: formData.descripcion || "",
+          referencia: `REF-${Date.now().toString().slice(-6)}`,
+          costo: totalCarrito,
+          documentosRequeridos: todosDocumentosRequeridos,
+          documentosAdjuntos: documentosAdjuntos,
+          itemsSolicitud: itemsCarrito,
+          comprobantePago: null,
+          estadoPago: todoExonerado ? "Exonerado" : "Pendiente de verificación",
+          fechaCompletado: new Date().toLocaleDateString(),
+          // Información del creador
+          creador: {
+            username: creadorInfo?.name || "Usuario",
+            email: creadorInfo?.email || "usuario@ejemplo.com",
+            esAdmin:
+              creadorInfo?.role === "admin" || creadorInfo?.isAdmin || false,
+            fecha: new Date().toISOString(),
+            tipo: "creado",
+          },
+        };
+        // Pasar la solicitud creada al componente padre
+        onFinalizarSolicitud(nuevaSolicitud);
+      } catch (error) {
+        console.error("Error al crear solicitud:", error);
+        setErrors({
+          general:
+            "Ocurrió un error al procesar la solicitud. Inténtelo nuevamente.",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
     // Filtrar tipos de solicitud para excluir "Solvencia"
-    const tiposSolicitudFiltrados = Object.keys(TIPOS_SOLICITUD).filter((tipo) => tipo !== "Solvencia")
-
     return (
       <form onSubmit={handleSubmit}>
         <div className="p-6">
+          {/* Loading state */}
+          {loading && (
+            <div className="flex justify-center items-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C40180]"></div>
+            </div>
+          )}
+          {/* Error state */}
+          {!loading && !tipos_solicitud && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-red-800 mb-4">
+              <p>Error al cargar los tipos de solicitud. Por favor, intente nuevamente.</p>
+            </div>
+          )}
+
           {/* Selección de colegiado (solo si es necesario) */}
           {mostrarSeleccionColegiado && (
             <div className="mb-6">
@@ -419,11 +464,11 @@ export default function SeleccionarSolicitudesStep({
                       <User size={20} className="text-gray-400 mr-2" />
                       <div>
                         <p className="font-medium">
-                          {colegiadoSeleccionado.nombre}
+                          {colegiadoSeleccionado.recaudos.persona.nombre}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {colegiadoSeleccionado.cedula} ·{" "}
-                          {colegiadoSeleccionado.numeroRegistro}
+                          {colegiadoSeleccionado.recaudos.persona.identificacion} ·{" "}
+                          COV: {colegiadoSeleccionado.num_cov}
                         </p>
                       </div>
                     </div>
@@ -468,9 +513,9 @@ export default function SeleccionarSolicitudesStep({
                           className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
                           onClick={() => selectColegiado(colegiado)}
                         >
-                          <p className="font-medium">{colegiado.nombre}</p>
+                          <p className="font-medium">{colegiado.recaudos.persona.nombre}</p>
                           <p className="text-xs text-gray-500">
-                            {colegiado.cedula} · {colegiado.numeroRegistro}
+                            {colegiado.recaudos.persona.identificacion} · COV: {colegiado.num_cov}
                           </p>
                         </div>
                       ))
@@ -493,57 +538,9 @@ export default function SeleccionarSolicitudesStep({
             {errors.items && (
               <div className="text-red-500 text-xs mb-2">{errors.items}</div>
             )}
-
-            {/* Si hay un tipo preseleccionado (excepto "multiple"), mostrar solo ese tipo */}
-            {tipoSolicitudPreseleccionado &&
-            tipoSolicitudPreseleccionado !== "multiple" ? (
-              <div className="flex justify-center">
-                <div className="w-full max-w-md">
-                  {(() => {
-                    // Convertir el tipo preseleccionado al formato correcto
-                    let tipoFormateado = "";
-                    if (tipoSolicitudPreseleccionado === "constancia")
-                      tipoFormateado = "Constancia";
-                    else if (tipoSolicitudPreseleccionado === "carnet")
-                      tipoFormateado = "Carnet";
-                    else if (tipoSolicitudPreseleccionado === "especializacion")
-                      tipoFormateado = "Especializacion";
-
-                    // Definir colores específicos para cada tipo
-                    let gradientColors = "from-blue-400 to-cyan-600"; // Default para carnet
-                    if (tipoFormateado === "Constancia") {
-                      gradientColors = "from-teal-400 to-emerald-500";
-                    } else if (tipoFormateado === "Especializacion") {
-                      gradientColors = "from-pink-500 to-orange-400";
-                    }
-
-                    return (
-                      <div className="transform transition-all duration-300 mb-4 mt-2">
-                        <div
-                          className={`bg-gradient-to-r ${gradientColors} rounded-xl shadow-xl overflow-hidden`}
-                        >
-                          <div className="p-0.5">
-                            <div className="bg-white rounded-lg p-2">
-                              <div className="flex flex-col items-center justify-center">
-                                <h2 className="text-2xl font-bold text-center mb-2 text-gray-800 ml-4">
-                                  {TIPOS_SOLICITUD[tipoFormateado].nombre}
-                                </h2>
-                                <div
-                                  className={`h-1 w-1/2 bg-gradient-to-r ${gradientColors} rounded-full mb-4 mx-auto`}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            ) : (
-              // Si no hay tipo preseleccionado o es "multiple", mostrar todos los tipos
+              {/* Si no hay tipo preseleccionado o es "multiple", mostrar todos los tipos*/}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                {tiposSolicitudFiltrados.map((tipo) => (
+                {Object.keys(tipos_solicitud).map((tipo) => (
                   <div
                     key={tipo}
                     className={`
@@ -558,11 +555,11 @@ export default function SeleccionarSolicitudesStep({
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-medium text-gray-800">
-                          {TIPOS_SOLICITUD[tipo].nombre}
+                          {tipos_solicitud[tipo].nombre}
                         </p>
                         {tipo !== "Constancia" ? (
                           <p className="text-xs text-gray-500">
-                            Costo: ${TIPOS_SOLICITUD[tipo].costo.toFixed(2)}
+                            Costo: ${tipos_solicitud[tipo].costo.monto.toFixed(2)}
                           </p>
                         ) : (
                           <p className="text-xs text-gray-500">
@@ -579,7 +576,6 @@ export default function SeleccionarSolicitudesStep({
                   </div>
                 ))}
               </div>
-            )}
 
             {/* Subtipos de constancia si está seleccionada */}
             {tiposSeleccionados.includes("Constancia") && (
@@ -588,7 +584,7 @@ export default function SeleccionarSolicitudesStep({
                   Seleccione los tipos de constancia que necesita:
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {TIPOS_SOLICITUD.Constancia.subtipos.map((subtipo) => (
+                  {tipos_solicitud.Constancia.subtipos.map((subtipo) => (
                     <div
                       key={subtipo.codigo}
                       className={`
@@ -606,7 +602,7 @@ export default function SeleccionarSolicitudesStep({
                         <div>
                           <p className="text-sm">{subtipo.nombre}</p>
                           <p className="text-xs text-gray-500">
-                            ${subtipo.costo.toFixed(2)}
+                            ${subtipo.costo.monto.toFixed(2)}
                           </p>
                         </div>
                         {subtiposConstanciaSeleccionados.includes(
@@ -621,6 +617,11 @@ export default function SeleccionarSolicitudesStep({
           </div>
 
           {/* Carrito de compras */}
+          {errors.documentos && (
+                <div className="text-red-500 text-xs mb-2">
+                  {errors.documentos.text}
+                </div>
+              )}
           <div className="mb-6 border rounded-lg overflow-hidden">
             <div className="bg-gray-50 p-3 border-b flex justify-between items-center">
               <h3 className="font-medium text-gray-800 flex items-center">
@@ -656,22 +657,24 @@ export default function SeleccionarSolicitudesStep({
                                 : "text-[#C40180]"
                             }`}
                           >
-                            ${item.costo.toFixed(2)}
+                            ${item.costo.monto.toFixed(2)}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <label className="inline-flex items-center cursor-pointer">
-                            <span className="text-xs text-gray-600 mr-2">
-                              Exonerar
-                            </span>
-                            <input
-                              type="checkbox"
-                              className="sr-only peer"
-                              checked={item.exonerado}
-                              onChange={() => toggleExoneracion(item.id)}
-                            />
-                            <div className="relative w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-600"></div>
-                          </label>
+                          {isAdmin && (
+                            <label className="inline-flex items-center cursor-pointer">
+                              <span className="text-xs text-gray-600 mr-2">
+                                Exonerar
+                              </span>
+                              <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={item.exonerado}
+                                onChange={() => toggleExoneracion(item.id)}
+                              />
+                              <div className="relative w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                          )}
                           <button
                             type="button"
                             onClick={() => eliminarDelCarrito(item.id)}
@@ -698,7 +701,7 @@ export default function SeleccionarSolicitudesStep({
                                     size={14}
                                     className="text-gray-400 mr-1"
                                   />
-                                  <span className="text-xs">{doc.displayName}</span>
+                                  <span className={`text-xs ${errors?.documentos?.list?.includes(doc.displayName) ? "text-red-500" : ""}`}>{doc.displayName}</span>
                                   <input
                                     type="file"
                                     id={`documento-${item.id}-${index}`}
@@ -737,17 +740,20 @@ export default function SeleccionarSolicitudesStep({
                   ))}
                 </ul>
                 {/* Acciones del carrito */}
+                
                 <div className="bg-gray-50 p-3 border-t flex justify-between items-center">
                   <span className="text-sm font-bold">
                     Total a pagar: ${totalCarrito.toFixed(2)}
                   </span>
-                  <button
-                    type="button"
-                    onClick={exonerarTodos}
-                    className="cursor-pointer text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Exonerar todos
-                  </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={exonerarTodos}
+                      className="cursor-pointer text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Exonerar todos
+                    </button>
+                  )}
                 </div>
               </div>
             )}

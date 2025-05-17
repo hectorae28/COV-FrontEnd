@@ -1,8 +1,10 @@
 "use client";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx";
+import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent";
 import { CreditCard, DollarSign } from "lucide-react";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -13,20 +15,33 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
     const [paymentDate, setPaymentDate] = useState("")
     const [paymentFile, setPaymentFile] = useState(null)
     const [previewUrl, setPreviewUrl] = useState("")
+    const tasaBcv = useColegiadoUserStore((state) => state.tasaBcv)
+    const setTasaBcv = useColegiadoUserStore((state) => state.setTasaBcv)
 
     // Tasa de cambio
-    const exchangeRate = 80
-
+    async function fetchTasaBcv() {
+      try {
+        const response = await fetchDataSolicitudes("tasa-bcv");
+        const tasaBcvData = Number(response.data.rate);
+        setTasaBcv(tasaBcvData);
+      } catch (error) {
+        console.error("Error fetching tasa BCV:", error);
+      }
+    }
+    const LoadData = async () => {
+        await fetchTasaBcv();
+    }
     // Inicializar valores cuando totalPendiente cambia
     useEffect(() => {
+        LoadData();
         if (totalPendiente) {
             setMontoPago(totalPendiente.toFixed(2))
-            setMontoEnBs((totalPendiente * exchangeRate).toFixed(2))
+            setMontoEnBs((totalPendiente * tasaBcv).toFixed(2))
         } else {
             setMontoPago("0.00")
             setMontoEnBs("0.00")
         }
-    }, [totalPendiente, exchangeRate])
+    }, [totalPendiente, tasaBcv])
 
     // Actualizar el monto en USD cuando se ingresa en Bs
     const handleBsChange = (e) => {
@@ -43,13 +58,13 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
         setMontoEnBs(value)
 
         // Convertir a USD
-        const usdAmount = (parseFloat(value) / exchangeRate).toFixed(2)
+        const usdAmount = (parseFloat(value) / tasaBcv).toFixed(2)
 
         // Verificar que no exceda el monto pendiente
         if (parseFloat(usdAmount) > totalPendiente) {
             alert(`El monto no puede ser mayor a USD$ ${totalPendiente.toFixed(2)}`)
             // Reajustar al monto máximo
-            setMontoEnBs((totalPendiente * exchangeRate).toFixed(2))
+            setMontoEnBs((totalPendiente * tasaBcv).toFixed(2))
             setMontoPago(totalPendiente.toFixed(2))
             return
         }
@@ -79,7 +94,11 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
         // Actualizar valor sin formatear para que sea más fácil de editar
         setMontoPago(value)
         // Calcular el equivalente en Bs
-        setMontoEnBs((numericValue * exchangeRate).toFixed(2))
+        setMontoEnBs((numericValue * tasaBcv).toFixed(2))
+    }
+
+    const handlePago = async (detallesDePago) => {
+        console.log(detallesDePago)
     }
 
     // PayPal fee calculation
@@ -168,7 +187,7 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
 
         if (totalPendiente) {
             setMontoPago(totalPendiente.toFixed(2))
-            setMontoEnBs((totalPendiente * exchangeRate).toFixed(2))
+            setMontoEnBs((totalPendiente * tasaBcv).toFixed(2))
         } else {
             setMontoPago("0.00")
             setMontoEnBs("0.00")
@@ -204,7 +223,7 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
 
                     {/* Tasa de cambio */}
                     <div className="bg-[#D7008A]/10 px-3 py-1.5 rounded-lg border border-[#D7008A]">
-                        <p className="text-sm font-bold text[#41023B]">USD$ 1 = 80Bs</p>
+                        <p className="text-sm font-bold text[#41023B]">USD$ 1 = {tasaBcv}Bs</p>
                     </div>
                 </div>
 
@@ -212,7 +231,7 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
                 <div className="text-center mb-6">
                     <p className="text-base text-gray-600">Monto total pendiente:</p>
                     <p className="text-2xl font-bold text-[#D7008A]">USD$ {parseFloat(totalPendiente).toFixed(2)}</p>
-                    <p className="text-lg font-medium text-gray-700 mt-1">Monto en Bs: {(parseFloat(totalPendiente) * exchangeRate).toFixed(2)}</p>
+                    <p className="text-lg font-medium text-gray-700 mt-1">Monto en Bs: {(parseFloat(totalPendiente) * tasaBcv).toFixed(2)}</p>
                 </div>
 
                 {/* Botones de selección de método de pago */}
@@ -383,13 +402,13 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
                             <div className="space-y-5">
                                 {/* Información de PayPal */}
                                 <PaypalPaymentComponent
-                                    totalPendiente={parseFloat(totalPendiente)}
-                                    exchangeRate={exchangeRate}
-                                    onPaymentInfoChange={(paymentInfo) => {
-                                        setMontoPago(paymentInfo.montoPago)
-                                        setMontoEnBs(paymentInfo.montoEnBs)
+                                    totalPendiente={parseFloat(paypalAmount)}
+                                    onPaymentInfoChange={(info) => {
+                                        setMontoPago(info.montoPago)
                                     }}
                                     allowMultiplePayments={true}
+                                    metodoDePagoId={paymentMethod.metodoId}
+                                    handlePago={(detallesPago) => handlePago(detallesPago)}
                                 />
                             </div>
                         )}
@@ -437,22 +456,6 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
                         </motion.button>
                     </div>
                 )}
-            </div>
-
-            {/* Nota importante */}
-            <div className="bg-[#D7008A]/10 p-3 rounded-lg border border-[#D7008A] text-[#41023B] text-sm">
-                <p className="flex items-start">
-                    <span className="mr-2 mt-0.5 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
-                    </span>
-                    <span>
-                        <strong>Nota importante:</strong> Guarde su comprobante de pago. El personal administrativo verificará su pago para activar completamente su solicitud.
-                    </span>
-                </p>
             </div>
         </div>
     )

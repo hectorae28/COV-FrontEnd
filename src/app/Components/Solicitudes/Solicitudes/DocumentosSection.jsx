@@ -8,36 +8,40 @@ const DocumentosSection = ({ solicitud, onVerDocumento }) => {
                 Documentos requeridos
             </h2>
 
-            {false ? (
+            {solicitud.documentosRequeridos.length === 0 ? (
                 <div className="text-gray-500 text-sm">No se requieren documentos para esta solicitud</div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {/* {solicitud.documentosRequeridos.map((documento, index) => {
-                        const documentoAdjunto = solicitud.documentosAdjuntos.find(doc =>
-                            doc.toLowerCase().includes(documento.split(" ")[0].toLowerCase())
+                    {solicitud.documentosRequeridos.map((documento, index) => {
+                        // Buscar la clave en documentosAdjuntos que coincida parcialmente con el nombre del documento
+                        const docKey = Object.keys(solicitud.documentosAdjuntos || {}).find(key => 
+                            key.toLowerCase().includes(documento.split(" ")[0].toLowerCase()) ||
+                            documento.toLowerCase().includes(key.toLowerCase().replace(/_/g, ' '))
                         );
+                        
+                        const documentoUrl = docKey ? solicitud.documentosAdjuntos[docKey] : null;
 
                         return (
                             <div
                                 key={index}
-                                className={`rounded-lg p-3 flex items-center ${documentoAdjunto ? 'bg-green-50' : 'bg-yellow-50'}`}
+                                className={`rounded-lg p-3 flex items-center ${documentoUrl ? 'bg-green-50' : 'bg-yellow-50'}`}
                             >
                                 <FileText
-                                    className={documentoAdjunto ? "text-green-500 mr-2 flex-shrink-0" : "text-yellow-500 mr-2 flex-shrink-0"}
+                                    className={documentoUrl ? "text-green-500 mr-2 flex-shrink-0" : "text-yellow-500 mr-2 flex-shrink-0"}
                                     size={18}
                                 />
                                 <div className="min-w-0 flex-1">
                                     <h3 className="font-medium text-sm text-gray-900 truncate">{documento}</h3>
                                     <p className="text-xs text-gray-500 mt-0.5 truncate">
-                                        {documentoAdjunto
-                                            ? documentoAdjunto
+                                        {documentoUrl
+                                            ? docKey.replace(/_/g, ' ')
                                             : "Documento pendiente"}
                                     </p>
                                 </div>
 
-                                {documentoAdjunto && (
+                                {documentoUrl && (
                                     <button
-                                        onClick={() => onVerDocumento(documentoAdjunto)}
+                                        onClick={() => onVerDocumento(documentoUrl)}
                                         className="text-blue-600 hover:text-blue-800 p-1 ml-2 flex-shrink-0"
                                     >
                                         <Eye size={16} />
@@ -45,7 +49,7 @@ const DocumentosSection = ({ solicitud, onVerDocumento }) => {
                                 )}
                             </div>
                         )
-                    })} */}
+                    })}
                 </div>
             )}
         </div>

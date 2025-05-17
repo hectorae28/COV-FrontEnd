@@ -8,10 +8,8 @@ import { useBarraContext } from "@/app/(Colegiado)/BarraContext";
 
 export default function Barra({
   onMenuClick,
-  isSolvent,
   userInfo,
   showSolvencyWarning,
-  session
 }) {
   const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser)
   // Manejo seguro del contexto con valores por defecto
@@ -49,21 +47,21 @@ export default function Barra({
         {/* Información de solvencia (oculta en móviles) */}
         <div className="hidden md:block min-w-0 whitespace-nowrap">
           <h2 className="text-lg font-semibold cursor-default">
-            {colegiadoUser.solvencia_status ? (
+            {colegiadoUser?.solvencia_status ? (
               <>
                 {showSolvencyWarning ? (
                   <span className="text-amber-600 flex items-center">
                     <Warning fontSize="small" className="mr-1" />
                     Solvencia por vencer:{" "}
                     <span className="text-black font-semibold ml-1">
-                      {colegiadoUser.solvente}
+                      {colegiadoUser?.solvente}
                     </span>
                   </span>
                 ) : (
                   <>
                     <span className="text-green-600">Solvente</span> hasta:{" "}
                     <span className="text-black font-semibold">
-                      {colegiadoUser.solvente}
+                      {colegiadoUser?.solvente}
                     </span>
                   </>
                 )}
@@ -86,7 +84,7 @@ export default function Barra({
             <Notifications fontSize="medium" />
           </button>
 
-          <PerfilDropdown userInfo={userInfo} session={session} />
+          <PerfilDropdown userInfo={userInfo} />
         </div>
       </div>
     </div>

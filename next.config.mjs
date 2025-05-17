@@ -20,9 +20,9 @@ const nextConfig = {
                 port: '8000',
                 pathname: '/**',
             },
-            {//https://sad-variation-subjects-saver.trycloudflare.com
+            {//https://pdf-jersey-neighbor-excited.trycloudflare.com
                 protocol: "https",
-                hostname: "sad-variation-subjects-saver.trycloudflare.com",
+                hostname: "pdf-jersey-neighbor-excited.trycloudflare.com",
                 pathname: '/**',
 
             }

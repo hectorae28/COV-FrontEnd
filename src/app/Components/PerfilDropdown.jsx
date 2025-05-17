@@ -8,6 +8,8 @@ import { LogOut } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
+
 
 export default function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,31 +19,8 @@ export default function ProfileDropdown() {
   const router = useRouter();
   const pathname = usePathname();
   const [profileImage, setProfileImage] = useState(null);
-  
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
-  
-  const handleSingOut = () => {
-    api.post(
-      '/usuario/logout/',
-      {
-      headers: {
-        Accept: '/',
-        Authorization: 'Bearer ' + sessionData?.user?.access,
-      },
-      data: {"username": sessionData?.user?.username},
-    }
-      )
-      .then(() => {
-        console.log("Logout successful");
-        signOut(sessionData);
-      })
-      .catch((error) => {
-        console.error("Logout error:", error);
-      });
-  };
-  
+  const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
+    
   const navigateToProfile = () => {
     setIsOpen(false);
     router.push("/Perfil");
@@ -57,6 +36,7 @@ export default function ProfileDropdown() {
       fetchMe(sessionData)
         .then((response) => {
           setUserInfo(response.data);
+          setColegiadoUser(response.data);
           // Si hay imagen de perfil en la respuesta, configurarla
           if (response.data?.imagenPerfil) {
             setProfileImage(response.data.imagenPerfil);

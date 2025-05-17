@@ -1,0 +1,28 @@
+const EstadoData = {
+    "amazonas": ["Isla Ratón", "La Esmeralda", "Maroa", "Puerto Ayacucho", "San Carlos de Río Negro", "San Fernando de Atabapo", "San Juan de Manapiare"],
+    "anzoátegui": ["Anaco", "Aragua de Barcelona", "Barcelona", "Boca de Uchire", "Cantaura", "Clarines", "El Chaparro", "El Tigre", "Guanta", "Lechería", "Mapire", "Onoto", "Pariaguán", "Puerto La Cruz", "Puerto Píritu", "San José de Guanipa", "San Mateo", "Santa Ana", "Soledad", "Valle de Guanape"],
+    "apure": ["Achaguas", "Biruaca", "Bruzual", "El Amparo", "El Nula", "Elorza", "Guasdualito", "Mantecal", "San Fernando de Apure", "San Juan de Payara"],
+    "aragua": ["Barbacoas", "Cagua", "Camatagua", "Colonia Tovar", "El Consejo", "El Limón", "La Victoria", "Las Tejerías", "Magdaleno", "Maracay", "Ocumare de la Costa", "Palo Negro", "San Casimiro", "San Mateo", "San Sebastián", "Santa Cruz de Aragua", "Turmero", "Villa de Cura"],
+    "barinas": ["Arismendi", "Barinas", "Barinitas", "Barrancas", "Ciudad Bolivia", "El Cantón", "Libertad", "Obispos", "Pedraza", "Sabaneta", "Santa Bárbara", "Socopó", "Ciudad de Nutrias"],
+    "bolívar": ["Caicara del Orinoco", "Ciudad Bolívar", "Ciudad Guayana", "Ciudad Piar", "El Callao", "El Dorado", "El Manteco", "El Palmar", "El Pao", "Guasipati", "Maripa", "Puerto Ordaz", "San Félix", "Santa Elena de Uairén", "Tumeremo", "Upata"],
+    "carabobo": ["Bejuma", "Güigüe", "Guacara", "Los Guayos", "Mariara", "Miranda", "Montalbán", "Morón", "Naguanagua", "Puerto Cabello", "San Diego", "San Joaquín", "Tacarigua", "Tocuyito", "Urama", "Valencia"],
+    "cojedes": ["Apartaderos", "El Baúl", "El Pao", "La Aguadita", "La Sierra", "Las Vegas", "Libertad", "Macapo", "San Carlos", "Tinaco", "Tinaquillo"],
+    "delta amacuro": ["Casacoima", "Curiapo", "Pedernales", "Piacoa", "San José de Amacuro", "Sierra Imataca", "Tucupita"],
+    "distrito capital": ["Antimano", "Baruta", "Caracas", "Caricuao", "Catia", "Chacao", "Coche", "El Hatillo", "El Junquito", "El Paraíso", "El Valle", "La Pastora", "Petare", "San Juan"],
+    "falcón": ["Cabure", "Chichiriviche", "Churuguara", "Coro", "Dabajuro", "Jacura", "La Vela de Coro", "Mirimire", "Morón", "Píritu", "Puerto Cumarebo", "Pueblo Nuevo", "Punto Fijo", "San Juan de los Cayos", "Santa Ana de Coro", "Santa Cruz de Bucaral", "Tocópero", "Tucacas"],
+    "guárico": ["Altagracia de Orituco", "Calabozo", "Camaguán", "Chaguaramas", "El Socorro", "Guardatinajas", "Las Mercedes", "Ortiz", "San José de Guaribe", "San Juan de los Morros", "Santa María de Ipire", "Tucupido", "Valle de la Pascua", "Zaraza"],
+    "lara": ["Barquisimeto", "Cabudare", "Carora", "Cubiro", "Curarigua", "Duaca", "El Tocuyo", "Guarico", "Humocaro Alto", "Humocaro Bajo", "Quíbor", "Río Claro", "Sanare", "Sarare", "Siquisique"],
+    "mérida": ["Aricagua", "Bailadores", "Chiguará", "Ejido", "El Vigía", "La Azulita", "Lagunillas", "Mérida", "Mucuchíes", "Mucurubá", "Pueblo Llano", "Santa Cruz de Mora", "Santo Domingo", "Tabay", "Timotes", "Tovar", "Torondoy", "Zea"],
+    "miranda": ["Baruta", "Carrizal", "Caucagua", "Charallave", "Cúa", "Cúpira", "El Hatillo", "Guarenas", "Guatire", "Higuerote", "Los Teques", "Ocumare del Tuy", "Petare", "Río Chico", "San Antonio de los Altos", "San Francisco de Yare", "San José de los Altos", "Santa Lucía", "Santa Teresa del Tuy"],
+    "monagas": ["Aguasay", "Aragua de Maturín", "Barrancas del Orinoco", "Caicara de Maturín", "Caripe", "Caripito", "Jusepin", "Maturín", "Punta de Mata", "Quiriquire", "San Antonio de Maturín", "Santa Bárbara", "Temblador", "Tropical"],
+    "nueva esparta": ["El Valle del Espíritu Santo", "Juan Griego", "La Asunción", "La Plaza de Paraguachí", "Las Guevaras", "Las Hernández", "Pampatar", "Pedro González", "Porlamar", "Punta de Piedras", "San Juan Bautista", "Santa Ana", "Villa Rosa"],
+    "portuguesa": ["Acarigua", "Agua Blanca", "Araure", "Biscucuy", "Boconoíto", "Chabasquén", "Guanare", "Guanarito", "Ospino", "Papelón", "Píritu", "San Rafael de Onoto", "Santa Rosalía", "Turén", "Villa Bruzual"],
+    "sucre": ["Araya", "Cariaco", "Carúpano", "Casanay", "Cumaná", "El Pilar", "Güiria", "Irapa", "Marigüitar", "Río Caribe", "San Antonio del Golfo", "San José de Aerocuar", "Tunapuy", "Yaguaraparo"],
+    "táchira": ["Abejales", "Capacho", "Colón", "Delicias", "La Grita", "Lobatera", "Michelena", "Palmira", "Pregonero", "Queniquea", "Rubio", "San Antonio del Táchira", "San Cristóbal", "San Juan de Colón", "San Josecito", "San Simón", "Santa Ana del Táchira", "Táriba", "Umuquena", "Ureña"],
+    "trujillo": ["Betijoque", "Boconó", "Carache", "Carvajal", "Escuque", "Jajó", "La Puerta", "La Quebrada", "Monay", "Motatán", "Pampán", "Pampanito", "Sabana de Mendoza", "Santa Ana de Trujillo", "Santiago", "Trujillo", "Valera"],
+    "vargas": ["Caraballeda", "Carayaca", "Caruao", "Catia La Mar", "El Junko", "La Guaira", "La Sabana", "Macuto", "Maiquetía", "Naiguatá"],
+    "yaracuy": ["Aroa", "Boraure", "Chivacoa", "Cocorote", "Farriar", "Guama", "Guararito", "Marín", "Nirgua", "Sabana de Parra", "San Felipe", "San Pablo", "Urachiche", "Yaritagua", "Yumare"],
+    "zulia": ["Bachaquero", "Bobures", "Cabimas", "Caja Seca", "Casigua El Cubo", "Ciudad Ojeda", "El Chivo", "El Guayabo", "El Vigía", "Encontrados", "La Concepción", "La Villa del Rosario", "Lagunillas", "Machiques", "Maracaibo", "Mene Grande", "San Carlos del Zulia", "San Rafael del Moján", "Santa Rita", "Sinamaica"]
+};
+
+export default EstadoData;

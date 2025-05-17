@@ -2,15 +2,26 @@
 import AppBar from "@/app/(Colegiado)/AppBar";
 import Barra from "@/app/(Colegiado)/Barra";
 import { useState } from "react";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 export default function DashboardLayout({
   children,
-  isSolvent,
-  userInfo,
-  showSolvencyWarning,
-  session,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
+  const checkSolvencyStatus = () => {
+    if (!colegiadoUser) return;
+    
+    const today = new Date();
+    const [year, month, day] = colegiadoUser.solvente.split("-").map(Number);
+    const solvencyDate = new Date(year, month - 1, day);
+
+    const warningDate = new Date(solvencyDate);
+    warningDate.setDate(warningDate.getDate() - 14);
+
+    return today >= warningDate;
+  };
+
 
   return (
     <div className="bg-[#F9F9F9] min-h-screen flex relative">
@@ -44,13 +55,12 @@ export default function DashboardLayout({
       >
         <Barra
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-          isSolvent={isSolvent}
-          userInfo={userInfo}
-          showSolvencyWarning={showSolvencyWarning}
-          session={session}
+          isSolvent={colegiadoUser?.solvencia_status}
+          userInfo={colegiadoUser}
+          showSolvencyWarning={()=>checkSolvencyStatus()}
         />
         <main className="flex-1 overflow-y-auto pt-20">
-          <div className="max-w-7xl mx-auto flex flex-col gap-8 py-10 px-4">
+          <div className="max-w-8xl mx-auto flex flex-col gap-8">
             {children}
           </div>
         </main>

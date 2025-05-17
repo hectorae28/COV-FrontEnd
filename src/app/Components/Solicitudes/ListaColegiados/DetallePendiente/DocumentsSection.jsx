@@ -1,10 +1,16 @@
 "use client"
 
-import { FileText, Eye, RefreshCcw, AlertCircle, Upload, X } from "lucide-react"
-import { motion } from "framer-motion"
-import { useState, useRef } from "react"
+import { motion } from "framer-motion";
+import { AlertCircle, Eye, FileText, RefreshCcw, Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
+import DocumentVerificationSwitch from "./DocumentVerificationSwitch";
 
-export default function DocumentsSection({ documentosRequeridos, handleVerDocumento, updateDocumento }) {
+export default function DocumentsSection({ 
+  documentosRequeridos, 
+  handleVerDocumento, 
+  updateDocumento,
+  onDocumentStatusChange
+}) {
     const [documentoParaSubir, setDocumentoParaSubir] = useState(null)
     const [selectedFile, setSelectedFile] = useState(null)
     const [isUploading, setIsUploading] = useState(false)
@@ -12,7 +18,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
     const fileInputRef = useRef(null)
 
     // Filtrar documentos para excluir comprobantes de pago
-    const documentosRegulares =documentosRequeridos
+    const documentosRegulares = documentosRequeridos
 
     // Función para validar archivo
     const validarArchivo = (file) => {
@@ -107,7 +113,15 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
 
     // Componente de tarjeta de documento reutilizable
     const DocumentCard = ({ documento }) => {
-        const tieneArchivo = !documento.requerido||(documento.requerido&&documento.url!==null)
+        const tieneArchivo = !documento.requerido || (documento.requerido && documento.url !== null);
+
+        // Manejar cambio de estado del documento
+        const handleStatusChange = (updatedDocument) => {
+            if (onDocumentStatusChange) {
+                onDocumentStatusChange(updatedDocument);
+            }
+        };
+
         return (
             <div
                 className={`border rounded-lg ${tieneArchivo ? "border-gray-200 hover:border-[#C40180]" : "border-red-200 bg-red-50"
@@ -139,6 +153,18 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                                     </span>
                                 </div>
                             )}
+
+                            {/* Switch de verificación */}
+                            {tieneArchivo && (
+                                <div className="mt-3">
+                                    <DocumentVerificationSwitch
+                                        documento={documento}
+                                        onChange={handleStatusChange}
+                                        status={documento.status || 'pending'}
+                                        readOnly={documento.status === 'approved' && documento.isReadOnly}
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex items-center space-x-1">
@@ -156,19 +182,22 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
                                 </span>
                             )}
 
-                            <button
-                                onClick={() => handleReemplazarDocumento(documento)}
-                                className={`${tieneArchivo ? "cursor-pointer text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} cursor-pointer p-2 rounded-full transition-colors`}
-                                title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
-                            >
-                                {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
-                            </button>
+                            {/* Botón de reemplazo solo visible si el documento no está aprobado o fue rechazado */}
+                            {(!documento.status || documento.status !== 'approved' || !documento.isReadOnly) && (
+                                <button
+                                    onClick={() => handleReemplazarDocumento(documento)}
+                                    className={`${tieneArchivo ? "cursor-pointer text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} cursor-pointer p-2 rounded-full transition-colors`}
+                                    title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
+                                >
+                                    {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
-        )
-    }
+        );
+    };
 
     return (
         <motion.div
@@ -188,7 +217,7 @@ export default function DocumentsSection({ documentosRequeridos, handleVerDocume
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {documentosRegulares  ? (
+                {documentosRegulares ? (
                     documentosRegulares.map((documento, index) => (
                         <DocumentCard key={index} documento={documento} />
                     ))

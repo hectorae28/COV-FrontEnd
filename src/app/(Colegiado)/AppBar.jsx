@@ -69,35 +69,35 @@ export default function AppBar({ solvencyInfo }) {
                     icon={<Description className="h-5 w-5" />}
                     text="Solicitudes"
                     active={selectedItem === "Solicitudes"}
-                    href="/Solicitudes"
+                    href="/Colegiado/Solicitudes"
                 />
                 <Divider />
                 <SidebarItem
                     icon={<EventNote className="h-5 w-5" />}
                     text="Eventos"
                     active={selectedItem === "Eventos"}
-                    href="/eventos"
+                    href="/Colegiado/eventos"
                 />
                 <Divider />
                 <SidebarItem
                     icon={<School className="h-5 w-5" />}
                     text="Cursos"
                     active={selectedItem === "Cursos"}
-                    href="/cursos"
+                    href="/Colegiado/cursos"
                 />
                 <Divider />
                 <SidebarItem
                     icon={<Forum className="h-5 w-5" />}
                     text="Notificaciones"
                     active={selectedItem === "Notificaciones"}
-                    href="/notificaciones"
+                    href="/Colegiado/notificaciones"
                 />
                 <Divider />
                 <SidebarItem
                     icon={<Inbox className="h-5 w-5" />}
                     text="Bandeja"
                     active={selectedItem === "Bandeja"}
-                    href="/bandeja"
+                    href="/Colegiado/bandeja"
                 />
                 <Divider />
 
@@ -108,11 +108,11 @@ export default function AppBar({ solvencyInfo }) {
                             <span className="text-md text-gray-300 mb-2">Estado:</span>
                             <span className="text-[16px] font-semibold text-white">
                                 <span
-                                    className={colegiadoUser.solvencia_status ? "text-green-400" : "text-red-400"}
+                                    className={colegiadoUser?.solvencia_status ? "text-green-400" : "text-red-400"}
                                 >
-                                    {colegiadoUser.solvencia_status ? "Solvente" : "No Solvente"}
+                                    {colegiadoUser?.solvencia_status ? "Solvente" : "No Solvente"}
                                 </span>{" "}
-                                hasta: {colegiadoUser.solvente}
+                                hasta: {colegiadoUser?.solvente}
                             </span>
                         </div>
                     </div>

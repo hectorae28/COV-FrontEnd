@@ -2,75 +2,178 @@
 
 import { create } from "zustand";
 import { fetchSolicitudes } from "@/api/endpoints/solicitud";
-import api from "@/api/api";
+import { postDataSolicitud, patchDataSolicitud } from "@/api/endpoints/solicitud";
+
+export const TIPOS_SOLICITUD = {
+    Carnet: {
+        id: "carnet",
+        nombre: "Carnet",
+        codigo: "CARNET",
+        descripcion: "Solicitud de carnet de identificación profesional",
+        documentosRequeridos: [
+            { displayName: "Foto tipo carnet", campo: "foto" },
+        ]
+    },
+    Especializacion: {
+        id: "especializacion",
+        nombre: "Especialización",
+        codigo: "ESPEC",
+        descripcion: "Registro de título de especialización odontológica",
+        documentosRequeridos: [
+            { displayName: "Título de Especialización", campo: "file_titulo_especializacion" },
+            { displayName: "Título de Especialización (Fondo Negro)", campo: "file_fondo_negro_titulo_especializacion" },
+            { displayName: "Título de Odontólogo", campo: "file_titulo_odontologo" },
+            { displayName: "Título de Odontólogo (Fondo Negro)", campo: "file_fondo_negro_titulo_odontologo" },
+            { displayName: "Cédula de Identidad Ampliada", campo: "file_cedula_ampliada" },
+            { displayName: "Fotos tipo Carnet", campo: "file_fotos_carnet" },
+            { displayName: "Comprobante de Solvencia", campo: "file_solvencia" },
+            { displayName: "Carta de Solicitud", campo: "file_carta_solicitud" }
+        ]
+    },
+    Constancia: {
+        id: "constancia",
+        nombre: "Constancia",
+        codigo: "CONST",
+        descripcion: "Constancia profesional (requiere seleccionar tipo específico)",
+        documentosRequeridos: [
+            { displayName: "Cédula de Identidad", campo: "file_cedula" },
+        ],
+        subtipos: [
+            { codigo: "inscripcion_cov", nombre: "Inscripción del COV" },
+            { codigo: "solvencia", nombre: "Solvencia" },
+            { codigo: "libre_ejercicio", nombre: "Libre ejercicio" },
+            { codigo: "declaracion_habilitacion", nombre: "Declaración de habilitación" },
+            { codigo: "continuidad_laboral", nombre: "Continuidad laboral" },
+            { codigo: "deontologia_odontologica", nombre: "Deontología odontológica" }
+        ]
+    }
+};
 
 export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
-  const formData = new FormData();
+  const form = new FormData();
   
-  formData.append("colegiado_id", solicitudJson.colegiadoId);
-  formData.append("descripcion", solicitudJson.descripcion || "");
-  
-  if (opcionales.referencia) formData.append("referencia", solicitudJson.referencia);
-  if (opcionales.estado) formData.append("estado", solicitudJson.estado || "Pendiente");
-  
-  const items = {};
-  
+  // Basic fields
+  form.append("colegiado", solicitudJson.colegiadoId);
+  solicitudJson.creador?.id && form.append("user", solicitudJson.creador.id);
+
+  // Process items and their costs
+  const constancias = [];
+  let costo_solicitud_carnet = 0;
+  let costo_solicitud_especializacion = 0;
+  let especializacion = 0;
+
   solicitudJson.itemsSolicitud.forEach(item => {
-    const tipoBase = item.tipo.toLowerCase();
-    
-    if (tipoBase === "carnet") {
-      items.carnet = {
-        costo: item.costo,
-        exonerado: item.exonerado || false
-      };
-    } 
-    else if (tipoBase === "especializacion") {
-      items.especializacion = {
-        costo: item.costo,
-        exonerado: item.exonerado || false
-      };
-    } 
-    else if (tipoBase === "solvencia") {
-      items.solvencia = {
-        costo: item.costo,
-        exonerado: item.exonerado || false
-      };
-    } 
-    else if (tipoBase === "constancia") {
-      if (!items.constancias) items.constancias = [];
-      
-      items.constancias.push({
-        subtipo: item.subtipo,
-        costo: item.costo,
-        exonerado: item.exonerado || false,
-        codigo: item.codigo
-      });
+    if (item.tipo === "Carnet") {
+      costo_solicitud_carnet = item.costo.id;
+    } else if (item.tipo === "Especializacion") {
+      costo_solicitud_especializacion = item.costo.id;
+      especializacion = 1;
+    } else if (item.tipo === "Constancia") {
+      constancias.push(item.codigo);
     }
   });
-  
-  formData.append("items", JSON.stringify(items));
-  
-  if (solicitudJson.documentosAdjuntos && solicitudJson.documentosAdjuntos.length > 0) {
-    solicitudJson.documentosAdjuntos.forEach((doc, index) => {
-      if (doc instanceof File || doc instanceof Blob) {
-        formData.append(`documentos[${index}]`, doc);
+
+  // Add processed costs
+  if(solicitudJson.descripcion){
+    form.append("descripcion", solicitudJson.descripcion);
+  }
+  if (costo_solicitud_carnet !== 0) { 
+    form.append("costo_solicitud_carnet", costo_solicitud_carnet);
+  }
+  if (costo_solicitud_especializacion !== 0) {
+    form.append("costo_solicitud_especializacion", costo_solicitud_especializacion);
+  }
+  if (especializacion !== 0) {
+    form.append("especializacion", especializacion);
+  }
+
+  // Add constancias as JSON string
+  if (constancias.length > 0) {
+    form.append("solicitud_constancias", JSON.stringify({ constancias }));
+  }
+
+  // Add files
+  if (solicitudJson.documentosAdjuntos) {
+    Object.entries(solicitudJson.documentosAdjuntos).forEach(([key, value]) => {
+      if (value instanceof File || value instanceof Blob) {
+        form.append(key, value);
+      } else {
+        // If no file is provided, append an empty string
+        form.append(key, "");
       }
     });
   }
-  
-  return formData;
+
+  return form;
 };
 
 export const useSolicitudesStore = create((set, get) => ({
   solicitudes: [],
   solicitudesPagination: {},
+  solicitudesAbiertas: [],
+  solicitudesAbiertasPagination: {},
+  solicitudesCerradas: [],
+  solicitudesCerradasPagination: {},
+  tipos_solicitud: TIPOS_SOLICITUD,
   loading: false,
   error: null,
+
+  initStore: async () => {
+    await get().fetchTiposSolicitud();
+    await get().fetchSolicitudes("cerrada");
+    await get().fetchSolicitudes("abierta");
+    await get().fetchSolicitudes(null);
+  },
   
-  fetchSolicitudes: async (page = 1, pageSize = 10, filtros = {}) => {
+  fetchTiposSolicitud: async () => {
     set({ loading: true });
     try {
-      let params = `?page=${page}&page_size=${pageSize}`;
+      const response = await fetchSolicitudes('costo',"?es_vigente=true");
+      const costos = response.data;
+      
+      const tiposActualizados = { ...TIPOS_SOLICITUD };
+      
+      const costoCarnet = costos.find(c => c.tipo_costo_nombre === "Carnet");
+      if (costoCarnet) {
+        tiposActualizados.Carnet.costo = {id: costoCarnet.id, monto:parseFloat(costoCarnet.monto_usd)};
+      }
+      
+      const costoEspecializacion = costos.find(c => c.tipo_costo_nombre === "Especializacion");
+      if (costoEspecializacion) {
+        tiposActualizados.Especializacion.costo = {id: costoCarnet.id, monto:parseFloat(costoEspecializacion.monto_usd)};
+      }
+      
+      tiposActualizados.Constancia.subtipos = tiposActualizados.Constancia.subtipos.map(subtipo => {
+        const costo = costos.find(c => {
+          const backendCodigo = c.tipo_costo_nombre.replace('constancia_', '');
+          return backendCodigo === subtipo.codigo;
+        });
+        
+        return {
+          ...subtipo,
+          costo: costo ? {id: costoCarnet.id, monto:parseFloat(costo.monto_usd)} : {id: 0, monto:0}
+        };
+      });
+      
+      set({ 
+        tipos_solicitud: tiposActualizados,
+        loading: false 
+      });
+      
+      return tiposActualizados;
+    } catch (error) {
+      set({ 
+        loading: false, 
+        error: error.message || "Error al cargar los tipos de solicitud"
+      });
+      throw error;
+    }
+  },
+  
+  fetchSolicitudes: async (estado,page = 1, pageSize = 10, filtros = {}) => {
+    set({ loading: true });
+    try {
+      let params = `?page=${page}&page_size=${pageSize}${estado && `&status=${estado}`}`;
       
       Object.entries(filtros).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -78,18 +181,44 @@ export const useSolicitudesStore = create((set, get) => ({
         }
       });
       
-      const res = await fetchSolicitudes("solicitud", params);
-      set({
-        solicitudes: res.data.results,
-        solicitudesPagination: res.data,
-        loading: false
-      });
-      return res.data;
+      const res = await fetchSolicitudes("solicitud_unida", params);
+      if (estado === "cerrada") {
+        set({
+          solicitudesCerradas: res.data.results,
+          solicitudesCerradasPagination: res.data,
+          loading: false
+        });
+        return res.data;
+      }else if(estado === "abierta"){
+        set({
+          solicitudesAbiertas: res.data.results,
+          solicitudesAbiertasPagination: res.data,
+          loading: false
+        });
+        return res.data;
+      }else{
+        set({
+          solicitudes: res.data.results,
+          solicitudesPagination: res.data,
+          loading: false
+        });
+        return res.data;
+      }
     } catch (error) {
       set({ 
         loading: false, 
         error: error.message || "Error al cargar solicitudes"
       });
+      throw error;
+    }
+  },
+
+  getSolicitudById: async (id) => {
+    try {
+      const res = await fetchSolicitudes(`solicitud_unida/${id}`);
+      return res.data;
+    } catch (error) {
+      set({ error: error.message || "Error al obtener detalles de la solicitud" });
       throw error;
     }
   },
@@ -99,18 +228,15 @@ export const useSolicitudesStore = create((set, get) => ({
     try {
       const formData = convertJsonToFormData(solicitudJson, opcionales);
       
-      const response = await api.post('solicitudes/solicitud/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      });
+      const response = await postDataSolicitud('solicitud', formData);
+      const solicitud = get().getSolicitudById(response.data.id);
       
       set(state => ({
-        solicitudes: [response.data, ...state.solicitudes],
+        solicitudes: [solicitud, ...state.solicitudes],
         loading: false
       }));
       
-      return response.data;
+      return solicitud;
     } catch (error) {
       set({ 
         loading: false, 
@@ -120,20 +246,12 @@ export const useSolicitudesStore = create((set, get) => ({
     }
   },
   
-  getSolicitudById: async (id) => {
-    try {
-      const res = await fetchSolicitudes(`solicitud/${id}`);
-      return res.data;
-    } catch (error) {
-      set({ error: error.message || "Error al obtener detalles de la solicitud" });
-      throw error;
-    }
-  },
+
   
   updateSolicitudStatus: async (id, nuevoEstado, observaciones = "") => {
     set({ loading: true });
     try {
-      const response = await api.patch(`solicitudes/solicitud/${id}/`, {
+      const response = await patchDataSolicitud(`solicitud/${id}`, {
         estado: nuevoEstado,
         observaciones: observaciones
       });
