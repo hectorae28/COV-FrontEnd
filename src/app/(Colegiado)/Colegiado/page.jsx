@@ -1,8 +1,6 @@
 "use client";
 import { fetchMe } from "@/api/endpoints/colegiado";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import SolvencyStatus from "@/app/Components/Solvencia/EstatusSolv";
-import SolvenciaPago from "@/app/Components/Solvencia/PagoSolv";
 import SolvencyStatus from "@/Components/Solvencia/EstatusSolv";
 import SolvenciaPago from "@/Components/Solvencia/PagoSolv";
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"

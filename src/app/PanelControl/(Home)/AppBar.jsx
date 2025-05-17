@@ -88,7 +88,7 @@ const menuItems = [
       routes: [
         { path: "/PanelControl/ListaColegiados", title: "Lista de Colegiados", icon: <Assignment className="h-5 w-5" /> },
         { path: "/PanelControl/Solicitudes", title: "Solicitudes", icon: <NoteAdd className="h-5 w-5" /> },
-        { path: "/PanelControl/Solvenciaa", title: "Solvencias", icon: <PriceChange className="h-5 w-5" /> },
+        { path: "/PanelControl/Solvencias", title: "Solvencias", icon: <PriceChange className="h-5 w-5" /> },
         { path: "/PanelControl/Pagos", title: "Pagos", icon: <RequestQuote className="h-5 w-5" /> },
       ],
     }

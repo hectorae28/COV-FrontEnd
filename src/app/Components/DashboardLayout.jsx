@@ -55,7 +55,7 @@ export default function DashboardLayout({
       >
         <Barra
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-          isSolvent={colegiadoUser.solvencia_status}
+          isSolvent={colegiadoUser?.solvencia_status}
           userInfo={colegiadoUser}
           showSolvencyWarning={()=>checkSolvencyStatus()}
         />
