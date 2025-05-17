@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { FiPlus } from "react-icons/fi";
+import { FiDollarSign, FiPlus, FiTag } from "react-icons/fi";
 import CardPreview from "./CardPreview";
 
 export default function EventForm({
@@ -10,8 +12,13 @@ export default function EventForm({
     handleNewItem,
     tabIndex
 }) {
-    const [imageType, setImageType] = useState("file"); // "file" or "url"
+    const [imageType, setImageType] = useState("file");
     const [imageUrl, setImageUrl] = useState(formValues.image || "");
+
+    // Nuevos estados para manejar las opciones de pago
+    const [isPaid, setIsPaid] = useState(formValues.isPaid || false);
+    const [showPriceTag, setShowPriceTag] = useState(formValues.showPriceTag || false);
+    const [currency, setCurrency] = useState(formValues.currency || "USD");
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,6 +37,34 @@ export default function EventForm({
         const value = e.target.value;
         setImageUrl(value);
         setFormValues((prev) => ({ ...prev, image: value }));
+    };
+
+    // Manejadores para las nuevas opciones
+    const handlePaidToggle = (e) => {
+        const newIsPaid = e.target.checked;
+        setIsPaid(newIsPaid);
+        setFormValues((prev) => ({ 
+            ...prev, 
+            isPaid: newIsPaid,
+            price: newIsPaid ? (prev.price || "0.00") : "0.00"
+        }));
+    };
+
+    const handlePriceChange = (e) => {
+        const value = e.target.value;
+        setFormValues((prev) => ({ ...prev, price: value }));
+    };
+
+    const handleCurrencyChange = (e) => {
+        const value = e.target.value;
+        setCurrency(value);
+        setFormValues((prev) => ({ ...prev, currency: value }));
+    };
+
+    const handleShowPriceTagToggle = (e) => {
+        const value = e.target.checked;
+        setShowPriceTag(value);
+        setFormValues((prev) => ({ ...prev, showPriceTag: value }));
     };
 
     return (
@@ -52,8 +87,81 @@ export default function EventForm({
                 <CardPreview {...formValues} />
             </div>
 
-            <form className="space-y-4">
+            <form className="space-y-4 mb-8">
                 <div className="space-y-4">
+                    {/* Opciones de pago - NUEVO */}
+                    <div className="p-4 border border-gray-200 rounded-lg space-y-4">
+                        <h3 className="font-medium text-gray-700 flex items-center gap-2">
+                            <FiDollarSign className="text-[#C40180]" />
+                            Opciones de pago
+                        </h3>
+
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox"
+                                        checked={isPaid}
+                                        onChange={handlePaidToggle}
+                                        className="sr-only peer" 
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#C40180]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C40180]"></div>
+                                    <span className="ml-3 text-sm font-medium text-gray-700">
+                                        {isPaid ? "Evento/Curso de pago" : "Evento/Curso gratuito"}
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {isPaid && (
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+                                    <input
+                                        type="number"
+                                        name="price"
+                                        step="0.01"
+                                        min="0"
+                                        value={formValues.price || "0.00"}
+                                        onChange={handlePriceChange}
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-[#C40180] focus:border-[#C40180] outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+                                    <select
+                                        name="currency"
+                                        value={currency}
+                                        onChange={handleCurrencyChange}
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-[#C40180] focus:border-[#C40180] outline-none"
+                                    >
+                                        <option value="USD">Dólares (USD)</option>
+                                        <option value="BS">Bolívares (Bs)</option>
+                                        <option value="EUR">Euros (EUR)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="pt-2 border-t border-gray-100">
+                            <div className="flex items-center">
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox"
+                                        checked={showPriceTag}
+                                        onChange={handleShowPriceTagToggle}
+                                        className="sr-only peer" 
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#C40180]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C40180]"></div>
+                                    <span className="ml-3 text-sm font-medium text-gray-700 flex items-center gap-1">
+                                        <FiTag size={14} />
+                                        Mostrar etiqueta {isPaid ? "PAGO" : "PASE LIBRE"}
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Imagen / Video</label>
                         <div className="flex space-x-2 mb-2">

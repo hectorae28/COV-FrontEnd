@@ -438,22 +438,6 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
                     </div>
                 )}
             </div>
-
-            {/* Nota importante */}
-            <div className="bg-[#D7008A]/10 p-3 rounded-lg border border-[#D7008A] text-[#41023B] text-sm">
-                <p className="flex items-start">
-                    <span className="mr-2 mt-0.5 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
-                    </span>
-                    <span>
-                        <strong>Nota importante:</strong> Guarde su comprobante de pago. El personal administrativo verificará su pago para activar completamente su solicitud.
-                    </span>
-                </p>
-            </div>
         </div>
     )
 }
