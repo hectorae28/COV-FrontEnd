@@ -1,17 +1,18 @@
 "use client";
 import { fetchMe } from "@/api/endpoints/colegiado";
-import DashboardLayout from "@/Components/DashboardLayout";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import SolvencyStatus from "@/app/Components/Solvencia/EstatusSolv";
+import SolvenciaPago from "@/app/Components/Solvencia/PagoSolv";
 import SolvencyStatus from "@/Components/Solvencia/EstatusSolv";
 import SolvenciaPago from "@/Components/Solvencia/PagoSolv";
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Cards from "../Cards";
 import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
-import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
@@ -33,7 +34,7 @@ export default function Home() {
     if (!colegiadoUser) return;
     
     const today = new Date();
-    const [year, month, day] = colegiadoUser.solvente.split("-").map(Number);
+    const [year, month, day] = colegiadoUser?.solvente.split("-").map(Number);
     const solvencyDate = new Date(year, month - 1, day);
 
     const warningDate = new Date(solvencyDate);
@@ -130,7 +131,7 @@ async function fetchUserAndSolvency() {
 
   useEffect(() => {
     fetchUserAndSolvency();
-  }, [useColegiadoUserStore((state) => state.colegiadoUser.solvente)]);
+  }, [useColegiadoUserStore((state) => state.colegiadoUser?.solvente)]);
 
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {
@@ -256,7 +257,7 @@ async function fetchUserAndSolvency() {
               {/* Estado de Solvencia (solo si no está solvente o está por vencer) */}
               {(!isSolvent || showSolvencyWarning) && (
                 <SolvencyStatus
-                  solvencyAmount={colegiadoUser.costo_de_solvencia}
+                  solvencyAmount={colegiadoUser?.costo_de_solvencia}
                   onPayClick={handlePayClick}
                   isExpiringSoon={showSolvencyWarning}
                 />

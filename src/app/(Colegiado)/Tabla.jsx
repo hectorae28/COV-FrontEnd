@@ -1,11 +1,11 @@
 "use client";
 
-import { ChevronDown, Filter, Search } from "lucide-react";
-import { useEffect, useState } from "react";
-import NoSolventBanner from "@/Components/Solvencia/BannerNoSolv";
+import NoSolventBanner from "@/app/Components/Solvencia/BannerNoSolv";
 import TableUpdateModal from "@/Components/Tabla/ActualizarModalTabla";
 import TableDetailsModal from "@/Components/Tabla/DetallesTablaModal";
 import TableRow from "@/Components/Tabla/RowTabla";
+import { ChevronDown, Filter, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function TablaHistorial({ isSolvent = true }) {
     // Estados iniciales

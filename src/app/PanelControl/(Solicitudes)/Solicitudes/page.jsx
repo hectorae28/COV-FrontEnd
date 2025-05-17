@@ -21,6 +21,7 @@ import useColegiadoUserStore from "@/store/colegiadoUserStore"
 import transformBackendData from "@/utils/formatDataSolicitudes";
 import {useRouter} from "next/navigation"
 export default function ListaSolicitudes() {
+  
   // Estados para manejar los datos
   //const [solicitudes, setSolicitudes] = useState([])
   //const fetchTiposSolicitud = useSolicitudesStore((state) => state.fetchTiposSolicitud)

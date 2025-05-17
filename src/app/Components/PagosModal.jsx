@@ -1,8 +1,8 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, DollarSign, Check, X, ArrowLeft } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent";
+import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, Check, CreditCard, DollarSign } from "lucide-react";
+import { useState, useEffect } from "react";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
 export default function PagosColg({ props }) {

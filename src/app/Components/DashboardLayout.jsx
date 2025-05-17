@@ -8,13 +8,6 @@ export default function DashboardLayout({
   children,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  /*
-  
-                    isSolvent={userData.solvencia_status}
-                  showSolvencyWarning={()=>checkSolvencyStatus()}
-                  userInfo={userData}
-  
-  */
   const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
   const checkSolvencyStatus = () => {
     if (!colegiadoUser) return;

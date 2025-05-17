@@ -1,5 +1,5 @@
 "use client";
-import { AccountBalance, PersonRounded, Assessment, Assignment, Celebration, ChevronRight, ContactPage, DescriptionRounded, ExpandMore, Forum, Group, Handshake, Home, House, Message, Newspaper, NoteAdd, Notifications, RequestQuote, Settings, Web } from "@mui/icons-material";
+import { AccountBalance, Assessment, Assignment, Celebration, ChevronRight, ContactPage, DescriptionRounded, ExpandMore, Forum, Group, Handshake, Home, House, Message, Newspaper, NoteAdd, Notifications, PersonRounded, PriceChange, RequestQuote, Settings, Web } from "@mui/icons-material";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -88,6 +88,7 @@ const menuItems = [
       routes: [
         { path: "/PanelControl/ListaColegiados", title: "Lista de Colegiados", icon: <Assignment className="h-5 w-5" /> },
         { path: "/PanelControl/Solicitudes", title: "Solicitudes", icon: <NoteAdd className="h-5 w-5" /> },
+        { path: "/PanelControl/Solvenciaa", title: "Solvencias", icon: <PriceChange className="h-5 w-5" /> },
         { path: "/PanelControl/Pagos", title: "Pagos", icon: <RequestQuote className="h-5 w-5" /> },
       ],
     }
@@ -108,7 +109,7 @@ const menuItems = [
     config: {
       title: "Cursos y Eventos",
       icon: <Celebration className="h-5 w-5" />,
-      path: "/PanelControl/CursosEventos",
+      path: "/PanelControl/",
       isDirectNav: true
     }
   },
@@ -122,7 +123,7 @@ const menuItems = [
         { path: "/PanelControl/SobreCOV", title: "Sobre Nosotros", icon: <Handshake className="h-5 w-5" /> },
         { path: "/PanelControl/Noticias", title: "Noticias", icon: <Newspaper className="h-5 w-5" /> },
         { path: "/PanelControl/NuevaLey", title: "Nueva Ley", icon: <AccountBalance className="h-5 w-5" /> },
-        { path: "/PanelControl/Eventos", title: "Eventos", icon: <Celebration className="h-5 w-5" /> },
+        { path: "/PanelControl/CursosEventos", title: "Cursos y Eventos", icon: <Celebration className="h-5 w-5" /> },
         { path: "/PanelControl/Tramites", title: "Tramites", icon: <RequestQuote className="h-5 w-5" /> },
         { path: "/PanelControl/Contactenos", title: "Contactenos", icon: <ContactPage className="h-5 w-5" /> }
       ],
