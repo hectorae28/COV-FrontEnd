@@ -8,16 +8,18 @@ import {
   FileCheck,
   Filter,
   PlusCircle,
+  Router,
   Search,
   Shield,
   User,
   XCircle
 } from "lucide-react"
 import { useEffect, useState,useMemo } from "react"
-import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud"
-import { solicitudes as solicitudesIniciales, colegiados as colegiadosIniciales } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
+import Pagination from "@/Components/Paginations.jsx";
 import {useSolicitudesStore} from "@/store/SolicitudesStore.jsx"
 import useColegiadoUserStore from "@/store/colegiadoUserStore"
+import transformBackendData from "@/utils/formatDataSolicitudes";
+import {useRouter} from "next/navigation"
 export default function ListaSolicitudes() {
   // Estados para manejar los datos
   //const [solicitudes, setSolicitudes] = useState([])
@@ -30,11 +32,11 @@ export default function ListaSolicitudes() {
   const solicitudesAbiertasPagination = useSolicitudesStore((state)=>state.solicitudesAbiertasPagination)
   const solicitudesCerradas = useSolicitudesStore((state)=>state.solicitudesCerradas)
   const solicitudesCerradasPagination = useSolicitudesStore((state)=>state.solicitudesCerradasPagination)
-  const [isLoading, setIsLoading] = useState(true)
+  const loading = useSolicitudesStore((state)=>state.loading)
   const [searchTerm, setSearchTerm] = useState("")
   const [showModal, setShowModal] = useState(false)
   const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(null)
-  const [colegiados, setColegiados] = useState([])
+  //const [colegiados, setColegiados] = useState([])
   const user = useColegiadoUserStore((state) => state.colegiadoUser);
   const addSolicitud = useSolicitudesStore((state) => state.addSolicitud);
   
@@ -45,6 +47,8 @@ export default function ListaSolicitudes() {
   const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null)
   const [tabActual, setTabActual] = useState("todas") // todas, pendientes, aprobadas, rechazadas
   const [filtroCosto, setFiltroCosto] = useState("todas") // todas, conCosto, sinCosto
+  const [currentPage, setCurrentPage] = useState(1)
+  const router = useRouter()
   
   const loadTiposSolicitud = async () => {
     try {
@@ -53,58 +57,23 @@ export default function ListaSolicitudes() {
       console.error("Error al cargar tipos de solicitud:", error);
     }
   };
-  
-  // Efecto para cargar los tipos de solicitud al montar el componente
   useEffect(() => {
     loadTiposSolicitud();
   }, []); // Solo se ejecuta al montar el componente
-  // Cargar datos iniciales
-  useEffect(() => {
-    // Simulando carga de datos con un pequeño retraso
-    setTimeout(() => {
-      setColegiados(colegiadosIniciales);
-      setSolicitudes(solicitudesIniciales);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
-  console.log({solicitudesAbiertas,solicitudesAbiertasPagination,solicitudesCerradas,solicitudesCerradasPagination})
-  
 
+  const TypeSolicitudes = {
+    todas: solicitudes,
+    abierta: solicitudesAbiertas,
+    cerrada: solicitudesCerradas
+  }
+  const PaginationSolicitudes = {
+    todas: solicitudesPagination,
+    abierta: solicitudesAbiertasPagination,
+    cerrada: solicitudesCerradasPagination
+  }
   // Filtrar solicitudes basado en búsqueda, tab actual y filtro de costo
   const solicitudesFiltradas = useMemo(() => {
-    return solicitudes
-      .filter(solicitud => {
-        const matchesSearch =
-          searchTerm === "" ||
-          solicitud.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          solicitud.colegiadoNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          solicitud.referencia.toLowerCase().includes(searchTerm.toLowerCase())
-
-        const matchesTab =
-          tabActual === "todas" ||
-          (tabActual === "revisando" && solicitud.estado === "Pendiente") ||
-          (tabActual === "aprobadas" && solicitud.estado === "Aprobada") ||
-          (tabActual === "rechazadas" && solicitud.estado === "Rechazada") ||
-          (tabActual === "exoneradas" && solicitud.estado === "Exonerada")
-
-        const matchesCosto =
-          filtroCosto === "todas" ||
-          (filtroCosto === "conCosto" && solicitud.costo > 0) ||
-          (filtroCosto === "sinCosto" && solicitud.costo === 0)
-
-        return matchesSearch && matchesTab && matchesCosto
-      })
-      .sort((a, b) => {
-        // Convertir fechas de formato DD/MM/YYYY a objetos Date
-        const [diaA, mesA, anioA] = a.fecha.split('/');
-        const [diaB, mesB, anioB] = b.fecha.split('/');
-
-        const fechaA = new Date(anioA, mesA - 1, diaA);
-        const fechaB = new Date(anioB, mesB - 1, diaB);
-
-        // Ordenar descendente (más reciente primero)
-        return fechaB - fechaA;
-      });
+    return TypeSolicitudes[tabActual] || [];
   }, [solicitudes, searchTerm, tabActual, filtroCosto]);
 
   // Función para ver detalle de una solicitud
@@ -121,34 +90,11 @@ export default function ListaSolicitudes() {
 
   // Función para manejar la creación exitosa de una nueva solicitud
   const handleSolicitudCreada = async (nuevaSolicitud) => {
-    console.log("Solicitud creada:", nuevaSolicitud)
     const solCreada= await addSolicitud({...nuevaSolicitud, creador:{id:user.id}})
-    setSolicitudCreada(
-      solCreada
-    )
-    //setSolicitudes(prev => [nuevaSolicitud, ...prev]); // Añadir al principio del array
+    setSolicitudCreada(solCreada)
   }
 
   // Función para abrir el modal con un colegiado preseleccionado
-  const abrirModalParaColegiado = (event, colegiadoId) => {
-    // Detener la propagación para evitar que el clic llegue a la fila
-    event.stopPropagation();
-
-    const colegiado = colegiados.find(c => c.id === colegiadoId)
-    setColegiadoSeleccionado(colegiado)
-    setShowModal(true)
-  }
-
-  // Actualizar una solicitud existente
-  const actualizarSolicitud = (solicitudActualizada) => {
-    setSolicitudes(prev => prev.map(s =>
-      s.id === solicitudActualizada.id ? solicitudActualizada : s
-    ))
-  }
-
-  // Renderizado condicional basado en la vista actual
-
-  // Vista principal de lista
   return (
     <div className="select-none cursor-default w-full px-4 md:px-10 py-10 md:py-12">
       {/* Header Section */}
@@ -162,7 +108,12 @@ export default function ListaSolicitudes() {
           className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
+          transition={{
+            duration: 0.8,
+            delay: 0.2,
+            type: "spring",
+            stiffness: 100,
+          }}
         >
           Gestión de solicitudes
         </motion.h1>
@@ -211,19 +162,26 @@ export default function ListaSolicitudes() {
           <nav className="-mb-px flex overflow-x-auto">
             <button
               onClick={() => setTabActual("todas")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "todas"
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "todas"
                   ? "border-[#C40180] text-[#C40180]"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+              }`}
             >
               Todas las solicitudes
+              {solicitudesPagination.count > 0 && (
+                <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {solicitudesPagination.count}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setTabActual("abierta")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "abierta"
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "abierta"
                   ? "border-[#C40180] text-[#C40180]"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+              }`}
             >
               Abiertas
               {solicitudesAbiertasPagination.count > 0 && (
@@ -234,10 +192,11 @@ export default function ListaSolicitudes() {
             </button>
             <button
               onClick={() => setTabActual("cerradas")}
-              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${tabActual === "cerradas"
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "cerradas"
                   ? "border-[#C40180] text-[#C40180]"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+              }`}
             >
               Cerradas
               {solicitudesCerradasPagination.count > 0 && (
@@ -254,33 +213,38 @@ export default function ListaSolicitudes() {
       <div className="mb-6">
         <div className="flex items-center mb-2">
           <Filter size={16} className="mr-2 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Filtros de costo</span>
+          <span className="text-sm font-medium text-gray-700">
+            Filtros de costo
+          </span>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <button
-            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "todas"
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
+              filtroCosto === "todas"
                 ? "bg-purple-100 text-purple-800"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+            }`}
             onClick={() => setFiltroCosto("todas")}
           >
             Todas
           </button>
           <button
-            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "conCosto"
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
+              filtroCosto === "conCosto"
                 ? "bg-blue-100 text-blue-800"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+            }`}
             onClick={() => setFiltroCosto("conCosto")}
           >
             Con costo
           </button>
           <button
-            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${filtroCosto === "sinCosto"
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
+              filtroCosto === "sinCosto"
                 ? "bg-teal-100 text-teal-800"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+            }`}
             onClick={() => setFiltroCosto("sinCosto")}
           >
             Exonerada
@@ -289,7 +253,7 @@ export default function ListaSolicitudes() {
       </div>
 
       {/* Estado de carga */}
-      {isLoading ? (
+      {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
         </div>
@@ -299,15 +263,19 @@ export default function ListaSolicitudes() {
           {solicitudesFiltradas.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                {tabActual === "revisando" && <Clock className="h-8 w-8 text-yellow-500" />}
-                {tabActual === "aprobadas" && <CheckCircle className="h-8 w-8 text-green-500" />}
-                {tabActual === "rechazadas" && <XCircle className="h-8 w-8 text-red-500" />}
-                {tabActual === "todas" && <Search className="h-8 w-8 text-gray-400" />}
+                {tabActual === "abierta" && (
+                  <Clock className="h-8 w-8 text-yellow-500" />
+                )}
+                {tabActual === "cerradas" && (
+                  <CheckCircle className="h-8 w-8 text-green-500" />
+                )}
+                {tabActual === "todas" && (
+                  <Search className="h-8 w-8 text-gray-400" />
+                )}
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                {tabActual === "revisando" && "No hay solicitudes pendientes"}
-                {tabActual === "aprobadas" && "No hay solicitudes aprobadas"}
-                {tabActual === "rechazadas" && "No hay solicitudes rechazadas"}
+                {tabActual === "abierta" && "No hay solicitudes abiertas"}
+                {tabActual === "cerradas" && "No hay solicitudes cerradas"}
                 {tabActual === "todas" && "No se encontraron solicitudes"}
                 {filtroCosto !== "todas" && (
                   <span>
@@ -345,74 +313,122 @@ export default function ListaSolicitudes() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {solicitudesFiltradas.map((solicitud) => (
-                    <tr
-                      key={solicitud.id}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => verDetalleSolicitud(solicitud.id)}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{solicitud.tipo}</div>
-                        <div className="text-xs text-gray-500 md:hidden">
-                          Ref: {solicitud.referencia}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {solicitud.costo > 0 ? `${solicitud.costo.toFixed(2)}` : 'Sin costo'}
-                        </div>
-                        {/* Mostrar información del creador */}
-                        {solicitud.creador && (
-                          <div className="flex items-center mt-1 text-xs text-gray-500">
-                            {solicitud.creador.esAdmin ? (
-                              <Shield size={12} className="mr-1 text-purple-500" />
-                            ) : (
-                              <User size={12} className="mr-1 text-gray-400" />
-                            )}
-                            <span>
-                              Creado por {solicitud.creador.nombre || "Usuario"}
-                              {solicitud.creador.esAdmin && (
-                                <span className="ml-1 text-xs bg-purple-100 text-purple-800 px-1 py-0.5 rounded text-[10px]">
-                                  Admin
-                                </span>
-                              )}
-                            </span>
+                  {solicitudesFiltradas.map((solicitudNoFormat, index) => {
+                    const solicitud = transformBackendData(solicitudNoFormat);
+                    return (
+                      <tr
+                        key={index}
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() =>
+                          router.push(
+                            `/PanelControl/Solicitudes/${solicitud.id}`
+                          )
+                        }
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-medium text-gray-900">
+                            Solicitud {solicitud.tipo}
                           </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{solicitud.colegiadoNombre}</div>
-                        <button
-                          className="cursor-grab text-xs text-[#C40180] hover:underline mt-1"
-                          onClick={(e) => abrirModalParaColegiado(e, solicitud.colegiadoId)}
-                        >
-                          + Nueva solicitud
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                        <div className="text-sm text-gray-500">{solicitud.referencia}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
-                        <div className="text-sm text-gray-500">{solicitud.fecha}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${solicitud.estado === 'Pendiente'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : solicitud.estado === 'Aprobada'
-                              ? 'bg-green-100 text-green-800'
-                              : solicitud.estado === 'Exonerada'
-                                ? 'bg-teal-100 text-teal-800'
-                                : 'bg-red-100 text-red-800'
-                          }`}>
-                          {solicitud.estado === 'Pendiente' && <Clock size={12} />}
-                          {solicitud.estado === 'Aprobada' && <CheckCircle size={12} />}
-                          {solicitud.estado === 'Exonerada' && <FileCheck size={12} />}
-                          {solicitud.estado === 'Rechazada' && <XCircle size={12} />}
-                          {solicitud.estado}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                          <div className="text-xs text-gray-500 md:hidden">
+                            Ref: {solicitud.referencia}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {solicitud.costo > 0
+                              ? `${solicitud.costo.toFixed(2)} $`
+                              : "Sin costo"}
+                          </div>
+                          {/* Mostrar información del creador */}
+                          {solicitud.creador && (
+                            <div className="flex items-center mt-1 text-xs text-gray-500">
+                              {solicitud.creador.esAdmin ? (
+                                <Shield
+                                  size={12}
+                                  className="mr-1 text-purple-500"
+                                />
+                              ) : (
+                                <User
+                                  size={12}
+                                  className="mr-1 text-gray-400"
+                                />
+                              )}
+                              <span>
+                                Creado por{" "}
+                                {solicitud.creador.nombre || "Usuario"}
+                                {solicitud.creador.esAdmin && (
+                                  <span className="ml-1 text-xs bg-purple-100 text-purple-800 px-1 py-0.5 rounded text-[10px]">
+                                    Admin
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {solicitud.colegiadoNombre}
+                          </div>
+                          <button
+                            className="cursor-grab text-xs text-[#C40180] hover:underline mt-1"
+                            onClick={(e) =>
+                              abrirModalParaColegiado(e, solicitud.colegiadoId)
+                            }
+                          >
+                            + Nueva solicitud
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                          <div className="text-sm text-gray-500">
+                            {solicitud.referencia}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                          <div className="text-sm text-gray-500">
+                            {solicitud.fecha}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              solicitud.estado === "Pendiente"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : solicitud.estado === "Aprobada"
+                                ? "bg-green-100 text-green-800"
+                                : solicitud.estado === "Exonerada"
+                                ? "bg-teal-100 text-teal-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {solicitud.estado === "Pendiente" && (
+                              <Clock size={12} />
+                            )}
+                            {solicitud.estado === "Aprobada" && (
+                              <CheckCircle size={12} />
+                            )}
+                            {solicitud.estado === "Exonerada" && (
+                              <FileCheck size={12} />
+                            )}
+                            {solicitud.estado === "Rechazada" && (
+                              <XCircle size={12} />
+                            )}
+                            {solicitud.estado}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(
+                  (PaginationSolicitudes[tabActual].count || 0) / 10
+                )}
+                onPageChange={setCurrentPage}
+                onNextPage={() => setCurrentPage((prev) => prev + 1)}
+                onPrevPage={() => setCurrentPage((prev) => prev - 1)}
+                isNextDisabled={!PaginationSolicitudes[tabActual].next}
+                isPrevDisabled={!PaginationSolicitudes[tabActual].previous}
+              />
             </div>
           )}
         </>
@@ -424,10 +440,10 @@ export default function ListaSolicitudes() {
           onClose={() => {
             setShowModal(false);
             setColegiadoSeleccionado(null);
-            setSolicitudCreada(null)
+            setSolicitudCreada(null);
           }}
           onSolicitudCreada={handleSolicitudCreada}
-          colegiados={colegiados}
+          //colegiados={colegiados}
           colegiadoPreseleccionado={colegiadoSeleccionado}
           onVerDetalle={verDetalleSolicitud}
           session={{
@@ -435,13 +451,13 @@ export default function ListaSolicitudes() {
               name: "Administrador",
               email: "admin@ejemplo.com",
               role: "admin",
-              isAdmin: true
-            }
+              isAdmin: true,
+            },
           }}
           solicitudCreada={solicitudCreada}
           isAdmin={true}
         />
       )}
     </div>
-  )
+  );
 }

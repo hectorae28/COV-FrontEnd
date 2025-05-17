@@ -3,7 +3,7 @@ import { TIPOS_SOLICITUD } from '@/store/SolicitudesStore';
 export default function transformBackendData(backendData) {
   const frontendData = {
     id: backendData.id, // Generar un ID similar al frontend
-    tipo: getObjectCount(backendData.detalles_solicitud) + " ítems",
+    tipo:  Object.keys(backendData.detalles_solicitud).length + " ítems",
     colegiadoId: "1", // Asignar un ID temporal
     colegiadoNombre: backendData.colegiado,
     fecha: formatDate(backendData.created_at),
@@ -63,15 +63,6 @@ function transformItem(item, type) {
       ? Object.keys(item.archivos || {})
       : []
   };
-}
-
-function getObjectCount(obj) {
-  return Object.keys(obj).reduce((count, key) => {
-    if (Array.isArray(obj[key])) {
-      return count + obj[key].length;
-    }
-    return count + 1;
-  }, 0);
 }
 
 function mapEstado(detalles) {

@@ -3,6 +3,7 @@ import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/Detal
 import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
 import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal";
 import useDataListaColegiados from "@/store/ListaColegiadosData";
+import {useSolicitudesStore} from "@/store/SolicitudesStore";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,7 +18,7 @@ import TabSelector from "./TabSelector";
 
 export default function ListaColegiadosPage() {
   // Estado del store de Zustand
-  const initStore = useDataListaColegiados((state) => state.initStore);
+  const initStore = useSolicitudesStore((state) => state.initStore);
   const colegiados = useDataListaColegiados((state) => state.colegiados);
   const colegiadosPagination = useDataListaColegiados(
     (state) => state.colegiadosPagination
@@ -68,6 +69,13 @@ export default function ListaColegiadosPage() {
   const [ordenFechaRegistrados, setOrdenFechaRegistrados] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
   const [recordsPerPage, setRecordsPerPage] = useState(10);
   const router = useRouter();
+  const initStoreAsync = async () => {
+    await initStore();
+  }
+
+  useEffect(() => {
+    initStoreAsync();
+  }, [])
 
   // Inicialización
   useEffect(() => {

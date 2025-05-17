@@ -122,6 +122,7 @@ export const useSolicitudesStore = create((set, get) => ({
     await get().fetchTiposSolicitud();
     await get().fetchSolicitudes("cerrada");
     await get().fetchSolicitudes("abierta");
+    await get().fetchSolicitudes(null);
   },
   
   fetchTiposSolicitud: async () => {
@@ -172,7 +173,7 @@ export const useSolicitudesStore = create((set, get) => ({
   fetchSolicitudes: async (estado,page = 1, pageSize = 10, filtros = {}) => {
     set({ loading: true });
     try {
-      let params = `?page=${page}&page_size=${pageSize}&status=${estado}`;
+      let params = `?page=${page}&page_size=${pageSize}${estado && `&status=${estado}`}`;
       
       Object.entries(filtros).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -188,10 +189,17 @@ export const useSolicitudesStore = create((set, get) => ({
           loading: false
         });
         return res.data;
-      }else{
+      }else if(estado === "abierta"){
         set({
           solicitudesAbiertas: res.data.results,
           solicitudesAbiertasPagination: res.data,
+          loading: false
+        });
+        return res.data;
+      }else{
+        set({
+          solicitudes: res.data.results,
+          solicitudesPagination: res.data,
           loading: false
         });
         return res.data;

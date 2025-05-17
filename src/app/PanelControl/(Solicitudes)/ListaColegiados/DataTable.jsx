@@ -27,13 +27,6 @@ export default function DataTable({
 }) {
     // Función para filtrar los pendientes según el tab activo
     const obtenerPendientesFiltrados = () => {
-        // if (tabActivo === "pendientes") {
-        //     return colegiadosPendientes.filter(p => p.status === "revisando");
-        // } else if (tabActivo === "rechazados") {
-        //     return colegiadosPendientes.filter(p => p.status === "rechazado");
-        // } else if (tabActivo === "anulados") {
-        //     return colegiadosPendientes.filter(p => p.status === "denegado" || p.estado === "Anuladas");
-        // }
         return colegiadosPendientes;
     };
 

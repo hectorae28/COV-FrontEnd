@@ -1,6 +1,4 @@
 "use client"
-//import { TIPOS_SOLICITUD } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
-import { TIPOS_SOLICITUD } from "@/app/Models/PanelControl/Solicitudes/SolicitudesData"
 
 import {useSolicitudesStore} from "@/store/SolicitudesStore"
 import useDataListaColegiados from "@/store/ListaColegiadosData"
@@ -60,6 +58,7 @@ export default function SeleccionarSolicitudesStep({
     }, [searchTerm]);
 
     // Efecto para manejar el tipo de solicitud preseleccionado
+    console.log({tipos_solicitud})
     useEffect(() => {
         if (!tipos_solicitud || !tipos_solicitud[0]?.costo) return;
 
@@ -365,65 +364,70 @@ export default function SeleccionarSolicitudesStep({
 
     // Manejar envío del formulario
     const handleSubmit = async (e) => {
-        e.preventDefault()
-        if (!validarFormulario()) return
-        setIsSubmitting(true)
-        try {
-            // Usamos creadorInfo en lugar de session
-            // Crear lista de documentos requeridos única (sin duplicados)
-            const todosDocumentosRequeridos = []
-            itemsCarrito.forEach((item) => {
-                item.documentosRequeridos.forEach((doc) => {
-                    if (!todosDocumentosRequeridos.includes(doc)) {
-                        todosDocumentosRequeridos.push(doc)
-                    }
-                })
-            })
-            // Determinar el tipo principal para mostrar
-            let tipoMostrar = ""
-            if (itemsCarrito.length > 1) {
-                tipoMostrar = `Solicitud múltiple (${itemsCarrito.length} ítems)`
-            } else if (itemsCarrito.length === 1) {
-                tipoMostrar = itemsCarrito[0].nombre
+      e.preventDefault();
+      if (!validarFormulario()) return;
+      setIsSubmitting(true);
+      try {
+        // Usamos creadorInfo en lugar de session
+        // Crear lista de documentos requeridos única (sin duplicados)
+        const todosDocumentosRequeridos = [];
+        itemsCarrito.forEach((item) => {
+          item.documentosRequeridos.forEach((doc) => {
+            if (!todosDocumentosRequeridos.includes(doc)) {
+              todosDocumentosRequeridos.push(doc);
             }
-
-            // Crear objeto de nueva solicitud
-            const nuevaSolicitud = {
-                id: `sol-${Date.now()}`,
-                tipo: tipoMostrar,
-                colegiadoId: formData.colegiadoId,
-                colegiadoNombre: colegiadoSeleccionado?.recaudos?.persona?.nombre || colegiadoSeleccionado?.firstname || "Colegiado",
-                fecha: new Date().toLocaleDateString(),
-                estado: todoExonerado ? "Exonerada" : "Pendiente",
-                descripcion: formData.descripcion || "",
-                referencia: `REF-${Date.now().toString().slice(-6)}`,
-                costo: totalCarrito,
-                documentosRequeridos: todosDocumentosRequeridos,
-                documentosAdjuntos: documentosAdjuntos,
-                itemsSolicitud: itemsCarrito,
-                comprobantePago: null,
-                estadoPago: todoExonerado ? "Exonerado" : "Pendiente de verificación",
-                fechaCompletado: new Date().toLocaleDateString(),
-                // Información del creador
-                creador: {
-                    username: creadorInfo?.name || "Usuario",
-                    email: creadorInfo?.email || "usuario@ejemplo.com",
-                    esAdmin: creadorInfo?.role === "admin" || creadorInfo?.isAdmin || false,
-                    fecha: new Date().toISOString(),
-                    tipo: "creado",
-                },
-            }
-            // Pasar la solicitud creada al componente padre
-            onFinalizarSolicitud(nuevaSolicitud)
-        } catch (error) {
-            console.error("Error al crear solicitud:", error)
-            setErrors({
-                general: "Ocurrió un error al procesar la solicitud. Inténtelo nuevamente.",
-            })
-        } finally {
-            setIsSubmitting(false)
+          });
+        });
+        // Determinar el tipo principal para mostrar
+        let tipoMostrar = "";
+        if (itemsCarrito.length > 1) {
+          tipoMostrar = `Solicitud múltiple (${itemsCarrito.length} ítems)`;
+        } else if (itemsCarrito.length === 1) {
+          tipoMostrar = itemsCarrito[0].nombre;
         }
-    }
+
+        // Crear objeto de nueva solicitud
+        const nuevaSolicitud = {
+          id: `sol-${Date.now()}`,
+          tipo: tipoMostrar,
+          colegiadoId: formData.colegiadoId,
+          colegiadoNombre:
+            colegiadoSeleccionado?.recaudos?.persona?.nombre ||
+            colegiadoSeleccionado?.firstname ||
+            "Colegiado",
+          fecha: new Date().toLocaleDateString(),
+          estado: todoExonerado ? "Exonerada" : "Pendiente",
+          descripcion: formData.descripcion || "",
+          referencia: `REF-${Date.now().toString().slice(-6)}`,
+          costo: totalCarrito,
+          documentosRequeridos: todosDocumentosRequeridos,
+          documentosAdjuntos: documentosAdjuntos,
+          itemsSolicitud: itemsCarrito,
+          comprobantePago: null,
+          estadoPago: todoExonerado ? "Exonerado" : "Pendiente de verificación",
+          fechaCompletado: new Date().toLocaleDateString(),
+          // Información del creador
+          creador: {
+            username: creadorInfo?.name || "Usuario",
+            email: creadorInfo?.email || "usuario@ejemplo.com",
+            esAdmin:
+              creadorInfo?.role === "admin" || creadorInfo?.isAdmin || false,
+            fecha: new Date().toISOString(),
+            tipo: "creado",
+          },
+        };
+        // Pasar la solicitud creada al componente padre
+        onFinalizarSolicitud(nuevaSolicitud);
+      } catch (error) {
+        console.error("Error al crear solicitud:", error);
+        setErrors({
+          general:
+            "Ocurrió un error al procesar la solicitud. Inténtelo nuevamente.",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
     // Filtrar tipos de solicitud para excluir "Solvencia"
     return (
@@ -435,7 +439,6 @@ export default function SeleccionarSolicitudesStep({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C40180]"></div>
             </div>
           )}
-
           {/* Error state */}
           {!loading && !tipos_solicitud && (
             <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-red-800 mb-4">

@@ -89,7 +89,7 @@ export default function DetalleColegiado({
     };
 
     loadData();
-  }, [colegiadoId, providedColegiado, getColegiado, getDocumentos]);
+  }, [colegiadoId]);
 
   // Función para confirmar entrega de título
   const handleConfirmarEntregaTitulo = async () => {
@@ -120,9 +120,6 @@ export default function DetalleColegiado({
   // Función para registrar nueva solicitud
   const handleNuevaSolicitud = (nuevaSolicitud) => {
     console.log(nuevaSolicitud)
-    // addSolicitud(colegiadoId, nuevaSolicitud);
-    // setRefreshSolicitudes((prev) => prev + 1);
-    // setMostrarModalSolicitud(false);
   };
 
   useEffect(() => {
