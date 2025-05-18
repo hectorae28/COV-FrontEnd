@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 // Import components
-import EventForm from "@/app/components/PaginaWeb/CursosEventos/EventForm";
-import EventList from "@/app/components/PaginaWeb/CursosEventos/EventList";
-import FormBuilder from "@/app/Components/PaginaWeb/CursosEventos/FormInscripcion/FormBuilder";
+import EventForm from "@/Components/PaginaWeb/CursosEventos/EventForm";
+import EventList from "@/Components/PaginaWeb/CursosEventos/EventList";
+import FormBuilder from "@/Components/PaginaWeb/CursosEventos/FormInscripcion/FormBuilder";
 
 const initialValues = {
   title: "",

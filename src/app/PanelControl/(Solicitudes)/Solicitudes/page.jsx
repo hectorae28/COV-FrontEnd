@@ -28,6 +28,7 @@ export default function ListaSolicitudes() {
   const initStore = useSolicitudesStore((state) => state.initStore)
   const solicitudes = useSolicitudesStore((state)=>state.solicitudes)
   const solicitudesPagination = useSolicitudesStore((state)=>state.solicitudesPagination)
+  const tipos_solicitud = useSolicitudesStore((state)=>state.tipos_solicitud)
 
   const solicitudesAbiertas = useSolicitudesStore((state)=>state.solicitudesAbiertas)
   const solicitudesAbiertasPagination = useSolicitudesStore((state)=>state.solicitudesAbiertasPagination)
@@ -54,6 +55,7 @@ export default function ListaSolicitudes() {
   const loadTiposSolicitud = async () => {
     try {
       await initStore();
+      console.log(tipos_solicitud)
     } catch (error) {
       console.error("Error al cargar tipos de solicitud:", error);
     }
@@ -314,7 +316,8 @@ export default function ListaSolicitudes() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {solicitudesFiltradas.map((solicitudNoFormat, index) => {
+                  {solicitudesFiltradas?.map((solicitudNoFormat, index) => {
+                    console.log({solicitudNoFormat,text:'solicitudNoFormat'});
                     const solicitud = transformBackendData(solicitudNoFormat);
                     return (
                       <tr

@@ -85,17 +85,21 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     let processedValue = value;
 
     // Aplicar capitalización y validación según el campo
-    if (["firstName", "secondName", "firstLastName", "secondLastName"].includes(name)) {
-  // Permitimos escribir espacios, pero eliminamos espacios dobles al procesar
-  // No bloqueamos la entrada si hay espacios dobles
-  processedValue = value.replace(/\s{2,}/g, ' ');
-  processedValue = capitalizeText(processedValue);
-  
-  // Solo retornamos si hay caracteres no permitidos (que no sean espacios)
-  if (processedValue && !validateNameChars(processedValue)) {
-    return;
-  }
-}
+    if (
+      ["firstName", "secondName", "firstLastName", "secondLastName"].includes(
+        name
+      )
+    ) {
+      // Permitimos escribir espacios, pero eliminamos espacios dobles al procesar
+      // No bloqueamos la entrada si hay espacios dobles
+      processedValue = value.replace(/\s{2,}/g, " ");
+      processedValue = capitalizeText(processedValue);
+
+      // Solo retornamos si hay caracteres no permitidos (que no sean espacios)
+      if (processedValue && !validateNameChars(processedValue)) {
+        return;
+      }
+    }
 
     onInputChange({ [name]: processedValue });
 
@@ -130,6 +134,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       if (newBirthDateParts.year && newBirthDateParts.month && newBirthDateParts.day) {
         const fullDate = `${newBirthDateParts.year}-${newBirthDateParts.month}-${newBirthDateParts.day}`;
         calculateAge(fullDate);
+        onInputChange({ birthDate: fullDate });
       } else {
         setAge("");
         setIsAdult(true);

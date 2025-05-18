@@ -229,7 +229,7 @@ export const useSolicitudesStore = create((set, get) => ({
       const formData = convertJsonToFormData(solicitudJson, opcionales);
       
       const response = await postDataSolicitud('solicitud', formData);
-      const solicitud = get().getSolicitudById(response.data.id);
+      const solicitud = await get().getSolicitudById(response.data.id);
       
       set(state => ({
         solicitudes: [solicitud, ...state.solicitudes],

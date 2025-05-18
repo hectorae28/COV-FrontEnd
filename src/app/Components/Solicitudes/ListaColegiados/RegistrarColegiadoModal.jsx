@@ -240,8 +240,6 @@ export default function RegistroColegiados({
         formData.fondo_negro_titulo_bachiller
       );
     }
-    console.log(!pagarLuego&&!exonerarPagos)
-    console.log(pagarLuego,exonerarPagos);
     
     
     (!pagarLuego&&!exonerarPagos)

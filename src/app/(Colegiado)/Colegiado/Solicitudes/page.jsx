@@ -152,7 +152,7 @@ export default function ListaSolicitudesColegiado() {
     };
 
   const handleSolicitudCreada = async (nuevaSolicitud) => {
-    const solCreada= await addSolicitud({...nuevaSolicitud, colegiadoId:Colegiado.colegiado_id})
+    const solCreada= await addSolicitud({...nuevaSolicitud, colegiadoId:colegiadoUser.colegiado_id})
     setSolicitudCreada(solCreada)
   }
 
@@ -464,7 +464,7 @@ export default function ListaSolicitudesColegiado() {
                     <CrearSolicitudModal
                         onClose={() => {setShowModal(false); setSolicitudCreada(null);}}
                         onSolicitudCreada={handleSolicitudCreada}
-                        colegiadoPreseleccionado={Colegiado}
+                        colegiadoPreseleccionado={colegiadoUser}
                         onVerDetalle={verDetalleSolicitud}
                         session={session}
                         mostrarSeleccionColegiado={false}

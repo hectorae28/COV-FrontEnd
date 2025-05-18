@@ -49,6 +49,7 @@ export default function DetalleSolicitud({ props }) {
   const loadSolicitudById = async () => {
     const solicitud = await getSolicitudById(id);
     //setSolicitud(solicitud)
+    console.log({solicitud,text:'detalles'});
     setSolicitud(transformBackendData(solicitud));
     setIsLoading(false);
   };
