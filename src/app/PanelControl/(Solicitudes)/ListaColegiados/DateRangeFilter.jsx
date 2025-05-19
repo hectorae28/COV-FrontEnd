@@ -32,37 +32,39 @@ export default function DateRangeFilter({
 
     return (
         <div className="relative">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border shadow-sm ${hasDateRange
-                    ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                    }`}
-            >
-                <Calendar size={18} />
-                <span>
-                    {hasDateRange
-                        ? fromDate && toDate
-                            ? `${fromDate} - ${toDate}`
-                            : fromDate
-                                ? `Desde ${fromDate}`
-                                : `Hasta ${toDate}`
-                        : "Fecha"}
-                </span>
-                <ChevronDown size={16} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+            {/* Reemplazar el botón exterior por un div */}
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border shadow-sm cursor-pointer ${hasDateRange
+                ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}>
+                {/* Botón principal para abrir el selector */}
+                <div 
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="flex items-center gap-2 flex-grow cursor-pointer"
+                >
+                    <Calendar size={18} />
+                    <span>
+                        {hasDateRange
+                            ? fromDate && toDate
+                                ? `${fromDate} - ${toDate}`
+                                : fromDate
+                                    ? `Desde ${fromDate}`
+                                    : `Hasta ${toDate}`
+                            : "Fecha"}
+                    </span>
+                    <ChevronDown size={16} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                </div>
 
+                {/* Botón separado para limpiar */}
                 {hasDateRange && (
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleClear();
-                        }}
+                        onClick={handleClear}
                         className="ml-2 text-white hover:text-gray-200"
                     >
                         <X size={16} />
                     </button>
                 )}
-            </button>
+            </div>
 
             {isOpen && (
                 <div className="absolute top-full left-0 mt-2 p-4 bg-white rounded-lg border border-gray-200 shadow-xl z-50 w-80">

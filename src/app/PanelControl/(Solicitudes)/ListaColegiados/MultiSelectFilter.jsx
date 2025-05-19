@@ -29,16 +29,14 @@ export default function MultiSelectFilter({
 
     // Actualizar estado seleccionado basado en filtros activos
     useEffect(() => {
-    // Usar setTimeout para evitar actualizaciones durante renderizado
-    setTimeout(() => {
-        const activeEstado = activeFilters.find(f => f.group === "Ubicación");
-        if (activeEstado && (!selectedEstado || selectedEstado.id !== activeEstado.id)) {
-            setSelectedEstado(activeEstado);
-        } else if (!activeEstado && selectedEstado) {
-            setSelectedEstado(null);
-        }
-    }, 0);
-}, [activeFilters, selectedEstado]);
+    const activeEstado = activeFilters.find(f => f.group === "Ubicación");
+    // Agregar verificación para evitar actualizaciones innecesarias
+    if (activeEstado && (!selectedEstado || selectedEstado.id !== activeEstado.id)) {
+        setSelectedEstado(activeEstado);
+    } else if (!activeEstado && selectedEstado) {
+        setSelectedEstado(null);
+    }
+}, [activeFilters]);
 
     // Organizar filtros por grupo
     useEffect(() => {
@@ -108,57 +106,56 @@ export default function MultiSelectFilter({
     };
 
     // Manejar selección/deselección de filtro
-    // Manejar selección/deselección de filtro
-const toggleFilter = (filter) => {
-    const isConflicting = checkFilterConflicts(filter);
-    if (isConflicting) return;
-    
-    // Preparar los valores que queremos actualizar
-    let newFilters;
-    let newSelectedEstado = selectedEstado;
-    let newActiveGroup = activeGroup;
-    
-    const exists = activeFilters.some((f) => f.id === filter.id);
-    if (exists) {
-        // Si quitamos un estado
-        if (filter.group === "Ubicación") {
-            newSelectedEstado = null;
-            newFilters = activeFilters.filter((f) => 
-                f.id !== filter.id && (f.group !== "Municipio" || !f.relatedTo)
-            );
+    const toggleFilter = (filter) => {
+        const isConflicting = checkFilterConflicts(filter);
+        if (isConflicting) return;
+
+        // Preparar los valores que queremos actualizar
+        let newFilters;
+        let newSelectedEstado = selectedEstado;
+        let newActiveGroup = activeGroup;
+        
+        const exists = activeFilters.some((f) => f.id === filter.id);
+        if (exists) {
+            // Si quitamos un estado
+            if (filter.group === "Ubicación") {
+                newSelectedEstado = null;
+                newFilters = activeFilters.filter((f) => 
+                    f.id !== filter.id && (f.group !== "Municipio" || !f.relatedTo)
+                );
+            } else {
+                newFilters = activeFilters.filter((f) => f.id !== filter.id);
+            }
         } else {
-            newFilters = activeFilters.filter((f) => f.id !== filter.id);
+            if (filter.group === "Ubicación") {
+                // Si seleccionamos estado
+                const newFilter = { ...filter };
+                newSelectedEstado = newFilter;
+                newActiveGroup = "Municipio";
+                newFilters = [
+                    ...activeFilters.filter(f => 
+                        f.group !== "Ubicación" && !(f.group === "Municipio" && f.relatedTo)
+                    ), 
+                    newFilter
+                ];
+            } else {
+                newFilters = [...activeFilters, filter];
+            }
         }
-    } else {
-        if (filter.group === "Ubicación") {
-            // Si seleccionamos estado
-            const newFilter = { ...filter };
-            newSelectedEstado = newFilter;
-            newActiveGroup = "Municipio";
-            newFilters = [
-                ...activeFilters.filter(f => 
-                    f.group !== "Ubicación" && !(f.group === "Municipio" && f.relatedTo)
-                ), 
-                newFilter
-            ];
-        } else {
-            newFilters = [...activeFilters, filter];
-        }
-    }
-    
-    // Actualizar estados con los nuevos valores en una sola pasada
-    setActiveFilters(newFilters);
-    
-    // Usar setTimeout para asegurar que estas actualizaciones ocurran después del renderizado
-    setTimeout(() => {
-        if (newSelectedEstado !== selectedEstado) {
-            setSelectedEstado(newSelectedEstado);
-        }
-        if (newActiveGroup !== activeGroup) {
-            setActiveGroup(newActiveGroup);
-        }
-    }, 0);
-};
+        
+        // Actualizar estados con los nuevos valores en una sola pasada
+        setActiveFilters(newFilters);
+        
+        // Usar setTimeout para asegurar que estas actualizaciones ocurran después del renderizado
+        setTimeout(() => {
+            if (newSelectedEstado !== selectedEstado) {
+                setSelectedEstado(newSelectedEstado);
+            }
+            if (newActiveGroup !== activeGroup) {
+                setActiveGroup(newActiveGroup);
+            }
+        }, 0);
+    };
 
     // Eliminar un filtro
     const removeFilter = (filterId) => {
@@ -240,7 +237,7 @@ const toggleFilter = (filter) => {
     return (
         <div className="mb-6">
             {/* Controles de filtros */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 {/* Botón Filtrar por */}
                 <div className="relative" ref={dropdownRef}>
                     <button
@@ -539,9 +536,8 @@ const toggleFilter = (filter) => {
                     setFromDate={setFromDate}
                     setToDate={setToDate}
                 />
-            </div>
-            {/* Filtros seleccionados como burbujas */}
-            <div className="flex flex-wrap gap-2 mb-4 mt-4">
+                
+                {/* Filtros seleccionados como burbujas */}
                 {hasDateRange && (
                     <div className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
                         {fromDate && toDate
