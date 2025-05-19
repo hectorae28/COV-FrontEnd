@@ -2,7 +2,7 @@
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation"
 import confetti from "canvas-confetti"
 import { AnimatePresence, motion } from "framer-motion"
-import { Building, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Phone, User, Mail } from "lucide-react"
+import { Building, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -692,10 +692,10 @@ export default function RegistrationForm(props) {
                               <div className="relative">
                                 <div
                                   className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isCompleted
-                                      ? "bg-[#D7008A] border-transparent"
-                                      : isCurrent
-                                        ? "bg-white border-[#D7008A]"
-                                        : "bg-white border-gray-400"
+                                    ? "bg-[#D7008A] border-transparent"
+                                    : isCurrent
+                                      ? "bg-white border-[#D7008A]"
+                                      : "bg-white border-gray-400"
                                     }`}
                                 >
                                   {isCompleted ? (
@@ -728,11 +728,20 @@ export default function RegistrationForm(props) {
                         <div className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-6">
                           <Check className="w-10 h-10 text-white" />
                         </div>
-                        <h2 className="text-2xl font-bold text-[#41023B] mb-4">¡Registro Completado!</h2>
-                        <p className="text-gray-600 mb-8">
-                          Gracias por registrarte y completar tu pago. Hemos recibido tu información y pronto nos
-                          pondremos en contacto contigo.
+                        <h2 className="text-2xl font-bold text-[#41023B] mb-4">¡Su formulario ha sido enviado con éxito!</h2>
+                        <p className="text-gray-600 mb-6">
+                          Gracias por registrarse. Hemos recibido su información y pronto nos
+                          pondremos en contacto con usted.
                         </p>
+
+                        {/* Mensaje condicional si seleccionó pagar luego */}
+                        {pagarLuego && (
+                          <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                            <p className="text-yellow-800 font-medium">
+                              Recuerde que para finalizar su registro exitosamente debe realizar sus pagos correspondientes posteriormente.
+                            </p>
+                          </div>
+                        )}
                       </motion.div>
                     ) : showPaymentScreen ? (
                       <motion.div
@@ -766,21 +775,34 @@ export default function RegistrationForm(props) {
                             }}
                           />
                         )}
-                        <div className="flex flex-col space-y-4 mt-12">
-                          <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
-                            <label className="flex items-center space-x-3 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={pagarLuego}
-                                onChange={(e) => setPagarLuego(e.target.checked)}
-                                className="h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
-                              />
-                              <p className="text-md text-gray-800">
-                                <span className="text-[#41023B] font-bold text-lg">Pagar luego:</span> Al habilitar esta
-                                opción, el colegiado quedará registrado con pago pendiente y podrá completarlo
-                                posteriormente.
-                              </p>
-                            </label>
+                        <div className="flex justify-center mt-12">
+                          <div className="w-full max-w-xs mx-auto p-4 bg-[#41023B]/10 rounded-xl border border-[#41023B]">
+                            <div className="flex items-center justify-center">
+                              <div>
+                                <span className="text-[#41023B] font-bold text-lg mr-4">Pagar luego</span>
+                              </div>
+
+                              {/* Switch con colores y iconos */}
+                              <button
+                                type="button"
+                                onClick={() => setPagarLuego(!pagarLuego)}
+                                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${pagarLuego
+                                    ? "bg-green-500 focus:ring-green-500"
+                                    : "bg-red-500 focus:ring-red-500"
+                                  }`}
+                              >
+                                <span
+                                  className={`inline-flex h-6 w-6 transform items-center justify-center rounded-full bg-white transition-transform ${pagarLuego ? "translate-x-9" : "translate-x-1"
+                                    }`}
+                                >
+                                  {pagarLuego ? (
+                                    <Check className="h-4 w-4 text-green-500" />
+                                  ) : (
+                                    <X className="h-4 w-4 text-red-500" />
+                                  )}
+                                </span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                         <div className="flex justify-center p-6 gap-6">

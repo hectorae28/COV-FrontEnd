@@ -1,51 +1,52 @@
 const institucionesList = [
   {
-    "code": "CDP",
-    "name": "Consultorios "
+    code: "ASP",
+    name: "Agencias de Salud Pública"
   },
   {
-    "code": "CAA",
-    "name": "Centros de Atención Ambulatoria"
+    code: "CAA",
+    name: "Centros de Atención Ambulatoria"
   },
   {
-    "code": "HD",
-    "name": "Hospitales"
+    code: "CC",
+    name: "Clínicas"
   },
   {
-    "code": "ASP",
-    "name": "Agencias de Salud Pública"
+    code: "CDP",
+    name: "Consultorios"
   },
   {
-    "code": "LDC",
-    "name": "Laboratorio"
+    code: "EO",
+    name: "Escuelas y Facultades de Odontología"
   },
   {
-    "code": "FMD",
-    "name": "Fabricación de Materiales y Equipos Dentales"
+    code: "FAP",
+    name: "Fuerzas Armadas y Servicios Penitenciarios"
   },
   {
-    "code": "EO",
-    "name": "Escuelas y Facultades de Odontología"
+    code: "FMD",
+    name: "Fabricación de Materiales y Equipos Dentales"
   },
   {
-    "code": "UI",
-    "name": "Universidades e Institutos de Investigación"
+    code: "HD",
+    name: "Hospitales"
   },
   {
-    "code": "CC",
-    "name": "Clínicas"
+    code: "LDC",
+    name: "Laboratorio"
   },
   {
-    "code": "PMSB",
-    "name": "Programas Móviles de Salud Bucal"
+    code: "OT",
+    name: "Otros"
   },
   {
-    "code": "FAP",
-    "name": "Fuerzas Armadas y Servicios Penitenciarios"
+    code: "PMSB",
+    name: "Programas Móviles de Salud Bucal"
   },
   {
-    "code": "OT",
-    "name": "Otros"
+    code: "UI",
+    name: "Universidades e Institutos de Investigación"
   }
 ]
+
 export default institucionesList
