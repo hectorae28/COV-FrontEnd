@@ -35,17 +35,29 @@ export default function FormPreview({ fields, isPaid, price, currency }) {
               </label>
 
               {field.tipo === "seleccion" && (
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                  disabled
-                >
-                  <option value="">Seleccione una opción</option>
-                  {field.opciones?.map((option, i) => (
-                    <option key={i} value={option.toLowerCase().replace(/ /g, "_")}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                <div>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white mb-2"
+                    disabled
+                  >
+                    <option value="">Seleccione una opción</option>
+                    {field.opciones?.map((option, i) => (
+                      <option key={i} value={option.toLowerCase().replace(/ /g, "_")}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  {/* Preview dropdown options */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm">
+                    <p className="text-xs text-gray-500 mb-1">Vista previa de opciones:</p>
+                    <ul className="pl-4 text-xs text-gray-600 space-y-1">
+                      {field.opciones?.map((option, i) => (
+                        <li key={i}>• {option}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               )}
 
               {field.tipo === "numero" && (
@@ -99,6 +111,23 @@ export default function FormPreview({ fields, isPaid, price, currency }) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                   disabled
                 />
+              )}
+
+              {field.tipo === "interruptor" && (
+                <div className="flex items-center">
+                  <label className="relative inline-flex items-center cursor-not-allowed">
+                    <input 
+                      type="checkbox"
+                      checked={field.valor_predeterminado === "true"}
+                      className="sr-only peer" 
+                      disabled
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C40180]"></div>
+                    <span className="ml-3 text-sm font-medium text-gray-700">
+                      {field.valor_predeterminado === "true" ? "Activado" : "Desactivado"}
+                    </span>
+                  </label>
+                </div>
               )}
 
               {field.tipo !== "archivo" && field.requerido === "true" && !isPriceField && (

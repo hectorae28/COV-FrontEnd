@@ -81,7 +81,13 @@ export default function FormFieldItem({
     <div className={`${disableEditing ? "opacity-75" : ""}`}>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-base font-medium text-gray-700 flex items-center">
-          Editar Campo #{index + 1}
+          Editar {fieldData.tipo === "seleccion" ? "Selección" :
+                fieldData.tipo === "numero" ? "Número" :
+                fieldData.tipo === "texto" ? "Texto" :
+                fieldData.tipo === "archivo" ? "Archivo" :
+                fieldData.tipo === "fecha" ? "Fecha" :
+                fieldData.tipo === "interruptor" ? "Interruptor" : 
+                "Campo"}: {fieldData.nombre}
           {disableEditing && (
             <span className="ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
               Auto-generado
@@ -297,6 +303,34 @@ export default function FormFieldItem({
               <option value="MM/DD/YYYY">MM/DD/YYYY</option>
               <option value="YYYY-MM-DD">YYYY-MM-DD</option>
             </select>
+          </div>
+        )}
+
+        {fieldData.tipo === "interruptor" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Valor predeterminado
+            </label>
+            <div className="flex items-center">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox"
+                  checked={fieldData.valor_predeterminado === "true"}
+                  onChange={(e) => {
+                    const value = e.target.checked ? "true" : "false";
+                    const updatedField = { ...fieldData, valor_predeterminado: value };
+                    setFieldData(updatedField);
+                    onUpdate(updatedField);
+                  }}
+                  disabled={disableEditing}
+                  className="sr-only peer" 
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#C40180]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C40180]"></div>
+                <span className="ml-3 text-sm font-medium text-gray-700">
+                  {fieldData.valor_predeterminado === "true" ? "Activado" : "Desactivado"}
+                </span>
+              </label>
+            </div>
           </div>
         )}
       </div>

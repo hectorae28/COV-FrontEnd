@@ -751,7 +751,7 @@ export default function RegistrationForm(props) {
                         className="relative z-10 p-8"
                       >
                         {/* Botón de regresar en la esquina superior izquierda */}
-                        <div className="absolute top-4 left-4">
+                        <div className="absolute bottom-4 left-4">
                           <button
                             type="button"
                             onClick={() => setShowPaymentScreen(false)}

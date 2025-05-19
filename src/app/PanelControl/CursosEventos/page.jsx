@@ -29,7 +29,7 @@ export default function DashboardEventos() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(true);
   const [filteredData, setFilteredData] = useState([]);
-  
+
   // Nuevo estado para manejar el formulario
   const [showFormBuilder, setShowFormBuilder] = useState(false);
   const [currentFormItem, setCurrentFormItem] = useState(null);
@@ -38,7 +38,7 @@ export default function DashboardEventos() {
     const currentData = tabIndex === 0 ? eventos : cursos;
     if (searchTerm) {
       setFilteredData(
-        currentData.filter(item => 
+        currentData.filter(item =>
           item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.location?.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -101,7 +101,7 @@ export default function DashboardEventos() {
       direccionMapa: item.direccionMapa || "",
       linkText: item.linkText || "Inscríbete"
     };
-    
+
     setFormValues(safeItem);
     setEditingId(item.id);
     setIsCreating(false);
@@ -120,11 +120,11 @@ export default function DashboardEventos() {
   const handleSaveForm = (updatedItem) => {
     // Actualizar el item con el formulario
     if (tabIndex === 0) {
-      setEventos(prev => prev.map(item => 
+      setEventos(prev => prev.map(item =>
         item.id === updatedItem.id ? updatedItem : item
       ));
     } else {
-      setCursos(prev => prev.map(item => 
+      setCursos(prev => prev.map(item =>
         item.id === updatedItem.id ? updatedItem : item
       ));
     }
@@ -134,8 +134,8 @@ export default function DashboardEventos() {
   // Si estamos mostrando el constructor de formularios
   if (showFormBuilder) {
     return (
-      <FormBuilder 
-        item={currentFormItem} 
+      <FormBuilder
+        item={currentFormItem}
         onBack={() => setShowFormBuilder(false)}
         onSave={handleSaveForm}
       />
@@ -168,26 +168,24 @@ export default function DashboardEventos() {
         </motion.p>
       </motion.div>
 
-      <Tab.Group selectedIndex={tabIndex} onChange={(i) => { 
-        setTabIndex(i); 
+      <Tab.Group selectedIndex={tabIndex} onChange={(i) => {
+        setTabIndex(i);
         resetForm();
         setSearchTerm("");
       }}>
-        <Tab.List className="flex space-x-2 mb-4 bg-white p-1 rounded-lg shadow-sm max-w-[584px]">
-          <Tab className={({ selected }) => 
-            `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${
-              selected 
-                ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md" 
-                : "text-gray-700 hover:bg-gray-100"
+        <Tab.List className="flex space-x-2 mb-4 bg-white p-1 rounded-lg shadow-sm max-w-2/3">
+          <Tab className={({ selected }) =>
+            `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
+              ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
+              : "text-gray-700 hover:bg-gray-100"
             }`
           }>
             Eventos
           </Tab>
-          <Tab className={({ selected }) => 
-            `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${
-              selected 
-                ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md" 
-                : "text-gray-700 hover:bg-gray-100"
+          <Tab className={({ selected }) =>
+            `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
+              ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
+              : "text-gray-700 hover:bg-gray-100"
             }`
           }>
             Cursos
@@ -197,7 +195,7 @@ export default function DashboardEventos() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left side: List */}
           <div className="lg:col-span-8">
-            <EventList 
+            <EventList
               filteredData={filteredData}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -207,12 +205,15 @@ export default function DashboardEventos() {
               handleDelete={handleDelete}
               handleFormBuilder={handleFormBuilder}
               handleNewItem={handleNewItem}
+              formValues={formValues}
+              setFormValues={setFormValues}
+              handleSave={handleSave}
             />
           </div>
-          
+
           {/* Right side: Form with Preview */}
           <div className="lg:col-span-4 space-y-4">
-            <EventForm 
+            <EventForm
               formValues={formValues}
               setFormValues={setFormValues}
               handleSave={handleSave}

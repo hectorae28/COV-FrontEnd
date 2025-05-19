@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Save, Trash2, ToggleLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import FormFieldItem from "./FormFieldItem";
 import FormPreview from "./FormPreview";
@@ -11,7 +11,8 @@ const FIELD_TYPES = [
   { value: "numero", label: "Número", icon: "hash" },
   { value: "texto", label: "Texto", icon: "type" },
   { value: "archivo", label: "Archivo", icon: "file" },
-  { value: "fecha", label: "Fecha", icon: "calendar" }
+  { value: "fecha", label: "Fecha", icon: "calendar" },
+  { value: "interruptor", label: "Interruptor", icon: "toggle-left" }
 ];
 
 const DEFAULT_FIELDS = {
@@ -45,6 +46,12 @@ const DEFAULT_FIELDS = {
     nombre: "Nueva fecha",
     formato: "DD/MM/YYYY",
     requerido: "true"
+  },
+  interruptor: {
+    tipo: "interruptor",
+    nombre: "Nuevo interruptor",
+    requerido: "true",
+    valor_predeterminado: "false"
   }
 };
 
@@ -219,7 +226,7 @@ export default function FormBuilder({ item, onBack, onSave }) {
 
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
           <h1 className="text-2xl font-bold p-6 border-b border-gray-200">
-            {item.formulario ? "Editar Formulario de Registro" : "Crear Formulario de Registro"}
+            Crear Formulario
           </h1>
           <div className="p-6">
             <div className="flex items-center mb-4">
@@ -326,61 +333,77 @@ export default function FormBuilder({ item, onBack, onSave }) {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {formFields.map((field, index) => (
-                        <div
-                          key={index}
-                          className={`p-3 border rounded-lg cursor-pointer hover:border-[#C40180] transition-colors ${selectedFieldIndex === index
-                              ? "border-[#C40180] bg-[#C40180]/5"
-                              : "border-gray-200"
-                            } ${
-                            // Destacar los campos de monto
-                            field.nombre.toLowerCase().includes("monto") ||
-                              field.nombre.toLowerCase().includes("precio") ||
-                              field.nombre.toLowerCase().includes("pago")
-                              ? "border-orange-200 bg-orange-50"
-                              : ""
-                            }`}
-                          onClick={() => setSelectedFieldIndex(index)}
-                        >
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 mr-2">
-                                {
-                                  FIELD_TYPES.find(
-                                    (t) => t.value === field.tipo
-                                  )?.label || field.tipo
-                                }
-                              </span>
-                              <span className="font-medium text-gray-800">
-                                {field.nombre}
-                              </span>
-                            </div>
-                            <div className="flex space-x-1">
-                              {field.requerido === "true" && (
-                                <span className="text-xs px-2 py-1 rounded bg-red-50 text-red-600">
-                                  Requerido
+                      {formFields.map((field, index) => {
+                        // Verificar si es un campo de monto
+                        const isPriceField = 
+                          field.nombre.toLowerCase().includes("monto") || 
+                          field.nombre.toLowerCase().includes("precio") ||
+                          field.nombre.toLowerCase().includes("pago");
+                        
+                        return (
+                          <div
+                            key={index}
+                            className={`p-3 border rounded-lg cursor-pointer hover:border-[#C40180] transition-colors ${selectedFieldIndex === index
+                                ? "border-[#C40180] bg-[#C40180]/5"
+                                : "border-gray-200"
+                              } ${
+                              isPriceField ? "border-orange-200 bg-orange-50" : ""
+                              }`}
+                            onClick={() => setSelectedFieldIndex(index)}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 mr-2">
+                                  {
+                                    FIELD_TYPES.find(
+                                      (t) => t.value === field.tipo
+                                    )?.label || field.tipo
+                                  }
                                 </span>
-                              )}
-
-                              {/* No mostrar el botón de eliminar para campos de monto si includePriceField está activo */}
-                              {!(includePriceField &&
-                                (field.nombre.toLowerCase().includes("monto") ||
-                                  field.nombre.toLowerCase().includes("precio") ||
-                                  field.nombre.toLowerCase().includes("pago"))) && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      deleteField(index);
-                                    }}
-                                    className="p-1 text-gray-400 hover:text-red-500"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                <span className="font-medium text-gray-800">
+                                  {field.nombre}
+                                </span>
+                              </div>
+                              <div className="flex space-x-1">
+                                {field.requerido === "true" && (
+                                  <span className="text-xs px-2 py-1 rounded bg-red-50 text-red-600">
+                                    Requerido
+                                  </span>
                                 )}
+
+                                {/* No mostrar el botón de eliminar para campos de monto si includePriceField está activo */}
+                                {!(includePriceField && isPriceField) && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteField(index);
+                                      }}
+                                      className="p-1 text-gray-400 hover:text-red-500"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  )}
+                              </div>
                             </div>
+                            
+                            {/* Direct field editing */}
+                            {selectedFieldIndex === index && (
+                              <div className="mt-3 border-t pt-3">
+                                <FormFieldItem
+                                  field={field}
+                                  index={index}
+                                  onUpdate={(updatedField) => updateField(index, updatedField)}
+                                  onMove={(direction) => moveField(index, direction)}
+                                  onDelete={() => deleteField(index)}
+                                  isFirst={index === 0}
+                                  isLast={index === formFields.length - 1}
+                                  disableEditing={includePriceField && isPriceField}
+                                />
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </>
@@ -411,31 +434,6 @@ export default function FormBuilder({ item, onBack, onSave }) {
                       />
                     </div>
                   </div>
-                </div>
-              )}
-
-              {selectedFieldIndex !== null && activeTab === "fields" && (
-                <div className="mt-6 p-4 border border-gray-200 rounded-xl">
-                  <FormFieldItem
-                    field={formFields[selectedFieldIndex]}
-                    index={selectedFieldIndex}
-                    onUpdate={(updatedField) =>
-                      updateField(selectedFieldIndex, updatedField)
-                    }
-                    onMove={(direction) =>
-                      moveField(selectedFieldIndex, direction)
-                    }
-                    onDelete={() => deleteField(selectedFieldIndex)}
-                    isFirst={selectedFieldIndex === 0}
-                    isLast={selectedFieldIndex === formFields.length - 1}
-                    // Deshabilitar edición para campos de monto si includePriceField está activo
-                    disableEditing={
-                      includePriceField &&
-                      (formFields[selectedFieldIndex].nombre.toLowerCase().includes("monto") ||
-                        formFields[selectedFieldIndex].nombre.toLowerCase().includes("precio") ||
-                        formFields[selectedFieldIndex].nombre.toLowerCase().includes("pago"))
-                    }
-                  />
                 </div>
               )}
             </div>
