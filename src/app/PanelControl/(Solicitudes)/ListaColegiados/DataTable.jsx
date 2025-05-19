@@ -1,7 +1,8 @@
 import Pagination from "@/Components/Paginations.jsx";
 import {
     AlertCircle,
-    ArrowUpDown,
+    ArrowDown,
+    ArrowUp,
     CheckCircle,
     Search,
     UserX,
@@ -23,7 +24,7 @@ export default function DataTable({
     setCurrentPage,
     recordsPerPage
 }) {
-    // Obtener la fecha formateada
+    // Obtener la fecha formateada - ahora sin hora
     const obtenerFechaFormateada = (fechaStr) => {
         if (!fechaStr) return "-";
         try {
@@ -31,9 +32,7 @@ export default function DataTable({
             const dia = String(fecha.getDate()).padStart(2, "0");
             const mes = String(fecha.getMonth() + 1).padStart(2, "0");
             const año = fecha.getFullYear();
-            const horas = String(fecha.getHours()).padStart(2, "0");
-            const minutos = String(fecha.getMinutes()).padStart(2, "0");
-            return `${dia}/${mes}/${año} ${horas}:${minutos}`;
+            return `${dia}/${mes}/${año}`;
         } catch (e) {
             return fechaStr || "-";
         }
@@ -106,17 +105,15 @@ export default function DataTable({
                                 onClick={toggleOrdenFecha}
                             >
                                 {tabActivo === "registrados" ? "FECHA REGISTRO" : "FECHA SOLICITUD"}
-                                <ArrowUpDown
-                                    size={14}
-                                    className={`transition-transform ${ordenFecha === "desc"
-                                        ? "text-purple-600"
-                                        : "text-gray-400 rotate-180"
-                                        }`}
-                                />
+                                {ordenFecha === "desc" ? (
+                                    <ArrowDown size={14} className="text-purple-600" />
+                                ) : (
+                                    <ArrowUp size={14} className="text-purple-600" />
+                                )}
                             </button>
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                            Profesión/Ocupación
+                            Profesión
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Estado

@@ -11,7 +11,13 @@ export default function MultiSelectFilter({
     fromDate,
     toDate,
     setFromDate,
-    setToDate
+    setToDate,
+    edadMin,
+    setEdadMin,
+    edadMax,
+    setEdadMax,
+    edadExacta,
+    setEdadExacta
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [filterGroups, setFilterGroups] = useState({});
@@ -23,7 +29,7 @@ export default function MultiSelectFilter({
 
     // Actualizar estado seleccionado basado en filtros activos
     useEffect(() => {
-        const activeEstado = activeFilters.find(f => f.group === "Estado");
+        const activeEstado = activeFilters.find(f => f.group === "Ubicación");
         if (activeEstado && !selectedEstado) {
             setTimeout(() => setSelectedEstado(activeEstado), 0);
         }
@@ -69,46 +75,17 @@ export default function MultiSelectFilter({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Manejar selección/deselección de filtro
-    const toggleFilter = (filter) => {
-        const isConflicting = checkFilterConflicts(filter);
-        if (isConflicting) return;
-
-        setActiveFilters((prev) => {
-            const exists = prev.some((f) => f.id === filter.id);
-            if (exists) {
-                // Si quitamos un estado
-                if (filter.group === "Estado") {
-                    // Limpiamos el estado seleccionado
-                    setTimeout(() => setSelectedEstado(null), 0);
-                    // Y eliminamos solo municipios relacionados (no universidades)
-                    return prev.filter((f) => f.id !== filter.id && (f.group !== "Municipio" || !f.relatedTo));
-                }
-                return prev.filter((f) => f.id !== filter.id);
-            } else {
-                if (filter.group === "Estado") {
-                    // Si seleccionamos estado
-                    const newFilter = { ...filter };
-                    // Actualizamos estado seleccionado tras el render
-                    setTimeout(() => {
-                        setSelectedEstado(newFilter);
-                        // Cambiar automáticamente a municipios
-                        setActiveGroup("Municipio");
-                    }, 0);
-                    // Solo eliminamos filtros de Estado previos y municipios relacionados a otros estados
-                    return [...prev.filter(f => f.group !== "Estado" && !(f.group === "Municipio" && f.relatedTo)), newFilter];
-                }
-                return [...prev, filter];
-            }
-        });
-    };
-
     // Verificar conflictos entre filtros
     const checkFilterConflicts = (filter) => {
+        // Define mutually exclusive filter groups
         const exclusiveGroups = {
+            "documentos-status": ["documentos-incompletos", "documentos-completos", "documentos-pendientes", "documentos-rechazados"],
             "pagos-status": ["pagos-exonerados", "pagos-pendientes"],
+            "estado-laboral": ["laborando", "no-laborando"],
+            "genero": ["masculino", "femenino", "otros"]
         };
 
+        // Check each exclusivity group
         for (const groupName in exclusiveGroups) {
             const group = exclusiveGroups[groupName];
             if (group.includes(filter.id)) {
@@ -125,11 +102,45 @@ export default function MultiSelectFilter({
         return false;
     };
 
+    // Manejar selección/deselección de filtro
+    const toggleFilter = (filter) => {
+        const isConflicting = checkFilterConflicts(filter);
+        if (isConflicting) return;
+
+        setActiveFilters((prev) => {
+            const exists = prev.some((f) => f.id === filter.id);
+            if (exists) {
+                // Si quitamos un estado
+                if (filter.group === "Ubicación") {
+                    // Limpiamos el estado seleccionado
+                    setTimeout(() => setSelectedEstado(null), 0);
+                    // Y eliminamos solo municipios relacionados (no universidades)
+                    return prev.filter((f) => f.id !== filter.id && (f.group !== "Municipio" || !f.relatedTo));
+                }
+                return prev.filter((f) => f.id !== filter.id);
+            } else {
+                if (filter.group === "Ubicación") {
+                    // Si seleccionamos estado
+                    const newFilter = { ...filter };
+                    // Actualizamos estado seleccionado tras el render
+                    setTimeout(() => {
+                        setSelectedEstado(newFilter);
+                        // Cambiar automáticamente a municipios
+                        setActiveGroup("Municipio");
+                    }, 0);
+                    // Solo eliminamos filtros de Estado previos y municipios relacionados a otros estados
+                    return [...prev.filter(f => f.group !== "Ubicación" && !(f.group === "Municipio" && f.relatedTo)), newFilter];
+                }
+                return [...prev, filter];
+            }
+        });
+    };
+
     // Eliminar un filtro
     const removeFilter = (filterId) => {
         setActiveFilters((prev) => {
             const filter = prev.find(f => f.id === filterId);
-            if (filter?.group === "Estado") {
+            if (filter?.group === "Ubicación") {
                 // Limpiar estado seleccionado tras el render
                 setTimeout(() => setSelectedEstado(null), 0);
                 // Solo eliminar municipios relacionados, no universidades
@@ -210,8 +221,8 @@ export default function MultiSelectFilter({
 
     return (
         <div className="mb-6">
-            {/* Controles de filtros y burbujas en un solo contenedor flex */}
-            <div className="flex flex-wrap gap-2 items-center">
+            {/* Controles de filtros */}
+            <div className="flex gap-2">
                 {/* Botón Filtrar por */}
                 <div className="relative" ref={dropdownRef}>
                     <button
@@ -222,7 +233,7 @@ export default function MultiSelectFilter({
                         className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm"
                     >
                         <Filter size={18} />
-                        <span>Filtrar por</span>
+                        <span>Filtro</span>
                         <ChevronDown size={16} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
                     </button>
 
@@ -274,24 +285,114 @@ export default function MultiSelectFilter({
                                 {activeGroup && (
                                     <div className="rounded-lg bg-white shadow-md p-4 border">
                                         <h3 className="font-medium mb-2">
-                                            {activeGroup}
+                                            {activeGroup === "Municipio" && selectedEstado?.value.toLowerCase().includes('distrito') 
+                                              ? 'Parroquias' 
+                                              : activeGroup}
                                             {activeGroup === "Municipio" && selectedEstado && (
                                                 <span className="text-sm font-normal text-gray-500 ml-2">
-                                                    Estado: {selectedEstado.label}
+                                                    Ubicación: {selectedEstado.label}
                                                 </span>
                                             )}
                                         </h3>
 
-                                        {/* Caso especial para Estado */}
-                                        {activeGroup === "Estado" && (
+                                        {/* Caso especial para Edad */}
+                                        {activeGroup === "Edad" && (
+                                            <div className="p-4 col-span-3">
+                                              <h3 className="font-medium mb-2">Edad (mínimo 18 años)</h3>
+                                              <div className="flex items-center gap-4">
+                                                <div>
+                                                  <label className="block text-sm text-gray-600 mb-1">Edad exacta</label>
+                                                  <input 
+                                                    type="number" 
+                                                    min="18"
+                                                    value={edadExacta || ""}
+                                                    onChange={(e) => setEdadExacta(e.target.value)}
+                                                    className="w-24 border border-gray-300 rounded px-2 py-1"
+                                                    placeholder="Ej: 25"
+                                                  />
+                                                </div>
+                                                <div className="text-gray-500 text-sm">O</div>
+                                                <div>
+                                                  <label className="block text-sm text-gray-600 mb-1">Desde</label>
+                                                  <input 
+                                                    type="number" 
+                                                    min="18"
+                                                    value={edadMin || ""}
+                                                    onChange={(e) => setEdadMin(e.target.value)}
+                                                    className="w-24 border border-gray-300 rounded px-2 py-1"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <label className="block text-sm text-gray-600 mb-1">Hasta</label>
+                                                  <input 
+                                                    type="number" 
+                                                    min="18"
+                                                    value={edadMax || ""}
+                                                    onChange={(e) => setEdadMax(e.target.value)}
+                                                    className="w-24 border border-gray-300 rounded px-2 py-1"
+                                                  />
+                                                </div>
+                                                <button
+                                                  onClick={() => {
+                                                    // Validar edad mínima
+                                                    if ((edadExacta && edadExacta < 18) || (edadMin && edadMin < 18)) {
+                                                      alert("La edad mínima debe ser 18 años");
+                                                      return;
+                                                    }
+                                                    
+                                                    // Crea filtro por edad exacta o rango
+                                                    let filtroEdad;
+                                                    if (edadExacta) {
+                                                      filtroEdad = {
+                                                        id: `edad-${edadExacta}`,
+                                                        group: "Edad",
+                                                        label: `${edadExacta} años`,
+                                                        value: `${edadExacta}-${edadExacta}`
+                                                      };
+                                                    } else if (edadMin || edadMax) {
+                                                      // Asegurar valores mínimos
+                                                      const min = edadMin || '18';
+                                                      const max = edadMax || '';
+                                                      
+                                                      filtroEdad = {
+                                                        id: `edad-${min}-${max}`,
+                                                        group: "Edad",
+                                                        label: max ? `${min} - ${max} años` : `Desde ${min} años`,
+                                                        value: `${min}-${max}`
+                                                      };
+                                                    }
+                                                    
+                                                    // Remover filtros previos de edad
+                                                    setActiveFilters(prev => prev.filter(f => f.group !== "Edad"));
+                                                    
+                                                    // Añadir el nuevo filtro
+                                                    if (filtroEdad) {
+                                                      setActiveFilters(prev => [...prev, filtroEdad]);
+                                                    }
+                                                    
+                                                    // Limpiar campos
+                                                    setEdadExacta("");
+                                                    setEdadMin("");
+                                                    setEdadMax("");
+                                                  }}
+                                                  className="mt-4 px-4 py-1 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md"
+                                                >
+                                                  Aplicar
+                                                </button>
+                                              </div>
+                                            </div>
+                                        )}
+
+                                        {/* Caso especial para Ubicación */}
+                                        {activeGroup === "Ubicación" && (
                                             <div className="grid grid-cols-3 gap-2">
                                                 {estados
                                                     .filter(estado => !searchText ||
                                                         estado.toLowerCase().includes(searchText.toLowerCase()))
                                                     .map(estado => {
                                                         const estadoFilter = {
-                                                            id: `estado-${estado.toLowerCase().replace(/\s+/g, '-')}`,
-                                                            group: "Estado",
+                                                            id: `ubicacion-${estado.toLowerCase().replace(/\s+/g, '-')}`,
+                                                            group: "Ubicación",
                                                             label: estado,
                                                             value: estado
                                                         };
@@ -317,36 +418,45 @@ export default function MultiSelectFilter({
                                             </div>
                                         )}
 
-                                        {/* Caso especial para Municipios */}
+                                        {/* Caso especial para Municipios/Parroquias */}
                                         {activeGroup === "Municipio" && (
                                             <div className="grid grid-cols-3 gap-2">
                                                 {selectedEstado ? (
-                                                    getMunicipiosByEstado()
-                                                        .filter(municipio => !searchText ||
-                                                            municipio.label.toLowerCase().includes(searchText.toLowerCase()))
-                                                        .map(municipio => {
-                                                            const isSelected = activeFilters.some(f => f.id === municipio.id);
+                                                    <>
+                                                        <h3 className="font-medium mb-2 col-span-3">
+                                                            {selectedEstado.value.toLowerCase().includes('distrito') ? 'Parroquias' : 'Municipios'}
+                                                            <span className="text-sm font-normal text-gray-500 ml-2">
+                                                                Ubicación: {selectedEstado.label}
+                                                            </span>
+                                                        </h3>
+                                                        {getMunicipiosByEstado()
+                                                            .filter(municipio => !searchText ||
+                                                                municipio.label.toLowerCase().includes(searchText.toLowerCase()))
+                                                            .map(municipio => {
+                                                                const isSelected = activeFilters.some(f => f.id === municipio.id);
 
-                                                            return (
-                                                                <div
-                                                                    key={municipio.id}
-                                                                    onClick={() => toggleFilter(municipio)}
-                                                                    className={`flex items-center gap-1 p-2 rounded-md cursor-pointer text-sm ${isSelected
-                                                                        ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white"
-                                                                        : "bg-gray-50 hover:bg-gray-100"
-                                                                        }`}
-                                                                >
-                                                                    <div className={`h-3.5 w-3.5 border rounded flex-shrink-0 ${isSelected ? "border-white bg-white" : "border-gray-300 bg-white"
-                                                                        }`}>
-                                                                        {isSelected && <Check size={10} className="text-[#C40180]" />}
+                                                                return (
+                                                                    <div
+                                                                        key={municipio.id}
+                                                                        onClick={() => toggleFilter(municipio)}
+                                                                        className={`flex items-center gap-1 p-2 rounded-md cursor-pointer text-sm ${isSelected
+                                                                            ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white"
+                                                                            : "bg-gray-50 hover:bg-gray-100"
+                                                                            }`}
+                                                                    >
+                                                                        <div className={`h-3.5 w-3.5 border rounded flex-shrink-0 ${isSelected ? "border-white bg-white" : "border-gray-300 bg-white"
+                                                                            }`}>
+                                                                            {isSelected && <Check size={10} className="text-[#C40180]" />}
+                                                                        </div>
+                                                                        <span className="truncate">{municipio.label}</span>
                                                                     </div>
-                                                                    <span className="truncate">{municipio.label}</span>
-                                                                </div>
-                                                            );
-                                                        })
+                                                                );
+                                                            })}
+                                                    </>
                                                 ) : (
                                                     <div className="text-center py-4 text-sm text-gray-500 col-span-3">
-                                                        Seleccione un estado primero para ver los municipios disponibles
+                                                        Seleccione una ubicación primero para ver los 
+                                                        {' ' + (selectedEstado?.value.toLowerCase().includes('distrito') ? 'parroquias' : 'municipios')} disponibles
                                                     </div>
                                                 )}
                                             </div>
@@ -382,7 +492,7 @@ export default function MultiSelectFilter({
                                         )}
 
                                         {/* Otros filtros */}
-                                        {activeGroup !== "Estado" && activeGroup !== "Municipio" && activeGroup !== "Universidad" && (
+                                        {activeGroup !== "Ubicación" && activeGroup !== "Municipio" && activeGroup !== "Universidad" && activeGroup !== "Edad" && (
                                             <div className="grid grid-cols-3 gap-2">
                                                 {filterGroups[activeGroup]?.filter(filter =>
                                                     !searchText || filter.label.toLowerCase().includes(searchText.toLowerCase())
@@ -421,8 +531,10 @@ export default function MultiSelectFilter({
                     setFromDate={setFromDate}
                     setToDate={setToDate}
                 />
-
-                {/* Filtros activos como burbujas (movidos aquí) */}
+            </div>
+            {/* Filtros seleccionados como burbujas */}
+            <div className="flex flex-wrap gap-2 mb-4 mt-4">
+                {/* Burbuja de rango de fechas */}
                 {hasDateRange && (
                     <div className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
                         {fromDate && toDate
@@ -435,7 +547,7 @@ export default function MultiSelectFilter({
                         </button>
                     </div>
                 )}
-
+                
                 {activeFilters.map((filter) => (
                     <div
                         key={filter.id}

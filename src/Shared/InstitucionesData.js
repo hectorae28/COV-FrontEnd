@@ -36,17 +36,17 @@ const institucionesList = [
     name: "Laboratorio"
   },
   {
-    code: "OT",
-    name: "Otros"
-  },
-  {
     code: "PMSB",
     name: "Programas Móviles de Salud Bucal"
   },
   {
     code: "UI",
     name: "Universidades e Institutos de Investigación"
-  }
+  },
+  {
+    code: "OT",
+    name: "Otros"
+  },
 ]
 
 export default institucionesList

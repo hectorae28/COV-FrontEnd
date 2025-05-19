@@ -1,4 +1,4 @@
-import { Calendar, ChevronDown } from 'lucide-react';
+import { Calendar, ChevronDown, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function DateRangeFilter({
@@ -32,28 +32,37 @@ export default function DateRangeFilter({
 
     return (
         <div className="relative">
-            {/* Replace the nested button with a div wrapper */}
-            <div className="flex items-center">
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border shadow-sm ${hasDateRange
-                        ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
-                >
-                    <Calendar size={18} />
-                    <span>
-                        {hasDateRange
-                            ? fromDate && toDate
-                                ? `${fromDate} - ${toDate}`
-                                : fromDate
-                                    ? `Desde ${fromDate}`
-                                    : `Hasta ${toDate}`
-                            : "Rango de fechas"}
-                    </span>
-                    <ChevronDown size={16} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                </button>
-            </div>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border shadow-sm ${hasDateRange
+                    ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
+            >
+                <Calendar size={18} />
+                <span>
+                    {hasDateRange
+                        ? fromDate && toDate
+                            ? `${fromDate} - ${toDate}`
+                            : fromDate
+                                ? `Desde ${fromDate}`
+                                : `Hasta ${toDate}`
+                        : "Fecha"}
+                </span>
+                <ChevronDown size={16} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+
+                {hasDateRange && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleClear();
+                        }}
+                        className="ml-2 text-white hover:text-gray-200"
+                    >
+                        <X size={16} />
+                    </button>
+                )}
+            </button>
 
             {isOpen && (
                 <div className="absolute top-full left-0 mt-2 p-4 bg-white rounded-lg border border-gray-200 shadow-xl z-50 w-80">
