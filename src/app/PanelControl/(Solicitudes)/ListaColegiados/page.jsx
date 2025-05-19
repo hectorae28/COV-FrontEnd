@@ -64,75 +64,82 @@ export default function ListaColegiadosPage() {
   const [activeFilters, setActiveFilters] = useState([]);
 
   // Definir todos los filtros disponibles
-  const allFilters = [
-    // Estado de solvencia
-    { id: "solventes", group: "Estado de solvencia", label: "Solventes", value: "solventes" },
-    { id: "noSolventes", group: "Estado de solvencia", label: "No Solventes", value: "noSolventes" },
-    { id: "solicitudes", group: "Estado de solvencia", label: "Con Solicitudes", value: "solicitudes" },
+  // Definir todos los filtros disponibles - reorganizados
+  // Definir todos los filtros disponibles - reorganizados correctamente
+const allFilters = [
+  // Estado de solvencia
+  { id: "solventes", group: "Estado de solvencia", label: "Solventes", value: "solventes" },
+  { id: "noSolventes", group: "Estado de solvencia", label: "No Solventes", value: "noSolventes" },
+  { id: "solicitudes", group: "Estado de solvencia", label: "Con Solicitudes", value: "solicitudes" },
 
-    // Profesión - Roles principales
-    { id: "prof-odontologo", group: "Profesión", label: "Odontólogo", value: "Odontólogo" },
-    { id: "prof-tecnico", group: "Profesión", label: "Técnico Odontólogo", value: "Técnico Odontólogo" },
-    { id: "prof-higienista", group: "Profesión", label: "Higienista", value: "Higienista" },
-    
-    // Especialidad - Separada de profesión
-    { id: "especialidad-armonizacion", group: "Especialidad", label: "Armonización facial", value: "Armonización facial" },
-    { id: "especialidad-cirugia-bucal", group: "Especialidad", label: "Cirugía bucal", value: "Cirugía bucal" },
-    { id: "especialidad-cirugia-bucomaxilofacial", group: "Especialidad", label: "Cirugía bucomaxilofacial", value: "Cirugía bucomaxilofacial" },
-    { id: "especialidad-endodoncia", group: "Especialidad", label: "Endodoncia", value: "Endodoncia" },
-    { id: "especialidad-ortodoncia", group: "Especialidad", label: "Ortodoncia", value: "Ortodoncia" },
+  // Profesiones
+  { id: "prof-odontologo", group: "Profesiones", label: "Odontólogo", value: "Odontólogo" },
+  { id: "prof-tecnico", group: "Profesiones", label: "Técnico Dental", value: "Técnico Dental" },
+  { id: "prof-higienista", group: "Profesiones", label: "Higienista", value: "Higienista" },
+  
+  // Especialidad
+  { id: "especialidad-armonizacion", group: "Especialidades", label: "Armonización facial", value: "Armonización facial" },
+  { id: "especialidad-cirugia-bucal", group: "Especialidades", label: "Cirugía bucal", value: "Cirugía bucal" },
+  { id: "especialidad-cirugia-bucomaxilofacial", group: "Especialidades", label: "Cirugía bucomaxilofacial", value: "Cirugía bucomaxilofacial" },
+  { id: "especialidad-endodoncia", group: "Especialidades", label: "Endodoncia", value: "Endodoncia" },
+  { id: "especialidad-ortodoncia", group: "Especialidades", label: "Ortodoncia", value: "Ortodoncia" },
 
-    // Edad - ahora flexible
-    { id: "edad-rango", group: "Edad", label: "Edad", value: "personalizado" },
+  // Edad
+  { id: "edad-rango", group: "Edad", label: "Edad", value: "personalizado" },
 
-    // Estado laboral
-    { id: "laborando", group: "Estado laboral", label: "Laborando", value: "laborando" },
-    { id: "no-laborando", group: "Estado laboral", label: "No laborando", value: "no-laborando" },
+  // Estado laboral
+  { id: "laborando", group: "Estado laboral", label: "Laborando", value: "laborando" },
+  { id: "no-laborando", group: "Estado laboral", label: "No laborando", value: "no-laborando" },
 
-    // Género - incluye Otros
-    { id: "masculino", group: "Género", label: "Masculino", value: "M" },
-    { id: "femenino", group: "Género", label: "Femenino", value: "F" },
-    { id: "otros", group: "Género", label: "Otros", value: "O" },
+  // Género
+  { id: "masculino", group: "Género", label: "Masculino", value: "M" },
+  { id: "femenino", group: "Género", label: "Femenino", value: "F" },
+  { id: "otros", group: "Género", label: "Otros", value: "O" },
 
-    // Documentos - separado
-    { id: "documentos-incompletos", group: "Documentos", label: "Incompletos", value: "documentosIncompletos" },
-    { id: "documentos-rechazados", group: "Documentos", label: "Rechazados", value: "documentosRechazados" },
-    { id: "documentos-completos", group: "Documentos", label: "Completos", value: "documentosCompletos" },
-    { id: "documentos-pendientes", group: "Documentos", label: "Pendientes por aprobar", value: "documentosPendientes" },
+  // Documentos
+  { id: "documentos-incompletos", group: "Documentos", label: "Incompletos", value: "documentosIncompletos" },
+  { id: "documentos-rechazados", group: "Documentos", label: "Rechazados", value: "documentosRechazados" },
+  { id: "documentos-completos", group: "Documentos", label: "Completos", value: "documentosCompletos" },
+  { id: "documentos-pendientes", group: "Documentos", label: "Pendientes por aprobar", value: "documentosPendientes" },
 
-    // Pagos - separado
-    { id: "pagos-pendientes", group: "Pagos", label: "Pendientes", value: "pagosPendientes" },
-    { id: "pagos-exonerados", group: "Pagos", label: "Exonerados", value: "pagosExonerados" },
+  // Pagos - añadido Rechazado
+  { id: "pagos-pendientes", group: "Pagos", label: "Pendientes", value: "pagosPendientes" },
+  { id: "pagos-exonerados", group: "Pagos", label: "Exonerados", value: "pagosExonerados" },
+  { id: "pagos-rechazados", group: "Pagos", label: "Rechazados", value: "pagosRechazados" },
 
-    // Creado por
-    { id: "creado-admin", group: "Creado por", label: "Admin", value: "admin" },
-    { id: "creado-colegiado", group: "Creado por", label: "Colegiado", value: "colegiado" },
+  // Creado por
+  { id: "creado-admin", group: "Creado por", label: "Admin", value: "admin" },
+  { id: "creado-colegiado", group: "Creado por", label: "Colegiado", value: "colegiado" },
 
-    // Duplicados - comentado
-    // { id: "registros-duplicados", group: "Registros", label: "Duplicados", value: "duplicados" },
+  // Institución
+  { id: "inst-asp", group: "Institución", label: "Agencias de Salud Pública", value: "ASP" },
+  { id: "inst-caa", group: "Institución", label: "Centros de Atención Ambulatoria", value: "CAA" },
+  { id: "inst-cc", group: "Institución", label: "Clínicas", value: "CC" },
+  { id: "inst-cdp", group: "Institución", label: "Consultorios", value: "CDP" },
+  { id: "inst-eo", group: "Institución", label: "Escuelas y Facultades de Odontología", value: "EO" },
+  { id: "inst-fap", group: "Institución", label: "Fuerzas Armadas y Servicios Penitenciarios", value: "FAP" },
+  { id: "inst-fmd", group: "Institución", label: "Fabricación de Materiales y Equipos Dentales", value: "FMD" },
+  { id: "inst-hd", group: "Institución", label: "Hospitales", value: "HD" },
+  { id: "inst-ldc", group: "Institución", label: "Laboratorio", value: "LDC" },
+  { id: "inst-ot", group: "Institución", label: "Otros", value: "OT" },
+  { id: "inst-pmsb", group: "Institución", label: "Programas Móviles de Salud Bucal", value: "PMSB" },
+  { id: "inst-ui", group: "Institución", label: "Universidades e Institutos de Investigación", value: "UI" },
 
-    // Institución
-    { id: "inst-asp", group: "Institución", label: "Agencias de Salud Pública", value: "ASP" },
-    { id: "inst-caa", group: "Institución", label: "Centros de Atención Ambulatoria", value: "CAA" },
-    { id: "inst-cc", group: "Institución", label: "Clínicas", value: "CC" },
-    { id: "inst-cdp", group: "Institución", label: "Consultorios", value: "CDP" },
-    { id: "inst-eo", group: "Institución", label: "Escuelas y Facultades de Odontología", value: "EO" },
-    { id: "inst-fap", group: "Institución", label: "Fuerzas Armadas y Servicios Penitenciarios", value: "FAP" },
-    { id: "inst-fmd", group: "Institución", label: "Fabricación de Materiales y Equipos Dentales", value: "FMD" },
-    { id: "inst-hd", group: "Institución", label: "Hospitales", value: "HD" },
-    { id: "inst-ldc", group: "Institución", label: "Laboratorio", value: "LDC" },
-    { id: "inst-ot", group: "Institución", label: "Otros", value: "OT" },
-    { id: "inst-pmsb", group: "Institución", label: "Programas Móviles de Salud Bucal", value: "PMSB" },
-    { id: "inst-ui", group: "Institución", label: "Universidades e Institutos de Investigación", value: "UI" },
-
-    // Estados -> Ubicación (generados dinámicamente)
-    ...estados.map(estado => ({
-      id: `ubicacion-${estado.toLowerCase().replace(/\s+/g, '-')}`,
-      group: "Ubicación",
-      label: estado,
-      value: estado
-    })),
-  ];
+  // Universidad - simplemente ubicado antes de Ubicación en la lista
+  { id: "universidad-ucv", group: "Universidad", label: "Universidad Central de Venezuela (UCV)", value: "UCV" },
+  { id: "universidad-luz", group: "Universidad", label: "Universidad del Zulia (LUZ)", value: "LUZ" },
+  { id: "universidad-ula", group: "Universidad", label: "Universidad de Los Andes (ULA)", value: "ULA" },
+  { id: "universidad-usb", group: "Universidad", label: "Universidad Simón Bolívar (USB)", value: "USB" },
+  { id: "universidad-unimet", group: "Universidad", label: "Universidad Metropolitana (UNIMET)", value: "UNIMET" },
+  
+  // Estados -> Ubicación (ahora después de Universidad)
+  ...estados.map(estado => ({
+    id: `ubicacion-${estado.toLowerCase().replace(/\s+/g, '-')}`,
+    group: "Ubicación",
+    label: estado,
+    value: estado
+  })),
+];
 
   const router = useRouter();
   const initStoreAsync = async () => {
@@ -171,12 +178,12 @@ export default function ListaColegiadosPage() {
           if (filter.id === "solicitudes") filtros.tiene_solicitudes_pendientes = "true";
           break;
 
-        case "Profesión":
+        case "Profesiones":
           if (!filtros.profesiones) filtros.profesiones = [];
           filtros.profesiones.push(filter.value);
           break;
 
-        case "Especialidad":
+        case "Especialidades":
           if (!filtros.especialidades) filtros.especialidades = [];
           filtros.especialidades.push(filter.value);
           break;
@@ -205,6 +212,7 @@ export default function ListaColegiadosPage() {
         case "Pagos":
           if (filter.id === "pagos-pendientes") filtros.tiene_pago = "false";
           if (filter.id === "pagos-exonerados") filtros.pago_exonerado = "true";
+          if (filter.id === "pagos-rechazados") filtros.pago_rechazado = "true";
           break;
 
         case "Creado por":
@@ -328,16 +336,16 @@ export default function ListaColegiadosPage() {
     setTabActivo(newTab);
     setCurrentPage(1);
 
-    // No eliminamos los filtros de documentos ahora, sólo actualizamos los que corresponden
     if (newTab === "registrados") {
       // Eliminar filtros no aplicables a colegiados registrados
       setActiveFilters(prev => prev.filter(filter =>
-        filter.group !== "Documentos"  
+        filter.group !== "Documentos"
       ));
     } else {
       // Eliminar filtros no aplicables a solicitudes
       setActiveFilters(prev => prev.filter(filter =>
-        filter.group !== "Estado de solvencia"
+        filter.group !== "Estado de solvencia" &&
+        filter.group !== "Especialidades"
       ));
     }
   };
@@ -406,11 +414,11 @@ export default function ListaColegiadosPage() {
           activeFilters={activeFilters}
           setActiveFilters={setActiveFilters}
           allFilters={allFilters.filter(filter => {
-            // Mostrar todos los filtros excepto aquellos que no aplican según el tab 
             if (tabActivo === "registrados") {
               return filter.group !== "Documentos";
             } else {
-              return filter.group !== "Estado de solvencia";
+              return filter.group !== "Estado de solvencia" &&
+                filter.group !== "Especialidades";
             }
           })}
           fromDate={fromDate}
