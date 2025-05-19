@@ -240,9 +240,6 @@ export default function RegistroColegiados({
         formData.fondo_negro_titulo_bachiller
       );
     }
-    console.log(!pagarLuego&&!exonerarPagos)
-    console.log(pagarLuego,exonerarPagos);
-    
     
     (!pagarLuego&&!exonerarPagos)
       ? Form.append(
@@ -312,7 +309,7 @@ export default function RegistroColegiados({
         );
       case 2:
         return (
-          <InfoContacto formData={formData} onInputChange={handleInputChange} />
+          <InfoContacto formData={formData} onInputChange={handleInputChange} isAdmin={true} />
         );
       case 3:
         return (

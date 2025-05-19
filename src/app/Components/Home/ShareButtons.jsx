@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
     Facebook,
@@ -15,8 +15,11 @@ const ShareButtons = ({ url, title, displayMode = "row" }) => {
     const [copySuccess, setCopySuccess] = useState(false);
 
     // Si no se proporciona una URL, usar la URL actual
-    const shareUrl = url || (typeof window !== "undefined" ? window.location.href : "");
+    let shareUrl
     const shareTitle = title || "Noticia interesante";
+    useEffect(() => {
+        shareUrl = url || (typeof window !== "undefined" ? window.location.href : "");
+    },[])
 
     const handleShare = (platform) => {
         switch (platform) {

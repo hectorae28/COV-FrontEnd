@@ -58,9 +58,10 @@ export default function PagosColg({ props }) {
   const paypalAmount = calculatePaypalFee(paymentAmount);
 
   const handleSubmit = async (e) => {
+    console.log(paymentMethod)
     e.preventDefault();
     setIsSubmitting(true);
-    handlePaymentComplete({
+    handlePago({
       paymentDate,
       referenceNumber,
       paymentFile,

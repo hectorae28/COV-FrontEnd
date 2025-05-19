@@ -28,7 +28,7 @@ export default function Colegiados({ onClose, isClosing }) {
       case "forgot-password":
         return "Recuperar Contraseña";
       case "claim-account":
-        return "Acceder a mi Cuenta";
+        return "Registrar Pago";
       default:
         return "Colegiados";
     }
@@ -42,7 +42,7 @@ export default function Colegiados({ onClose, isClosing }) {
       case "forgot-password":
         return "Ingresa tu correo para recuperar tu contraseña";
       case "claim-account":
-        return "Ingresa tu número de cédula para obtener acceso a tu cuenta";
+        return "Ingrese su correo electrónico para reenviarle el enlace de pago. Asegúrese de introducir la misma dirección utilizada anteriormente.";
       default:
         return "Acceso para odontólogos adscritos al COV";
     }

@@ -444,6 +444,7 @@ export default function InfoColegiado({
               // En modo perfil, no editable
               <input
                 type="text"
+                maxLength={6}
                 value={formData.mainRegistrationNumber ? `COV-${formData.mainRegistrationNumber}` : "No especificado"}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
                 disabled
@@ -455,6 +456,7 @@ export default function InfoColegiado({
                 inputMode="numeric"
                 pattern="[0-9]*"
                 name="mainRegistrationNumber"
+                maxLength={6}
                 value={formData.mainRegistrationNumber}
                 onChange={handleNumericInput}
                 className={`w-full px-4 py-3 border ${isFieldEmpty("mainRegistrationNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
@@ -574,6 +576,7 @@ export default function InfoColegiado({
             <input
               type="text"
               value={formData.mppsRegistrationNumber || "No especificado"}
+              maxLength={6}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
               disabled
             />
@@ -585,6 +588,7 @@ export default function InfoColegiado({
               pattern="[0-9]*"
               name="mppsRegistrationNumber"
               value={formData.mppsRegistrationNumber}
+              maxLength={6}
               onChange={handleNumericInput}
               className={`w-full px-4 py-3 border ${isFieldEmpty("mppsRegistrationNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}

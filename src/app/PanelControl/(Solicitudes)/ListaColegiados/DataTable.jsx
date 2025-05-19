@@ -96,7 +96,7 @@ export default function DataTable({
                         {/* N° Registro solo para colegiados registrados */}
                         {tabActivo === "registrados" && (
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                N° Registro
+                                N° COV
                             </th>
                         )}
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
@@ -131,31 +131,20 @@ export default function DataTable({
                             >
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                     <div className="font-medium text-gray-900">
-                                        {colegiado.recaudos.persona.nombre || "-"}
+                                        {colegiado.recaudos.persona.nombre+" "+colegiado.recaudos.persona.primer_apellido || "-"}
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
                                     {colegiado.recaudos.persona.identificacion || "-"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                    {colegiado.recaudos.num_registro_principal || "-"}
+                                    {colegiado.num_cov || "-"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
                                     {obtenerFechaFormateada(colegiado.recaudos.fecha_registro_principal)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
-                                    {colegiado.especialidades.map(
-                                        (especialidad, index) => (
-                                            <div key={index}>
-                                                <span>
-                                                    {especialidad?.nombre == undefined
-                                                        ? "-"
-                                                        : especialidad?.nombre}
-                                                </span>
-                                                <br />
-                                            </div>
-                                        )
-                                    )}
+                                    {colegiado.recaudos.tipo_profesion_display}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                     <span
@@ -195,7 +184,7 @@ export default function DataTable({
                                     {obtenerFechaFormateada(pendiente.created_at)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center hidden lg:table-cell">
-                                    {pendiente.especialidad?.nombre || "-"}
+                                    {pendiente.tipo_profesion_display || "-"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                     <div className="flex flex-col sm:flex-row gap-1 justify-center items-center">

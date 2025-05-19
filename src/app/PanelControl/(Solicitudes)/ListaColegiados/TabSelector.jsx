@@ -118,7 +118,7 @@ export default function TabSelector({
                         } transition-colors`}
                     onClick={handleClickRegistrados}
                 >
-                    Registrados ({contadores.registrados})
+                    Aprobados ({contadores.registrados})
                 </button>
             </nav>
         </div>

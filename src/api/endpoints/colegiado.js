@@ -30,7 +30,6 @@ export const patchDataUsuario = async (url, body, docs=false) => {
     try {
         let headers = {};
         
-        // Si es FormData (docs=true) o si body es una instancia de FormData
         if (docs || body instanceof FormData) {
             headers = {
                 "Content-Type": "multipart/form-data",
