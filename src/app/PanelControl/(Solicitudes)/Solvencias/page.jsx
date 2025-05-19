@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import { useSolicitudesStore } from "@/store/SolicitudesStore"
 
 export default function ListaSolvencias() {
   // Estados para manejar los datos
@@ -41,11 +42,33 @@ export default function ListaSolvencias() {
   const [fechaInicio, setFechaInicio] = useState("")
   const [fechaFin, setFechaFin] = useState("")
   const [ordenFecha, setOrdenFecha] = useState("desc") // asc, desc
+  const fetchSolicitudesDeSolvencia = useSolicitudesStore((state) => state.fetchSolicitudesDeSolvencia);
+  const solicitudesDeSolvencia = useSolicitudesStore((state) => state.solicitudesDeSolvencia);
+
+  /*
+  const odernarSolicitudesDeSolvencia = (solicitudes) => {
+    const solicitudesOrdenadas = [];
+    solicitudes.forEach((solicitud) => {
+      solicitudesOrdenadas.push({
+        idColegiado: solicitud.id,
+        nombreColegiado: solicitud.nombre,
+        statusSolvencia: solicitud.solvencia_status,
+        idSolicitudSolvencia: solicitud.solicitudes_solvencia.lista[0].id,
+        statusSolicitud: solicitud.solicitudes_solvencia.lista[0].status,
+        fechaSolicitud: solicitud.solicitudes_solvencia.lista[0].fecha_solicitud,
+        costoRegularSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_regular,
+        costoEspecialSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
+        fechaExpSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
+        modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
+        grupos: solicitud.solicitudes_solvencia.lista[0].detalles.user_groups
+      });
+    });
+  }*/
 
   const getSolicitudesDeSolvencia = async () => {
         try {
-            const response = await fetchDataSolicitudes('list_solicitud_solvencias');
-            console.log(response.data);
+            await fetchSolicitudesDeSolvencia();
+            console.log("Solicitudes de solvencia:", solicitudesDeSolvencia);
         } catch (error) {
             console.error("Error fetching solicitudes:", error);
         }
