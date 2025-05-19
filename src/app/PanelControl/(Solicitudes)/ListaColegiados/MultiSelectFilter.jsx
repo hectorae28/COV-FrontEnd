@@ -210,37 +210,8 @@ export default function MultiSelectFilter({
 
     return (
         <div className="mb-6">
-            {/* Filtros seleccionados como burbujas */}
-            <div className="flex flex-wrap gap-2 mb-3">
-                {activeFilters.map((filter) => (
-                    <div
-                        key={filter.id}
-                        className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1 rounded-full text-sm flex items-center gap-1"
-                    >
-                        {filter.label}
-                        <button onClick={() => removeFilter(filter.id)} className="ml-1">
-                            <X size={16} />
-                        </button>
-                    </div>
-                ))}
-
-                {/* Burbuja de rango de fechas */}
-                {hasDateRange && (
-                    <div className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        {fromDate && toDate
-                            ? `${fromDate} - ${toDate}`
-                            : fromDate
-                                ? `Desde ${fromDate}`
-                                : `Hasta ${toDate}`}
-                        <button onClick={clearDates} className="ml-1">
-                            <X size={16} />
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            {/* Controles de filtros */}
-            <div className="flex gap-2">
+            {/* Controles de filtros y burbujas en un solo contenedor flex */}
+            <div className="flex flex-wrap gap-2 items-center">
                 {/* Botón Filtrar por */}
                 <div className="relative" ref={dropdownRef}>
                     <button
@@ -450,6 +421,32 @@ export default function MultiSelectFilter({
                     setFromDate={setFromDate}
                     setToDate={setToDate}
                 />
+
+                {/* Filtros activos como burbujas (movidos aquí) */}
+                {hasDateRange && (
+                    <div className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                        {fromDate && toDate
+                            ? `${fromDate} - ${toDate}`
+                            : fromDate
+                                ? `Desde ${fromDate}`
+                                : `Hasta ${toDate}`}
+                        <button onClick={clearDates} className="ml-1">
+                            <X size={16} />
+                        </button>
+                    </div>
+                )}
+
+                {activeFilters.map((filter) => (
+                    <div
+                        key={filter.id}
+                        className="bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                    >
+                        {filter.label}
+                        <button onClick={() => removeFilter(filter.id)} className="ml-1">
+                            <X size={16} />
+                        </button>
+                    </div>
+                ))}
             </div>
         </div>
     );

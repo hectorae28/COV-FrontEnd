@@ -1,5 +1,4 @@
 "use client"
-
 import CountryFlag from "@/Shared/CountryFlag"
 import PhoneEstData from "@/Shared/EstadoData"
 import phoneCodes from "@/Shared/TelefonoData"
@@ -56,7 +55,6 @@ export default function InfoContacto({
 
   const handleChange = (e) => {
     const { name, value } = e.target
-
     if (name === "address") {
       // Capitalizamos la primera letra de cada palabra en la dirección
       onInputChange({ [name]: capitalizeWords(value) })
@@ -69,13 +67,11 @@ export default function InfoContacto({
       } else {
         setEmailError("");
       }
-
       // Siempre notificar el cambio de email al componente padre
       onInputChange({
         [name]: value,
         emailIsValid: validateEmail(value)
       });
-
       // Actualizar el estado local según el valor de formData después del cambio
       // Esto se manejará en el useEffect que observa formData.emailVerified
     } else {
@@ -97,7 +93,6 @@ export default function InfoContacto({
         setIsCountryDropdownOpen(false)
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
@@ -118,7 +113,6 @@ export default function InfoContacto({
   useEffect(() => {
     // Actualizar el estado de verificación del correo
     setEmailIsVerified(formData.emailVerified || false)
-
     // Actualizar el estado de cambio de correo
     if (formData.emailVerified) {
       setEmailChanged(false)
@@ -131,18 +125,14 @@ export default function InfoContacto({
   // Validar formulario cuando cambia formData
   useEffect(() => {
     const requiredFields = ["email", "phoneNumber", "state", "city", "address"]
-
     // Validación de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     const isEmailValid = formData.email && emailRegex.test(formData.email)
-
     // Validación de número de teléfono
     const isPhoneValid = formData.phoneNumber && formData.phoneNumber.length >= 10
-
     // Verificar que todos los campos requeridos estén completos y válidos
     const isValid =
       requiredFields.every((field) => formData[field] && formData[field].trim() !== "") && isEmailValid && isPhoneValid
-
     setIsFormValid(isValid)
   }, [formData])
 
@@ -156,7 +146,6 @@ export default function InfoContacto({
   // Función para mostrar el estado de verificación del correo
   const renderEmailVerificationStatus = () => {
     if (isProfileEdit) return null
-
     // Si el correo ha sido verificado y no ha cambiado
     if (emailIsVerified && !emailChanged) {
       return (
@@ -168,7 +157,6 @@ export default function InfoContacto({
         </div>
       )
     }
-
     // Si el correo fue verificado pero ha cambiado
     if (emailChanged) {
       return (
@@ -185,7 +173,6 @@ export default function InfoContacto({
         </div>
       )
     }
-
     // Si el correo no ha sido verificado
     return (
       <div className="mt-2 flex items-center text-gray-400">
@@ -207,6 +194,10 @@ export default function InfoContacto({
       </div>
     )
   }
+
+  // Determinar si mostrar "Parroquias" en lugar de "Municipio"
+  const isDistritoCapital = formData.state && formData.state.toLowerCase() === "distrito capital";
+  const municipioLabel = isDistritoCapital ? "Parroquia" : "Municipio";
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="space-y-6">
@@ -258,7 +249,6 @@ export default function InfoContacto({
         {/* Mostrar el estado de verificación del correo */}
         {renderEmailVerificationStatus()}
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -283,7 +273,6 @@ export default function InfoContacto({
                 <span className="mx-1">{formData.countryCode || "+58"}</span>
                 <ChevronDown size={16} className="ml-1" />
               </button>
-
               {isCountryDropdownOpen && (
                 <div className="absolute left-0 z-10 mt-1 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 max-h-80 overflow-y-auto">
                   <div className="p-2 border-b">
@@ -328,7 +317,6 @@ export default function InfoContacto({
                 </div>
               )}
             </div>
-
             {/* Input para número de teléfono */}
             <input
               type="tel"
@@ -367,11 +355,9 @@ export default function InfoContacto({
           </div>
         </div>
       </div>
-
       {/* Sección de Dirección de habitación */}
       <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
         <h3 className="text-lg font-medium text-[#41023B] mb-4">Dirección de habitación</h3>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Estado */}
           <div>
@@ -393,11 +379,10 @@ export default function InfoContacto({
             </select>
             {isFieldEmpty("state") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
           </div>
-
-          {/* Municipio (antes Ciudad) */}
+          {/* Municipio o Parroquia según el estado seleccionado */}
           <div>
             <label className="block mb-2 text-sm font-medium text-[#41023B]">
-              Municipio <span className="text-red-500">*</span>
+              {municipioLabel} <span className="text-red-500">*</span>
             </label>
             <select
               name="city" // Mantenemos el mismo nombre en el formData pero cambiamos el label
@@ -406,7 +391,7 @@ export default function InfoContacto({
               className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${!formData.state ? "bg-white" : ""}`}
               disabled={!formData.state}
             >
-              <option value="">Seleccionar Municipio</option>
+              <option value="">{`Seleccionar ${municipioLabel}`}</option>
               {cities.map((city) => (
                 <option key={city} value={city.toLowerCase()}>
                   {city}
@@ -416,7 +401,6 @@ export default function InfoContacto({
             {isFieldEmpty("city") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
           </div>
         </div>
-
         {/* Dirección específica */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B]">
