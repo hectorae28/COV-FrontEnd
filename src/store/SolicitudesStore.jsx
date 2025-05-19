@@ -301,12 +301,28 @@ export const useSolicitudesStore = create((set, get) => ({
       });
       
       const res = await fetchSolicitudes("list_solicitud_solvencias", params);
+      const solicitudesOrdenadas = [];
+      res.data.results.forEach((solicitud) => {
+      solicitudesOrdenadas.push({
+          idColegiado: solicitud.id,
+          nombreColegiado: solicitud.nombre,
+          statusSolvencia: solicitud.solvencia_status,
+          idSolicitudSolvencia: solicitud.solicitudes_solvencia.lista[0].id,
+          statusSolicitud: solicitud.solicitudes_solvencia.lista[0].status,
+          fechaSolicitud: solicitud.solicitudes_solvencia.lista[0].fecha_solicitud,
+          costoRegularSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_regular,
+          costoEspecialSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
+          fechaExpSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
+          modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
+          grupos: solicitud.solicitudes_solvencia.lista[0].detalles.user_groups
+        });
+      });
       set({
-        solicitudesDeSolvencia: res.data.results,
+        solicitudesDeSolvencia: solicitudesOrdenadas,
         solicitudesDeSolvenciaPagination: res.data,
         loading: false
       });
-      return res.data;
+      return solicitudesOrdenadas;
     } catch (error) {
       set({ 
         loading: false, 
