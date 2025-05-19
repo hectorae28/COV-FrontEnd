@@ -6,6 +6,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
   const [isFormValid, setIsFormValid] = useState(false);
   const [isAdult, setIsAdult] = useState(true);
   const [identityCardError, setIdentityCardError] = useState("");
+  const [passportError, setPassportError] = useState("");
   const [days, setDays] = useState([]);
 
   // Constantes para los meses en español
@@ -54,6 +55,13 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     return regex.test(value);
   };
 
+  // Función para validar formato de pasaporte
+  const validatePassport = (passport) => {
+    // Validar formato de pasaporte: una letra seguida de 6-9 dígitos
+    const regex = /^[A-Z][0-9]{6,9}$/;
+    return regex.test(passport);
+  };
+
   // Actualizar días según el mes y año seleccionados
   useEffect(() => {
     if (birthDateParts.month && birthDateParts.year) {
@@ -62,7 +70,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         parseInt(birthDateParts.month),
         0
       ).getDate();
-
       const daysArray = Array.from({ length: daysInMonth }, (_, i) => {
         const day = i + 1;
         return {
@@ -70,9 +77,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           label: day.toString()
         };
       });
-
       setDays(daysArray);
-
       // Si el día seleccionado es mayor que los días disponibles en el mes, resetear el día
       if (birthDateParts.day && parseInt(birthDateParts.day) > daysInMonth) {
         setBirthDateParts(prev => ({ ...prev, day: "" }));
@@ -90,15 +95,18 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       // No bloqueamos la entrada si hay espacios dobles
       processedValue = value.replace(/\s{2,}/g, ' ');
       processedValue = capitalizeText(processedValue);
-
       // Solo retornamos si hay caracteres no permitidos (que no sean espacios)
       if (processedValue && !validateNameChars(processedValue)) {
         return;
       }
     }
 
-    // Si es el campo de pasaporte, permitir solo números
+    // Modificar la validación para pasaporte: permitir formato alfanumérico
     if (name === "identityCard" && formData.documentType === "pasaporte") {
+      // Permitir letras y números para pasaporte, convertir letras a mayúsculas
+      processedValue = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    } else if (name === "identityCard" && formData.documentType === "cedula") {
+      // Para cédula, solo permitir números
       processedValue = value.replace(/\D/g, "");
     }
 
@@ -111,14 +119,28 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         identityCard: "",
         idType: value === "cedula" ? "V" : ""
       });
+      // Limpiar errores al cambiar de tipo de documento
+      setIdentityCardError("");
+      setPassportError("");
     }
 
     // Validate identity card length when it changes
-    if (name === "identityCard" && formData.documentType === "cedula") {
-      if (value.length > 0 && (value.length < 7 || value.length > 8)) {
-        setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
-      } else {
-        setIdentityCardError("");
+    if (name === "identityCard") {
+      if (formData.documentType === "cedula") {
+        if (value.length > 0 && (value.length < 7 || value.length > 8)) {
+          setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
+        } else {
+          setIdentityCardError("");
+        }
+      } else if (formData.documentType === "pasaporte") {
+        // Validar formato de pasaporte
+        if (processedValue.length > 0 && (processedValue.length < 7 || processedValue.length > 10)) {
+          setPassportError("El pasaporte debe tener entre 7 y 10 caracteres");
+        } else if (processedValue.length > 0 && !/^[A-Z][0-9]{6,9}$/.test(processedValue)) {
+          setPassportError("Formato inválido. Debe ser una letra seguida de 6-9 dígitos");
+        } else {
+          setPassportError("");
+        }
       }
     }
 
@@ -128,9 +150,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         ...birthDateParts,
         [name.replace("birthDate", "").toLowerCase()]: value
       };
-
       setBirthDateParts(newBirthDateParts);
-
       // Si tenemos las tres partes, construir la fecha completa
       if (newBirthDateParts.year && newBirthDateParts.month && newBirthDateParts.day) {
         const fullDate = `${newBirthDateParts.year}-${newBirthDateParts.month}-${newBirthDateParts.day}`;
@@ -189,15 +209,26 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       "maritalStatus"
     ];
 
-    // Check if identity card meets the length requirement for cédula
+    // Validar cédula o pasaporte según el tipo de documento
     let isIdentityCardValid = true;
+    
     if (formData.documentType === "cedula" && formData.identityCard) {
       isIdentityCardValid = formData.identityCard.length >= 7 && formData.identityCard.length <= 8;
-
       if (!isIdentityCardValid) {
         setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
       } else {
         setIdentityCardError("");
+      }
+    } else if (formData.documentType === "pasaporte" && formData.identityCard) {
+      // Validar formato de pasaporte
+      if (formData.identityCard.length < 7 || formData.identityCard.length > 10) {
+        setPassportError("El pasaporte debe tener entre 7 y 10 caracteres");
+        isIdentityCardValid = false;
+      } else if (!/^[A-Z][0-9]{6,9}$/.test(formData.identityCard)) {
+        setPassportError("Formato inválido. Debe ser una letra seguida de 6-9 dígitos");
+        isIdentityCardValid = false;
+      } else {
+        setPassportError("");
       }
     }
 
@@ -242,8 +273,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 name="documentType"
                 value={formData.documentType}
                 onChange={handleChange}
-                className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("documentType") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                className={`cursor-pointer w-full px-4 py-3 border ${
+                  isFieldEmpty("documentType") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
               >
                 <option value="" disabled>
                   Tipo de Documento
@@ -271,6 +303,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
+
         {/* Identity Card / Passport */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -288,18 +321,27 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           ) : (
             // En modo normal, editable según tipo de documento
             isPasaporte ? (
-              // Caso Pasaporte: Solo campo de texto para el número
-              <input
-                type="text"
-                name="identityCard"
-                value={formData.identityCard}
-                maxLength={15}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"
+              // Caso Pasaporte: Campo de texto para formato alfanumérico
+              <div>
+                <input
+                  type="text"
+                  name="identityCard"
+                  value={formData.identityCard}
+                                   maxLength={10}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 border ${
+                    isFieldEmpty("identityCard") || passportError ? "border-red-500 bg-red-50" : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                placeholder="Ingrese Pasaporte"
-                style={{ height: "48px" }}
-              />
+                  placeholder="Ej: A1234567"
+                  style={{ height: "48px" }}
+                />
+                {passportError && (
+                  <p className="mt-1 text-xs text-red-500">{passportError}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Formato: una letra seguida de 6-9 dígitos (Ej: A1234567)
+                </p>
+              </div>
             ) : (
               // Caso Cédula: Selector de V/E + campo numérico
               <div className="flex items-center relative">
@@ -328,8 +370,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                     const value = e.target.value.replace(/\D/g, "");
                     handleChange({ target: { name: "identityCard", value } });
                   }}
-                  className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") || identityCardError ? "border-red-500 bg-red-50" : "border-gray-200"
-                    } rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                  className={`w-full px-4 py-3 border ${
+                    isFieldEmpty("identityCard") || identityCardError ? "border-red-500 bg-red-50" : "border-gray-200"
+                  } rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
                   placeholder="Ingrese su número de cédula"
                   style={{ height: "48px" }}
                 />
@@ -370,8 +413,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("firstName") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+              className={`w-full px-4 py-3 border ${
+                isFieldEmpty("firstName") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
               placeholder="Ingrese su primer nombre"
             />
           )}
@@ -397,6 +441,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           />
         </div>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* First Last Name */}
         <div>
@@ -419,8 +464,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               name="firstLastName"
               value={formData.firstLastName || ""}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("firstLastName") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+              className={`w-full px-4 py-3 border ${
+                isFieldEmpty("firstLastName") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
               placeholder="Ingrese su primer apellido"
             />
           )}
@@ -462,8 +508,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 name="birthDateYear"
                 value={birthDateParts.year}
                 onChange={handleChange}
-                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                className={`cursor-pointer w-full px-2 py-3 border ${
+                  isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
               >
                 <option value="" disabled>
                   Año
@@ -484,15 +531,15 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 </svg>
               </div>
             </div>
-
             {/* Selector de mes */}
             <div className="relative">
               <select
                 name="birthDateMonth"
                 value={birthDateParts.month}
                 onChange={handleChange}
-                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                className={`cursor-pointer w-full px-2 py-3 border ${
+                  isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
               >
                 <option value="" disabled>
                   Mes
@@ -513,15 +560,15 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 </svg>
               </div>
             </div>
-
             {/* Selector de día */}
             <div className="relative">
               <select
                 name="birthDateDay"
                 value={birthDateParts.day}
                 onChange={handleChange}
-                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                className={`cursor-pointer w-full px-2 py-3 border ${
+                  isFieldEmpty("birthDate") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
               >
                 <option value="" disabled>
                   Día
@@ -562,8 +609,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("gender") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              className={`cursor-pointer w-full px-4 py-3 border ${
+                isFieldEmpty("gender") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="" disabled>
                 Seleccionar Género
@@ -598,8 +646,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
               name="maritalStatus"
               value={formData.maritalStatus}
               onChange={handleChange}
-              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("maritalStatus") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              className={`cursor-pointer w-full px-4 py-3 border ${
+                isFieldEmpty("maritalStatus") ? "border-red-500 bg-red-50" : "border-gray-200"
+              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
             >
               <option value="" disabled>
                 Seleccionar Estado Civil

@@ -10,7 +10,8 @@ export default function EventForm({
     handleSave,
     isCreating,
     handleNewItem,
-    tabIndex
+    tabIndex,
+    isInline = false
 }) {
     const [imageType, setImageType] = useState("file");
     const [imageUrl, setImageUrl] = useState(formValues.image || "");
@@ -68,19 +69,11 @@ export default function EventForm({
     };
 
     return (
-        <div className="bg-white p-5 rounded-xl shadow-md">
+        <div className={`bg-white ${!isInline && 'p-5 rounded-xl shadow-md'}`}>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800">
-                    {isCreating ? "Crear nuevo" : "Editar"} {tabIndex === 0 ? "evento" : "curso"}
+                    Vista Previa
                 </h2>
-                {!isCreating && (
-                    <button
-                        onClick={handleNewItem}
-                        className="flex items-center gap-1 text-sm bg-[#C40180] text-white px-3 py-1.5 rounded-md hover:bg-[#a80166] transition-colors"
-                    >
-                        <FiPlus /> Nuevo
-                    </button>
-                )}
             </div>
 
             <div className="mb-6">
