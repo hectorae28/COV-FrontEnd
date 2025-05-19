@@ -16,6 +16,58 @@ export default function InfoColegiado({
   const [nombreUniversidad, setNombreUniversidad] = useState("");
   const [acronimoUniversidad, setAcronimoUniversidad] = useState("");
 
+  // Añadir estados para las partes de las fechas
+  const [mppsDateParts, setMppsDateParts] = useState({
+    day: formData.mppsRegistrationDate ? formData.mppsRegistrationDate.split('-')[2] : "",
+    month: formData.mppsRegistrationDate ? formData.mppsRegistrationDate.split('-')[1] : "",
+    year: formData.mppsRegistrationDate ? formData.mppsRegistrationDate.split('-')[0] : ""
+  });
+
+  const [titleDateParts, setTitleDateParts] = useState({
+    day: formData.titleIssuanceDate ? formData.titleIssuanceDate.split('-')[2] : "",
+    month: formData.titleIssuanceDate ? formData.titleIssuanceDate.split('-')[1] : "",
+    year: formData.titleIssuanceDate ? formData.titleIssuanceDate.split('-')[0] : ""
+  });
+
+  const [mainRegDateParts, setMainRegDateParts] = useState({
+    day: formData.mainRegistrationDate ? formData.mainRegistrationDate.split('-')[2] : "",
+    month: formData.mainRegistrationDate ? formData.mainRegistrationDate.split('-')[1] : "",
+    year: formData.mainRegistrationDate ? formData.mainRegistrationDate.split('-')[0] : ""
+  });
+
+  // Generar arrays para los selectores
+  const years = Array.from({ length: 80 }, (_, i) => {
+    const year = new Date().getFullYear() - i;
+    return { value: year.toString(), label: year.toString() };
+  });
+
+  const months = [
+    { value: "01", label: "Enero" },
+    { value: "02", label: "Febrero" },
+    { value: "03", label: "Marzo" },
+    { value: "04", label: "Abril" },
+    { value: "05", label: "Mayo" },
+    { value: "06", label: "Junio" },
+    { value: "07", label: "Julio" },
+    { value: "08", label: "Agosto" },
+    { value: "09", label: "Septiembre" },
+    { value: "10", label: "Octubre" },
+    { value: "11", label: "Noviembre" },
+    { value: "12", label: "Diciembre" }
+  ];
+
+  const getDaysInMonth = (year, month) => {
+    if (!year || !month) return [];
+    const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const day = i + 1;
+      return {
+        value: day < 10 ? `0${day}` : day.toString(),
+        label: day.toString()
+      };
+    });
+  };
+
   // Manejador general para campos que no requieren formato especial
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -130,6 +182,42 @@ export default function InfoColegiado({
     // Filtrar para permitir solo dígitos
     const numericValue = value.replace(/\D/g, '');
     onInputChange({ [name]: numericValue });
+  };
+
+  // Para manejar cambios en los selectores de fecha MPPS
+  const handleMppsDateChange = (field, value) => {
+    const newDateParts = { ...mppsDateParts, [field]: value };
+    setMppsDateParts(newDateParts);
+
+    // Si tenemos las tres partes, actualizar la fecha completa
+    if (newDateParts.year && newDateParts.month && newDateParts.day) {
+      const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
+      onInputChange({ mppsRegistrationDate: fullDate });
+    }
+  };
+
+  // Para manejar cambios en los selectores de fecha de título
+  const handleTitleDateChange = (field, value) => {
+    const newDateParts = { ...titleDateParts, [field]: value };
+    setTitleDateParts(newDateParts);
+
+    // Si tenemos las tres partes, actualizar la fecha completa
+    if (newDateParts.year && newDateParts.month && newDateParts.day) {
+      const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
+      onInputChange({ titleIssuanceDate: fullDate });
+    }
+  };
+
+  // Para manejar cambios en los selectores de fecha de registro principal
+  const handleMainRegDateChange = (field, value) => {
+    const newDateParts = { ...mainRegDateParts, [field]: value };
+    setMainRegDateParts(newDateParts);
+
+    // Si tenemos las tres partes, actualizar la fecha completa
+    if (newDateParts.year && newDateParts.month && newDateParts.day) {
+      const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
+      onInputChange({ mainRegistrationDate: fullDate });
+    }
   };
 
   // Checks if a field has validation errors to display the required message
@@ -396,15 +484,72 @@ export default function InfoColegiado({
                   disabled
                 />
               ) : (
-                // En modo normal, editable
-                <input
-                  type="date"
-                  name="mainRegistrationDate"
-                  value={formData.mainRegistrationDate}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"
-                    } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
-                />
+                // En modo normal, editable con selectores
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Selector de año */}
+                  <div className="relative">
+                    <select
+                      value={mainRegDateParts.year}
+                      onChange={(e) => handleMainRegDateChange('year', e.target.value)}
+                      className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                    >
+                      <option value="">Año</option>
+                      {years.map(year => (
+                        <option key={`mainreg-year-${year.value}`} value={year.value}>
+                          {year.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Selector de mes */}
+                  <div className="relative">
+                    <select
+                      value={mainRegDateParts.month}
+                      onChange={(e) => handleMainRegDateChange('month', e.target.value)}
+                      className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                    >
+                      <option value="">Mes</option>
+                      {months.map(month => (
+                        <option key={`mainreg-month-${month.value}`} value={month.value}>
+                          {month.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Selector de día */}
+                  <div className="relative">
+                    <select
+                      value={mainRegDateParts.day}
+                      onChange={(e) => handleMainRegDateChange('day', e.target.value)}
+                      disabled={!mainRegDateParts.year || !mainRegDateParts.month}
+                      className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                    >
+                      <option value="">Día</option>
+                      {getDaysInMonth(mainRegDateParts.year, mainRegDateParts.month).map(day => (
+                        <option key={`mainreg-day-${day.value}`} value={day.value}>
+                          {day.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
             {isProfileEdit && (
@@ -468,15 +613,72 @@ export default function InfoColegiado({
                 disabled
               />
             ) : (
-              // En modo normal, editable
-              <input
-                type="date"
-                name="mppsRegistrationDate"
-                value={formData.mppsRegistrationDate}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border ${isFieldEmpty("mppsRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
-              />
+              // En modo normal, editable con selectores
+              <div className="grid grid-cols-3 gap-2">
+                {/* Selector de año */}
+                <div className="relative">
+                  <select
+                    value={mppsDateParts.year}
+                    onChange={(e) => handleMppsDateChange('year', e.target.value)}
+                    className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mppsRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                  >
+                    <option value="">Año</option>
+                    {years.map(year => (
+                      <option key={`mpps-year-${year.value}`} value={year.value}>
+                        {year.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Selector de mes */}
+                <div className="relative">
+                  <select
+                    value={mppsDateParts.month}
+                    onChange={(e) => handleMppsDateChange('month', e.target.value)}
+                    className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mppsRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                  >
+                    <option value="">Mes</option>
+                    {months.map(month => (
+                      <option key={`mpps-month-${month.value}`} value={month.value}>
+                        {month.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Selector de día */}
+                <div className="relative">
+                  <select
+                    value={mppsDateParts.day}
+                    onChange={(e) => handleMppsDateChange('day', e.target.value)}
+                    disabled={!mppsDateParts.year || !mppsDateParts.month}
+                    className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mppsRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                  >
+                    <option value="">Día</option>
+                    {getDaysInMonth(mppsDateParts.year, mppsDateParts.month).map(day => (
+                      <option key={`mpps-day-${day.value}`} value={day.value}>
+                        {day.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
           {isProfileEdit && (
@@ -495,41 +697,103 @@ export default function InfoColegiado({
           <span className="text-red-500 ml-1">*</span>
         </label>
         <div className="relative">
-          <input
-            type="date"
-            name="titleIssuanceDate"
-            value={formData.titleIssuanceDate}
-            onChange={handleChange}
-            onFocus={() => setShowTitleDateWarning(true)}
-            onBlur={() => setShowTitleDateWarning(false)}
-            className={`w-full px-4 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] text-gray-700`}
-          />
-        </div>
-        {isFieldEmpty("titleIssuanceDate") && (
-          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-        )}
-
-        {/* Warning message that appears when date field is focused */}
-        {showTitleDateWarning && (
-          <div className="absolute z-10 mt-2 w-full sm:w-80 md:w-96 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r shadow-md">
-            <div className="flex items-center">
-              <AlertTriangle
-                className="text-yellow-500 mr-2 flex-shrink-0"
-                size={20}
-              />
-              <h3 className="text-sm font-semibold text-yellow-800">
-                ¡Atención Colegiado!
-              </h3>
+          {/* Selectores para fecha de emisión de título */}
+          <div className="grid grid-cols-3 gap-2">
+            {/* Selector de año */}
+            <div className="relative">
+              <select
+                value={titleDateParts.year}
+                onChange={(e) => handleTitleDateChange('year', e.target.value)}
+                onFocus={() => setShowTitleDateWarning(true)}
+                onBlur={() => setShowTitleDateWarning(false)}
+                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              >
+                <option value="">Año</option>
+                {years.map(year => (
+                  <option key={`title-year-${year.value}`} value={year.value}>
+                    {year.label}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
             </div>
-            <p className="mt-1 text-yellow-700 text-xs">
-              La fecha de emisión del título es importante y aparecerá en
-              documentos oficiales. Verifique que la información proporcionada
-              sea precisa.
-            </p>
+
+            {/* Selector de mes */}
+            <div className="relative">
+              <select
+                value={titleDateParts.month}
+                onChange={(e) => handleTitleDateChange('month', e.target.value)}
+                onFocus={() => setShowTitleDateWarning(true)}
+                onBlur={() => setShowTitleDateWarning(false)}
+                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              >
+                <option value="">Mes</option>
+                {months.map(month => (
+                  <option key={`title-month-${month.value}`} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Selector de día */}
+            <div className="relative">
+              <select
+                value={titleDateParts.day}
+                onChange={(e) => handleTitleDateChange('day', e.target.value)}
+                onFocus={() => setShowTitleDateWarning(true)}
+                onBlur={() => setShowTitleDateWarning(false)}
+                disabled={!titleDateParts.year || !titleDateParts.month}
+                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              >
+                <option value="">Día</option>
+                {getDaysInMonth(titleDateParts.year, titleDateParts.month).map(day => (
+                  <option key={`title-day-${day.value}`} value={day.value}>
+                    {day.label}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
-    </motion.div>
+      {isFieldEmpty("titleIssuanceDate") && (
+        <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+      )}
+
+      {/* Warning message that appears when date field is focused */}
+      {showTitleDateWarning && (
+        <div className="absolute z-10 mt-2 w-full sm:w-80 md:w-96 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r shadow-md">
+          <div className="flex items-center">
+            <AlertTriangle
+              className="text-yellow-500 mr-2 flex-shrink-0"
+              size={20}
+            />
+            <h3 className="text-sm font-semibold text-yellow-800">
+              ¡Atención Colegiado!
+            </h3>
+          </div>
+          <p className="mt-1 text-yellow-700 text-xs">
+            La fecha de emisión del título es importante y aparecerá en
+            documentos oficiales. Verifique que la información proporcionada
+            sea precisa.
+          </p>
+        </div>
+      )}
+    </motion.div >
   );
 }

@@ -49,20 +49,20 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
 
   // Función para validar caracteres en nombres y apellidos
   const validateNameChars = (value) => {
-  // Usamos una expresión regular más permisiva que acepte letras, apóstrofes y espacios
-  const regex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ'\s]+$/;
-  return regex.test(value);
-};
+    // Usamos una expresión regular más permisiva que acepte letras, apóstrofes y espacios
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ'\s]+$/;
+    return regex.test(value);
+  };
 
   // Actualizar días según el mes y año seleccionados
   useEffect(() => {
     if (birthDateParts.month && birthDateParts.year) {
       const daysInMonth = new Date(
-        parseInt(birthDateParts.year), 
-        parseInt(birthDateParts.month), 
+        parseInt(birthDateParts.year),
+        parseInt(birthDateParts.month),
         0
       ).getDate();
-      
+
       const daysArray = Array.from({ length: daysInMonth }, (_, i) => {
         const day = i + 1;
         return {
@@ -70,9 +70,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           label: day.toString()
         };
       });
-      
+
       setDays(daysArray);
-      
+
       // Si el día seleccionado es mayor que los días disponibles en el mes, resetear el día
       if (birthDateParts.day && parseInt(birthDateParts.day) > daysInMonth) {
         setBirthDateParts(prev => ({ ...prev, day: "" }));
@@ -86,16 +86,21 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
 
     // Aplicar capitalización y validación según el campo
     if (["firstName", "secondName", "firstLastName", "secondLastName"].includes(name)) {
-  // Permitimos escribir espacios, pero eliminamos espacios dobles al procesar
-  // No bloqueamos la entrada si hay espacios dobles
-  processedValue = value.replace(/\s{2,}/g, ' ');
-  processedValue = capitalizeText(processedValue);
-  
-  // Solo retornamos si hay caracteres no permitidos (que no sean espacios)
-  if (processedValue && !validateNameChars(processedValue)) {
-    return;
-  }
-}
+      // Permitimos escribir espacios, pero eliminamos espacios dobles al procesar
+      // No bloqueamos la entrada si hay espacios dobles
+      processedValue = value.replace(/\s{2,}/g, ' ');
+      processedValue = capitalizeText(processedValue);
+
+      // Solo retornamos si hay caracteres no permitidos (que no sean espacios)
+      if (processedValue && !validateNameChars(processedValue)) {
+        return;
+      }
+    }
+
+    // Si es el campo de pasaporte, permitir solo números
+    if (name === "identityCard" && formData.documentType === "pasaporte") {
+      processedValue = value.replace(/\D/g, "");
+    }
 
     onInputChange({ [name]: processedValue });
 
@@ -123,9 +128,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         ...birthDateParts,
         [name.replace("birthDate", "").toLowerCase()]: value
       };
-      
+
       setBirthDateParts(newBirthDateParts);
-      
+
       // Si tenemos las tres partes, construir la fecha completa
       if (newBirthDateParts.year && newBirthDateParts.month && newBirthDateParts.day) {
         const fullDate = `${newBirthDateParts.year}-${newBirthDateParts.month}-${newBirthDateParts.day}`;
@@ -441,7 +446,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           />
         </div>
       </div>
-      
+
       {/* Nueva fila con tres columnas para fecha de nacimiento, género y estado civil */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Fecha de Nacimiento (con selectores separados) */}
@@ -479,7 +484,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 </svg>
               </div>
             </div>
-            
+
             {/* Selector de mes */}
             <div className="relative">
               <select
@@ -508,7 +513,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 </svg>
               </div>
             </div>
-            
+
             {/* Selector de día */}
             <div className="relative">
               <select
@@ -545,7 +550,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Debe ser mayor de edad (18 años o más)</p>
           )}
         </div>
-        
+
         {/* Género */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -581,7 +586,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        
+
         {/* Estado Civil */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">

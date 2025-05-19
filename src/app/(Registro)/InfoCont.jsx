@@ -30,6 +30,7 @@ export default function InfoContacto({
   const [emailIsVerified, setEmailIsVerified] = useState(formData.emailVerified || false)
   const [originalEmail, setOriginalEmail] = useState(formData.email || "")
   const [emailChanged, setEmailChanged] = useState(false)
+  const [emailError, setEmailError] = useState("")
   const dropdownRef = useRef(null)
 
   // Ordenamos los códigos telefónicos alfabéticamente por nombre de país
@@ -47,6 +48,12 @@ export default function InfoContacto({
     )
   }, [sortedPhoneCodes, searchTerm])
 
+  // Función para validar formato de correo electrónico
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target
 
@@ -56,9 +63,18 @@ export default function InfoContacto({
     } else if (name === "state") {
       onInputChange({ [name]: value, city: "" })
     } else if (name === "email") {
+      // Validar formato de correo electrónico
+      if (value && !validateEmail(value)) {
+        setEmailError("Ingrese un correo electrónico válido");
+      } else {
+        setEmailError("");
+      }
+
       // Siempre notificar el cambio de email al componente padre
-      // El componente padre determinará si ya está verificado o no
-      onInputChange({ [name]: value })
+      onInputChange({
+        [name]: value,
+        emailIsValid: validateEmail(value)
+      });
 
       // Actualizar el estado local según el valor de formData después del cambio
       // Esto se manejará en el useEffect que observa formData.emailVerified
@@ -220,11 +236,11 @@ export default function InfoContacto({
                 name="email"
                 value={formData.email || ""}
                 onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("email")
-                    ? "border-red-500 bg-red-50"
-                    : emailIsVerified && !emailChanged
-                      ? "border-green-300"
-                      : "border-gray-200"
+                className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("email") || emailError
+                  ? "border-red-500 bg-red-50"
+                  : emailIsVerified && !emailChanged
+                    ? "border-green-300"
+                    : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
                 placeholder="ejemplo@correo.com"
               />
@@ -235,6 +251,9 @@ export default function InfoContacto({
         {isProfileEdit && <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>}
         {isFieldEmpty("email") && !isProfileEdit && (
           <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+        )}
+        {emailError && !isProfileEdit && (
+          <p className="mt-1 text-xs text-red-500">{emailError}</p>
         )}
         {/* Mostrar el estado de verificación del correo */}
         {renderEmailVerificationStatus()}
@@ -349,21 +368,21 @@ export default function InfoContacto({
         </div>
       </div>
 
-      {/* State and City */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* State */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            Estado
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="relative">
+      {/* Sección de Dirección de habitación */}
+      <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+        <h3 className="text-lg font-medium text-[#41023B] mb-4">Dirección de habitación</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Estado */}
+          <div>
+            <label className="block mb-2 text-sm font-medium text-[#41023B]">
+              Estado <span className="text-red-500">*</span>
+            </label>
             <select
               name="state"
               value={formData.state || ""}
               onChange={handleChange}
-              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+              className={`w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none`}
             >
               <option value="">Seleccionar Estado</option>
               {venezuelanStates.map((state) => (
@@ -372,63 +391,49 @@ export default function InfoContacto({
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
+            {isFieldEmpty("state") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
           </div>
-          {isFieldEmpty("state") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
-        </div>
-        {/* Ciudad - depende del estado seleccionado */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            Ciudad
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="relative">
+
+          {/* Municipio (antes Ciudad) */}
+          <div>
+            <label className="block mb-2 text-sm font-medium text-[#41023B]">
+              Municipio <span className="text-red-500">*</span>
+            </label>
             <select
-              name="city"
+              name="city" // Mantenemos el mismo nombre en el formData pero cambiamos el label
               value={formData.city || ""}
               onChange={handleChange}
-              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700 ${!formData.state ? "bg-white" : ""}`}
+              className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${!formData.state ? "bg-white" : ""}`}
+              disabled={!formData.state}
             >
-              <option value="">Seleccionar Ciudad</option>
+              <option value="">Seleccionar Municipio</option>
               {cities.map((city) => (
                 <option key={city} value={city.toLowerCase()}>
                   {city}
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
+            {isFieldEmpty("city") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
           </div>
-          {isFieldEmpty("city") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
         </div>
-      </div>
 
-      {/* Home Address - Capitaliza la primera letra de cada palabra */}
-      <div>
-        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-          Dirección de Habitación
-          <span className="text-red-500 ml-1">*</span>
-        </label>
-        <div className="relative">
-          <textarea
-            name="address"
-            value={formData.address || ""}
-            onChange={handleChange}
-            className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("address") ? "border-red-500 bg-red-50" : "border-gray-200"
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] min-h-[100px]`}
-            placeholder="Ingrese su dirección completa"
-          />
-          <MapPin className="absolute left-3 top-4 text-gray-400" />
+        {/* Dirección específica */}
+        <div>
+          <label className="block mb-2 text-sm font-medium text-[#41023B]">
+            Dirección <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <textarea
+              name="address"
+              value={formData.address || ""}
+              onChange={handleChange}
+              className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("address") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] min-h-[100px]`}
+              placeholder="Ingrese su dirección completa"
+            />
+            <MapPin className="absolute left-3 top-4 text-gray-400" />
+          </div>
+          {isFieldEmpty("address") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
         </div>
-        {isFieldEmpty("address") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
       </div>
     </motion.div>
   )

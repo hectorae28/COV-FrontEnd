@@ -2,16 +2,17 @@
 import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado";
 import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
 import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal";
+import { estados } from "@/Shared/UniversidadData";
 import useDataListaColegiados from "@/store/ListaColegiadosData";
-import {useSolicitudesStore} from "@/store/SolicitudesStore";
+import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // Componentes
 import DataTable from "./DataTable";
-import FilterSection from "./FilterSection";
 import HeaderSection from "./HeaderSection";
+import MultiSelectFilter from "./MultiSelectFilter";
 import Notifications from "./Notifications";
 import SearchBar from "./SearchBar";
 import TabSelector from "./TabSelector";
@@ -46,28 +47,87 @@ export default function ListaColegiadosPage() {
   const [params, setParams] = useState({ id: null, type: null });
   const [colegiadoSeleccionadoId, setColegiadoSeleccionadoId] = useState(null);
   const [tabActivo, setTabActivo] = useState("pendientes");
-
-  // Filtros adicionales para colegiados registrados - Ahora permiten múltiples selecciones
-  const [filtrosEstado, setFiltrosEstado] = useState([]);
-  const [filtrosEspecialidad, setFiltrosEspecialidad] = useState([]);
-
-  // Filtros para pendientes
-  const [filtroFecha, setFiltroFecha] = useState("todas");
-  const [filtroEtiqueta, setFiltroEtiqueta] = useState("todos");
   const [registroExitoso, setRegistroExitoso] = useState(false);
   const [aprobacionExitosa, setAprobacionExitosa] = useState(false);
-
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Nuevos filtros de fecha para pendientes
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
-
-  // Estado para ordenamiento - Aseguramos que por defecto sea desc (más reciente primero)
   const [ordenFecha, setOrdenFecha] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
-  // Nuevo estado para ordenamiento de colegiados registrados
-  const [ordenFechaRegistrados, setOrdenFechaRegistrados] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
   const [recordsPerPage, setRecordsPerPage] = useState(10);
+
+  // Fechas desde-hasta separadas
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
+  // Estado para filtros activos
+  const [activeFilters, setActiveFilters] = useState([]);
+
+  // Definir todos los filtros disponibles
+  const allFilters = [
+    // Estado de solvencia
+    { id: "solventes", group: "Estado de solvencia", label: "Solventes", value: "solventes" },
+    { id: "noSolventes", group: "Estado de solvencia", label: "No Solventes", value: "noSolventes" },
+    { id: "solicitudes", group: "Estado de solvencia", label: "Con Solicitudes", value: "solicitudes" },
+
+    // Profesión/Ocupación  
+    { id: "prof-armonizacion", group: "Profesión/Ocupación", label: "Armonización facial", value: "Armonización facial" },
+    { id: "prof-cirugia-bucal", group: "Profesión/Ocupación", label: "Cirugía bucal", value: "Cirugía bucal" },
+    { id: "prof-cirugia-bucomaxilofacial", group: "Profesión/Ocupación", label: "Cirugía bucomaxilofacial", value: "Cirugía bucomaxilofacial" },
+    { id: "prof-endodoncia", group: "Profesión/Ocupación", label: "Endodoncia", value: "Endodoncia" },
+    { id: "prof-ortodoncia", group: "Profesión/Ocupación", label: "Ortodoncia", value: "Ortodoncia" },
+
+    // Fecha de solicitud
+    { id: "ultima-semana", group: "Fecha de solicitud", label: "Última Semana", value: "semana" },
+    { id: "ultimo-mes", group: "Fecha de solicitud", label: "Último Mes", value: "mes" },
+
+    // Edad
+    { id: "edad-18-25", group: "Edad", label: "18-25 años", value: "18-25" },
+    { id: "edad-25-30", group: "Edad", label: "25-30 años", value: "25-30" },
+    { id: "edad-30-40", group: "Edad", label: "30-40 años", value: "30-40" },
+    { id: "edad-40-50", group: "Edad", label: "40-50 años", value: "40-50" },
+    { id: "edad-50-mas", group: "Edad", label: "50+ años", value: "50+" },
+
+    // Estado laboral
+    { id: "laborando", group: "Estado laboral", label: "Laborando", value: "laborando" },
+    { id: "no-laborando", group: "Estado laboral", label: "No laborando", value: "no-laborando" },
+
+    // Género
+    { id: "masculino", group: "Género", label: "Masculino", value: "M" },
+    { id: "femenino", group: "Género", label: "Femenino", value: "F" },
+
+    // Documentos y Pagos
+    { id: "documentos-incompletos", group: "Documentos y Pagos", label: "Documentos Incompletos", value: "documentosIncompletos" },
+    { id: "pagos-pendientes", group: "Documentos y Pagos", label: "Pagos Pendientes", value: "pagosPendientes" },
+    { id: "pagos-exonerados", group: "Documentos y Pagos", label: "Pagos Exonerados", value: "pagosExonerados" },
+
+    // Creado por
+    { id: "creado-admin", group: "Creado por", label: "Admin", value: "admin" },
+    { id: "creado-colegiado", group: "Creado por", label: "Colegiado", value: "colegiado" },
+
+    // Registros
+    { id: "registros-duplicados", group: "Registros", label: "Duplicados", value: "duplicados" },
+
+    // Institución
+    { id: "inst-asp", group: "Institución", label: "Agencias de Salud Pública", value: "ASP" },
+    { id: "inst-caa", group: "Institución", label: "Centros de Atención Ambulatoria", value: "CAA" },
+    { id: "inst-cc", group: "Institución", label: "Clínicas", value: "CC" },
+    { id: "inst-cdp", group: "Institución", label: "Consultorios", value: "CDP" },
+    { id: "inst-eo", group: "Institución", label: "Escuelas y Facultades de Odontología", value: "EO" },
+    { id: "inst-fap", group: "Institución", label: "Fuerzas Armadas y Servicios Penitenciarios", value: "FAP" },
+    { id: "inst-fmd", group: "Institución", label: "Fabricación de Materiales y Equipos Dentales", value: "FMD" },
+    { id: "inst-hd", group: "Institución", label: "Hospitales", value: "HD" },
+    { id: "inst-ldc", group: "Institución", label: "Laboratorio", value: "LDC" },
+    { id: "inst-ot", group: "Institución", label: "Otros", value: "OT" },
+    { id: "inst-pmsb", group: "Institución", label: "Programas Móviles de Salud Bucal", value: "PMSB" },
+    { id: "inst-ui", group: "Institución", label: "Universidades e Institutos de Investigación", value: "UI" },
+
+    // Estados (generados dinámicamente)
+    ...estados.map(estado => ({
+      id: `estado-${estado.toLowerCase().replace(/\s+/g, '-')}`,
+      group: "Estado",
+      label: estado,
+      value: estado
+    })),
+  ];
+
   const router = useRouter();
   const initStoreAsync = async () => {
     await initStore();
@@ -75,7 +135,7 @@ export default function ListaColegiadosPage() {
 
   useEffect(() => {
     initStoreAsync();
-  }, [])
+  }, []);
 
   // Inicialización
   useEffect(() => {
@@ -96,38 +156,98 @@ export default function ListaColegiadosPage() {
   useEffect(() => {
     const filtros = {};
 
-    if (filtroFecha !== "todas") {
-      if (filtroFecha === "semana") {
-        const unaSemanAtras = new Date();
-        unaSemanAtras.setDate(unaSemanAtras.getDate() - 7);
-        filtros.fecha_solicitud_desde = unaSemanAtras
-          .toISOString()
-          .split("T")[0];
-      } else if (filtroFecha === "mes") {
-        const unMesAtras = new Date();
-        unMesAtras.setMonth(unMesAtras.getMonth() - 1);
-        filtros.fecha_solicitud_desde = unMesAtras.toISOString().split("T")[0];
+    // Procesar los filtros activos
+    activeFilters.forEach(filter => {
+      switch (filter.group) {
+        case "Estado de solvencia":
+          if (filter.id === "solventes") filtros.solvencia_status = "true";
+          if (filter.id === "noSolventes") filtros.solvencia_status = "false";
+          if (filter.id === "solicitudes") filtros.tiene_solicitudes_pendientes = "true";
+          break;
+
+        case "Profesión/Ocupación":
+          if (!filtros.especialidades) filtros.especialidades = [];
+          filtros.especialidades.push(filter.value);
+          break;
+
+        case "Fecha de solicitud":
+          if (filter.value === "semana") {
+            const unaSemanAtras = new Date();
+            unaSemanAtras.setDate(unaSemanAtras.getDate() - 7);
+            filtros.fecha_solicitud_desde = unaSemanAtras.toISOString().split("T")[0];
+          } else if (filter.value === "mes") {
+            const unMesAtras = new Date();
+            unMesAtras.setMonth(unMesAtras.getMonth() - 1);
+            filtros.fecha_solicitud_desde = unMesAtras.toISOString().split("T")[0];
+          }
+          break;
+
+        case "Edad":
+          const [min, max] = filter.value.split("-");
+          if (min) filtros.edad_min = min;
+          if (max && max !== "mas") filtros.edad_max = max;
+          if (max === "mas") filtros.edad_min = 50; // Para "50+ años"
+          break;
+
+        case "Estado laboral":
+          filtros.laborando = filter.id === "laborando" ? "true" : "false";
+          break;
+
+        case "Género":
+          filtros.genero = filter.value;
+          break;
+
+        case "Documentos y Pagos":
+          if (filter.id === "documentos-incompletos") filtros.documentos_completos = "false";
+          if (filter.id === "pagos-pendientes") filtros.tiene_pago = "false";
+          if (filter.id === "pagos-exonerados") filtros.pago_exonerado = "true";
+          break;
+
+        case "Creado por":
+          filtros.creado_por = filter.value;
+          break;
+
+        case "Registros":
+          if (filter.id === "registros-duplicados") filtros.duplicados = "true";
+          break;
+
+        case "Estado":
+          if (!filtros.estados) filtros.estados = [];
+          filtros.estados.push(filter.value);
+          break;
+
+        case "Municipio":
+          if (!filtros.municipios) filtros.municipios = [];
+          filtros.municipios.push(filter.value);
+          break;
+
+        case "Universidad":
+          if (!filtros.universidades) filtros.universidades = [];
+          filtros.universidades.push(filter.value);
+          break;
+
+        case "Institución":
+          if (!filtros.instituciones) filtros.instituciones = [];
+          filtros.instituciones.push(filter.value);
+          break;
       }
-    }
+    });
 
-    if (fechaDesde) filtros.fecha_solicitud_desde = fechaDesde;
-    if (fechaHasta) filtros.fecha_solicitud_hasta = fechaHasta;
+    // Añadir fechas desde-hasta
+    if (fromDate) filtros.fecha_solicitud_desde = fromDate;
+    if (toDate) filtros.fecha_solicitud_hasta = toDate;
 
-    if (ordenFecha) {
-      filtros.ordering = ordenFecha === "desc" ? "-created_at" : "created_at";
-    }
+    // Si hay arrays, convertirlos a strings separados por comas
+    if (filtros.especialidades) filtros.especialidades = filtros.especialidades.join(',');
+    if (filtros.estados) filtros.estados = filtros.estados.join(',');
+    if (filtros.municipios) filtros.municipios = filtros.municipios.join(',');
+    if (filtros.universidades) filtros.universidades = filtros.universidades.join(',');
+    if (filtros.instituciones) filtros.instituciones = filtros.instituciones.join(',');
 
-    if (filtroEtiqueta !== "todos") {
-      if (filtroEtiqueta === "documentosIncompletos") {
-        filtros.documentos_completos = "false";
-      } else if (filtroEtiqueta === "pagosPendientes") {
-        filtros.tiene_pago = "false";
-      } else if (filtroEtiqueta === "pagosExonerados") {
-        filtros.pago_exonerado = "true";
-      }
-    }
+    // Añadir ordenamiento por fecha
+    filtros.ordering = ordenFecha === "desc" ? "-created_at" : "created_at";
 
-    // Manejo de estados en base a la pestaña seleccionada
+    // Filtrar según el tab activo
     if (tabActivo === "pendientes") {
       filtros.status = "revisando";
     } else if (tabActivo === "rechazados") {
@@ -136,26 +256,9 @@ export default function ListaColegiadosPage() {
       filtros.status = "denegado";
     }
 
-    // Aplicar filtros múltiples de especialidad
-    if (filtrosEspecialidad.length > 0) {
-      filtros.especialidades = filtrosEspecialidad.join(',');
-    }
-
-    // Aplicar filtros múltiples de estado
-    if (filtrosEstado.length > 0) {
-      if (filtrosEstado.includes("solventes")) {
-        filtros.solvencia_status = "true";
-      }
-      if (filtrosEstado.includes("noSolventes")) {
-        filtros.solvencia_status = "false";
-      }
-      if (filtrosEstado.includes("solicitudes")) {
-        filtros.tiene_solicitudes_pendientes = "true";
-      }
-    }
-
     console.log({ filtros, tabActivo });
 
+    // Ejecutar la función fetch adecuada
     if (tabActivo === "registrados") {
       fetchColegiados(currentPage, recordsPerPage, searchTerm, filtros);
     } else {
@@ -165,14 +268,10 @@ export default function ListaColegiadosPage() {
     currentPage,
     recordsPerPage,
     searchTerm,
-    filtroFecha,
-    fechaDesde,
-    fechaHasta,
     ordenFecha,
-    ordenFechaRegistrados,
-    filtrosEstado,
-    filtroEtiqueta,
-    filtrosEspecialidad,
+    activeFilters,
+    fromDate,
+    toDate,
     tabActivo,
   ]);
 
@@ -201,11 +300,6 @@ export default function ListaColegiadosPage() {
     setOrdenFecha((prev) => (prev === "desc" ? "asc" : "desc"));
   };
 
-  // Alternar orden de fecha para colegiados registrados
-  const toggleOrdenFechaRegistrados = () => {
-    setOrdenFechaRegistrados((prev) => (prev === "desc" ? "asc" : "desc"));
-  };
-
   // Manejador para el registro exitoso de un nuevo colegiado pendiente
   const handleRegistroExitoso = () => {
     setShowRegistro(false);
@@ -225,6 +319,26 @@ export default function ListaColegiadosPage() {
 
       // Cambiar al tab de registrados
       setTabActivo("registrados");
+    }
+  };
+
+  // Manejador para cambio de tabs que ajusta los filtros
+  const handleTabChange = (newTab) => {
+    setTabActivo(newTab);
+    setCurrentPage(1);
+
+    // Limpiar filtros específicos que no aplican para el tab seleccionado
+    if (newTab === "registrados") {
+      // Eliminar filtros no aplicables a colegiados registrados
+      setActiveFilters(prev => prev.filter(filter =>
+        !["Documentos y Pagos"].includes(filter.group) ||
+        (filter.group === "Documentos y Pagos" && filter.id !== "documentos-incompletos")
+      ));
+    } else {
+      // Eliminar filtros no aplicables a solicitudes
+      setActiveFilters(prev => prev.filter(filter =>
+        filter.group !== "Estado de solvencia"
+      ));
     }
   };
 
@@ -283,26 +397,27 @@ export default function ListaColegiadosPage() {
       {/* Tabs para alternar entre colegiados y pendientes */}
       <TabSelector
         tabActivo={tabActivo}
-        setTabActivo={setTabActivo}
-        setCurrentPage={setCurrentPage}
+        setTabActivo={handleTabChange}
       />
-
       {/* Sección de filtros */}
-      <FilterSection
-        tabActivo={tabActivo}
-        filtroFecha={filtroFecha}
-        setFiltroFecha={setFiltroFecha}
-        filtrosEstado={filtrosEstado}
-        setFiltrosEstado={setFiltrosEstado}
-        filtrosEspecialidad={filtrosEspecialidad}
-        setFiltrosEspecialidad={setFiltrosEspecialidad}
-        filtroEtiqueta={filtroEtiqueta}
-        setFiltroEtiqueta={setFiltroEtiqueta}
-        fechaDesde={fechaDesde}
-        setFechaDesde={setFechaDesde}
-        fechaHasta={fechaHasta}
-        setFechaHasta={setFechaHasta}
-      />
+      <div className="mb-2">
+        <MultiSelectFilter
+          activeFilters={activeFilters}
+          setActiveFilters={setActiveFilters}
+          allFilters={allFilters.filter(filter => {
+            if (tabActivo === "registrados") {
+              return filter.group !== "Documentos y Pagos" ||
+                (filter.group === "Documentos y Pagos" && filter.id !== "documentos-incompletos");
+            } else {
+              return filter.group !== "Estado de solvencia";
+            }
+          })}
+          fromDate={fromDate}
+          toDate={toDate}
+          setFromDate={setFromDate}
+          setToDate={setToDate}
+        />
+      </div>
 
       {/* Tabla de datos */}
       <DataTable
@@ -313,9 +428,7 @@ export default function ListaColegiadosPage() {
         verDetalleColegiado={verDetalleColegiado}
         verDetallePendiente={verDetallePendiente}
         ordenFecha={ordenFecha}
-        ordenFechaRegistrados={ordenFechaRegistrados}
         toggleOrdenFecha={toggleOrdenFecha}
-        toggleOrdenFechaRegistrados={toggleOrdenFechaRegistrados}
         currentPage={currentPage}
         colegiadosPagination={colegiadosPagination}
         colegiadosPendientesPagination={colegiadosPendientesPagination}
