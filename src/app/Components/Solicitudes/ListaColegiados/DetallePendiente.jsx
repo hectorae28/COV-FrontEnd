@@ -12,6 +12,7 @@ import PagosColg from "@/app/Components/PagosModal";
 import {
   AlertTriangle,
   CheckCircle,
+  Upload,
   XCircle
 } from "lucide-react";
 import AcademicInfoSection from "./DetallePendiente/AcademicInfoSection ";
@@ -28,6 +29,7 @@ import ProfileCard from "./DetallePendiente/ProfileCard";
 import StatusAlerts from "./DetallePendiente/StatusAlerts";
 
 // Componente de reporte de ilegalidades
+// Componente de reporte de irregularidades
 function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
   const [reportType, setReportType] = useState("");
   const [description, setDescription] = useState("");
@@ -35,10 +37,10 @@ function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
 
   const reportTypes = [
     { id: "fake_credentials", label: "Credenciales falsificadas" },
-    { id: "illegal_practice", label: "Ejercicio ilegal de la profesión" },
+    { id: "irregular_practice", label: "Ejercicio irregular de la profesión" },
     { id: "fraud", label: "Fraude o estafa a pacientes" },
     { id: "identity_theft", label: "Suplantación de identidad" },
-    { id: "other", label: "Otro tipo de ilegalidad" }
+    { id: "other", label: "Otro tipo de irregularidad" }
   ];
 
   const handleSubmit = (e) => {
@@ -59,13 +61,13 @@ function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-xl">
         <div className="bg-red-50 p-4 border-b border-red-100 flex items-center">
           <AlertTriangle size={24} className="text-red-600 mr-3" />
-          <h3 className="text-xl font-semibold text-gray-900">Reportar Ilegalidad</h3>
+          <h3 className="text-xl font-semibold text-gray-900">Reportar Irregularidad</h3>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="mb-6">
             <p className="text-gray-700 mb-4">
-              Este formulario permite reportar posibles ilegalidades relacionadas con
+              Este formulario permite reportar posibles irregularidades relacionadas con
               {colegiadoInfo && (
                 <span className="font-medium"> {colegiadoInfo.nombre}</span>
               )}.
@@ -85,7 +87,7 @@ function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de ilegalidad <span className="text-red-500">*</span>
+                Tipo de irregularidad <span className="text-red-500">*</span>
               </label>
               <select
                 value={reportType}
@@ -93,7 +95,7 @@ function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 required
               >
-                <option value="">Seleccione el tipo de ilegalidad</option>
+                <option value="">Seleccione el tipo de irregularidad</option>
                 {reportTypes.map(type => (
                   <option key={type.id} value={type.id}>{type.label}</option>
                 ))}
@@ -118,11 +120,28 @@ function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Evidencia (opcional)
               </label>
-              <input
-                type="file"
-                onChange={(e) => setEvidence(e.target.files[0])}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              />
+              <div
+                className="w-full p-4 border border-gray-300 rounded-md hover:border-[#C40180] focus-within:ring-2 focus-within:ring-[#C40180] focus-within:border-[#C40180] transition-colors cursor-pointer bg-gray-50"
+                onClick={() => document.getElementById('evidence-file-input').click()}
+              >
+                <div className="flex flex-col items-center">
+                  <Upload size={24} className="text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600 font-medium mb-1">Haga clic o arrastre un archivo aquí</p>
+                  <p className="text-xs text-gray-500">Imágenes, PDF o documentos (máx. 10MB)</p>
+                  {evidence && (
+                    <div className="mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-green-700 w-full text-center">
+                      <p className="text-sm font-medium">{evidence.name}</p>
+                      <p className="text-xs">{Math.round(evidence.size / 1024)} KB</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  id="evidence-file-input"
+                  type="file"
+                  onChange={(e) => setEvidence(e.target.files[0])}
+                  className="hidden"
+                />
+              </div>
               <p className="text-xs text-gray-500 mt-1">
                 Puede adjuntar documentos, imágenes u otros archivos que sirvan como evidencia (máx. 10MB)
               </p>
@@ -238,8 +257,8 @@ function DocumentVerificationSwitch({
           onClick={() => handleStatusChange('approved')}
           disabled={readOnly}
           className={`p-2 rounded-md transition-all ${status === 'approved'
-              ? 'bg-green-100 text-green-700 ring-2 ring-green-500'
-              : 'bg-gray-100 text-gray-500 hover:bg-green-50'
+            ? 'bg-green-100 text-green-700 ring-2 ring-green-500'
+            : 'bg-gray-100 text-gray-500 hover:bg-green-50'
             } ${readOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           title={readOnly ? "No se puede modificar un documento aprobado" : "Aprobar documento"}
         >
@@ -250,8 +269,8 @@ function DocumentVerificationSwitch({
           onClick={() => handleStatusChange('rejected')}
           disabled={readOnly}
           className={`p-2 rounded-md transition-all ${status === 'rejected'
-              ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
-              : 'bg-gray-100 text-gray-500 hover:bg-red-50'
+            ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
+            : 'bg-gray-100 text-gray-500 hover:bg-red-50'
             } ${readOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           title={readOnly ? "No se puede modificar un documento aprobado" : "Rechazar documento"}
         >
@@ -317,8 +336,8 @@ function DocumentVerificationSwitch({
                 onClick={submitRejection}
                 disabled={useCustomReason ? !customReason.trim() : !rejectionPreset}
                 className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${(useCustomReason ? !customReason.trim() : !rejectionPreset)
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
+                  ? 'opacity-50 cursor-not-allowed'
+                  : ''
                   }`}
               >
                 Confirmar rechazo

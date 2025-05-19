@@ -38,6 +38,8 @@ export default function MultiSelectFilter({
     // Organizar filtros por grupo
     useEffect(() => {
         const groups = {};
+
+        // Agrupar solo filtros visibles
         allFilters.forEach((filter) => {
             if (!groups[filter.group]) {
                 groups[filter.group] = [];
@@ -45,23 +47,23 @@ export default function MultiSelectFilter({
             groups[filter.group].push(filter);
         });
 
-        // Añadir grupo Universidad si no existe
-        if (!groups["Universidad"]) {
-            groups["Universidad"] = [];
-        }
+        // Filtrar grupos que realmente tengan filtros visibles
+        const gruposConFiltros = {};
+        Object.keys(groups).forEach((groupName) => {
+            if (groups[groupName].length > 0) {
+                gruposConFiltros[groupName] = groups[groupName];
+            }
+        });
 
-        // Asegurar que existe el grupo Municipio
-        if (!groups["Municipio"]) {
-            groups["Municipio"] = [];
-        }
+        setFilterGroups(gruposConFiltros);
 
-        setFilterGroups(groups);
-
-        // Si no hay grupo activo, seleccionar el primero
-        if (!activeGroup && Object.keys(groups).length > 0) {
-            setActiveGroup(Object.keys(groups)[0]);
+        // Actualizar grupo activo si ya no existe
+        if (!activeGroup || !gruposConFiltros[activeGroup]) {
+            const primerGrupo = Object.keys(gruposConFiltros)[0];
+            setActiveGroup(primerGrupo || null);
         }
     }, [allFilters, activeGroup]);
+
 
     // Cerrar dropdown al hacer clic fuera
     useEffect(() => {

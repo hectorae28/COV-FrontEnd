@@ -110,8 +110,8 @@ export default function DocumentVerificationSwitch({
                     onClick={() => handleStatusChange('approved')}
                     disabled={readOnly}
                     className={`p-2 rounded-md transition-all ${status === 'approved'
-                            ? 'bg-green-100 text-green-700 ring-2 ring-green-500'
-                            : 'bg-gray-100 text-gray-500 hover:bg-green-50'
+                        ? 'bg-green-100 text-green-700 ring-2 ring-green-500'
+                        : 'bg-gray-100 text-gray-500 hover:bg-green-50'
                         } ${readOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     title={readOnly ? "No se puede modificar un documento aprobado" : "Aprobar documento"}
                 >
@@ -122,8 +122,8 @@ export default function DocumentVerificationSwitch({
                     onClick={() => handleStatusChange('rejected')}
                     disabled={readOnly}
                     className={`p-2 rounded-md transition-all ${status === 'rejected'
-                            ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
-                            : 'bg-gray-100 text-gray-500 hover:bg-red-50'
+                        ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
+                        : 'bg-gray-100 text-gray-500 hover:bg-red-50'
                         } ${readOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     title={readOnly ? "No se puede modificar un documento aprobado" : "Rechazar documento"}
                 >
@@ -159,7 +159,7 @@ export default function DocumentVerificationSwitch({
                                 {motivosRechazo.map((motivo, index) => (
                                     <option key={index} value={motivo}>{motivo}</option>
                                 ))}
-                                <option value="otro">Otro motivo...</option>
+                                <option value="otro">Agregar Detalles</option>
                             </select>
                         </div>
 
@@ -189,8 +189,8 @@ export default function DocumentVerificationSwitch({
                                 onClick={submitRejection}
                                 disabled={useCustomReason ? !customReason.trim() : !rejectionPreset}
                                 className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${(useCustomReason ? !customReason.trim() : !rejectionPreset)
-                                        ? 'opacity-50 cursor-not-allowed'
-                                        : ''
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : ''
                                     }`}
                             >
                                 Confirmar rechazo
