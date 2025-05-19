@@ -52,6 +52,9 @@ export default function ListaColegiadosPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [ordenFecha, setOrdenFecha] = useState("desc"); // desc = más nuevo primero, asc = más viejo primero
   const [recordsPerPage, setRecordsPerPage] = useState(10);
+  const [edadMin, setEdadMin] = useState("");
+  const [edadMax, setEdadMax] = useState("");
+  const [edadExacta, setEdadExacta] = useState("");
 
   // Fechas desde-hasta separadas
   const [fromDate, setFromDate] = useState("");
@@ -67,43 +70,46 @@ export default function ListaColegiadosPage() {
     { id: "noSolventes", group: "Estado de solvencia", label: "No Solventes", value: "noSolventes" },
     { id: "solicitudes", group: "Estado de solvencia", label: "Con Solicitudes", value: "solicitudes" },
 
-    // Profesión/Ocupación  
-    { id: "prof-armonizacion", group: "Profesión/Ocupación", label: "Armonización facial", value: "Armonización facial" },
-    { id: "prof-cirugia-bucal", group: "Profesión/Ocupación", label: "Cirugía bucal", value: "Cirugía bucal" },
-    { id: "prof-cirugia-bucomaxilofacial", group: "Profesión/Ocupación", label: "Cirugía bucomaxilofacial", value: "Cirugía bucomaxilofacial" },
-    { id: "prof-endodoncia", group: "Profesión/Ocupación", label: "Endodoncia", value: "Endodoncia" },
-    { id: "prof-ortodoncia", group: "Profesión/Ocupación", label: "Ortodoncia", value: "Ortodoncia" },
+    // Profesión - Roles principales
+    { id: "prof-odontologo", group: "Profesión", label: "Odontólogo", value: "Odontólogo" },
+    { id: "prof-tecnico", group: "Profesión", label: "Técnico Odontólogo", value: "Técnico Odontólogo" },
+    { id: "prof-higienista", group: "Profesión", label: "Higienista", value: "Higienista" },
+    
+    // Especialidad - Separada de profesión
+    { id: "especialidad-armonizacion", group: "Especialidad", label: "Armonización facial", value: "Armonización facial" },
+    { id: "especialidad-cirugia-bucal", group: "Especialidad", label: "Cirugía bucal", value: "Cirugía bucal" },
+    { id: "especialidad-cirugia-bucomaxilofacial", group: "Especialidad", label: "Cirugía bucomaxilofacial", value: "Cirugía bucomaxilofacial" },
+    { id: "especialidad-endodoncia", group: "Especialidad", label: "Endodoncia", value: "Endodoncia" },
+    { id: "especialidad-ortodoncia", group: "Especialidad", label: "Ortodoncia", value: "Ortodoncia" },
 
-    // Fecha de solicitud
-    { id: "ultima-semana", group: "Fecha de solicitud", label: "Última Semana", value: "semana" },
-    { id: "ultimo-mes", group: "Fecha de solicitud", label: "Último Mes", value: "mes" },
-
-    // Edad
-    { id: "edad-18-25", group: "Edad", label: "18-25 años", value: "18-25" },
-    { id: "edad-25-30", group: "Edad", label: "25-30 años", value: "25-30" },
-    { id: "edad-30-40", group: "Edad", label: "30-40 años", value: "30-40" },
-    { id: "edad-40-50", group: "Edad", label: "40-50 años", value: "40-50" },
-    { id: "edad-50-mas", group: "Edad", label: "50+ años", value: "50+" },
+    // Edad - ahora flexible
+    { id: "edad-rango", group: "Edad", label: "Edad", value: "personalizado" },
 
     // Estado laboral
     { id: "laborando", group: "Estado laboral", label: "Laborando", value: "laborando" },
     { id: "no-laborando", group: "Estado laboral", label: "No laborando", value: "no-laborando" },
 
-    // Género
+    // Género - incluye Otros
     { id: "masculino", group: "Género", label: "Masculino", value: "M" },
     { id: "femenino", group: "Género", label: "Femenino", value: "F" },
+    { id: "otros", group: "Género", label: "Otros", value: "O" },
 
-    // Documentos y Pagos
-    { id: "documentos-incompletos", group: "Documentos y Pagos", label: "Documentos Incompletos", value: "documentosIncompletos" },
-    { id: "pagos-pendientes", group: "Documentos y Pagos", label: "Pagos Pendientes", value: "pagosPendientes" },
-    { id: "pagos-exonerados", group: "Documentos y Pagos", label: "Pagos Exonerados", value: "pagosExonerados" },
+    // Documentos - separado
+    { id: "documentos-incompletos", group: "Documentos", label: "Incompletos", value: "documentosIncompletos" },
+    { id: "documentos-rechazados", group: "Documentos", label: "Rechazados", value: "documentosRechazados" },
+    { id: "documentos-completos", group: "Documentos", label: "Completos", value: "documentosCompletos" },
+    { id: "documentos-pendientes", group: "Documentos", label: "Pendientes por aprobar", value: "documentosPendientes" },
+
+    // Pagos - separado
+    { id: "pagos-pendientes", group: "Pagos", label: "Pendientes", value: "pagosPendientes" },
+    { id: "pagos-exonerados", group: "Pagos", label: "Exonerados", value: "pagosExonerados" },
 
     // Creado por
     { id: "creado-admin", group: "Creado por", label: "Admin", value: "admin" },
     { id: "creado-colegiado", group: "Creado por", label: "Colegiado", value: "colegiado" },
 
-    // Registros
-    { id: "registros-duplicados", group: "Registros", label: "Duplicados", value: "duplicados" },
+    // Duplicados - comentado
+    // { id: "registros-duplicados", group: "Registros", label: "Duplicados", value: "duplicados" },
 
     // Institución
     { id: "inst-asp", group: "Institución", label: "Agencias de Salud Pública", value: "ASP" },
@@ -119,10 +125,10 @@ export default function ListaColegiadosPage() {
     { id: "inst-pmsb", group: "Institución", label: "Programas Móviles de Salud Bucal", value: "PMSB" },
     { id: "inst-ui", group: "Institución", label: "Universidades e Institutos de Investigación", value: "UI" },
 
-    // Estados (generados dinámicamente)
+    // Estados -> Ubicación (generados dinámicamente)
     ...estados.map(estado => ({
-      id: `estado-${estado.toLowerCase().replace(/\s+/g, '-')}`,
-      group: "Estado",
+      id: `ubicacion-${estado.toLowerCase().replace(/\s+/g, '-')}`,
+      group: "Ubicación",
       label: estado,
       value: estado
     })),
@@ -165,28 +171,20 @@ export default function ListaColegiadosPage() {
           if (filter.id === "solicitudes") filtros.tiene_solicitudes_pendientes = "true";
           break;
 
-        case "Profesión/Ocupación":
-          if (!filtros.especialidades) filtros.especialidades = [];
-          filtros.especialidades.push(filter.value);
+        case "Profesión":
+          if (!filtros.profesiones) filtros.profesiones = [];
+          filtros.profesiones.push(filter.value);
           break;
 
-        case "Fecha de solicitud":
-          if (filter.value === "semana") {
-            const unaSemanAtras = new Date();
-            unaSemanAtras.setDate(unaSemanAtras.getDate() - 7);
-            filtros.fecha_solicitud_desde = unaSemanAtras.toISOString().split("T")[0];
-          } else if (filter.value === "mes") {
-            const unMesAtras = new Date();
-            unMesAtras.setMonth(unMesAtras.getMonth() - 1);
-            filtros.fecha_solicitud_desde = unMesAtras.toISOString().split("T")[0];
-          }
+        case "Especialidad":
+          if (!filtros.especialidades) filtros.especialidades = [];
+          filtros.especialidades.push(filter.value);
           break;
 
         case "Edad":
           const [min, max] = filter.value.split("-");
           if (min) filtros.edad_min = min;
-          if (max && max !== "mas") filtros.edad_max = max;
-          if (max === "mas") filtros.edad_min = 50; // Para "50+ años"
+          if (max && max !== "") filtros.edad_max = max;
           break;
 
         case "Estado laboral":
@@ -197,8 +195,14 @@ export default function ListaColegiadosPage() {
           filtros.genero = filter.value;
           break;
 
-        case "Documentos y Pagos":
+        case "Documentos":
           if (filter.id === "documentos-incompletos") filtros.documentos_completos = "false";
+          if (filter.id === "documentos-rechazados") filtros.documentos_rechazados = "true";
+          if (filter.id === "documentos-completos") filtros.documentos_completos = "true";
+          if (filter.id === "documentos-pendientes") filtros.documentos_pendientes = "true";
+          break;
+
+        case "Pagos":
           if (filter.id === "pagos-pendientes") filtros.tiene_pago = "false";
           if (filter.id === "pagos-exonerados") filtros.pago_exonerado = "true";
           break;
@@ -207,11 +211,7 @@ export default function ListaColegiadosPage() {
           filtros.creado_por = filter.value;
           break;
 
-        case "Registros":
-          if (filter.id === "registros-duplicados") filtros.duplicados = "true";
-          break;
-
-        case "Estado":
+        case "Ubicación":
           if (!filtros.estados) filtros.estados = [];
           filtros.estados.push(filter.value);
           break;
@@ -238,6 +238,7 @@ export default function ListaColegiadosPage() {
     if (toDate) filtros.fecha_solicitud_hasta = toDate;
 
     // Si hay arrays, convertirlos a strings separados por comas
+    if (filtros.profesiones) filtros.profesiones = filtros.profesiones.join(',');
     if (filtros.especialidades) filtros.especialidades = filtros.especialidades.join(',');
     if (filtros.estados) filtros.estados = filtros.estados.join(',');
     if (filtros.municipios) filtros.municipios = filtros.municipios.join(',');
@@ -327,12 +328,11 @@ export default function ListaColegiadosPage() {
     setTabActivo(newTab);
     setCurrentPage(1);
 
-    // Limpiar filtros específicos que no aplican para el tab seleccionado
+    // No eliminamos los filtros de documentos ahora, sólo actualizamos los que corresponden
     if (newTab === "registrados") {
       // Eliminar filtros no aplicables a colegiados registrados
       setActiveFilters(prev => prev.filter(filter =>
-        !["Documentos y Pagos"].includes(filter.group) ||
-        (filter.group === "Documentos y Pagos" && filter.id !== "documentos-incompletos")
+        filter.group !== "Documentos"  
       ));
     } else {
       // Eliminar filtros no aplicables a solicitudes
@@ -398,6 +398,7 @@ export default function ListaColegiadosPage() {
       <TabSelector
         tabActivo={tabActivo}
         setTabActivo={handleTabChange}
+        setCurrentPage={setCurrentPage}
       />
       {/* Sección de filtros */}
       <div className="mb-2">
@@ -405,9 +406,9 @@ export default function ListaColegiadosPage() {
           activeFilters={activeFilters}
           setActiveFilters={setActiveFilters}
           allFilters={allFilters.filter(filter => {
+            // Mostrar todos los filtros excepto aquellos que no aplican según el tab 
             if (tabActivo === "registrados") {
-              return filter.group !== "Documentos y Pagos" ||
-                (filter.group === "Documentos y Pagos" && filter.id !== "documentos-incompletos");
+              return filter.group !== "Documentos";
             } else {
               return filter.group !== "Estado de solvencia";
             }
@@ -416,6 +417,12 @@ export default function ListaColegiadosPage() {
           toDate={toDate}
           setFromDate={setFromDate}
           setToDate={setToDate}
+          edadMin={edadMin}
+          setEdadMin={setEdadMin}
+          edadMax={edadMax}
+          setEdadMax={setEdadMax}
+          edadExacta={edadExacta}
+          setEdadExacta={setEdadExacta}
         />
       </div>
 
