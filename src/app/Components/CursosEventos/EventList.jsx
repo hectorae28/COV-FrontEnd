@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { FiCalendar, FiClock, FiMapPin, FiSearch, FiTrash2, FiFileText, FiFilter, FiPlus } from "react-icons/fi";
-import EventForm from "./EventForm";
+import { FiCalendar, FiClock, FiFileText, FiMapPin, FiPlus, FiSearch, FiTrash2 } from "react-icons/fi";
+import { InlineEditForm } from "./InlineEditForm";
 
 export default function EventList({
     filteredData,
@@ -11,15 +11,38 @@ export default function EventList({
     handleSelect,
     handleDelete,
     handleFormBuilder,
-    handleNewItem,
+    handleCancel={handleCancel},
+    handleAdd,
     formValues,
     setFormValues,
-    handleSave
+    handleSave,
+    isCreating,
+    TabList,
+    Tab
 }) {
     const [dateFilter, setDateFilter] = useState("");
 
     return (
         <div className="bg-white p-5 rounded-xl shadow-md">
+            <TabList className="flex space-x-2 mb-4 p-1 rounded-lg bg-gray-100">
+                <Tab className={({ selected }) =>
+                    `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
+                        ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
+                        : "text-gray-700 hover:bg-gray-200"
+                    }`
+                }>
+                    Eventos
+                </Tab>
+                <Tab className={({ selected }) =>
+                    `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
+                        ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
+                        : "text-gray-700 hover:bg-gray-200"
+                    }`
+                }>
+                    Cursos
+                </Tab>
+            </TabList>
+
             <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-3">
                 <div className="relative flex-1 w-full">
                     <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -42,7 +65,7 @@ export default function EventList({
                         />
                     </div>
                     <button
-                        onClick={handleNewItem}
+                        onClick={handleAdd}
                         className="whitespace-nowrap flex items-center gap-1 bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg hover:from-[#a80166] hover:to-[#470137] transition-all"
                     >
                         <FiPlus /> Nuevo {tabIndex === 0 ? "Evento" : "Curso"}
@@ -50,7 +73,7 @@ export default function EventList({
                 </div>
             </div>
 
-            {filteredData.length === 0 ? (
+            {filteredData.length === 0 && !isCreating ? (
                 <div className="text-center py-10 text-gray-500">
                     {searchTerm ?
                         `No se encontraron ${tabIndex === 0 ? "eventos" : "cursos"} que coincidan con "${searchTerm}"` :
@@ -59,6 +82,18 @@ export default function EventList({
                 </div>
             ) : (
                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                    {isCreating && (
+                        <div className="border rounded-lg border-[#C40180] bg-[#C40180]/5 p-4">
+                            <InlineEditForm
+                                formValues={formValues}
+                                setFormValues={setFormValues}
+                                handleSave={handleSave}
+                                handleCancel={handleCancel}
+                                isNew={true}
+                            />
+                        </div>
+                    )}
+
                     {filteredData.map((item) => (
                         <div
                             key={item.id}
@@ -66,19 +101,17 @@ export default function EventList({
                         >
                             {editingId === item.id ? (
                                 <div className="p-4">
-                                    <EventForm 
+                                    <InlineEditForm
                                         formValues={formValues}
                                         setFormValues={setFormValues}
                                         handleSave={handleSave}
-                                        isCreating={false}
-                                        handleNewItem={handleNewItem}
-                                        tabIndex={tabIndex}
-                                        isInline={true}
+                                        handleCancel={handleCancel}
+                                        isNew={false}
                                     />
                                 </div>
                             ) : (
                                 <div className="flex items-center p-3">
-                                    <div 
+                                    <div
                                         className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 mr-4 bg-gray-100"
                                         onClick={() => handleSelect(item)}
                                     >
@@ -95,7 +128,7 @@ export default function EventList({
                                         )}
                                     </div>
 
-                                    <div 
+                                    <div
                                         className="flex-1"
                                         onClick={() => handleSelect(item)}
                                     >
@@ -131,7 +164,7 @@ export default function EventList({
                                         >
                                             <FiFileText size={18} />
                                         </button>
-                                        
+
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();

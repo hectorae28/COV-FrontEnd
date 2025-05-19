@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 // Import components
-import EventForm from "@/app/Components/CursosEventos/EventForm";
+import CardPreview from "@/app/Components/CursosEventos/CardPreview";
 import EventList from "@/app/Components/CursosEventos/EventList";
 import FormBuilder from "@/app/Components/CursosEventos/FormInscripcion/FormBuilder";
 
@@ -27,10 +27,10 @@ export default function DashboardEventos() {
   const [tabIndex, setTabIndex] = useState(0);
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreating, setIsCreating] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
 
-  // Nuevo estado para manejar el formulario
+  // Estado para manejar el formulario
   const [showFormBuilder, setShowFormBuilder] = useState(false);
   const [currentFormItem, setCurrentFormItem] = useState(null);
 
@@ -49,32 +49,43 @@ export default function DashboardEventos() {
   }, [searchTerm, tabIndex, eventos, cursos]);
 
   const handleAdd = () => {
-    const newItem = { ...formValues, id: Date.now() };
-    if (tabIndex === 0) {
-      setEventos((prev) => [newItem, ...prev]);
-    } else {
-      setCursos((prev) => [newItem, ...prev]);
-    }
+    // Reset any current editing
+    setEditingId(null);
+
+    // Set creating mode
+    setIsCreating(true);
+
+    // Set default values
+    setFormValues({
+      ...initialValues,
+      id: Date.now()
+    });
   };
 
   const handleSave = () => {
-    if (editingId) {
-      const updatedItem = { ...formValues, id: editingId };
+    if (isCreating) {
+      // Add new item
       if (tabIndex === 0) {
-        setEventos((prev) => prev.map((e) => (e.id === editingId ? updatedItem : e)));
+        setEventos((prev) => [formValues, ...prev]);
       } else {
-        setCursos((prev) => prev.map((c) => (c.id === editingId ? updatedItem : c)));
+        setCursos((prev) => [formValues, ...prev]);
       }
-    } else {
-      handleAdd();
+      setIsCreating(false);
+    } else if (editingId) {
+      // Update existing item
+      if (tabIndex === 0) {
+        setEventos((prev) => prev.map((e) => (e.id === editingId ? formValues : e)));
+      } else {
+        setCursos((prev) => prev.map((c) => (c.id === editingId ? formValues : c)));
+      }
+      setEditingId(null);
     }
-    resetForm();
   };
 
-  const resetForm = () => {
+  const handleCancel = () => {
     setEditingId(null);
+    setIsCreating(false);
     setFormValues(initialValues);
-    setIsCreating(true);
   };
 
   const handleDelete = (id, type) => {
@@ -84,7 +95,7 @@ export default function DashboardEventos() {
       setCursos((prev) => prev.filter((c) => c.id !== id));
     }
     if (editingId === id) {
-      resetForm();
+      setEditingId(null);
     }
   };
 
@@ -102,13 +113,13 @@ export default function DashboardEventos() {
       linkText: item.linkText || "Inscríbete"
     };
 
+    // If already creating, finish that first
+    if (isCreating) {
+      setIsCreating(false);
+    }
+
     setFormValues(safeItem);
     setEditingId(item.id);
-    setIsCreating(false);
-  };
-
-  const handleNewItem = () => {
-    resetForm();
   };
 
   // Funciones para el constructor de formularios
@@ -118,7 +129,6 @@ export default function DashboardEventos() {
   };
 
   const handleSaveForm = (updatedItem) => {
-    // Actualizar el item con el formulario
     if (tabIndex === 0) {
       setEventos(prev => prev.map(item =>
         item.id === updatedItem.id ? updatedItem : item
@@ -168,33 +178,15 @@ export default function DashboardEventos() {
         </motion.p>
       </motion.div>
 
-      <Tab.Group selectedIndex={tabIndex} onChange={(i) => {
-        setTabIndex(i);
-        resetForm();
-        setSearchTerm("");
-      }}>
-        <Tab.List className="flex space-x-2 mb-4 bg-white p-1 rounded-lg shadow-sm max-w-2/3">
-          <Tab className={({ selected }) =>
-            `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
-              ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
-              : "text-gray-700 hover:bg-gray-100"
-            }`
-          }>
-            Eventos
-          </Tab>
-          <Tab className={({ selected }) =>
-            `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
-              ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
-              : "text-gray-700 hover:bg-gray-100"
-            }`
-          }>
-            Cursos
-          </Tab>
-        </Tab.List>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left side: List */}
-          <div className="lg:col-span-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left side: List */}
+        <div className="lg:col-span-8">
+          <Tab.Group selectedIndex={tabIndex} onChange={(i) => {
+            setTabIndex(i);
+            handleCancel();
+            setSearchTerm("");
+          }}>
+            {/* Tabs are now inside the EventList component */}
             <EventList
               filteredData={filteredData}
               searchTerm={searchTerm}
@@ -204,32 +196,32 @@ export default function DashboardEventos() {
               handleSelect={handleSelect}
               handleDelete={handleDelete}
               handleFormBuilder={handleFormBuilder}
-              handleNewItem={handleNewItem}
+              handleAdd={handleAdd}
               formValues={formValues}
               setFormValues={setFormValues}
               handleSave={handleSave}
-            />
-          </div>
-
-          {/* Right side: Form with Preview */}
-          <div className="lg:col-span-4 space-y-4">
-            <EventForm
-              formValues={formValues}
-              setFormValues={setFormValues}
-              handleSave={handleSave}
+              handleCancel={handleCancel}
               isCreating={isCreating}
-              handleNewItem={handleNewItem}
-              tabIndex={tabIndex}
+              TabList={Tab.List}
+              Tab={Tab}
             />
-          </div>
+          </Tab.Group>
         </div>
 
-        <Tab.Panels className="hidden">
-          {[eventos, cursos].map((data, idx) => (
-            <Tab.Panel key={idx}></Tab.Panel>
-          ))}
-        </Tab.Panels>
-      </Tab.Group>
+        {/* Right side: Preview only */}
+        <div className="lg:col-span-4">
+          <div className="bg-white p-5 rounded-xl shadow-md">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-800">
+                Vista Previa
+              </h2>
+            </div>
+            <div className="mb-6">
+              <CardPreview {...formValues} />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
