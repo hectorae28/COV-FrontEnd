@@ -64,18 +64,16 @@ export default function ListaColegiadosPage() {
   const [activeFilters, setActiveFilters] = useState([]);
 
   // Definir todos los filtros disponibles
-  // Definir todos los filtros disponibles - reorganizados
-  // Definir todos los filtros disponibles - reorganizados correctamente
 const allFilters = [
   // Estado de solvencia
   { id: "solventes", group: "Estado de solvencia", label: "Solventes", value: "solventes" },
   { id: "noSolventes", group: "Estado de solvencia", label: "No Solventes", value: "noSolventes" },
   { id: "solicitudes", group: "Estado de solvencia", label: "Con Solicitudes", value: "solicitudes" },
 
-  // Profesiones
-  { id: "prof-odontologo", group: "Profesiones", label: "Odontólogo", value: "Odontólogo" },
-  { id: "prof-tecnico", group: "Profesiones", label: "Técnico Dental", value: "Técnico Dental" },
-  { id: "prof-higienista", group: "Profesiones", label: "Higienista", value: "Higienista" },
+  // Profesiones (cambiado a Profesión/Ocupación)
+  { id: "prof-odontologo", group: "Profesión/Ocupación", label: "Odontólogo", value: "Odontólogo" },
+  { id: "prof-tecnico", group: "Profesión/Ocupación", label: "Técnico Dental", value: "Técnico Dental" },
+  { id: "prof-higienista", group: "Profesión/Ocupación", label: "Higienista", value: "Higienista" },
   
   // Especialidad
   { id: "especialidad-armonizacion", group: "Especialidades", label: "Armonización facial", value: "Armonización facial" },
