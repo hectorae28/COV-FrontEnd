@@ -123,7 +123,6 @@ const menuItems = [
         { path: "/PanelControl/SobreCOV", title: "Sobre Nosotros", icon: <Handshake className="h-5 w-5" /> },
         { path: "/PanelControl/Noticias", title: "Noticias", icon: <Newspaper className="h-5 w-5" /> },
         { path: "/PanelControl/NuevaLey", title: "Nueva Ley", icon: <AccountBalance className="h-5 w-5" /> },
-        { path: "/PanelControl/CursosEventos", title: "Cursos y Eventos", icon: <Celebration className="h-5 w-5" /> },
         { path: "/PanelControl/Tramites", title: "Tramites", icon: <RequestQuote className="h-5 w-5" /> },
         { path: "/PanelControl/Contactenos", title: "Contactenos", icon: <ContactPage className="h-5 w-5" /> }
       ],

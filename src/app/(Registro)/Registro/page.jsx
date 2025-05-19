@@ -1,14 +1,16 @@
 "use client"
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation"
+import {patchDataUsuario} from "@/api/endpoints/colegiado" 
 import confetti from "canvas-confetti"
 import { AnimatePresence, motion } from "framer-motion"
-import { Building, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Phone, User, Mail } from "lucide-react"
+import { Building, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 // Import step components
 import api from "@/api/api"
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage"
+import { postDataUsuario } from "@/api/endpoints/colegiado";
 import Alert from "@/app/Components/Alert"
 import Head from "next/head"
 import PagosColg from "../../Components/PagosModal"
@@ -18,6 +20,7 @@ import InfoColegiado from "../InfoColg"
 import InfoContacto from "../InfoCont"
 import InfoLaboral from "../InfoLab"
 import InfoPersonal from "../InfoPers"
+import { Form } from "antd"
 
 const steps = [
   {
@@ -83,8 +86,8 @@ export default function RegistrationForm(props) {
   const [showEmailVerification, setShowEmailVerification] = useState(false)
   const [isResendingCode, setIsResendingCode] = useState(false)
   const [verifiedEmails, setVerifiedEmails] = useState([])
+  const [recaudoCreado, setRecaudoCreado] = useState({})
 
-  console.log(props)
   const initialState = {
     // Para tipo_profesion
     tipo_profesion: props?.tipo_profesion || "",
@@ -364,25 +367,17 @@ export default function RegistrationForm(props) {
   // Función para iniciar el proceso de verificación de correo
   const handleRequestEmailVerification = (email) => {
     if (!email) return
-
-    // Aquí se implementaría la llamada a la API para solicitar el código
-    // Por ahora simulamos la solicitud
     setShowEmailVerification(true)
-
-    // Simulación de envío de código de verificación a la API
-    console.log(`Solicitando código de verificación para ${email}`)
-
-    // Aquí puedes llamar a tu API real:
-    // api.post("verificacion-email", { email })
-    //   .then(response => console.log("Código enviado"))
-    //   .catch(error => setError("Error al enviar código de verificación"));
   }
 
   // Función para manejar el reenvío del código
-  const handleResendVerificationCode = () => {
+  const handleResendVerificationCode = async() => {
     setIsResendingCode(true)
 
     // Simulación de reenvío (aquí irían las llamadas a la API real)
+    const res = await postDataUsuario(`send-verification-email`, {
+      "email": formData.email,
+    })
     setTimeout(() => {
       setIsResendingCode(false)
       console.log(`Reenviando código de verificación a ${formData.email}`)
@@ -410,31 +405,126 @@ export default function RegistrationForm(props) {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    console.log({isSubmitting})
+    e.preventDefault();
 
     // Activar la bandera para mostrar errores de validación SOLO cuando intentamos proceder a pagos
-    setAttemptedNext(true)
+    setAttemptedNext(true);
 
     // Validar el paso actual
-    const isValid = validateStep(currentStep)
+    const isValid = validateStep(currentStep);
+
 
     if (isValid) {
       // Si todos los campos están completos, proceder
       if (isIntentionalSubmit) {
-        setShowPaymentScreen(true)
+        const Form = new FormData();
+        Form.append("tipo_profesion", formData.tipo_profesion);
+        Form.append(
+          "persona",
+          JSON.stringify({
+            direccion: {
+              referencia: formData.address,
+              estado: 1,
+            },
+            nombre: formData.firstName,
+            primer_apellido: formData.firstLastName,
+            segundo_apellido: formData.secondLastName,
+            segundo_nombre: formData.secondName,
+            genero: formData.gender,
+            // Ajustar para manejar pasaporte o cédula
+            nacionalidad:
+              formData.documentType === "cedula" ? "venezolana" : "extranjera",
+            identificacion:
+              formData.documentType === "cedula"
+                ? `${formData.idType}-${formData.identityCard}`
+                : formData.identityCard,
+            correo: formData.email,
+            telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
+            telefono_de_habitacion: formData.homePhone,
+            fecha_de_nacimiento: formData.birthDate,
+            estado_civil: formData.maritalStatus,
+          })
+        );
+        Form.append("instituto_bachillerato", formData.graduateInstitute);
+        Form.append("universidad", formData.universityTitle);
+        Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
+        if (formData.tipo_profesion === "odontologo") {
+          Form.append(
+            "num_registro_principal",
+            formData.mainRegistrationNumber
+          );
+          Form.append(
+            "fecha_registro_principal",
+            formData.mainRegistrationDate
+          );
+        }
+        Form.append("num_mpps", formData.mppsRegistrationNumber);
+        Form.append("fecha_mpps", formData.mppsRegistrationDate);
+        Form.append(
+          "instituciones",
+          JSON.stringify(
+            formData.laboralRegistros.map((registro) => ({
+              nombre: registro.institutionName,
+              cargo: registro.cargo,
+              direccion: registro.institutionAddress,
+              telefono: registro.institutionPhone,
+              tipo_institucion: registro.institutionType,
+            })) || []
+          )
+        );
+        Form.append("file_ci", formData.ci || null);
+        Form.append("file_rif", formData.rif || null);
+        Form.append("file_fondo_negro", formData.titulo || null);
+        Form.append("file_mpps", formData.mpps || null);
+        if (
+          formData.tipo_profesion === "tecnico" ||
+          formData.tipo_profesion === "higienista"
+        ) {
+          Form.append(
+            "Fondo_negro_credencial",
+            formData.Fondo_negro_credencial
+          );
+          Form.append("notas_curso", formData.notas_curso);
+          Form.append(
+            "fondo_negro_titulo_bachiller",
+            formData.fondo_negro_titulo_bachiller
+          );
+        }
+        try {
+          setIsSubmitting(true);
+          const response = await api.post("usuario/register/", Form, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          if (response.status === 201) {
+            setShowPaymentScreen(true);
+            setIsComplete(false);
+            setRecaudoCreado(response.data);
+            setIsSubmitting(false)
+          }
+        } catch (error) {
+          setError(`Error: ${error.response?.data || error}`);
+        } finally {
+          setIsSubmitting(false);
+        }
         // No necesitamos reiniciar attemptedNext aquí ya que queremos mantener
         // los mensajes de error visibles si el usuario vuelve desde la pantalla de pagos
       }
     } else {
       // Si hay errores, hacer scroll al primer error
       setTimeout(() => {
-        const firstErrorElement = document.querySelector(".border-red-500")
+        const firstErrorElement = document.querySelector(".border-red-500");
         if (firstErrorElement) {
-          firstErrorElement.scrollIntoView({ behavior: "smooth", block: "center" })
+          firstErrorElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
         }
-      }, 100)
+      }, 100);
     }
-  }
+  };
 
   const handlePaymentComplete = async ({
     paymentDate = null,
@@ -443,64 +533,10 @@ export default function RegistrationForm(props) {
     totalAmount = null,
     metodo_de_pago = null,
   }) => {
-    const Form = new FormData()
-    Form.append("tipo_profesion", formData.tipo_profesion)
-    Form.append(
-      "persona",
-      JSON.stringify({
-        direccion: {
-          referencia: formData.address,
-          estado: 1,
-        },
-        nombre: formData.firstName,
-        primer_apellido: formData.firstLastName,
-        segundo_apellido: formData.secondLastName,
-        segundo_nombre: formData.secondName,
-        genero: formData.gender,
-        // Ajustar para manejar pasaporte o cédula
-        nacionalidad: formData.documentType === "cedula" ? "venezolana" : "extranjera",
-        identificacion:
-          formData.documentType === "cedula" ? `${formData.idType}-${formData.identityCard}` : formData.identityCard,
-        correo: formData.email,
-        telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
-        telefono_de_habitacion: formData.homePhone,
-        fecha_de_nacimiento: formData.birthDate,
-        estado_civil: formData.maritalStatus,
-      }),
-    )
-    Form.append("instituto_bachillerato", formData.graduateInstitute)
-    Form.append("universidad", formData.universityTitle)
-    Form.append("fecha_egreso_universidad", formData.titleIssuanceDate)
-    if (formData.tipo_profesion === "odontologo") {
-      Form.append("num_registro_principal", formData.mainRegistrationNumber)
-      Form.append("fecha_registro_principal", formData.mainRegistrationDate)
-    }
-    Form.append("num_mpps", formData.mppsRegistrationNumber)
-    Form.append("fecha_mpps", formData.mppsRegistrationDate)
-    Form.append(
-      "instituciones",
-      JSON.stringify(
-        formData.laboralRegistros.map((registro) => ({
-          nombre: registro.institutionName,
-          cargo: registro.cargo,
-          direccion: registro.institutionAddress,
-          telefono: registro.institutionPhone,
-          tipo_institucion: registro.institutionType,
-        })) || [],
-      ),
-    )
-    Form.append("file_ci", formData.ci || null)
-    Form.append("file_rif", formData.rif || null)
-    Form.append("file_fondo_negro", formData.titulo || null)
-    Form.append("file_mpps", formData.mpps || null)
-    Form.append("comprobante", paymentFile)
-    if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
-      Form.append("Fondo_negro_credencial", formData.Fondo_negro_credencial)
-      Form.append("notas_curso", formData.notas_curso)
-      Form.append("fondo_negro_titulo_bachiller", formData.fondo_negro_titulo_bachiller)
-    }
-    !pagarLuego
-      ? Form.append(
+    console.log("Metodo de pago:", metodo_de_pago)
+    if(!pagarLuego){
+      const Form = new FormData()
+      Form.append(
         "pago",
         JSON.stringify({
           fecha_pago: paymentDate,
@@ -509,15 +545,19 @@ export default function RegistrationForm(props) {
           monto: totalAmount,
         }),
       )
-      : Form.append("pago", null)
-    setIsSubmitting(true)
+      Form.append("comprobante", paymentFile)
+      setIsSubmitting(true)
+    }
     try {
-      const response = await api.post("usuario/register/", Form, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      if (response.status === 201) {
+      let res
+      if(!pagarLuego){
+        res = await patchDataUsuario(
+          `register/${recaudoCreado.id}`,
+          Form,
+        );
+      }
+      if (res?.status === 201 || pagarLuego ) {
+        setError("¡Registro exitoso!")
         confetti({
           particleCount: 100,
           spread: 70,
@@ -527,14 +567,14 @@ export default function RegistrationForm(props) {
         setIsComplete(true)
       }
     } catch (error) {
-      setError(error.response?.data || error)
+      setError(`error ${error.response?.data || error}`)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   // Determinar qué componente mostrar
-  const renderCurrentStep = () => {
+  const renderCurrentStep =() => {
     if (showEmailVerification) {
       return (
         <EmailVerification
@@ -692,10 +732,10 @@ export default function RegistrationForm(props) {
                               <div className="relative">
                                 <div
                                   className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isCompleted
-                                      ? "bg-[#D7008A] border-transparent"
-                                      : isCurrent
-                                        ? "bg-white border-[#D7008A]"
-                                        : "bg-white border-gray-400"
+                                    ? "bg-[#D7008A] border-transparent"
+                                    : isCurrent
+                                      ? "bg-white border-[#D7008A]"
+                                      : "bg-white border-gray-400"
                                     }`}
                                 >
                                   {isCompleted ? (
@@ -717,7 +757,8 @@ export default function RegistrationForm(props) {
                       </div>
                     </div>
                   )}
-                  <div className="relative overflow-hidden rounded-2xl shadow-lg bg-white">
+                  <div className="relative overflow-hidden rounded-2xl shadow-lg bg-white pt-10 px-8">
+                  {error && <Alert type="alert">{error.detail}</Alert>}
                     {isComplete ? (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -728,18 +769,27 @@ export default function RegistrationForm(props) {
                         <div className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-6">
                           <Check className="w-10 h-10 text-white" />
                         </div>
-                        <h2 className="text-2xl font-bold text-[#41023B] mb-4">¡Registro Completado!</h2>
-                        <p className="text-gray-600 mb-8">
-                          Gracias por registrarte y completar tu pago. Hemos recibido tu información y pronto nos
-                          pondremos en contacto contigo.
+                        <h2 className="text-2xl font-bold text-[#41023B] mb-4">¡Su Solicitud de Registro ha sido enviado con éxito!</h2>
+                        <p className="text-gray-600 mb-6">
+                          Gracias por registrarse. Hemos recibido su información y pronto nos
+                          pondremos en contacto con usted.
                         </p>
+
+                        {/* Mensaje condicional si seleccionó pagar luego */}
+                        {pagarLuego && (
+                          <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                            <p className="text-yellow-800 font-medium">
+                              Hemos enviado un correo electrónico a su dirección registrada con un enlace para completar el pago pendiente. Recuerde que su solicitud no será procesada hasta que se haya realizado el pago correspondiente.
+                            </p>
+                          </div>
+                        )}
                       </motion.div>
                     ) : showPaymentScreen ? (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="relative z-10 p-8"
+                        className="relative z-10"
                       >
                         {/* Botón de regresar en la esquina superior izquierda */}
                         <div className="absolute top-4 left-4">
@@ -755,32 +805,43 @@ export default function RegistrationForm(props) {
                             </span>
                           </button>
                         </div>
-
-                        {error && <Alert type="alert">{error.detail}</Alert>}
                         {!pagarLuego && (
                           <PagosColg
                             props={{
-                              handlePaymentComplete,
                               costo: costoInscripcion,
-                              metodoPago,
+                              allowMultiplePayments:false,
+                              handlePago:handlePaymentComplete,
                             }}
                           />
                         )}
-                        <div className="flex flex-col space-y-4 mt-12">
-                          <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
-                            <label className="flex items-center space-x-3 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={pagarLuego}
-                                onChange={(e) => setPagarLuego(e.target.checked)}
-                                className="h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
-                              />
-                              <p className="text-md text-gray-800">
-                                <span className="text-[#41023B] font-bold text-lg">Pagar luego:</span> Al habilitar esta
-                                opción, el colegiado quedará registrado con pago pendiente y podrá completarlo
-                                posteriormente.
-                              </p>
-                            </label>
+                        <div className="flex justify-center mt-12">
+                          <div className="w-full max-w-xs mx-auto p-4 bg-[#41023B]/10 rounded-xl border border-[#41023B]">
+                            <div className="flex items-center justify-center">
+                              <div>
+                                <span className="text-[#41023B] font-bold text-lg mr-4">Pagar luego</span>
+                              </div>
+
+                              {/* Switch con colores y iconos */}
+                              <button
+                                type="button"
+                                onClick={() => setPagarLuego(!pagarLuego)}
+                                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${pagarLuego
+                                  ? "bg-green-500 focus:ring-green-500"
+                                  : "bg-red-500 focus:ring-red-500"
+                                  }`}
+                              >
+                                <span
+                                  className={`inline-flex h-6 w-6 transform items-center justify-center rounded-full bg-white transition-transform ${pagarLuego ? "translate-x-9" : "translate-x-1"
+                                    }`}
+                                >
+                                  {pagarLuego ? (
+                                    <Check className="h-4 w-4 text-green-500" />
+                                  ) : (
+                                    <X className="h-4 w-4 text-red-500" />
+                                  )}
+                                </span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                         <div className="flex justify-center p-6 gap-6">
@@ -816,7 +877,7 @@ export default function RegistrationForm(props) {
                                   Procesando...
                                 </span>
                               ) : (
-                                "Completar Registro"
+                                "Enviar Solicitud de Registro"
                               )}
                             </button>
                           )}
@@ -824,7 +885,7 @@ export default function RegistrationForm(props) {
                       </motion.div>
                     ) : (
                       <form onSubmit={handleSubmit} className="relative z-10">
-                        <div className="p-6">
+                        <div className="py-6">
                           <div className="flex items-center">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#D7008A] to-[#41023B] flex items-center justify-center mr-4">
                               {showEmailVerification ? (
@@ -846,7 +907,7 @@ export default function RegistrationForm(props) {
                           </div>
                         </div>
 
-                        <div className="p-6">
+                        <div className="py-6">
                           <AnimatePresence mode="wait">
                             <motion.div
                               key={showEmailVerification ? "verification" : currentStep}
@@ -924,7 +985,7 @@ export default function RegistrationForm(props) {
                                     Procesando...
                                   </>
                                 ) : (
-                                  "Continuar a Pagos"
+                                  "Pagar"
                                 )}
                               </motion.button>
                             ))}

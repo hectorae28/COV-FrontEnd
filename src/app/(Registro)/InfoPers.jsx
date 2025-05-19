@@ -1,3 +1,4 @@
+"use client";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -6,6 +7,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
   const [isFormValid, setIsFormValid] = useState(false);
   const [isAdult, setIsAdult] = useState(true);
   const [identityCardError, setIdentityCardError] = useState("");
+  const [passportError, setPassportError] = useState("");
   const [days, setDays] = useState([]);
 
   // Constantes para los meses en español
@@ -49,20 +51,19 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
 
   // Función para validar caracteres en nombres y apellidos
   const validateNameChars = (value) => {
-  // Usamos una expresión regular más permisiva que acepte letras, apóstrofes y espacios
-  const regex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ'\s]+$/;
-  return regex.test(value);
-};
+    // Usamos una expresión regular más permisiva que acepte letras, apóstrofes y espacios
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ'\s]+$/;
+    return regex.test(value);
+  };
 
   // Actualizar días según el mes y año seleccionados
   useEffect(() => {
     if (birthDateParts.month && birthDateParts.year) {
       const daysInMonth = new Date(
-        parseInt(birthDateParts.year), 
-        parseInt(birthDateParts.month), 
+        parseInt(birthDateParts.year),
+        parseInt(birthDateParts.month),
         0
       ).getDate();
-      
       const daysArray = Array.from({ length: daysInMonth }, (_, i) => {
         const day = i + 1;
         return {
@@ -70,9 +71,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           label: day.toString()
         };
       });
-      
       setDays(daysArray);
-      
       // Si el día seleccionado es mayor que los días disponibles en el mes, resetear el día
       if (birthDateParts.day && parseInt(birthDateParts.day) > daysInMonth) {
         setBirthDateParts(prev => ({ ...prev, day: "" }));
@@ -85,20 +84,24 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     let processedValue = value;
 
     // Aplicar capitalización y validación según el campo
-    if (
-      ["firstName", "secondName", "firstLastName", "secondLastName"].includes(
-        name
-      )
-    ) {
+    if (["firstName", "secondName", "firstLastName", "secondLastName"].includes(name)) {
       // Permitimos escribir espacios, pero eliminamos espacios dobles al procesar
       // No bloqueamos la entrada si hay espacios dobles
-      processedValue = value.replace(/\s{2,}/g, " ");
+      processedValue = value.replace(/\s{2,}/g, ' ');
       processedValue = capitalizeText(processedValue);
-
       // Solo retornamos si hay caracteres no permitidos (que no sean espacios)
       if (processedValue && !validateNameChars(processedValue)) {
         return;
       }
+    }
+
+    // Modificar la validación para pasaporte: permitir formato alfanumérico
+    if (name === "identityCard" && formData.documentType === "pasaporte") {
+      // Permitir letras y números para pasaporte, convertir letras a mayúsculas
+      processedValue = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    } else if (name === "identityCard" && formData.documentType === "cedula") {
+      // Para cédula, solo permitir números
+      processedValue = value.replace(/\D/g, "");
     }
 
     onInputChange({ [name]: processedValue });
@@ -110,14 +113,26 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         identityCard: "",
         idType: value === "cedula" ? "V" : ""
       });
+      // Limpiar errores al cambiar de tipo de documento
+      setIdentityCardError("");
+      setPassportError("");
     }
 
     // Validate identity card length when it changes
-    if (name === "identityCard" && formData.documentType === "cedula") {
-      if (value.length > 0 && (value.length < 7 || value.length > 8)) {
-        setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
-      } else {
-        setIdentityCardError("");
+    if (name === "identityCard") {
+      if (formData.documentType === "cedula") {
+        if (value.length > 0 && (value.length < 7 || value.length > 8)) {
+          setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
+        } else {
+          setIdentityCardError("");
+        }
+      } else if (formData.documentType === "pasaporte") {
+        // Validar longitud de pasaporte (entre 4 y 15 caracteres)
+        if (processedValue.length > 0 && (processedValue.length < 4 || processedValue.length > 15)) {
+          setPassportError("El pasaporte debe tener entre 4 y 15 caracteres");
+        } else {
+          setPassportError("");
+        }
       }
     }
 
@@ -127,9 +142,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         ...birthDateParts,
         [name.replace("birthDate", "").toLowerCase()]: value
       };
-      
       setBirthDateParts(newBirthDateParts);
-      
       // Si tenemos las tres partes, construir la fecha completa
       if (newBirthDateParts.year && newBirthDateParts.month && newBirthDateParts.day) {
         const fullDate = `${newBirthDateParts.year}-${newBirthDateParts.month}-${newBirthDateParts.day}`;
@@ -189,15 +202,23 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       "maritalStatus"
     ];
 
-    // Check if identity card meets the length requirement for cédula
+    // Validar cédula o pasaporte según el tipo de documento
     let isIdentityCardValid = true;
+
     if (formData.documentType === "cedula" && formData.identityCard) {
       isIdentityCardValid = formData.identityCard.length >= 7 && formData.identityCard.length <= 8;
-
       if (!isIdentityCardValid) {
         setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
       } else {
         setIdentityCardError("");
+      }
+    } else if (formData.documentType === "pasaporte" && formData.identityCard) {
+      // Validar longitud de pasaporte
+      if (formData.identityCard.length < 4 || formData.identityCard.length > 15) {
+        setPassportError("El pasaporte debe tener entre 4 y 15 caracteres");
+        isIdentityCardValid = false;
+      } else {
+        setPassportError("");
       }
     }
 
@@ -271,6 +292,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
+
         {/* Identity Card / Passport */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -288,18 +310,26 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           ) : (
             // En modo normal, editable según tipo de documento
             isPasaporte ? (
-              // Caso Pasaporte: Solo campo de texto para el número
-              <input
-                type="text"
-                name="identityCard"
-                value={formData.identityCard}
-                maxLength={15}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                placeholder="Ingrese Pasaporte"
-                style={{ height: "48px" }}
-              />
+              // Caso Pasaporte: Campo de texto para formato alfanumérico
+              <div>
+                <input
+                  type="text"
+                  name="identityCard"
+                  value={formData.identityCard}
+                  maxLength={15}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") || passportError ? "border-red-500 bg-red-50" : "border-gray-200"
+                    } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                  placeholder="Ingrese su número de pasaporte"
+                  style={{ height: "48px" }}
+                />
+                {passportError && (
+                  <p className="mt-1 text-xs text-red-500">{passportError}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Puede contener letras y números
+                </p>
+              </div>
             ) : (
               // Caso Cédula: Selector de V/E + campo numérico
               <div className="flex items-center relative">
@@ -397,6 +427,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           />
         </div>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* First Last Name */}
         <div>
@@ -446,7 +477,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           />
         </div>
       </div>
-      
+
       {/* Nueva fila con tres columnas para fecha de nacimiento, género y estado civil */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Fecha de Nacimiento (con selectores separados) */}
@@ -484,7 +515,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 </svg>
               </div>
             </div>
-            
             {/* Selector de mes */}
             <div className="relative">
               <select
@@ -513,7 +543,6 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                 </svg>
               </div>
             </div>
-            
             {/* Selector de día */}
             <div className="relative">
               <select
@@ -550,7 +579,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Debe ser mayor de edad (18 años o más)</p>
           )}
         </div>
-        
+
         {/* Género */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -586,7 +615,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
-        
+
         {/* Estado Civil */}
         <div>
           <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">

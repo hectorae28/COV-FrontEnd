@@ -62,7 +62,7 @@ export default function ClaimAccountForm({ onBackToLogin }) {
               <span>Procesando...</span>
             </div>
           ) : (
-            "Registrar mi pago"
+            "Enviar Correo"
           )}
         </motion.button>
 
@@ -72,7 +72,7 @@ export default function ClaimAccountForm({ onBackToLogin }) {
             className="cursor-pointer text-[#D7008A] font-medium hover:underline flex items-center justify-center"
             onClick={(e) => {
               e.preventDefault();
-              onBackToLogin();
+              onBackToLogin({ text: "", type: "info" })
             }}
           >
             <ArrowLeft className="mr-2 h-5 w-5" /> Volver a Iniciar Sesión

@@ -1,7 +1,7 @@
 "use client"
 
-import SessionInfo from "@/Components/SessionInfo"
-import { motion } from "framer-motion"
+import SessionInfo from "@/Components/SessionInfo";
+import { motion } from "framer-motion";
 import {
     AlertCircle,
     AlertTriangle,
@@ -15,7 +15,7 @@ import {
     User,
     UserX,
     XCircle,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function ProfileCard({ props }) {
     const {
@@ -128,7 +128,7 @@ export default function ProfileCard({ props }) {
                         <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
                             <GraduationCap className="text-[#C40180] h-5 w-5 mr-3" />
                             <div>
-                                <p className="text-xs text-gray-500 font-medium">Ejercicio profesional</p>
+                                <p className="text-xs text-gray-500 font-medium">Profesión/Ocupación</p>
                                 <p className="text-sm text-gray-700">{pendiente.tipo_profesion_display}</p>
                             </div>
                         </div>
@@ -188,11 +188,11 @@ export default function ProfileCard({ props }) {
                                         ? "Debe aprobar todos los documentos para continuar"
                                         : pagosPendientes && !pendiente?.exoneracionPagos?.fecha
                                             ? "Complete el pago o exonere el pago para aprobar"
-                                            : "Aprobar solicitud"
+                                            : "Aprobar Solicitud"
                                 }
                             >
                                 <CheckCircle size={18} />
-                                <span>Aprobar solicitud</span>
+                                <span>Aprobar Solicitud</span>
                             </button>
 
                             {/* Para rechazadas, mostrar botón de denegar; para pendientes, mostrar botón de rechazar */}
@@ -202,7 +202,7 @@ export default function ProfileCard({ props }) {
                                     } text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all duration-300 shadow-sm font-medium`}
                             >
                                 <XCircle size={18} />
-                                <span>{isRechazada ? "Anular solicitud" : "Rechazar solicitud"}</span>
+                                <span>{isRechazada ? "Anular Solicitud" : "Rechazar Solicitud"}</span>
                             </button>
 
                             {/* Botón para exonerar pagos (solo si hay pagos pendientes) */}
@@ -221,7 +221,7 @@ export default function ProfileCard({ props }) {
                                 className="cursor-pointer bg-gradient-to-r from-red-700 to-red-800 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all duration-300 shadow-sm font-medium"
                             >
                                 <AlertTriangle size={18} />
-                                <span>Reportar ilegalidad</span>
+                                <span>Reportar Irregulidad</span>
                             </button>
                         </div>
                     )}

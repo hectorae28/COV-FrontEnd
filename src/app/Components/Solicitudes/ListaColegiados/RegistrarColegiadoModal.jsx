@@ -310,7 +310,7 @@ export default function RegistroColegiados({
         );
       case 2:
         return (
-          <InfoContacto formData={formData} onInputChange={handleInputChange} />
+          <InfoContacto formData={formData} onInputChange={handleInputChange} isAdmin={true} />
         );
       case 3:
         return (

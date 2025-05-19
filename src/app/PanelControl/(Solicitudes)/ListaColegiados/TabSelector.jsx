@@ -89,7 +89,7 @@ export default function TabSelector({
                         } transition-colors`}
                     onClick={handleClickPendientes}
                 >
-                    Pendientes por Aprobación ({contadores.pendientes})
+                    Pendientes ({contadores.pendientes})
                 </button>
 
                 <button
@@ -119,7 +119,7 @@ export default function TabSelector({
                         } transition-colors`}
                     onClick={handleClickRegistrados}
                 >
-                    Colegiados Registrados ({contadores.registrados})
+                    Aprobados ({contadores.registrados})
                 </button>
             </nav>
         </div>

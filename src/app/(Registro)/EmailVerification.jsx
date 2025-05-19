@@ -1,5 +1,8 @@
+"use client";
+import { postDataUsuario } from "@/api/endpoints/colegiado";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MailCheck, RefreshCw } from "lucide-react";
+import { type } from "os";
 import { useEffect, useRef, useState } from "react";
 
 export default function EmailVerification({
@@ -12,10 +15,30 @@ export default function EmailVerification({
     const [verificationCode, setVerificationCode] = useState(Array(6).fill(""));
     const [isVerifying, setIsVerifying] = useState(false);
     const [error, setError] = useState("");
-    const [timeLeft, setTimeLeft] = useState(60);
-    const [canResend, setCanResend] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(null);
+    const [canResend, setCanResend] = useState(null);
 
     const inputRefs = useRef([]);
+    const handleSendEmailCode = async () => {
+        try{
+            const res = await postDataUsuario(`send-verification-email`, {
+                "email": email
+            })
+            if (res.status === 200) {
+                setCanResend(false);
+                setTimeLeft(60);
+            }
+        }catch(err){
+            if (err.status === 409){
+                setError("El correo electrónica ya se encuentra registrado")
+            }else{
+                setError("Error al enviar el código. Por favor, intente nuevamente.")
+            }
+        }
+    }
+    useEffect(() => {
+        handleSendEmailCode()
+    }, [])
 
     // Timer para resentir código
     useEffect(() => {
@@ -92,27 +115,27 @@ export default function EmailVerification({
 
     const handleVerify = async () => {
         const code = verificationCode.join('');
-
         // Validar que todos los campos estén completos
         if (code.length !== 6) {
             setError("Por favor, ingrese el código completo de 6 dígitos");
             return;
         }
-
         setIsVerifying(true);
         setError("");
-
         try {
-            // Aquí se implementaría la llamada a la API para verificar el código
-            // Por ahora simulamos una verificación exitosa (código 123456)
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            if (code === "123456") { // Simular verificación exitosa con código 123456
-                onVerificationSuccess();
-            } else {
-                setError("El código ingresado no es válido. Por favor, intente nuevamente.");
+            const rest = await postDataUsuario(`verify-email`, {
+                "email": email,
+                "code": code
+               })
+            if(rest.status === 200){
+                onVerificationSuccess()
+            }else{
+                setError("Error al verificar el código. Por favor, intente nuevamente.")
             }
         } catch (err) {
+            if(err.status === 409){
+                setError("El correo electrónica ya se encuentra registrado")
+            }
             setError("Error al verificar el código. Por favor, intente nuevamente.");
         } finally {
             setIsVerifying(false);
@@ -213,8 +236,8 @@ export default function EmailVerification({
                                 onClick={handleResendCode}
                                 disabled={!canResend || isResending}
                                 className={`${canResend && !isResending
-                                        ? "text-[#D7008A] font-medium hover:underline"
-                                        : "text-gray-400 cursor-default"
+                                    ? "text-[#D7008A] font-medium hover:underline"
+                                    : "text-gray-400 cursor-default"
                                     }`}
                             >
                                 {isResending ? (
@@ -249,8 +272,8 @@ export default function EmailVerification({
                     onClick={handleVerify}
                     disabled={isVerifying || verificationCode.join('').length !== 6}
                     className={`flex items-center px-6 py-2 rounded-xl text-sm font-medium transition-colors ${isVerifying || verificationCode.join('').length !== 6
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white hover:opacity-90"
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white hover:opacity-90"
                         }`}
                 >
                     {isVerifying ? (

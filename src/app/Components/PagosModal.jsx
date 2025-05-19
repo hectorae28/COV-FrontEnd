@@ -1,9 +1,9 @@
 "use client";
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Check, CreditCard, DollarSign } from "lucide-react";
-import { useState, useEffect } from "react";
-import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import { useEffect, useState } from "react";
 
 export default function PagosColg({ props }) {
   const { costo, allowMultiplePayments, handlePago } =
@@ -19,8 +19,6 @@ export default function PagosColg({ props }) {
   const [tasaBCV, setTasaBCV] = useState(0);
   const [metodoDePago, setMetodoDePago] = useState([]);
 
-  
-  
   const getTasa = async () => {
     try {
       const tasa = await fetchDataSolicitudes("tasa-bcv");
@@ -60,9 +58,10 @@ export default function PagosColg({ props }) {
   const paypalAmount = calculatePaypalFee(paymentAmount);
 
   const handleSubmit = async (e) => {
+    console.log(paymentMethod)
     e.preventDefault();
     setIsSubmitting(true);
-    handlePaymentComplete({
+    handlePago({
       paymentDate,
       referenceNumber,
       paymentFile,
@@ -245,8 +244,8 @@ export default function PagosColg({ props }) {
                           <motion.div
                             key={index}
                             className={`cursor-pointer rounded-lg border transition-all overflow-hidden p-2 ${widthClass} ${paymentMethod === metodo.datos_adicionales.slug
-                                ? "border-[#D7008A] ring-1 ring-[#D7008A] bg-[#D7008A]/5"
-                                : "border-gray-200 hover:border-[#D7008A]"
+                              ? "border-[#D7008A] ring-1 ring-[#D7008A] bg-[#D7008A]/5"
+                              : "border-gray-200 hover:border-[#D7008A]"
                               }`}
                             onClick={() => handleSelectPaymentMethod({
                               nombre: metodo.datos_adicionales.slug,
@@ -292,16 +291,16 @@ export default function PagosColg({ props }) {
               <button
                 key={index}
                 className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
-                    ? "bg-red-50 border-red-300 text-red-700"
-                    : "bg-blue-50 border-blue-300 text-blue-700"
+                  ? "bg-red-50 border-red-300 text-red-700"
+                  : "bg-blue-50 border-blue-300 text-blue-700"
                   } ${paymentMethod === metodo.datos_adicionales.slug
                     ? 'ring-2 ring-offset-2 ring-[#D7008A]'
                     : ''
                   }`}
                 onClick={() => setPaymentMethod({
-                              nombre: metodo.datos_adicionales.slug,
-                              metodoId: metodo.id
-                            })}
+                  nombre: metodo.datos_adicionales.slug,
+                  metodoId: metodo.id
+                })}
               >
                 <img
                   src={
@@ -345,6 +344,9 @@ export default function PagosColg({ props }) {
                         Números de cuentas del Colegio de Odontólogos de
                         Venezuela
                       </p>
+                      <p className="text-sm">
+                        Cuenta Corriente Nº 0102-0127-63-0000007511
+                      </p>
                       <p className="text-sm mt-2">RIF.: J-00041277-4</p>
                       <p className="text-sm">
                         A nombre del Colegio de Odontólogos de Venezuela
@@ -365,13 +367,6 @@ export default function PagosColg({ props }) {
                       <p className="text-sm text-red-700">
                         SI VA A REALIZAR TRÁMITES EN LINEA DEBERÁ DEPOSITAR
                         SOLAMENTE EN LA CUENTA DEL BANCO DE VENEZUELA.
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <p className="font-semibold">BANCO DE VENEZUELA</p>
-                      <p className="text-sm">
-                        Cuenta Corriente Nº 0102-0127-63-0000007511
                       </p>
                     </div>
                   </div>

@@ -351,7 +351,7 @@ export function RejectModal({
                             className="h-4 w-4 text-purple-600 rounded border-gray-300"
                         />
                         <label htmlFor="motivoPersonalizado" className="ml-2 text-sm text-gray-700">
-                            Otro motivo
+                            Agregar Detalles
                         </label>
                     </div>
 
@@ -505,7 +505,7 @@ export function ExonerationModal({
                             className="h-4 w-4 text-purple-600 rounded border-gray-300"
                         />
                         <label htmlFor="exoneracionPersonalizada" className="ml-2 text-sm text-gray-700">
-                            Otro motivo
+                            Agregar Detalles
                         </label>
                     </div>
 

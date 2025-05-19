@@ -46,6 +46,7 @@ export default function AppBar() {
   const [isLoading, setIsLoading] = useState(false); // New state for loading spinner
   const menuRefs = useRef([]);
   const mobileMenuRef = useRef(null);
+  
 
   // Function to check if a menu item is active based on the current path
   const isMenuActive = (item) => {
@@ -128,13 +129,6 @@ export default function AppBar() {
     setIsLoading(true);
     // Navigate to login page
     router.push("/Login");
-
-    // Optional: You can add a timeout to ensure the spinner shows for at least a minimum time
-    // setTimeout(() => {
-    //   setIsLoading(false);
-    // }, 1500);
-
-    // The loading state will be reset when the component unmounts during navigation
   };
 
   const handleBridgeHover = (index) => {
@@ -174,6 +168,7 @@ export default function AppBar() {
               alt="logos"
               width={paddingY > 18 ? 260 : 200}
               height={paddingY > 18 ? 60 : 40}
+              style={{ color: "transparent" }}
               className="transition-all duration-300 w-auto h-auto max-w-[120px] sm:max-w-[160px] md:max-w-[200px] lg:max-w-[220px]"
             />
           </div>

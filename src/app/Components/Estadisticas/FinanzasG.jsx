@@ -3,15 +3,15 @@
 import { FilterDropdown, generateColors, SectionTitle } from "@/app/PanelControl/(Estadisticas)/Estadisticas/page";
 import { useMemo, useState } from "react";
 import {
-  Bar, BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis
+    Bar, BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Line,
+    LineChart,
+    Pie,
+    PieChart,
+    ResponsiveContainer, Tooltip, XAxis, YAxis
 } from "recharts";
 
 // Tasa de cambio: 1 USD = 80 BS
