@@ -20,7 +20,7 @@ import {useSolicitudesStore} from "@/store/SolicitudesStore.jsx"
 import useColegiadoUserStore from "@/store/colegiadoUserStore"
 import transformBackendData from "@/utils/formatDataSolicitudes";
 import {useRouter} from "next/navigation"
-export default function ListaSolicitudes() {
+export default function ListaSolicitudes({isAdmin  = false}) {
   
   // Estados para manejar los datos
   //const [solicitudes, setSolicitudes] = useState([])
@@ -455,11 +455,11 @@ export default function ListaSolicitudes() {
               name: "Administrador",
               email: "admin@ejemplo.com",
               role: "admin",
-              isAdmin: true,
+              isAdmin: isAdmin,
             },
           }}
           solicitudCreada={solicitudCreada}
-          isAdmin={true}
+          isAdmin={isAdmin}
         />
       )}
     </div>

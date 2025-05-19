@@ -125,17 +125,12 @@ export default function LoginScreen() {
                   <div className="relative mb-16 sm:mb-24 md:mb-32">
                     <div className="absolute inset-0"></div>
                     <Link href="/">
-                      <Image
+                      <img
                         src="/assets/logo.png"
                         alt="Logo Colegio de Odontólogos de Venezuela"
                         width={400}
                         height={120}
                         className="relative drop-shadow-md object-contain max-w-full h-auto cursor-pointer"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src =
-                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Ccircle cx='90' cy='90' r='80' fill='%23ffffff' /%3E%3Ctext x='50%' y='50%' fontSize='24' textAnchor='middle' dominantBaseline='middle' fill='%23D7008A'%3ECOV%3C/text%3E%3C/svg%3E";
-                        }}
                       />
                     </Link>
                   </div>

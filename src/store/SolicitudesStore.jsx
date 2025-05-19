@@ -114,6 +114,7 @@ export const useSolicitudesStore = create((set, get) => ({
   solicitudesAbiertasPagination: {},
   solicitudesCerradas: [],
   solicitudesCerradasPagination: {},
+  pagosSolicitud:[],
   tipos_solicitud: TIPOS_SOLICITUD,
   loading: false,
   error: null,
@@ -216,6 +217,7 @@ export const useSolicitudesStore = create((set, get) => ({
   getSolicitudById: async (id) => {
     try {
       const res = await fetchSolicitudes(`solicitud_unida/${id}`);
+      get().getPagosSolicitud(id);
       return res.data;
     } catch (error) {
       set({ error: error.message || "Error al obtener detalles de la solicitud" });
@@ -246,8 +248,6 @@ export const useSolicitudesStore = create((set, get) => ({
     }
   },
   
-
-  
   updateSolicitudStatus: async (id, nuevoEstado, observaciones = "") => {
     set({ loading: true });
     try {
@@ -268,6 +268,48 @@ export const useSolicitudesStore = create((set, get) => ({
       set({ 
         loading: false, 
         error: error.message || "Error al actualizar estado de solicitud"
+      });
+      throw error;
+    }
+  },
+  // PAGOS
+  getPagosSolicitud: async (id) => {
+    set({ loading: true });
+    try {
+      const res = await fetchSolicitudes(`pago`,"?solicitud="+id);
+
+      set({
+        pagosSolicitud: res.data,
+        loading: false
+      })
+      return res.data;
+    } catch (error) {
+      set({ 
+        loading: false, 
+        error: error.message || "Error al cargar los pagos de la solicitud"
+      });
+      throw error;
+    }
+  },
+
+  addPagosSolicitud : async(id, pago) => {
+    set({ loading: true });
+    try {
+      const Form = new FormData();
+      Form.append("solicitud", id);
+      Form.append("monto", pago.monto);
+      Form.append("moneda", pago.moneda);
+      Form.append("num_referencia", pago.num_referencia);
+      Form.append("metodo_de_pago", pago.metodo_de_pago);
+      Form.append("tasa_bcv_del_dia", pago.tasa_bcv_del_dia);
+  
+      const res = await postDataSolicitud("pago", Form);
+      get().getPagosSolicitud(id);
+      
+    } catch (error) {
+      set({ 
+        loading: false, 
+        error: error.message || "Error al crear el pago"
       });
       throw error;
     }
