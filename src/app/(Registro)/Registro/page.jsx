@@ -728,7 +728,7 @@ export default function RegistrationForm(props) {
                         <div className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-6">
                           <Check className="w-10 h-10 text-white" />
                         </div>
-                        <h2 className="text-2xl font-bold text-[#41023B] mb-4">¡Su formulario ha sido enviado con éxito!</h2>
+                        <h2 className="text-2xl font-bold text-[#41023B] mb-4">¡Su Solicitud de Registro ha sido enviado con éxito!</h2>
                         <p className="text-gray-600 mb-6">
                           Gracias por registrarse. Hemos recibido su información y pronto nos
                           pondremos en contacto con usted.
@@ -738,7 +738,7 @@ export default function RegistrationForm(props) {
                         {pagarLuego && (
                           <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
                             <p className="text-yellow-800 font-medium">
-                              Recuerde que para finalizar su registro exitosamente debe realizar sus pagos correspondientes posteriormente.
+                              Hemos enviado un correo electrónico a su dirección registrada con un enlace para completar el pago pendiente. Recuerde que su solicitud no será procesada hasta que se haya realizado el pago correspondiente.
                             </p>
                           </div>
                         )}
@@ -787,8 +787,8 @@ export default function RegistrationForm(props) {
                                 type="button"
                                 onClick={() => setPagarLuego(!pagarLuego)}
                                 className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${pagarLuego
-                                    ? "bg-green-500 focus:ring-green-500"
-                                    : "bg-red-500 focus:ring-red-500"
+                                  ? "bg-green-500 focus:ring-green-500"
+                                  : "bg-red-500 focus:ring-red-500"
                                   }`}
                               >
                                 <span
@@ -838,7 +838,7 @@ export default function RegistrationForm(props) {
                                   Procesando...
                                 </span>
                               ) : (
-                                "Completar Registro"
+                                "Enviar Solicitud de Registro"
                               )}
                             </button>
                           )}
@@ -946,7 +946,7 @@ export default function RegistrationForm(props) {
                                     Procesando...
                                   </>
                                 ) : (
-                                  "Continuar a Pagos"
+                                  "Pagar"
                                 )}
                               </motion.button>
                             ))}

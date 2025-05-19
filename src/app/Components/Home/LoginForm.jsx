@@ -1,11 +1,10 @@
 "use client";
+import Alert from "@/app/Components/Alert";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Lock, Mail } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
-import Alert from "@/app/Components/Alert"
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount }) {
   const searchParams = useSearchParams();
@@ -16,13 +15,13 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
 
   useEffect(() => {
     setError(searchParams.get("error"));
-  },[])
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    try{
+    try {
       const Form = new FormData(formRef.current);
       const result = await signIn("credentials", {
         username: Form.get("email"),
@@ -44,15 +43,15 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
           default:
             setError("Ocurrió un error inesperado. Intenta nuevamente.");
         }
-            
+
       } else {
         console.log("Inicio de sesión exitoso:", result);
         router.push("/Colegiado");
       }
-    }catch (error) {
+    } catch (error) {
       console.error("Error al iniciar sesión:", error);
       setError("Ocurrió un error inesperado. Intenta nuevamente.");
-    }finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -107,7 +106,7 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
           "Iniciar Sesión"
         )}
       </motion.button>
-        
+
       {/* Forgot password link */}
       <div className="text-center mt-4">
         <motion.a
@@ -123,9 +122,9 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
           ¿Olvidaste tu contraseña?
         </motion.a>
       </div>
-        
+
       {/* Register link - Entire section with hover effect */}
-      <motion.div 
+      <motion.div
         className="text-center mt-8 p-2 bg-gray-50 rounded-xl border border-gray-100 cursor-pointer hover:bg-gradient-to-r hover:from-[#D7008A] hover:to-[#41023B] group transition-all duration-300"
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
@@ -139,9 +138,9 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
           Registrate como Colegiado
         </span>
       </motion.div>
-      
+
       {/* Claim Account section - Entire section with hover effect */}
-      <motion.div 
+      <motion.div
         className="text-center mt-4 p-2 border border-gray-300 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-[#D7008A] hover:to-[#41023B] group transition-all duration-300"
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
@@ -150,9 +149,9 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
           onClaimAccount();
         }}
       >
-        <p className="text-gray-700 mb-2 text-sm group-hover:text-white transition-colors duration-300">¿Estas PreInscrito? Finaliza tu Registro</p>
+        <p className="text-gray-700 mb-2 text-sm group-hover:text-white transition-colors duration-300">¿Ya completaste el Formulario, pero te falta registrar el pago?</p>
         <span className="text-[#D7008A] font-medium group-hover:text-white transition-colors duration-300">
-          Registra tu Pago
+          Completar Registro de Pago
         </span>
       </motion.div>
     </form>

@@ -1,14 +1,14 @@
 "use client";
 
-import { cursosData, eventosData } from "@/app/Models/PanelControl/PaginaWeb/CursosEventos/CursoEventosData";
+import { cursosData, eventosData } from "@/app/Models/PanelControl/CursosEventos/CursoEventosData";
 import { Tab } from "@headlessui/react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 // Import components
-import EventForm from "@/app/components/PaginaWeb/CursosEventos/EventForm";
-import EventList from "@/app/components/PaginaWeb/CursosEventos/EventList";
-import FormBuilder from "@/app/Components/PaginaWeb/CursosEventos/FormInscripcion/FormBuilder";
+import EventForm from "@/app/Components/CursosEventos/EventForm";
+import EventList from "@/app/Components/CursosEventos/EventList";
+import FormBuilder from "@/app/Components/CursosEventos/FormInscripcion/FormBuilder";
 
 const initialValues = {
   title: "",
@@ -156,7 +156,7 @@ export default function DashboardEventos() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
         >
-          Inicio ELCOV
+          Cursos y Eventos
         </motion.h1>
         <motion.p
           className="mt-4 max-w-full mx-auto text-gray-600 text-base md:text-lg"
@@ -164,7 +164,7 @@ export default function DashboardEventos() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
         >
-          Gestión de contenidos del <span className="font-bold text-[#C40180]">Inicio</span> del sitio web del Colegio Odontológico de Venezuela
+          Gestión de contenidos de <span className="font-bold text-[#C40180]">Cursos y Eventos</span> del sitio web del Colegio Odontológico de Venezuela
         </motion.p>
       </motion.div>
 
@@ -173,7 +173,7 @@ export default function DashboardEventos() {
         resetForm();
         setSearchTerm("");
       }}>
-        <Tab.List className="flex space-x-2 mb-4 bg-white p-1 rounded-lg shadow-sm">
+        <Tab.List className="flex space-x-2 mb-4 bg-white p-1 rounded-lg shadow-sm max-w-[584px]">
           <Tab className={({ selected }) => 
             `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${
               selected 
@@ -195,19 +195,7 @@ export default function DashboardEventos() {
         </Tab.List>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left side: Form with Preview */}
-          <div className="lg:col-span-4 space-y-4">
-            <EventForm 
-              formValues={formValues}
-              setFormValues={setFormValues}
-              handleSave={handleSave}
-              isCreating={isCreating}
-              handleNewItem={handleNewItem}
-              tabIndex={tabIndex}
-            />
-          </div>
-          
-          {/* Right side: List */}
+          {/* Left side: List */}
           <div className="lg:col-span-8">
             <EventList 
               filteredData={filteredData}
@@ -218,6 +206,19 @@ export default function DashboardEventos() {
               handleSelect={handleSelect}
               handleDelete={handleDelete}
               handleFormBuilder={handleFormBuilder}
+              handleNewItem={handleNewItem}
+            />
+          </div>
+          
+          {/* Right side: Form with Preview */}
+          <div className="lg:col-span-4 space-y-4">
+            <EventForm 
+              formValues={formValues}
+              setFormValues={setFormValues}
+              handleSave={handleSave}
+              isCreating={isCreating}
+              handleNewItem={handleNewItem}
+              tabIndex={tabIndex}
             />
           </div>
         </div>

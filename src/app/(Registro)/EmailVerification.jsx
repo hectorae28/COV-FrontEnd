@@ -213,8 +213,8 @@ export default function EmailVerification({
                                 onClick={handleResendCode}
                                 disabled={!canResend || isResending}
                                 className={`${canResend && !isResending
-                                        ? "text-[#D7008A] font-medium hover:underline"
-                                        : "text-gray-400 cursor-default"
+                                    ? "text-[#D7008A] font-medium hover:underline"
+                                    : "text-gray-400 cursor-default"
                                     }`}
                             >
                                 {isResending ? (
@@ -249,8 +249,8 @@ export default function EmailVerification({
                     onClick={handleVerify}
                     disabled={isVerifying || verificationCode.join('').length !== 6}
                     className={`flex items-center px-6 py-2 rounded-xl text-sm font-medium transition-colors ${isVerifying || verificationCode.join('').length !== 6
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white hover:opacity-90"
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white hover:opacity-90"
                         }`}
                 >
                     {isVerifying ? (
