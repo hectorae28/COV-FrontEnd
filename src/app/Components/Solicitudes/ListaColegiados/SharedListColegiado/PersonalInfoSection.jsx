@@ -1,26 +1,26 @@
 // SharedListColegiado/PersonalInfoSection.jsx
 "use client";
 
-import { User, Pencil, X, Save, Clock } from "lucide-react";
-import { motion } from "framer-motion";
 import SessionInfo from "@/Components/SessionInfo";
+import { motion } from "framer-motion";
+import { Clock, Pencil, Save, User, X } from "lucide-react";
 
 export default function PersonalInfoSection({
     props
 }) {
     const {
-      pendiente,
-      datosPersonales,
-      setDatosPersonales,
-      editandoPersonal,
-      setEditandoPersonal,
-      updateData,
-      pendienteId,
-      setCambiosPendientes,
-      isAdmin,
-      readOnly = false
+        pendiente,
+        datosPersonales,
+        setDatosPersonales,
+        editandoPersonal,
+        setEditandoPersonal,
+        updateData,
+        pendienteId,
+        setCambiosPendientes,
+        isAdmin,
+        readOnly = false
     } = props;
-    
+
     // Función para manejar cambios en datos personales
     const handleDatosPersonalesChange = (e) => {
         const { name, value } = e.target;
@@ -53,28 +53,28 @@ export default function PersonalInfoSection({
     const handleGuardarDatosPersonales = () => {
         const getDifferences = (original, updated) => {
             const differences = {};
-            
+
             Object.keys(updated).forEach(key => {
                 if (
-                    typeof updated[key] === 'object' && 
-                    updated[key] !== null && 
-                    !Array.isArray(updated[key]) && 
-                    original && 
+                    typeof updated[key] === 'object' &&
+                    updated[key] !== null &&
+                    !Array.isArray(updated[key]) &&
+                    original &&
                     original[key]
                 ) {
                     const nestedDiff = getDifferences(original[key], updated[key]);
                     if (Object.keys(nestedDiff).length > 0) {
                         differences[key] = nestedDiff;
                     }
-                } 
+                }
                 else if (JSON.stringify(updated[key]) !== JSON.stringify(original && original[key])) {
                     differences[key] = updated[key];
                 }
             });
-            
+
             return differences;
         };
-        
+
         // Get persona data from appropriate structure
         const persona = getPersona() || {};
         const personaDifferences = getDifferences(persona, datosPersonales);
@@ -99,7 +99,7 @@ export default function PersonalInfoSection({
             transition={{ delay: 0.1 }}
             className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
         >
-            
+
             {/* Información del creador */}
             {pendiente?.creador && (
                 <div className="pt-6 mb-8">
@@ -299,7 +299,7 @@ export default function PersonalInfoSection({
                             disabled={!isAdmin}
                             value={datosPersonales?.correo || ""}
                             onChange={handleDatosPersonalesChange}
-                            className={`w-full p-2 border ${ !isAdmin&& "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
+                            className={`w-full p-2 border ${!isAdmin && "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
                         />
                     </div>
 
@@ -325,32 +325,32 @@ export default function PersonalInfoSection({
                         />
                     </div>
                     {isAdmin && (
-                    <div className="grid grid-cols-2 gap-2">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Título entregado</label>
-                            <select
-                                name="titulo_entregado"
-                                disabled={!isAdmin}
-                                value={datosPersonales?.titulo_entregado ? "true" : "false"}
-                                onChange={handleDatosPersonalesChange}
-                                className={`w-full p-2 border ${ !isAdmin&& "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
-                            >
-                                <option value="false">No entregado</option>
-                                <option value="true">Entregado</option>
-                            </select>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Título entregado</label>
+                                <select
+                                    name="titulo_entregado"
+                                    disabled={!isAdmin}
+                                    value={datosPersonales?.titulo_entregado ? "true" : "false"}
+                                    onChange={handleDatosPersonalesChange}
+                                    className={`w-full p-2 border ${!isAdmin && "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
+                                >
+                                    <option value="false">No entregado</option>
+                                    <option value="true">Entregado</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro</label>
+                                <input
+                                    type="date"
+                                    name="fecha_registro"
+                                    disabled={!isAdmin}
+                                    value={datosPersonales?.fecha_registro ? datosPersonales.fecha_registro.split('T')[0] : ""}
+                                    onChange={handleDatosPersonalesChange}
+                                    className={`w-full p-2 border ${!isAdmin && "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro</label>
-                            <input
-                                type="date"
-                                name="fecha_registro"
-                                disabled={!isAdmin}
-                                value={datosPersonales?.fecha_registro ? datosPersonales.fecha_registro.split('T')[0] : ""}
-                                onChange={handleDatosPersonalesChange}
-                                className={`w-full p-2 border ${ !isAdmin&& "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
-                            />
-                        </div>
-                    </div>
                     )}
                 </div>
             )}

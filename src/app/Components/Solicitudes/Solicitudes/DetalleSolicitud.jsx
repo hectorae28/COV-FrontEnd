@@ -14,7 +14,7 @@ import Link from "next/link";
 import PagosColg from "@/app/Components/Solicitudes/Solicitudes/PagosModalSolic";
 import ConfirmacionModal from "@/Components/Solicitudes/Solicitudes/ConfirmacionModal";
 import DocumentosSection from "@/Components/Solicitudes/Solicitudes/DocumentsManagerComponent";
-import DocumentViewerModal from "@/Components/Solicitudes/ListaColegiados/DetallePendiente/DocumentViewerModal.jsx";
+import { DocumentSection as DocumentsSection } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import SolicitudHeader from "@/Components/Solicitudes/Solicitudes/HeaderSolic";
 import HistorialPagosSection from "@/Components/Solicitudes/Solicitudes/HistorialPagosSection";
 import RechazoModal from "@/Components/Solicitudes/Solicitudes/RechazoModal";

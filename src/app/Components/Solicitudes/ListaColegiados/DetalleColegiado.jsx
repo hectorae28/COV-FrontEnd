@@ -1,25 +1,24 @@
 "use client";
 
 import useDataListaColegiados from "@/store/ListaColegiadosData";
-import { CheckCircle, ChevronLeft, X } from "lucide-react";
+import { AlertCircle, CheckCircle, ChevronLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Componentes compartidos
-import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
 import AcademicInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
 import InstitutionsSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
+import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
 import ProfessionalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/ProfessionalInfoSection";
 
 // Componentes existentes
+import UserProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/UserProfileCard";
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal";
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud";
 import CarnetInfo from "./DetalleColegiado/CarnetInfo";
 import ChatSection from "./DetalleColegiado/ChatSection";
-import ColegiadoCard from "./DetalleColegiado/ColegiadoCard";
 import DocumentosLista from "./DetalleColegiado/DocumentosLista";
 import EstadisticasUsuario from "./DetalleColegiado/EstadisticasUsuario";
-import ModalConfirmacionTitulo from "./DetalleColegiado/ModalConfirmacionTitulo";
 import ModalVisualizarDocumento from "./DetalleColegiado/ModalVisualizarDocumento";
 import TablaPagos from "./DetalleColegiado/TablaPagos";
 import TablaSolicitudes from "./DetalleColegiado/TablaSolicitudes";
@@ -112,52 +111,52 @@ export default function DetalleColegiado({
 
   // Cargar datos del colegiado
   const loadData = async () => {
-  try {
-    setIsLoading(true)
-    const colegiadoData = await getColegiado(colegiadoId)
-    setColegiado(colegiadoData)
+    try {
+      setIsLoading(true)
+      const colegiadoData = await getColegiado(colegiadoId)
+      setColegiado(colegiadoData)
 
-    // Inicializar datos para componentes compartidos
-    if (colegiadoData) {
-      // Datos personales - Make sure to safely access persona
-      setDatosPersonales({
-        ...(colegiadoData.recaudos?.persona || {}),
-      });
-      
-      // Datos académicos
-      setDatosAcademicos({
-        universidad: colegiadoData.universidad || colegiadoData.recaudos?.universidad || "",
-        fecha_egreso_universidad: colegiadoData.fecha_egreso_universidad || "",
-        num_registro_principal: colegiadoData.num_registro_principal || "",
-        fecha_registro_principal: colegiadoData.fecha_registro_principal || "",
-        num_mpps: colegiadoData.num_mpps || "",
-        fecha_mpps: colegiadoData.fecha_mpps || "",
-        observaciones: colegiadoData.observaciones || ""
-      });
-      
-      // Datos profesionales
-      setDatosProfesionales({
-        numeroRegistro: colegiadoData.numeroRegistro || "",
-        especialidad: colegiadoData.especialidad || "",
-        anios_experiencia: colegiadoData.anios_experiencia || "",
-        carnetVigente: colegiadoData.carnetVigente || false,
-        carnetVencimiento: colegiadoData.carnetVencimiento || ""
-      });
-      
-      // Instituciones
-      setInstituciones(colegiadoData.instituciones || []);
+      // Inicializar datos para componentes compartidos
+      if (colegiadoData) {
+        // Datos personales - Make sure to safely access persona
+        setDatosPersonales({
+          ...(colegiadoData.recaudos?.persona || {}),
+        });
+
+        // Datos académicos
+        setDatosAcademicos({
+          universidad: colegiadoData.universidad || colegiadoData.recaudos?.universidad || "",
+          fecha_egreso_universidad: colegiadoData.fecha_egreso_universidad || "",
+          num_registro_principal: colegiadoData.num_registro_principal || "",
+          fecha_registro_principal: colegiadoData.fecha_registro_principal || "",
+          num_mpps: colegiadoData.num_mpps || "",
+          fecha_mpps: colegiadoData.fecha_mpps || "",
+          observaciones: colegiadoData.observaciones || ""
+        });
+
+        // Datos profesionales
+        setDatosProfesionales({
+          numeroRegistro: colegiadoData.numeroRegistro || "",
+          especialidad: colegiadoData.especialidad || "",
+          anios_experiencia: colegiadoData.anios_experiencia || "",
+          carnetVigente: colegiadoData.carnetVigente || false,
+          carnetVencimiento: colegiadoData.carnetVencimiento || ""
+        });
+
+        // Instituciones
+        setInstituciones(colegiadoData.instituciones || []);
+      }
+
+      // Cargar documentos del colegiado
+      const docs = await getDocumentos(colegiadoId)
+      setDocumentos(docs || [])
+
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Error al cargar datos del colegiado:", error);
+      setIsLoading(false);
     }
-
-    // Cargar documentos del colegiado
-    const docs = await getDocumentos(colegiadoId)
-    setDocumentos(docs || [])
-
-    setIsLoading(false)
-  } catch (error) {
-    console.error("Error al cargar datos del colegiado:", error);
-    setIsLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     loadData();
@@ -330,11 +329,35 @@ export default function DetalleColegiado({
         )}
 
         {/* Header con información principal */}
-        <ColegiadoCard
-          colegiado={colegiado}
+        <UserProfileCard
+          data={colegiado}
+          variant="registered"
           onNuevaSolicitud={() => setMostrarModalSolicitud(true)}
           onConfirmarTitulo={() => setConfirmarTitulo(true)}
+          isAdmin={true}
         />
+
+        {/* Estado de solvencia */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6 border border-gray-100">
+          <div className="flex justify-center">
+            <div className="text-center">
+              <p className="text-sm text-gray-500 mb-2">Estado de solvencia</p>
+              <p className={`font-bold text-xl ${colegiado.solvencia_status ? 'text-green-600' : 'text-red-600'} flex items-center justify-center`}>
+                {colegiado.solvencia_status ? (
+                  <>
+                    <CheckCircle size={20} className="mr-2" />
+                    Solvente
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle size={20} className="mr-2" />
+                    No Solvente
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Tabs y contenido */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
@@ -342,81 +365,73 @@ export default function DetalleColegiado({
           <div className="border-b border-gray-200">
             <nav className="flex overflow-x-auto justify-center">
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${
-                  tabActivo === "informacion"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
-                } transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "informacion"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
                 onClick={() => setTabActivo("informacion")}
               >
                 Información
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${
-                  tabActivo === "pagos"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
-                } transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "pagos"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
                 onClick={() => setTabActivo("pagos")}
               >
                 Pagos
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${
-                  tabActivo === "inscripciones"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
-                } transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "inscripciones"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
                 onClick={() => setTabActivo("inscripciones")}
               >
                 Inscripciones
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${
-                  tabActivo === "solicitudes"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
-                } transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "solicitudes"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
                 onClick={() => setTabActivo("solicitudes")}
               >
                 Solicitudes
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${
-                  tabActivo === "carnet"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
-                } transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "carnet"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
                 onClick={() => setTabActivo("carnet")}
               >
                 Carnet
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${
-                  tabActivo === "documentos"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
-                } transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "documentos"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
                 onClick={() => setTabActivo("documentos")}
               >
                 Documentos
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${
-                  tabActivo === "chats"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
-                } transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "chats"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
                 onClick={() => setTabActivo("chats")}
               >
                 Chats
               </button>
               <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${
-                  tabActivo === "estadisticas"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
-                } transition-colors`}
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "estadisticas"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
                 onClick={() => setTabActivo("estadisticas")}
               >
                 Estadísticas
@@ -430,20 +445,20 @@ export default function DetalleColegiado({
               <>
                 {/* Usando componentes compartidos */}
                 <PersonalInfoSection
-  props={{
-    pendiente: colegiado,
-    datosPersonales,
-    setDatosPersonales,
-    editandoPersonal,
-    setEditandoPersonal,
-    updateData: updateColegiadoData,
-    pendienteId: colegiadoId,
-    setCambiosPendientes,
-    isAdmin: true,
-    readOnly: false
-  }}
-/>
-                
+                  props={{
+                    pendiente: colegiado,
+                    datosPersonales,
+                    setDatosPersonales,
+                    editandoPersonal,
+                    setEditandoPersonal,
+                    updateData: updateColegiadoData,
+                    pendienteId: colegiadoId,
+                    setCambiosPendientes,
+                    isAdmin: true,
+                    readOnly: false
+                  }}
+                />
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <AcademicInfoSection
                     pendiente={colegiado}
@@ -484,7 +499,7 @@ export default function DetalleColegiado({
                 />
               </>
             )}
-            
+
             {tabActivo === "pagos" && (
               <TablaPagos colegiadoId={colegiadoId} handleVerDocumento={handleVerDocumento} documentos={documentos || []} />
             )}
@@ -495,7 +510,7 @@ export default function DetalleColegiado({
                 onVerDetalle={verDetalleSolicitud}
               />
             )}
-            {tabActivo === "carnet" && <CarnetInfo colegiado={{...colegiado, persona: colegiado.recaudos.persona}} />}
+            {tabActivo === "carnet" && <CarnetInfo colegiado={{ ...colegiado, persona: colegiado.recaudos.persona }} />}
             {tabActivo === "documentos" && (
               <DocumentosLista
                 documentos={documentos}
@@ -552,6 +567,3 @@ export default function DetalleColegiado({
 
   return content;
 }
-
-// Importaciones faltantes (para componentes como AlertCircle)
-import { AlertCircle } from "lucide-react";

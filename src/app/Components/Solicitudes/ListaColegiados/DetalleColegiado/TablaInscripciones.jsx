@@ -19,7 +19,7 @@ export default function TablaInscripciones({ colegiadoId }) {
       try {
         // Simulamos la carga con un setTimeout
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         // Datos de ejemplo
         setInscripciones([
           {
@@ -78,19 +78,19 @@ export default function TablaInscripciones({ colegiadoId }) {
             creditos: 15
           }
         ])
-        
+
         setIsLoading(false)
       } catch (error) {
         console.error("Error al cargar las inscripciones:", error)
         setIsLoading(false)
       }
     }
-    
+
     fetchInscripciones()
   }, [colegiadoId])
 
   // Filtrar inscripciones según el término de búsqueda
-  const inscripcionesFiltradas = inscripciones.filter(inscripcion => 
+  const inscripcionesFiltradas = inscripciones.filter(inscripcion =>
     inscripcion.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     inscripcion.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     inscripcion.fecha.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,7 +110,7 @@ export default function TablaInscripciones({ colegiadoId }) {
           <h3 className="text-lg font-medium text-gray-900">Cursos y eventos</h3>
           <p className="text-sm text-gray-500 mt-1">Inscripciones a cursos, congresos y eventos</p>
         </div>
-        
+
         <div className="mt-4 md:mt-0">
           <div className="relative">
             <input
@@ -124,7 +124,7 @@ export default function TablaInscripciones({ colegiadoId }) {
           </div>
         </div>
       </div>
-      
+
       {/* Resumen de inscripciones */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -134,7 +134,7 @@ export default function TablaInscripciones({ colegiadoId }) {
             {totalInscripciones}
           </p>
         </div>
-        
+
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Eventos completados</p>
           <p className="text-xl font-semibold text-green-600 flex items-center">
@@ -142,7 +142,7 @@ export default function TablaInscripciones({ colegiadoId }) {
             {inscripcionesCompletadas}
           </p>
         </div>
-        
+
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Total créditos académicos</p>
           <p className="text-xl font-semibold text-blue-600 flex items-center">
@@ -151,7 +151,7 @@ export default function TablaInscripciones({ colegiadoId }) {
           </p>
         </div>
       </div>
-      
+
       {/* Lista de inscripciones */}
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
@@ -177,18 +177,17 @@ export default function TablaInscripciones({ colegiadoId }) {
                         <h4 className="text-lg font-medium text-gray-900">{inscripcion.nombre}</h4>
                         <p className="text-sm text-gray-500 mt-1">{inscripcion.tipo}</p>
                       </div>
-                      
+
                       <div className="flex items-start">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          inscripcion.estado === 'Completado' 
-                            ? 'bg-green-100 text-green-800' 
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${inscripcion.estado === 'Completado'
+                            ? 'bg-green-100 text-green-800'
                             : inscripcion.estado === 'En curso'
                               ? 'bg-blue-100 text-blue-800'
                               : 'bg-yellow-100 text-yellow-800'
-                        }`}>
+                          }`}>
                           {inscripcion.estado}
                         </span>
-                        
+
                         {inscripcion.certificado && (
                           <button className="ml-2 text-blue-600 hover:text-blue-800 flex items-center gap-1">
                             <Download size={16} />
@@ -197,7 +196,7 @@ export default function TablaInscripciones({ colegiadoId }) {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                       <div className="flex items-start">
                         <Calendar className="text-gray-400 h-5 w-5 mr-2 mt-0.5" />
@@ -206,7 +205,7 @@ export default function TablaInscripciones({ colegiadoId }) {
                           <p className="text-sm font-medium">{inscripcion.fecha}</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start">
                         <MapPin className="text-gray-400 h-5 w-5 mr-2 mt-0.5" />
                         <div>
@@ -214,7 +213,7 @@ export default function TablaInscripciones({ colegiadoId }) {
                           <p className="text-sm font-medium">{inscripcion.lugar}</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start">
                         <Users className="text-gray-400 h-5 w-5 mr-2 mt-0.5" />
                         <div>
@@ -222,7 +221,7 @@ export default function TablaInscripciones({ colegiadoId }) {
                           <p className="text-sm font-medium">{inscripcion.ponentes}</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start">
                         <Award className="text-gray-400 h-5 w-5 mr-2 mt-0.5" />
                         <div>

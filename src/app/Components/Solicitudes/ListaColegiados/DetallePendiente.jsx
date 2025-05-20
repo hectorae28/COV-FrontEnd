@@ -16,19 +16,18 @@ import {
 } from "lucide-react";
 
 // Componentes compartidos
-import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
 import AcademicInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
 import InstitutionsSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
+import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
 
-import DocumentsSection from "./DetallePendiente/DocumentsSection";
-import DocumentViewerModal from "./DetallePendiente/DocumentViewerModal";
-import ProfileCard from "./DetallePendiente/ProfileCard";
-import StatusAlerts from "./DetallePendiente/StatusAlerts";
+import { DocumentSection as DocumentsSection } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import {
   ApprovalModal,
   ExonerationModal,
   RejectModal,
-} from "./DetallePendiente/ActionsModals";
+} from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ModalSystem";
+import StatusAlerts from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/NotificationSystem";
+import ProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/UserProfileCard";
 
 // Componente de reporte de irregularidades
 function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
@@ -1067,22 +1066,14 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
       {/* Profile Card */}
       <ProfileCard
-        props={{
-          pendiente,
-          obtenerIniciales,
-          nombreCompleto,
-          fechaSolicitud,
-          documentosCompletos,
-          pagosPendientes,
-          setMostrarConfirmacion,
-          setMostrarRechazo,
-          setMostrarExoneracion,
-          isRechazada,
-          isDenegada,
-          isAdmin,
-          setShowReportModal,
-          allDocumentsApproved: allDocumentsApproved()
-        }}
+        data={pendiente}
+        variant="pending"
+        onMostrarConfirmacion={() => setMostrarConfirmacion(true)}
+        onMostrarRechazo={() => setMostrarRechazo(true)}
+        onMostrarExoneracion={() => setMostrarExoneracion(true)}
+        onMostrarReporteIrregularidad={() => setShowReportModal(true)}
+        isAdmin={isAdmin}
+        allDocumentsApproved={allDocumentsApproved}
       />
 
       {/* Main content sections - Componentes compartidos */}
