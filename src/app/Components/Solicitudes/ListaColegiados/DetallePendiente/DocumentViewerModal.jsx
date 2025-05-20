@@ -1,6 +1,6 @@
 "use client"
 import { motion } from "framer-motion";
-import { CheckCircle, Download, ExternalLink, FileText, X } from "lucide-react";
+import { CheckCircle, Download, ExternalLink, FileText, X, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 
@@ -266,7 +266,7 @@ export default function DocumentViewerModal({ documento, onClose, pendiente, rea
               ) : (
                 <img
                   src={process.env.NEXT_PUBLIC_BACK_HOST + documento.url || "/placeholder.svg"}
-                  alt={documento.nombre||""}
+                  alt={documento.nombre || ""}
                   className="max-h-full max-w-full object-contain"
                 />
               )}
