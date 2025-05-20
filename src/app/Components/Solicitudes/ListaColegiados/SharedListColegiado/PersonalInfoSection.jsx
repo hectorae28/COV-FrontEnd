@@ -24,8 +24,15 @@ export default function PersonalInfoSection({
   // Nuevo estado para el modal
   const [showModal, setShowModal] = useState(false);
 
+  // Nuevo estado para los cambios temporales durante la edición
+  const [tempFormData, setTempFormData] = useState(null);
+  
+  // Estado local para el formulario directo, sin restricciones
+  const [localFormData, setLocalFormData] = useState(null);
+
   // Extraer los valores iniciales para el formulario de edición
   const getInitialFormData = () => {
+    // Crear una copia para evitar modificar el objeto original
     return {
       documentType: datosPersonales?.nacionalidad === "extranjera" ? "pasaporte" : "cedula",
       identityCard: datosPersonales?.identificacion?.split('-')[1] || "",
@@ -39,33 +46,51 @@ export default function PersonalInfoSection({
       maritalStatus: datosPersonales?.estado_civil || ""
     };
   };
+  
+  // Inicializar datos locales cuando se abre el modal
+  const handleOpenModal = () => {
+    setLocalFormData(getInitialFormData());
+    setShowModal(true);
+  };
+
+  // Función para manejar cambios en el formulario sin restricciones
+  const handleLocalInputChange = (e) => {
+    const { name, value } = e.target;
+    setLocalFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setCambiosPendientes(true);
+  };
 
   // Manejador para guardar cambios desde el modal
   const handleSaveChanges = (updates) => {
+    // Usar los datos locales si estamos editando directamente
+    const dataToUpdate = localFormData || updates;
+    
     // Construir el objeto de persona actualizado
     const updatedPersona = {
       ...datosPersonales,
-      nombre: updates.firstName,
-      segundo_nombre: updates.secondName,
-      primer_apellido: updates.firstLastName,
-      segundo_apellido: updates.secondLastName,
-      nacionalidad: updates.documentType === "pasaporte" ? "extranjera" : "venezolana",
-      identificacion: updates.documentType === "pasaporte"
-        ? updates.identityCard
-        : `${updates.idType}-${updates.identityCard}`,
-      fecha_de_nacimiento: updates.birthDate,
-      genero: updates.gender,
-      estado_civil: updates.maritalStatus
+      nombre: dataToUpdate.firstName,
+      segundo_nombre: dataToUpdate.secondName,
+      primer_apellido: dataToUpdate.firstLastName,
+      segundo_apellido: dataToUpdate.secondLastName,
+      nacionalidad: dataToUpdate.documentType === "pasaporte" ? "extranjera" : "venezolana",
+      identificacion: dataToUpdate.documentType === "pasaporte"
+        ? dataToUpdate.identityCard
+        : `${dataToUpdate.idType}-${dataToUpdate.identityCard}`,
+      fecha_de_nacimiento: dataToUpdate.birthDate,
+      genero: dataToUpdate.gender,
+      estado_civil: dataToUpdate.maritalStatus
     };
 
-    // Actualizar estado local
+    // Actualizar estado local primero (importante para feedback inmediato)
     setDatosPersonales(updatedPersona);
+    setTempFormData(null);
+    setLocalFormData(null);
 
-    // Guardar en el backend
+    // Enviar datos al componente padre
     updateData(pendienteId, { persona: updatedPersona });
-
-    // Indicar que los cambios se han guardado
-    setCambiosPendientes(false);
 
     // Cerrar modal
     setShowModal(false);
@@ -80,10 +105,15 @@ export default function PersonalInfoSection({
       .join(' ');
   };
 
-  // Formatear el nombre completo para mostrar
-  const nombreCompleto = datosPersonales ?
-    `${datosPersonales.nombre || ''} ${datosPersonales.segundo_nombre || ''} ${datosPersonales.primer_apellido || ''} ${datosPersonales.segundo_apellido || ''}`.trim()
-    : "";
+  // Formatear la fecha de nacimiento
+  const formatearFecha = (fechaISO) => {
+    if (!fechaISO) return "No especificada";
+    try {
+      return new Date(fechaISO).toLocaleDateString('es-ES');
+    } catch (error) {
+      return fechaISO;
+    }
+  };
 
   return (
     <motion.div
@@ -117,7 +147,7 @@ export default function PersonalInfoSection({
 
         {!readOnly && (
           <button
-            onClick={() => setShowModal(true)}
+            onClick={handleOpenModal}
             className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:opacity-90 transition-colors"
           >
             <Pencil size={16} className="mr-1" />
@@ -126,92 +156,284 @@ export default function PersonalInfoSection({
         )}
       </div>
 
-      {/* Vista de información personal - sin información de contacto */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Primera columna */}
+      {/* Vista de información personal - en formato similar al formulario InfoPers */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Primera fila - Tipo de documento e identificación */}
         <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre completo</p>
-          <p className="font-medium text-gray-800">{nombreCompleto}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+            Tipo de documento
+          </p>
+          <p className="font-medium text-gray-800">
+            {tempFormData?.documentType === "pasaporte" ? "Pasaporte" :
+              (datosPersonales?.nacionalidad === "extranjera" ? "Pasaporte" : "Cédula de identidad")}
+          </p>
         </div>
 
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-            {datosPersonales?.nacionalidad === "extranjera" ? "Pasaporte" : "Cédula"}
+            {(tempFormData?.documentType || datosPersonales?.nacionalidad === "extranjera") ? "Pasaporte" : "Cédula"}
           </p>
           <p className="font-medium text-gray-800">
-            {datosPersonales?.identificacion}
+            {tempFormData ?
+              (tempFormData.documentType === "pasaporte" ?
+                tempFormData.identityCard :
+                `${tempFormData.idType || "V"}-${tempFormData.identityCard}`) :
+              datosPersonales?.identificacion}
           </p>
         </div>
 
+        {/* Segunda fila - Nombres */}
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer nombre</p>
+          <p className="font-medium text-gray-800">{tempFormData?.firstName || datosPersonales?.nombre || "No especificado"}</p>
+        </div>
+
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo nombre</p>
+          <p className="font-medium text-gray-800">{tempFormData?.secondName || datosPersonales?.segundo_nombre || "No especificado"}</p>
+        </div>
+
+        {/* Tercera fila - Apellidos */}
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer apellido</p>
+          <p className="font-medium text-gray-800">{tempFormData?.firstLastName || datosPersonales?.primer_apellido || "No especificado"}</p>
+        </div>
+
+        <div className="bg-gray-50 p-3 rounded-md">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo apellido</p>
+          <p className="font-medium text-gray-800">{tempFormData?.secondLastName || datosPersonales?.segundo_apellido || "No especificado"}</p>
+        </div>
+
+        {/* Cuarta fila - Fecha de nacimiento, género y estado civil */}
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</p>
-          <p className="font-medium text-gray-800">{datosPersonales?.fecha_de_nacimiento
-            ? new Date(datosPersonales.fecha_de_nacimiento).toLocaleDateString('es-ES')
-            : "No especificada"}</p>
-        </div>
-
-        <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
-          <p className="font-medium text-gray-800">
-            {datosPersonales?.estado_civil
-              ? capitalizeText(datosPersonales.estado_civil)
-              : "No especificado"}
-          </p>
+          <p className="font-medium text-gray-800">{formatearFecha(tempFormData?.birthDate || datosPersonales?.fecha_de_nacimiento)}</p>
         </div>
 
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Género</p>
           <p className="font-medium text-gray-800">
-            {datosPersonales?.genero
-              ? capitalizeText(datosPersonales.genero)
-              : "No especificado"}
+            {tempFormData?.gender ?
+              capitalizeText(tempFormData.gender) :
+              (datosPersonales?.genero ? capitalizeText(datosPersonales.genero) : "No especificado")}
           </p>
         </div>
 
-        <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Tipo de documento</p>
+        {/* Última fila abarca 3 columnas */}
+        <div className="bg-gray-50 p-3 rounded-md md:col-span-1">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
           <p className="font-medium text-gray-800">
-            {datosPersonales?.nacionalidad === "extranjera" ? "Pasaporte" : "Cédula de identidad"}
+            {tempFormData?.maritalStatus ?
+              capitalizeText(tempFormData.maritalStatus) :
+              (datosPersonales?.estado_civil ? capitalizeText(datosPersonales.estado_civil) : "No especificado")}
           </p>
-        </div>
-
-        <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer nombre</p>
-          <p className="font-medium text-gray-800">{datosPersonales?.nombre || "No especificado"}</p>
-        </div>
-
-        <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo nombre</p>
-          <p className="font-medium text-gray-800">{datosPersonales?.segundo_nombre || "No especificado"}</p>
-        </div>
-
-        <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer apellido</p>
-          <p className="font-medium text-gray-800">{datosPersonales?.primer_apellido || "No especificado"}</p>
-        </div>
-
-        <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo apellido</p>
-          <p className="font-medium text-gray-800">{datosPersonales?.segundo_apellido || "No especificado"}</p>
         </div>
       </div>
 
-      {/* Modal para edición */}
+      {/* Modal para edición con formulario directo sin validaciones restrictivas */}
       <Modal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setTempFormData(null);
+          setLocalFormData(null);
+        }}
         title="Editar información personal"
         maxWidth="max-w-3xl"
       >
-        <InfoPersonal
-          formData={getInitialFormData()}
-          onInputChange={handleSaveChanges}
-          validationErrors={{}}
-          currentStep={1}
-          attemptedNext={false}
-          validateStep={() => true}
-          isEditMode={true}
-        />
+        {localFormData && (
+          <div className="space-y-6">
+            {/* Tipo de documento */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2 text-sm font-medium text-[#41023B]">
+                  Tipo de documento
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <select
+                  name="documentType"
+                  value={localFormData.documentType}
+                  onChange={handleLocalInputChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                >
+                  <option value="cedula">Cédula de identidad</option>
+                  <option value="pasaporte">Pasaporte</option>
+                </select>
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-[#41023B]">
+                  {localFormData.documentType === "pasaporte" ? "Pasaporte" : "Cédula"}
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <div className="flex">
+                  {localFormData.documentType !== "pasaporte" && (
+                    <select
+                      name="idType"
+                      value={localFormData.idType}
+                      onChange={handleLocalInputChange}
+                      className="w-20 px-2 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                    >
+                      <option value="V">V</option>
+                      <option value="E">E</option>
+                    </select>
+                  )}
+                  <input
+                    type="text"
+                    name="identityCard"
+                    value={localFormData.identityCard}
+                    onChange={handleLocalInputChange}
+                    className={`w-full px-4 py-3 border border-gray-200 ${localFormData.documentType !== "pasaporte" ? "rounded-r-xl" : "rounded-xl"} focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                    placeholder={localFormData.documentType === "pasaporte" ? "Ingrese su pasaporte" : "Ingrese su cédula"}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Nombres */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2 text-sm font-medium text-[#41023B]">
+                  Primer Nombre
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={localFormData.firstName}
+                  onChange={handleLocalInputChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                  placeholder="Ingrese su primer nombre"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-[#41023B]">
+                  Segundo Nombre
+                </label>
+                <input
+                  type="text"
+                  name="secondName"
+                  value={localFormData.secondName}
+                  onChange={handleLocalInputChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                  placeholder="Ingrese su segundo nombre"
+                />
+              </div>
+            </div>
+
+            {/* Apellidos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2 text-sm font-medium text-[#41023B]">
+                  Primer Apellido
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="firstLastName"
+                  value={localFormData.firstLastName}
+                  onChange={handleLocalInputChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                  placeholder="Ingrese su primer apellido"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-[#41023B]">
+                  Segundo Apellido
+                </label>
+                <input
+                  type="text"
+                  name="secondLastName"
+                  value={localFormData.secondLastName}
+                  onChange={handleLocalInputChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                  placeholder="Ingrese su segundo apellido"
+                />
+              </div>
+            </div>
+
+            {/* Fecha de nacimiento, género y estado civil */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block mb-2 text-sm font-medium text-[#41023B]">
+                  Fecha de Nacimiento
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="birthDate"
+                  value={localFormData.birthDate ? localFormData.birthDate.split('T')[0] : ""}
+                  onChange={handleLocalInputChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-[#41023B]">
+                  Género
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <select
+                  name="gender"
+                  value={localFormData.gender}
+                  onChange={handleLocalInputChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                >
+                  <option value="" disabled>Seleccionar Género</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="femenino">Femenino</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-[#41023B]">
+                  Estado Civil
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <select
+                  name="maritalStatus"
+                  value={localFormData.maritalStatus}
+                  onChange={handleLocalInputChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                >
+                  <option value="" disabled>Seleccionar Estado Civil</option>
+                  <option value="soltero">Soltero</option>
+                  <option value="casado">Casado</option>
+                  <option value="divorciado">Divorciado</option>
+                  <option value="viudo">Viudo</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Botón de guardar */}
+            <div className="flex justify-end pt-4 border-t mt-6">
+              <button
+                onClick={() => handleSaveChanges(null)}
+                className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
+              >
+                Guardar cambios
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Usar el componente original como respaldo si localFormData no está listo */}
+        {!localFormData && (
+          <InfoPersonal
+            formData={getInitialFormData()}
+            onInputChange={(updates) => {
+              // Almacenar cambios temporales para previsualización
+              setTempFormData(prev => ({
+                ...prev,
+                ...updates
+              }));
+              // Marcar que hay cambios pendientes
+              setCambiosPendientes(true);
+            }}
+            validationErrors={{}}
+            isProfileEdit={false}
+            isEditMode={true}
+            onSave={handleSaveChanges}
+          />
+        )}
       </Modal>
     </motion.div>
   );

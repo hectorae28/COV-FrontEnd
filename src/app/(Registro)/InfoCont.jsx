@@ -22,7 +22,8 @@ export default function InfoContacto({
   isProfileEdit,
   requestEmailVerification,
   isAdmin=false,
-  isEditMode = false
+  isEditMode = false,
+  onSave
 }) {
   const [cities, setCities] = useState([])
   const [isFormValid, setIsFormValid] = useState(false)
@@ -33,6 +34,14 @@ export default function InfoContacto({
   const [emailChanged, setEmailChanged] = useState(false)
   const [emailError, setEmailError] = useState("")
   const dropdownRef = useRef(null)
+  
+  // Estado local para el formulario en modo edición
+  const [localFormData, setLocalFormData] = useState(formData);
+  
+  // Actualizar el estado local cuando cambian las props
+  useEffect(() => {
+    setLocalFormData(formData);
+  }, [formData]);
 
   // Ordenamos los códigos telefónicos alfabéticamente por nombre de país
   const sortedPhoneCodes = useMemo(() => {
@@ -59,9 +68,19 @@ export default function InfoContacto({
     const { name, value } = e.target
     if (name === "address") {
       // Capitalizamos la primera letra de cada palabra en la dirección
-      onInputChange({ [name]: capitalizeWords(value) })
+      const processedValue = capitalizeWords(value);
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({ ...prev, [name]: processedValue }));
+      } else {
+        onInputChange({ [name]: processedValue });
+      }
     } else if (name === "state") {
-      onInputChange({ [name]: value, city: "" })
+      if (isEditMode) {
+        setLocalFormData(prev => ({ ...prev, [name]: value, city: "" }));
+      } else {
+        onInputChange({ [name]: value, city: "" });
+      }
     } else if (name === "email") {
       // Validar formato de correo electrónico
       if (value && !validateEmail(value)) {
@@ -69,23 +88,38 @@ export default function InfoContacto({
       } else {
         setEmailError("");
       }
-      // Siempre notificar el cambio de email al componente padre
-      onInputChange({
-        [name]: value,
-        emailIsValid: validateEmail(value)
-      });
-      // Actualizar el estado local según el valor de formData después del cambio
-      // Esto se manejará en el useEffect que observa formData.emailVerified
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({ 
+          ...prev, 
+          [name]: value,
+          emailIsValid: validateEmail(value)
+        }));
+      } else {
+        // Notificar el cambio de email al componente padre
+        onInputChange({
+          [name]: value,
+          emailIsValid: validateEmail(value)
+        });
+      }
     } else {
-      onInputChange({ [name]: value })
+      if (isEditMode) {
+        setLocalFormData(prev => ({ ...prev, [name]: value }));
+      } else {
+        onInputChange({ [name]: value });
+      }
     }
   }
 
   // Manejador para seleccionar un código de país
   const handleSelectCountry = (code) => {
-    onInputChange({ countryCode: code.codigo })
-    setIsCountryDropdownOpen(false)
-    setSearchTerm("")
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, countryCode: code.codigo }));
+    } else {
+      onInputChange({ countryCode: code.codigo });
+    }
+    setIsCountryDropdownOpen(false);
+    setSearchTerm("");
   }
 
   // Cerrar el dropdown cuando se hace clic fuera de él
@@ -103,13 +137,14 @@ export default function InfoContacto({
 
   // Actualizar las ciudades cuando cambia el estado
   useEffect(() => {
-    if (formData.state && typeof formData.state === 'string') {
-      const normalizedState = formData.state.toLowerCase();
+    const currentState = isEditMode ? localFormData.state : formData.state;
+    if (currentState && typeof currentState === 'string') {
+      const normalizedState = currentState.toLowerCase();
       setCities(PhoneEstData[normalizedState] || []);
     } else {
       setCities([]);
     }
-  }, [formData.state]);
+  }, [formData.state, localFormData.state, isEditMode]);
 
   // Actualizar estados locales cuando cambia formData
   useEffect(() => {
@@ -126,17 +161,20 @@ export default function InfoContacto({
 
   // Validar formulario cuando cambia formData
   useEffect(() => {
-    const requiredFields = ["email", "phoneNumber", "state", "city", "address"]
+    const requiredFields = ["email", "phoneNumber", "state", "city", "address"];
     // Validación de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    const isEmailValid = formData.email && emailRegex.test(formData.email)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isEmailValid = formData.email && emailRegex.test(formData.email);
     // Validación de número de teléfono
-    const isPhoneValid = formData.phoneNumber && formData.phoneNumber.length >= 10
+    const isPhoneValid = formData.phoneNumber && formData.phoneNumber.length >= 10;
     // Verificar que todos los campos requeridos estén completos y válidos
     const isValid =
-      requiredFields.every((field) => formData[field] && formData[field].trim() !== "") && isEmailValid && isPhoneValid
-    setIsFormValid(isValid)
-  }, [formData])
+      requiredFields.every((field) => {
+        const value = formData[field];
+        return value && typeof value === 'string' && value.trim() !== "";
+      }) && isEmailValid && isPhoneValid;
+    setIsFormValid(isValid);
+  }, [formData]);
 
   const venezuelanStates = Object.keys(PhoneEstData).map((state) => state.charAt(0).toUpperCase() + state.slice(1))
 
@@ -201,14 +239,16 @@ export default function InfoContacto({
   }
 
   // Determinar si mostrar "Parroquias" en lugar de "Municipio"
-  const isDistritoCapital = formData.state && formData.state.toLowerCase() === "distrito capital";
+  const state = isEditMode ? localFormData.state : formData.state;
+  const isDistritoCapital = typeof state === 'string' && state.toLowerCase() === "distrito capital";
   const municipioLabel = isDistritoCapital ? "Parroquia" : "Municipio";
 
   const handleSaveClick = () => {
-    // Validar datos antes de guardar
-    const isValid = validateForm();
-    if (isValid) {
-      onInputChange(formData);
+    // Simplemente guardamos sin validación estricta en modo edición
+    if (onSave) {
+      onSave(localFormData);
+    } else {
+      onInputChange(localFormData);
     }
   };
 
@@ -432,6 +472,7 @@ export default function InfoContacto({
           {isFieldEmpty("address") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
         </div>
       </div>
+      {/* Botones de acción en modo edición */}
       {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           <button

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Briefcase, Pencil } from "lucide-react";
+import { Briefcase, MapPin, Pencil, Phone } from "lucide-react";
 import { useState } from "react";
 
 import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
@@ -26,7 +26,7 @@ export default function InstitutionsSection({
     // Actualizar estado local
     setInstituciones(updatedInstituciones);
 
-    // Enviar al backend
+    // Enviar datos al componente padre (sin enviar a API)
     updateColegiadoPendiente(pendienteId, { instituciones: updatedInstituciones });
 
     // Marcar como guardado
@@ -56,6 +56,23 @@ export default function InstitutionsSection({
     return institucion ? institucion.name : code;
   };
 
+  // Formatear dirección completa
+  const formatearDireccion = (institucion) => {
+    if (!institucion) return "No especificada";
+    
+    const direccion = institucion.direccion || "";
+    const estado = institucion.selectedEstado || "";
+    const ciudad = institucion.selectedCiudad || "";
+    
+    if (estado && ciudad && direccion) {
+      return `${ciudad}, ${estado} - ${direccion}`;
+    } else if (direccion) {
+      return direccion;
+    } else {
+      return "No especificada";
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -82,7 +99,7 @@ export default function InstitutionsSection({
         )}
       </div>
 
-      {/* Vista de instituciones */}
+      {/* Vista de instituciones - siguiendo estructura de InfoLab.jsx */}
       {instituciones && instituciones.length > 0 ? (
         <div className="space-y-6">
           {instituciones.map((institucion, index) => (
@@ -92,17 +109,18 @@ export default function InstitutionsSection({
             >
               <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200 flex items-center">
                 <Briefcase size={16} className="mr-2 text-[#C40180]" />
-                {institucion.nombre}
+                {institucion.nombre || "Institución sin nombre"}
               </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                    Tipo De Institución
+                    Tipo de institución
                   </p>
                   <p className="font-medium text-gray-800">
                     {getInstitucionTypeName(institucion.tipo_institucion) || "No especificado"}
                   </p>
                 </div>
+                
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Cargo
@@ -111,21 +129,47 @@ export default function InstitutionsSection({
                     {institucion.cargo || "No especificado"}
                   </p>
                 </div>
+                
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                    Estado
+                  </p>
+                  <p className="font-medium text-gray-800">
+                    {institucion.selectedEstado || "No especificado"}
+                  </p>
+                </div>
+                
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                    Ciudad/Municipio
+                  </p>
+                  <p className="font-medium text-gray-800">
+                    {institucion.selectedCiudad || "No especificado"}
+                  </p>
+                </div>
+
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Teléfono
                   </p>
-                  <p className="font-medium text-gray-800">
-                    {institucion.telefono || "No especificado"}
-                  </p>
+                  <div className="flex items-center">
+                    <Phone size={16} className="mr-2 text-[#C40180]" />
+                    <p className="font-medium text-gray-800">
+                      {institucion.telefono || "No especificado"}
+                    </p>
+                  </div>
                 </div>
-                <div>
+                
+                <div className="sm:col-span-2">
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Dirección
                   </p>
-                  <p className="font-medium text-gray-800">
-                    {institucion.direccion || "No especificada"}
-                  </p>
+                  <div className="flex items-start">
+                    <MapPin size={16} className="mr-2 mt-0.5 text-[#C40180]" />
+                    <p className="font-medium text-gray-800">
+                      {formatearDireccion(institucion)}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -152,12 +196,17 @@ export default function InstitutionsSection({
             workStatus: "labora",
             laboralRegistros: instituciones
           }}
-          onInputChange={handleSaveChanges}
+          onInputChange={(updates) => {
+            // Guardar cambios temporalmente sin cerrar el modal
+            console.log("Cambios temporales en instituciones:", updates);
+            // No llamar a handleSaveChanges directamente
+          }}
           validationErrors={{}}
           currentStep={4}
           attemptedNext={false}
           validateStep={() => true}
           isEditMode={true}
+          onSave={handleSaveChanges}
         />
       </Modal>
     </motion.div>
