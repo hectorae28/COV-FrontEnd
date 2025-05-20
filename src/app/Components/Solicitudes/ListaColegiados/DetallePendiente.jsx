@@ -6,357 +6,23 @@ import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 
-// Import components
 import PagosColg from "@/app/Components/PagosModal";
-import {
-  AlertTriangle,
-  CheckCircle,
-  Upload,
-  XCircle
-} from "lucide-react";
 
 // Componentes compartidos
-import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
-import AcademicInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
-import InstitutionsSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
+import AcademicInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
+import ContactInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ContactInfoSection";
+import InstitutionsSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
+import PersonalInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
 
-import DocumentsSection from "./DetallePendiente/DocumentsSection";
-import DocumentViewerModal from "./DetallePendiente/DocumentViewerModal";
-import ProfileCard from "./DetallePendiente/ProfileCard";
-import StatusAlerts from "./DetallePendiente/StatusAlerts";
+import { DocumentSection, DocumentViewer } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import {
   ApprovalModal,
   ExonerationModal,
   RejectModal,
-} from "./DetallePendiente/ActionsModals";
-
-// Componente de reporte de irregularidades
-function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
-  const [reportType, setReportType] = useState("");
-  const [description, setDescription] = useState("");
-  const [evidence, setEvidence] = useState(null);
-
-  const reportTypes = [
-    { id: "fake_credentials", label: "Credenciales falsificadas" },
-    { id: "irregular_practice", label: "Ejercicio irregular de la profesión" },
-    { id: "fraud", label: "Fraude o estafa a pacientes" },
-    { id: "identity_theft", label: "Suplantación de identidad" },
-    { id: "other", label: "Otro tipo de irregularidad" }
-  ];
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit({
-      reportType,
-      description,
-      evidence,
-      colegiado: colegiadoInfo,
-      date: new Date().toISOString()
-    });
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-xl">
-        <div className="bg-red-50 p-4 border-b border-red-100 flex items-center">
-          <AlertTriangle size={24} className="text-red-600 mr-3" />
-          <h3 className="text-xl font-semibold text-gray-900">Reportar Irregularidad</h3>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="mb-6">
-            <p className="text-gray-700 mb-4">
-              Este formulario permite reportar posibles irregularidades relacionadas con
-              {colegiadoInfo && (
-                <span className="font-medium"> {colegiadoInfo.nombre}</span>
-              )}.
-              La información proporcionada será tratada con confidencialidad y será investigada por el comité de ética.
-            </p>
-
-            <div className="p-4 bg-red-50 border border-red-200 rounded-md mb-4">
-              <p className="text-sm text-red-800 font-medium">Importante:</p>
-              <p className="text-sm text-red-700 mt-1">
-                Proporcionar información falsa o realizar acusaciones sin fundamento puede
-                tener consecuencias legales. Asegúrese de contar con evidencia que respalde
-                su reporte.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de irregularidad <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                required
-              >
-                <option value="">Seleccione el tipo de irregularidad</option>
-                {reportTypes.map(type => (
-                  <option key={type.id} value={type.id}>{type.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción detallada <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={4}
-                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                placeholder="Describa en detalle la situación, incluyendo fechas, lugares y personas involucradas..."
-                required
-              ></textarea>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Evidencia (opcional)
-              </label>
-              <div
-                className="w-full p-4 border border-gray-300 rounded-md hover:border-[#C40180] focus-within:ring-2 focus-within:ring-[#C40180] focus-within:border-[#C40180] transition-colors cursor-pointer bg-gray-50"
-                onClick={() => document.getElementById('evidence-file-input').click()}
-              >
-                <div className="flex flex-col items-center">
-                  <Upload size={24} className="text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600 font-medium mb-1">Haga clic o arrastre un archivo aquí</p>
-                  <p className="text-xs text-gray-500">Imágenes, PDF o documentos (máx. 10MB)</p>
-                  {evidence && (
-                    <div className="mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-green-700 w-full text-center">
-                      <p className="text-sm font-medium">{evidence.name}</p>
-                      <p className="text-xs">{Math.round(evidence.size / 1024)} KB</p>
-                    </div>
-                  )}
-                </div>
-                <input
-                  id="evidence-file-input"
-                  type="file"
-                  onChange={(e) => setEvidence(e.target.files[0])}
-                  className="hidden"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Puede adjuntar documentos, imágenes u otros archivos que sirvan como evidencia (máx. 10MB)
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 mt-8 pt-4 border-t">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={!reportType || !description}
-              className={`px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${!reportType || !description ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-            >
-              Enviar reporte
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// Componente para verificar documentos individualmente
-function DocumentVerificationSwitch({
-  documento,
-  onChange,
-  readOnly = false
-}) {
-  const [isRejectionOpen, setIsRejectionOpen] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState(documento.rejectionReason || '');
-  const [rejectionPreset, setRejectionPreset] = useState('');
-  const [customReason, setCustomReason] = useState('');
-  const [useCustomReason, setUseCustomReason] = useState(false);
-
-  // Motivos predefinidos de rechazo
-  const motivosRechazo = [
-    "Documento ilegible",
-    "Documento incompleto",
-    "Documento caducado",
-    "Documento no válido",
-    "Formato incorrecto",
-    "Faltan firmas o sellos",
-    "Información inconsistente",
-    "No corresponde con el solicitante",
-    "Documento alterado",
-    "Documento dañado"
-  ];
-
-  // El estado actual del documento (approved, rejected, pending)
-  const status = documento.status || 'pending';
-
-  const handleStatusChange = (newStatus) => {
-    if (readOnly) return;
-
-    // Si se rechaza, abrir modal para motivo
-    if (newStatus === 'rejected') {
-      setIsRejectionOpen(true);
-    } else {
-      // Si se aprueba, actualizar inmediatamente
-      onChange({
-        ...documento,
-        status: newStatus,
-        rejectionReason: ''
-      });
-    }
-  };
-
-  const submitRejection = () => {
-    // Determinar la razón de rechazo final
-    const finalReason = useCustomReason
-      ? customReason
-      : rejectionPreset;
-
-    if (!finalReason.trim()) {
-      alert("Por favor seleccione o ingrese un motivo de rechazo");
-      return;
-    }
-
-    // Actualizar documento con estado rechazado y motivo
-    onChange({
-      ...documento,
-      status: 'rejected',
-      rejectionReason: finalReason
-    });
-
-    setIsRejectionOpen(false);
-  };
-
-  // Actualizar la razón al cambiar la selección
-  const handleReasonChange = (e) => {
-    const value = e.target.value;
-    setRejectionPreset(value);
-
-    // Si selecciona "Otro", habilitar campo personalizado
-    if (value === "otro") {
-      setUseCustomReason(true);
-    } else {
-      setUseCustomReason(false);
-    }
-  };
-
-  return (
-    <div className="relative">
-      <div className="flex items-center space-x-2">
-        <button
-          onClick={() => handleStatusChange('approved')}
-          disabled={readOnly}
-          className={`p-2 rounded-md transition-all ${status === 'approved'
-            ? 'bg-green-100 text-green-700 ring-2 ring-green-500'
-            : 'bg-gray-100 text-gray-500 hover:bg-green-50'
-            } ${readOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-          title={readOnly ? "No se puede modificar un documento aprobado" : "Aprobar documento"}
-        >
-          <CheckCircle size={20} />
-        </button>
-
-        <button
-          onClick={() => handleStatusChange('rejected')}
-          disabled={readOnly}
-          className={`p-2 rounded-md transition-all ${status === 'rejected'
-            ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
-            : 'bg-gray-100 text-gray-500 hover:bg-red-50'
-            } ${readOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-          title={readOnly ? "No se puede modificar un documento aprobado" : "Rechazar documento"}
-        >
-          <XCircle size={20} />
-        </button>
-
-        <span className="text-sm font-medium">
-          {status === 'approved' && 'Aprobado'}
-          {status === 'rejected' && 'Rechazado'}
-          {status === 'pending' && 'Pendiente'}
-        </span>
-      </div>
-
-      {/* Modal de razón de rechazo */}
-      {isRejectionOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
-              <AlertTriangle className="text-red-500 mr-2" size={20} />
-              Motivo de rechazo
-            </h3>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Seleccione motivo de rechazo <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={rejectionPreset}
-                onChange={handleReasonChange}
-                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-300 focus:border-red-500"
-              >
-                <option value="">Seleccione un motivo...</option>
-                {motivosRechazo.map((motivo, index) => (
-                  <option key={index} value={motivo}>{motivo}</option>
-                ))}
-                <option value="otro">Otro motivo...</option>
-              </select>
-            </div>
-
-            {useCustomReason && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Motivo personalizado <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={customReason}
-                  onChange={(e) => setCustomReason(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-400 focus:border-red-400"
-                  placeholder="Explique por qué rechaza este documento..."
-                  rows={3}
-                ></textarea>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => setIsRejectionOpen(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={submitRejection}
-                disabled={useCustomReason ? !customReason.trim() : !rejectionPreset}
-                className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${(useCustomReason ? !customReason.trim() : !rejectionPreset)
-                  ? 'opacity-50 cursor-not-allowed'
-                  : ''
-                  }`}
-              >
-                Confirmar rechazo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mostrar motivo del rechazo si existe */}
-      {status === 'rejected' && documento.rejectionReason && (
-        <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-md">
-          <span className="font-medium">Motivo de rechazo:</span> {documento.rejectionReason}
-        </div>
-      )}
-    </div>
-  );
-}
+  ReportIllegalityModal
+} from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ModalSystem";
+import StatusAlerts from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/NotificationSystem";
+import ProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/UserProfileCard";
 
 export default function DetallePendiente({ params, onVolver, isAdmin = false, recaudos = null, handleForward = null }) {
   const [metodoPago, setMetodoPago] = useState([]);
@@ -369,17 +35,35 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
     getColegiadoPendiente,
     updateColegiadoPendiente,
     approveRegistration,
-    rejectRegistration,
-    denyRegistration,
-    initSession,
     updateColegiadoPendienteWithToken
   } = useDataListaColegiados();
 
   // Estados locales
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [pendiente, setPendiente] = useState(null);
   const [cambiosPendientes, setCambiosPendientes] = useState(false);
+
+  // Estados para datos
+  const [datosPersonales, setDatosPersonales] = useState(null);
+  const [datosContacto, setDatosContacto] = useState({
+    email: "",
+    phoneNumber: "",
+    countryCode: "+58",
+    homePhone: "",
+    address: "",
+    city: "",
+    state: ""
+  });
+  const [datosAcademicos, setDatosAcademicos] = useState(null);
+  const [instituciones, setInstituciones] = useState([]);
+  const [nuevaInstitucion, setNuevaInstitucion] = useState({
+    nombre: "",
+    cargo: "",
+    telefono: "",
+    direccion: "",
+    tipo_institucion: ""
+  });
+  const [agregarInstitucion, setAgregarInstitucion] = useState(false);
 
   // Estados para modales
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -388,7 +72,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
 
-  // Estados para datos
+  // Estados para documentos y pagos
   const [pagosPendientes, setPagosPendientes] = useState(false);
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [motivoExoneracion, setMotivoExoneracion] = useState("");
@@ -403,22 +87,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const [rechazoExitoso, setRechazoExitoso] = useState(false);
   const [denegacionExitosa, setDenegacionExitosa] = useState(false);
   const [exoneracionExitosa, setExoneracionExitosa] = useState(false);
-
-  // Estados para edición
-  const [editandoPersonal, setEditandoPersonal] = useState(false);
-  const [editandoAcademico, setEditandoAcademico] = useState(false);
-  const [editandoInstituciones, setEditandoInstituciones] = useState(false);
-  const [datosPersonales, setDatosPersonales] = useState(null);
-  const [datosAcademicos, setDatosAcademicos] = useState(null);
-  const [instituciones, setInstituciones] = useState([]);
-  const [agregarInstitucion, setAgregarInstitucion] = useState(false);
-  const [nuevaInstitucion, setNuevaInstitucion] = useState({
-    nombre: "",
-    cargo: "",
-    telefono: "",
-    direccion: "",
-    tipo_institucion: ""
-  });
 
   // Estados para datos de registro
   const [datosRegistro, setDatosRegistro] = useState({
@@ -465,6 +133,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       requerido: true
     }
   };
+
   const obtenerNombreArchivo = (url) => {
     if (!url) return "";
     const partes = url.split('/');
@@ -475,56 +144,105 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const allDocumentsApproved = () => {
     if (!documentosRequeridos || documentosRequeridos.length === 0) return false;
 
-    // Verificar que todos los documentos requeridos tengan estado 'approved'
     return documentosRequeridos
-      .filter(doc => doc.requerido) // Solo considerar documentos requeridos
+      .filter(doc => doc.requerido)
       .every(doc => {
-        // Si el documento no tiene URL (no está cargado), no puede estar aprobado
         if (!doc.url) return false;
-
-        // Obtener el estado del documento, ya sea del estado local o del documento
         const status = documentosStatus[doc.id]?.status || doc.status;
         return status === 'approved';
       });
   };
 
-  // Función para manejar cambios en el estado de los documentos
+  // Función para manejar el estado de documentos
   const handleDocumentStatusChange = (updatedDocument) => {
-    setDocumentosStatus(prev => ({
-      ...prev,
-      [updatedDocument.id]: {
+    const docsCopy = [...documentosRequeridos];
+    const index = docsCopy.findIndex(doc => doc.id === updatedDocument.id);
+    if (index !== -1) {
+      docsCopy[index] = {
+        ...docsCopy[index],
         status: updatedDocument.status,
         rejectionReason: updatedDocument.rejectionReason || ''
-      }
-    }));
+      };
+      setDocumentosRequeridos(docsCopy);
+    }
 
-    // Si estamos en una solicitud rechazada, marcar el documento como de solo lectura
-    // si ha sido aprobado previamente
-    if (isRechazada && updatedDocument.status === 'approved') {
-      const docsCopy = [...documentosRequeridos];
-      const index = docsCopy.findIndex(doc => doc.id === updatedDocument.id);
-      if (index !== -1) {
-        docsCopy[index] = {
-          ...docsCopy[index],
-          status: 'approved',
-          isReadOnly: true
-        };
-        setDocumentosRequeridos(docsCopy);
+    const updateData = {
+      [`${updatedDocument.id}_status`]: updatedDocument.status
+    };
+    if (updatedDocument.rejectionReason) {
+      updateData[`${updatedDocument.id}_rejection_reason`] = updatedDocument.rejectionReason;
+    }
+
+    updateColegiadoPendiente(pendienteId, updateData);
+  };
+
+  // Función para actualizar un documento
+  const updateDocumento = async (formData) => {
+    try {
+      setIsLoading(true);
+
+      const documentId = Object.keys(formData)[0];
+      const file = formData.get(documentId);
+
+      if (!recaudos) {
+        console.log(`Subiendo documento ${documentId} para pendiente ${pendienteId}`);
+      } else {
+        const newFormData = new FormData();
+        newFormData.append(documentId, file);
+        await updateColegiadoPendienteWithToken(pendienteId, newFormData, true);
       }
+      await loadData();
+
+      setIsLoading(false);
+      return true;
+    } catch (error) {
+      console.error("Error al actualizar documento:", error);
+      setIsLoading(false);
+      throw error;
     }
   };
 
   const loadData = async () => {
     try {
       setIsLoading(true);
-      // Obtener datos del pendiente desde el store
-      let pendienteData
+      let pendienteData;
       if (!recaudos) {
         pendienteData = await getColegiadoPendiente(pendienteId);
       } else {
-        pendienteData = recaudos
+        pendienteData = recaudos;
       }
+
       if (pendienteData) {
+        // Datos personales
+        setDatosPersonales({ ...pendienteData.persona });
+
+        // Datos de contacto
+        setDatosContacto({
+          email: pendienteData.persona?.correo || "",
+          phoneNumber: pendienteData.persona?.telefono_movil?.split(" ")[1] || "",
+          countryCode: pendienteData.persona?.telefono_movil?.split(" ")[0] || "+58",
+          homePhone: pendienteData.persona?.telefono_de_habitacion || "",
+          address: pendienteData.persona?.direccion?.referencia || "",
+          city: pendienteData.persona?.direccion?.ciudad || "",
+          state: pendienteData.persona?.direccion?.estado || ""
+        });
+
+        // Datos académicos
+        setDatosAcademicos({
+          instituto_bachillerato: pendienteData.instituto_bachillerato || "",
+          universidad: pendienteData.universidad || "",
+          fecha_egreso_universidad: pendienteData.fecha_egreso_universidad || "",
+          num_registro_principal: pendienteData.num_registro_principal || "",
+          fecha_registro_principal: pendienteData.fecha_registro_principal || "",
+          num_mpps: pendienteData.num_mpps || "",
+          fecha_mpps: pendienteData.fecha_mpps || "",
+          observaciones: pendienteData.observaciones || "",
+        });
+
+        // Instituciones
+        setInstituciones(pendienteData.instituciones ? [...pendienteData.instituciones] : []);
+
+        // Documentos
         const documentosFormateados = [
           {
             id: "file_ci",
@@ -604,34 +322,12 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
             rejectionReason: pendienteData.fondo_negro_titulo_bachiller_rejection_reason || ''
           },
         ];
+
         setPendiente(pendienteData);
-
-        // Inicializar estados de edición
-        setDatosPersonales({ ...pendienteData.persona });
-        setDatosAcademicos({
-          instituto_bachillerato: pendienteData.instituto_bachillerato || "",
-          universidad: pendienteData.universidad || "",
-          fecha_egreso_universidad:
-            pendienteData.fecha_egreso_universidad || "",
-          num_registro_principal: pendienteData.num_registro_principal || "",
-          fecha_registro_principal:
-            pendienteData.fecha_registro_principal || "",
-          num_mpps: pendienteData.num_mpps || "",
-          fecha_mpps: pendienteData.fecha_mpps || "",
-          observaciones: pendienteData.observaciones || "",
-        });
-        setInstituciones(
-          pendienteData.instituciones ? [...pendienteData.instituciones] : []
-        );
-
-        // Verificar si los documentos están completos
-        setDocumentosCompletos(
-          !pendienteData.archivos_faltantes?.tiene_faltantes
-        );
-
+        setDocumentosCompletos(!pendienteData.archivos_faltantes?.tiene_faltantes);
         setDocumentosRequeridos(documentosFormateados);
 
-        // Inicializar el estado de los documentos
+        // Estado de documentos
         const initialDocStatus = {};
         documentosFormateados.forEach(doc => {
           initialDocStatus[doc.id] = {
@@ -643,11 +339,8 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         setDocumentosStatus(initialDocStatus);
 
         setPagosPendientes(pendienteData.pago === null && !pendienteData.pago_exonerado);
-
-        // Determinar si la solicitud está rechazada o anulada
-        const isRechazada = pendienteData.status === "rechazado";
-        const isDenegada = pendienteData.status === "denegado";
       }
+
       setIsLoading(false);
     } catch (error) {
       console.error("Error al cargar datos del pendiente:", error);
@@ -672,9 +365,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
         setMetodoPago(Mpagos.data);
       } catch (error) {
-        setError(
-          "Ocurrió un error al cargar los datos, verifique su conexión a internet"
-        );
+        setError("Ocurrió un error al cargar los datos, verifique su conexión a internet");
       }
     };
     if (!isLoading && pendiente) {
@@ -682,12 +373,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
     }
   }, [isLoading, pendiente]);
 
-  // Función para obtener iniciales del nombre
-  const obtenerIniciales = () => {
-    if (!pendiente) return "CN";
-
-    const { nombre, primer_apellido } = pendiente.persona;
-    return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`;
+  const updateData = (id, newData) => {
+    if (!recaudos) updateColegiadoPendiente(id, newData);
+    else updateColegiadoPendienteWithToken(id, newData);
   };
 
   const handlePaymentComplete = async ({
@@ -705,17 +393,16 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         metodo_de_pago: metodo_de_pago.id,
       },
     });
-    const Form = new FormData()
+    const Form = new FormData();
     Form.append("comprobante", paymentFile);
-    await updateColegiadoPendienteWithToken(pendienteId, Form, true)
-    loadData()
-    setPagosPendientes(false)
-    handleForward()
-  }
+    await updateColegiadoPendienteWithToken(pendienteId, Form, true);
+    loadData();
+    setPagosPendientes(false);
+    handleForward();
+  };
 
   // Funciones para gestión de documentos
   const handleVerDocumento = (documento) => {
-    // Agregar el estado del documento al documento seleccionado
     const docStatus = documentosStatus[documento.id] || { status: 'pending', rejectionReason: '' };
     setDocumentoSeleccionado({
       ...documento,
@@ -729,45 +416,20 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
     setDocumentoSeleccionado(null);
   };
 
-  // Función para actualizar un documento
-  const updateDocumento = (documentoActualizado) => {
-    try {
-      if (!recaudos) {
-        updateColegiadoPendiente(pendienteId, documentoActualizado, true);
-      } else {
-        updateColegiadoPendienteWithToken(pendienteId, documentoActualizado, true)
-      }
-      loadData()
-    } catch (error) {
-      console.error("Error al actualizar documento:", error);
-    }
-  };
-
-  const updateData = (id, newData) => {
-    if (!recaudos) updateColegiadoPendiente(id, newData)
-    else updateColegiadoPendienteWithToken(id, newData)
-  }
-
   // Función para manejar aprobación
   const handleAprobarSolicitud = async () => {
     try {
       if (isSubmitting) return;
       setIsSubmitting(true);
 
-      // Verificar que todos los documentos requeridos estén aprobados
       if (!allDocumentsApproved()) {
-        alert(
-          "No se puede aprobar esta solicitud. Algunos documentos no han sido aprobados."
-        );
+        alert("No se puede aprobar esta solicitud. Algunos documentos no han sido aprobados.");
         setIsSubmitting(false);
         return;
       }
 
-      // Verificar que los pagos estén completos o exonerados
       if (pagosPendientes) {
-        alert(
-          "No se puede aprobar esta solicitud. Los pagos están pendientes y no han sido exonerados."
-        );
+        alert("No se puede aprobar esta solicitud. Los pagos están pendientes y no han sido exonerados.");
         setIsSubmitting(false);
         return;
       }
@@ -792,17 +454,14 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         }
       });
 
-      // Llamar a la función de aprobación del store con los datos de registro y estados de documentos
       const colegiadoAprobado = approveRegistration(pendienteId, {
         ...datosRegistro,
         ...documentosData
       });
 
-      // Mostrar confirmación
       setConfirmacionExitosa(true);
       setMostrarConfirmacion(false);
 
-      // Volver a la lista después de un tiempo con el colegiado aprobado
       setTimeout(() => {
         if (onVolver) {
           onVolver({
@@ -828,7 +487,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
       setIsSubmitting(true);
 
-      // Obtener los documentos rechazados y sus motivos
       const documentosRechazados = Object.entries(documentosStatus)
         .filter(([_, data]) => data.status === 'rejected')
         .map(([docId, data]) => {
@@ -840,7 +498,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           };
         });
 
-      // Guardar estados de los documentos
       const documentosData = {};
       Object.entries(documentosStatus).forEach(([docId, data]) => {
         documentosData[`${docId}_status`] = data.status;
@@ -860,9 +517,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       setRechazoExitoso(true);
       setMostrarRechazo(false);
       onVolver({ rechazado: true });
-      loadData()
-
-      // Volver a la lista después de un tiempo
+      loadData();
     } catch (error) {
       console.error("Error al rechazar solicitud:", error);
     } finally {
@@ -880,7 +535,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
       setIsSubmitting(true);
 
-      // Obtener los documentos rechazados y sus motivos
       const documentosRechazados = Object.entries(documentosStatus)
         .filter(([_, data]) => data.status === 'rejected')
         .map(([docId, data]) => {
@@ -892,7 +546,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           };
         });
 
-      // Guardar estados de los documentos
       const documentosData = {};
       Object.entries(documentosStatus).forEach(([docId, data]) => {
         documentosData[`${docId}_status`] = data.status;
@@ -912,7 +565,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       setDenegacionExitosa(true);
       setMostrarRechazo(false);
       onVolver({ denegado: true });
-      loadData()
+      loadData();
     } catch (error) {
       console.error("Error al rechazar solicitud:", error);
     } finally {
@@ -934,14 +587,11 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         "motivo_exonerado": motivoExoneracion
       };
 
-      // Actualizar en el store
       await updateColegiadoPendiente(pendienteId, nuevosDatos);
-      loadData()
+      loadData();
 
       setExoneracionExitosa(true);
       setMostrarExoneracion(false);
-
-      // Limpiar el motivo
       setMotivoExoneracion("");
     } catch (error) {
       console.error("Error al exonerar pagos:", error);
@@ -952,7 +602,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
   // Función para manejar retroceso
   const handleVolver = () => {
-    // Preguntar si hay cambios sin guardar
     if (cambiosPendientes) {
       if (confirm("Hay cambios sin guardar. ¿Desea salir sin guardar?")) {
         onVolver({ aprobado: false });
@@ -966,11 +615,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const handleReportSubmit = (reportData) => {
     try {
       console.log("Reporte enviado:", reportData);
-
-      // Aquí puedes enviar el reporte a tu backend
-      // Por ejemplo: await sendIllegalityReport(reportData);
-
-      // Cerrar modal y mostrar notificación
       setShowReportModal(false);
       alert("El reporte de ilegalidad ha sido enviado correctamente y será revisado por el comité de ética");
     } catch (error) {
@@ -1004,31 +648,20 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const nombreCompleto = `${pendiente.persona.nombre} ${pendiente.persona.segundo_nombre || ""
     } ${pendiente.persona.primer_apellido} ${pendiente.persona.segundo_apellido || ""
     }`.trim();
+
   const fechaSolicitud = pendiente.created_at
     ? (() => {
       const fecha = new Date(pendiente.created_at);
-      const dia = String(fecha.getDate()).padStart(
-        2,
-        "0"
-      );
-      const mes = String(
-        fecha.getMonth() + 1
-      ).padStart(2, "0"); // Los meses empiezan en 0
+      const dia = String(fecha.getDate()).padStart(2, "0");
+      const mes = String(fecha.getMonth() + 1).padStart(2, "0");
       const año = fecha.getFullYear();
-      const horas = String(
-        fecha.getHours()
-      ).padStart(2, "0");
-      const minutos = String(
-        fecha.getMinutes()
-      ).padStart(2, "0");
-      const segundos = String(
-        fecha.getSeconds()
-      ).padStart(2, "0");
+      const horas = String(fecha.getHours()).padStart(2, "0");
+      const minutos = String(fecha.getMinutes()).padStart(2, "0");
+      const segundos = String(fecha.getSeconds()).padStart(2, "0");
       return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
     })()
     : "-";
 
-  // Determinar si la solicitud está rechazada o denegada
   const isRechazada = pendiente.status === "rechazado";
   const isDenegada = pendiente.status === "denegado";
 
@@ -1049,50 +682,42 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
       {/* Alertas de estado */}
       <StatusAlerts
-        confirmacionExitosa={confirmacionExitosa}
-        rechazoExitoso={rechazoExitoso}
-        denegacionExitosa={denegacionExitosa}
-        exoneracionExitosa={exoneracionExitosa}
-        cambiosPendientes={cambiosPendientes}
-        documentosCompletos={documentosCompletos}
-        isRechazada={isRechazada}
-        isDenegada={isDenegada}
+        notifications={{
+          confirmacionExitosa,
+          rechazoExitoso,
+          denegacionExitosa,
+          exoneracionExitosa,
+          cambiosPendientes,
+          documentosCompletos
+        }}
+        handlers={{
+          setConfirmacionExitosa,
+          setRechazoExitoso,
+          setDenegacionExitosa,
+          setExoneracionExitosa,
+          setCambiosPendientes
+        }}
         pendiente={pendiente}
-        setConfirmacionExitosa={setConfirmacionExitosa}
-        setRechazoExitoso={setRechazoExitoso}
-        setDenegacionExitosa={setDenegacionExitosa}
-        setExoneracionExitosa={setExoneracionExitosa}
-        setCambiosPendientes={setCambiosPendientes}
       />
 
       {/* Profile Card */}
       <ProfileCard
-        props={{
-          pendiente,
-          obtenerIniciales,
-          nombreCompleto,
-          fechaSolicitud,
-          documentosCompletos,
-          pagosPendientes,
-          setMostrarConfirmacion,
-          setMostrarRechazo,
-          setMostrarExoneracion,
-          isRechazada,
-          isDenegada,
-          isAdmin,
-          setShowReportModal,
-          allDocumentsApproved: allDocumentsApproved()
-        }}
+        data={pendiente}
+        variant="pending"
+        onMostrarConfirmacion={() => setMostrarConfirmacion(true)}
+        onMostrarRechazo={() => setMostrarRechazo(true)}
+        onMostrarExoneracion={() => setMostrarExoneracion(true)}
+        onMostrarReporteIrregularidad={() => setShowReportModal(true)}
+        isAdmin={isAdmin}
+        allDocumentsApproved={allDocumentsApproved}
       />
 
-      {/* Main content sections - Componentes compartidos */}
+      {/* Main content sections */}
       <PersonalInfoSection
         props={{
           pendiente,
           datosPersonales,
           setDatosPersonales,
-          editandoPersonal,
-          setEditandoPersonal,
           updateData,
           pendienteId,
           setCambiosPendientes,
@@ -1101,13 +726,23 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         }}
       />
 
+      {/* Nueva sección de contacto */}
+      <ContactInfoSection
+        pendiente={pendiente}
+        datosContacto={datosContacto}
+        setDatosContacto={setDatosContacto}
+        updateData={updateData}
+        pendienteId={pendienteId}
+        setCambiosPendientes={setCambiosPendientes}
+        isAdmin={isAdmin}
+        readOnly={isDenegada}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <AcademicInfoSection
           pendiente={pendiente}
           datosAcademicos={datosAcademicos}
           setDatosAcademicos={setDatosAcademicos}
-          editandoAcademico={editandoAcademico}
-          setEditandoAcademico={setEditandoAcademico}
           updateColegiadoPendiente={updateData}
           pendienteId={pendienteId}
           setCambiosPendientes={setCambiosPendientes}
@@ -1122,8 +757,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           setNuevaInstitucion={setNuevaInstitucion}
           agregarInstitucion={agregarInstitucion}
           setAgregarInstitucion={setAgregarInstitucion}
-          editandoInstituciones={editandoInstituciones}
-          setEditandoInstituciones={setEditandoInstituciones}
           updateColegiadoPendiente={updateData}
           pendienteId={pendienteId}
           setCambiosPendientes={setCambiosPendientes}
@@ -1132,11 +765,13 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       </div>
 
       {/* Documentos y pagos */}
-      <DocumentsSection
-        documentosRequeridos={documentosRequeridos}
-        handleVerDocumento={handleVerDocumento}
-        updateDocumento={updateDocumento}
+      <DocumentSection
+        documentos={documentosRequeridos}
+        onViewDocument={handleVerDocumento}
+        onUpdateDocument={updateDocumento}
         onDocumentStatusChange={handleDocumentStatusChange}
+        title="Documentos requeridos"
+        subtitle="Documentación obligatoria del solicitante"
       />
 
       {!isAdmin && pendiente.pago == null && pagosPendientes && (
@@ -1204,14 +839,12 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       )}
 
       {documentoSeleccionado && (
-        <DocumentViewerModal
+        <DocumentViewer
           documento={documentoSeleccionado}
           onClose={handleCerrarVistaDocumento}
-          pendiente={pendiente}
         />
       )}
 
-      {/* Modal de reporte de ilegalidades */}
       {showReportModal && (
         <ReportIllegalityModal
           isOpen={showReportModal}
