@@ -1,4 +1,4 @@
-import { FileText, Eye } from "lucide-react"
+import { Eye, FileText } from "lucide-react"
 
 export default function DocumentosLista({ documentos, handleVerDocumento }) {
     return (

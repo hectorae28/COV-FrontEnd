@@ -1,8 +1,8 @@
 // SharedListColegiado/ProfessionalInfoSection.jsx
 "use client";
 
-import { Briefcase, CheckCircle, AlertCircle, Pencil, X, Save } from "lucide-react";
 import { motion } from "framer-motion";
+import { AlertCircle, Briefcase, CheckCircle, Pencil, Save, X } from "lucide-react";
 
 export default function ProfessionalInfoSection({
     colegiado,

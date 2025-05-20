@@ -20,11 +20,10 @@ const nextConfig = {
                 port: '8000',
                 pathname: '/**',
             },
-            {//https://underlying-assured-ambien-button.trycloudflare.com
+            {//https://stands-infections-hunting-visual.trycloudflare.com
                 protocol: "https",
-                hostname: "underlying-assured-ambien-button.trycloudflare.com",
+                hostname: "stands-infections-hunting-visual.trycloudflare.com",
                 pathname: '/**',
-
             }
         ],
     },

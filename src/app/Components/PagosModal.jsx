@@ -58,7 +58,6 @@ export default function PagosColg({ props }) {
   const paypalAmount = calculatePaypalFee(paymentAmount);
 
   const handleSubmit = async (e) => {
-    console.log(paymentMethod)
     e.preventDefault();
     setIsSubmitting(true);
     handlePago({
@@ -67,7 +66,7 @@ export default function PagosColg({ props }) {
       paymentFile,
       totalAmount: paymentMethod === "bdv" ? montoEnBs : paypalAmount,
       metodo_de_pago: metodoDePago.find(
-        (m) => m.datos_adicionales.slug === paymentMethod
+        (m) => m.datos_adicionales.slug === paymentMethod.nombre
       ),
     });
 
@@ -78,18 +77,18 @@ export default function PagosColg({ props }) {
     const file = e.target.files[0];
     if (file) {
       setPaymentFile(file);
-
-      // Create a URL for previewing the image
       const fileUrl = URL.createObjectURL(file);
       setPreviewUrl(fileUrl);
     }
   };
 
   // Manejar la selección de método de pago
-  const handleSelectPaymentMethod = (slug) => {
-    debugger
-    setPaymentMethod(slug);
-    setShowMethodSelection(false); // Cerrar automáticamente después de seleccionar
+  const handleSelectPaymentMethod = (metodo) => {
+    setPaymentMethod({
+      nombre: metodo.datos_adicionales.slug,
+      metodoId: metodo.id
+    });
+    setShowMethodSelection(false);
   };
 
   return (
@@ -247,10 +246,7 @@ export default function PagosColg({ props }) {
                               ? "border-[#D7008A] ring-1 ring-[#D7008A] bg-[#D7008A]/5"
                               : "border-gray-200 hover:border-[#D7008A]"
                               }`}
-                            onClick={() => handleSelectPaymentMethod({
-                              nombre: metodo.datos_adicionales.slug,
-                              metodoId: metodo.id
-                            })}
+                            onClick={() => handleSelectPaymentMethod(metodo)}
                             whileHover={{ y: -2, scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
@@ -297,10 +293,7 @@ export default function PagosColg({ props }) {
                     ? 'ring-2 ring-offset-2 ring-[#D7008A]'
                     : ''
                   }`}
-                onClick={() => setPaymentMethod({
-                  nombre: metodo.datos_adicionales.slug,
-                  metodoId: metodo.id
-                })}
+                onClick={() => handleSelectPaymentMethod(metodo)}
               >
                 <img
                   src={
@@ -383,7 +376,10 @@ export default function PagosColg({ props }) {
                       Número de referencia
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={14}
                       value={referenceNumber}
                       onChange={(e) => setReferenceNumber(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"

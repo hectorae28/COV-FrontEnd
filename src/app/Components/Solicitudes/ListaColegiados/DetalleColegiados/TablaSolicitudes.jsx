@@ -1,5 +1,5 @@
-import useDataListaColegiados from "@/store/ListaColegiadosData"
 import SessionInfo from "@/Components/SessionInfo"
+import useDataListaColegiados from "@/store/ListaColegiadosData"
 import { AlertCircle, Calendar, CheckCircle, Clock, Eye, FileCheck, FileText, Search, Tag } from "lucide-react"
 import { useEffect, useState } from "react"
 

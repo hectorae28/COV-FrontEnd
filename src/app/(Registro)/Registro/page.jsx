@@ -555,9 +555,19 @@ export default function RegistrationForm(props) {
           `register/${recaudoCreado.id}`,
           Form,
         );
-      }
-      if (res?.status === 201 || pagarLuego ) {
-        setError("¡Registro exitoso!")
+        if (res?.status === 200 ) {
+          setError(null)
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+          })
+          setShowPaymentScreen(false)
+          setIsComplete(true)
+          setIsSubmitting(false)
+          return
+        }
+      }else {
         confetti({
           particleCount: 100,
           spread: 70,
@@ -565,6 +575,7 @@ export default function RegistrationForm(props) {
         })
         setShowPaymentScreen(false)
         setIsComplete(true)
+        setIsSubmitting(false)
       }
     } catch (error) {
       setError(`error ${error.response?.data || error}`)

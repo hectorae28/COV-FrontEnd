@@ -1,4 +1,4 @@
-import { CreditCard, CheckCircle, AlertCircle } from "lucide-react"
+import { AlertCircle, CheckCircle, CreditCard } from "lucide-react"
 
 export default function CarnetInfo({ colegiado }) {
     // Función para obtener iniciales del nombre

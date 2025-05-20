@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle, UserPlus, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 // Import components and data store
+import api from "@/api/api";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import DocsRequirements from "@/app/(Registro)/DocsRequirements";
 import InfoColegiado from "@/app/(Registro)/InfoColg";
@@ -11,7 +12,6 @@ import InfoContacto from "@/app/(Registro)/InfoCont";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
 import InfoPersonal from "@/app/(Registro)/InfoPers";
 import PagosColg from "@/app/Components/PagosModal";
-import api from "@/api/api";
 
 export default function RegistroColegiados({
   isAdmin = true,
@@ -104,7 +104,7 @@ export default function RegistroColegiados({
     if (docs.mpps) {
       setFormData(prev => ({ ...prev, mpps: docs.mpps }));
     }
-    
+
     // También mantener la estructura de documentos para coherencia
     setFormData((prev) => ({
       ...prev,
@@ -224,8 +224,8 @@ export default function RegistroColegiados({
         })) || []
       )
     );
-    Form.append("file_ci", formData.ci );
-    Form.append("file_rif", formData.rif );
+    Form.append("file_ci", formData.ci);
+    Form.append("file_rif", formData.rif);
     Form.append("file_fondo_negro", formData.titulo);
     Form.append("file_mpps", formData.mpps);
     Form.append("comprobante", paymentFile);
@@ -243,14 +243,14 @@ export default function RegistroColegiados({
     
     (!pagarLuego&&!exonerarPagos)
       ? Form.append(
-          "pago",
-          JSON.stringify({
-            fecha_pago: paymentDate,
-            metodo_de_pago: metodo_de_pago.id,
-            num_referencia: referenceNumber,
-            monto: totalAmount,
-          })
-        )
+        "pago",
+        JSON.stringify({
+          fecha_pago: paymentDate,
+          metodo_de_pago: metodo_de_pago.id,
+          num_referencia: referenceNumber,
+          monto: totalAmount,
+        })
+      )
       : Form.append("pago", null);
     exonerarPagos && Form.append("pago_exonerado", true)
     try {
@@ -510,13 +510,12 @@ export default function RegistroColegiados({
                   <div className="flex flex-col items-center">
                     <div
                       className={`w-10 h-10 flex items-center justify-center rounded-full 
-                    ${
-                      completedSteps.includes(paso)
-                        ? "bg-[#41023B] text-white"
-                        : pasoActual === paso
-                        ? "bg-[#D7008A] text-white"
-                        : "bg-gray-200 text-gray-600"
-                    }`}
+                    ${completedSteps.includes(paso)
+                          ? "bg-[#41023B] text-white"
+                          : pasoActual === paso
+                            ? "bg-[#D7008A] text-white"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
                     >
                       {completedSteps.includes(paso) ? (
                         <CheckCircle size={18} />
@@ -532,11 +531,10 @@ export default function RegistroColegiados({
 
                   {index < 4 && (
                     <div
-                      className={`h-1 flex-1 mx-1 ${
-                        completedSteps.includes(paso)
+                      className={`h-1 flex-1 mx-1 ${completedSteps.includes(paso)
                           ? "bg-[#41023B]"
                           : "bg-gray-200"
-                      }`}
+                        }`}
                     ></div>
                   )}
                 </React.Fragment>
