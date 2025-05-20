@@ -44,6 +44,7 @@ export default function ListaSolvencias() {
   const [ordenFecha, setOrdenFecha] = useState("desc") // asc, desc
   const fetchSolicitudesDeSolvencia = useSolicitudesStore((state) => state.fetchSolicitudesDeSolvencia);
   const solicitudesDeSolvencia = useSolicitudesStore((state) => state.solicitudesDeSolvencia);
+  const setSolicitudesDeSolvencia = useSolicitudesStore((state) => state.setSolicitudesDeSolvencia);
 
   /*
   const odernarSolicitudesDeSolvencia = (solicitudes) => {
@@ -67,7 +68,9 @@ export default function ListaSolvencias() {
 
   const getSolicitudesDeSolvencia = async () => {
         try {
-            await fetchSolicitudesDeSolvencia();
+            const solicitudesOrdenadas = await fetchSolicitudesDeSolvencia();
+            console.log(solicitudesOrdenadas)
+            setSolicitudesDeSolvencia(solicitudesOrdenadas);
             console.log("Solicitudes de solvencia:", solicitudesDeSolvencia);
         } catch (error) {
             console.error("Error fetching solicitudes:", error);
@@ -77,13 +80,13 @@ export default function ListaSolvencias() {
   // Cargar datos iniciales
   useEffect(() =>  {
     // Simulando carga de datos con un pequeño retraso
-    getSolicitudesDeSolvencia();
+    fetchSolicitudesDeSolvencia();
     setTimeout(() => {
       setColegiados(colegiadosIniciales);
       setSolvencias(solvenciasIniciales);
       setIsLoading(false);
     }, 1000);
-  }, []);
+  }, [fetchSolicitudesDeSolvencia]);
 
   // Determinar si mostrar por defecto aprobadas cuando no hay en revisión
   useEffect(() => {
@@ -92,8 +95,9 @@ export default function ListaSolvencias() {
       if (tabActual === "revision" && !existenRevision) {
         setTabActual("aprobadas");
       }
+      console.log("Ahora sí tengo solicitudes:", solicitudesDeSolvencia);
     }
-  }, [solvencias, isLoading, tabActual]);
+  }, [solvencias, isLoading, tabActual, solicitudesDeSolvencia]);
 
   // Conteo de solvencias por estado para los tabs
 

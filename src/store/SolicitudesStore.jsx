@@ -378,4 +378,7 @@ export const useSolicitudesStore = create((set, get) => ({
       throw error;
     }
   },
+  setSolicitudesDeSolvencia: (solicitudes) => {
+    set({ solicitudesDeSolvencia: solicitudes });
+  },
 }));
