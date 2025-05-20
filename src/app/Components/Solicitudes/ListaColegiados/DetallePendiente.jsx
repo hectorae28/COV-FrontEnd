@@ -20,7 +20,7 @@ import AcademicInfoSection from "@/app/Components/Solicitudes/ListaColegiados/Sh
 import InstitutionsSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
 import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
 
-import { DocumentSection as DocumentsSection } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
+import { DocumentSection, DocumentViewer } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import {
   ApprovalModal,
   ExonerationModal,
@@ -57,7 +57,7 @@ function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-xl">
         <div className="bg-red-50 p-4 border-b border-red-100 flex items-center">
           <AlertTriangle size={24} className="text-red-600 mr-3" />
@@ -286,7 +286,7 @@ function DocumentVerificationSwitch({
 
       {/* Modal de razón de rechazo */}
       {isRejectionOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
               <AlertTriangle className="text-red-500 mr-2" size={20} />
@@ -488,28 +488,54 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   };
 
   // Función para manejar cambios en el estado de los documentos
+  // Función para manejar el estado de documentos - Añadir en ambos componentes
   const handleDocumentStatusChange = (updatedDocument) => {
-    setDocumentosStatus(prev => ({
-      ...prev,
-      [updatedDocument.id]: {
+    // Actualizar el estado del documento localmente
+    const docsCopy = [...documentos]; // o [...documentosRequeridos] en DetallePendiente
+    const index = docsCopy.findIndex(doc => doc.id === updatedDocument.id);
+    if (index !== -1) {
+      docsCopy[index] = {
+        ...docsCopy[index],
         status: updatedDocument.status,
         rejectionReason: updatedDocument.rejectionReason || ''
-      }
-    }));
+      };
+      setDocumentos(docsCopy); // o setDocumentosRequeridos(docsCopy) en DetallePendiente
+    }
 
-    // Si estamos en una solicitud rechazada, marcar el documento como de solo lectura
-    // si ha sido aprobado previamente
-    if (isRechazada && updatedDocument.status === 'approved') {
-      const docsCopy = [...documentosRequeridos];
-      const index = docsCopy.findIndex(doc => doc.id === updatedDocument.id);
-      if (index !== -1) {
-        docsCopy[index] = {
-          ...docsCopy[index],
-          status: 'approved',
-          isReadOnly: true
-        };
-        setDocumentosRequeridos(docsCopy);
-      }
+    // Enviar actualización al backend
+    const updateData = {
+      [`${updatedDocument.id}_status`]: updatedDocument.status
+    };
+    if (updatedDocument.rejectionReason) {
+      updateData[`${updatedDocument.id}_rejection_reason`] = updatedDocument.rejectionReason;
+    }
+
+    // Usar la función correcta según el componente
+    if (updateColegiado) {
+      updateColegiado(colegiadoId, updateData);
+    } else if (updateColegiadoPendiente) {
+      updateColegiadoPendiente(pendienteId, updateData);
+    }
+  };
+
+  // Función para actualizar un documento - Añadir en ambos componentes
+  const updateDocumento = async (formData) => {
+    try {
+      // Implementar la lógica para actualizar el documento
+      console.log("Actualizando documento:", formData);
+      // Aquí iría la llamada al API o al store para actualizar el documento
+
+      // Ejemplo:
+      // En DetalleColegiado:
+      // await updateColegiadoDocumento(colegiadoId, formData);
+
+      // En DetallePendiente:
+      // await updateColegiadoPendienteDocumento(pendienteId, formData);
+
+      // Refrescar documentos después de actualizar
+      loadData();
+    } catch (error) {
+      console.error("Error al actualizar documento:", error);
     }
   };
 
@@ -726,20 +752,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
   const handleCerrarVistaDocumento = () => {
     setDocumentoSeleccionado(null);
-  };
-
-  // Función para actualizar un documento
-  const updateDocumento = (documentoActualizado) => {
-    try {
-      if (!recaudos) {
-        updateColegiadoPendiente(pendienteId, documentoActualizado, true);
-      } else {
-        updateColegiadoPendienteWithToken(pendienteId, documentoActualizado, true)
-      }
-      loadData()
-    } catch (error) {
-      console.error("Error al actualizar documento:", error);
-    }
   };
 
   const updateData = (id, newData) => {
@@ -1123,11 +1135,13 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       </div>
 
       {/* Documentos y pagos */}
-      <DocumentsSection
-        documentosRequeridos={documentosRequeridos}
-        handleVerDocumento={handleVerDocumento}
-        updateDocumento={updateDocumento}
+      <DocumentSection
+        documentos={documentosRequeridos}
+        onViewDocument={handleVerDocumento}
+        onUpdateDocument={updateDocumento}
         onDocumentStatusChange={handleDocumentStatusChange}
+        title="Documentos requeridos"
+        subtitle="Documentación obligatoria del solicitante"
       />
 
       {!isAdmin && pendiente.pago == null && pagosPendientes && (
@@ -1195,10 +1209,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       )}
 
       {documentoSeleccionado && (
-        <DocumentViewerModal
+        <DocumentViewer
           documento={documentoSeleccionado}
           onClose={handleCerrarVistaDocumento}
-          pendiente={pendiente}
         />
       )}
 

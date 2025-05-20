@@ -1,31 +1,47 @@
 // SharedListColegiado/DocumentModule.jsx
 import { motion } from "framer-motion";
 import {
-  AlertCircle, CheckCircle, Eye, FileText, RefreshCcw,
+  AlertCircle, CheckCircle, Eye,
+  FileText, RefreshCcw,
   Upload, X, XCircle
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 // Componente principal de gestión de documentos
 export function DocumentSection({
   documentos = [], // Proporciona un valor predeterminado de array vacío
   onViewDocument,
   onUpdateDocument,
-  onStatusChange,
+  onDocumentStatusChange,
   title = "Documentos",
   subtitle = "Documentación obligatoria del colegiado",
   icon = <FileText size={20} className="text-[#C40180] mr-2" />,
-  filter = doc => !doc.id.includes('comprobante_pago')
+  filter = doc => !doc.id?.includes('comprobante_pago')
 }) {
   // Asegúrate de que documentos sea siempre un array antes de filtrar
   const docs = Array.isArray(documentos) ? documentos : [];
 
+  // Normalizamos los documentos para garantizar una estructura consistente
+  const normalizedDocs = docs.map(doc => ({
+    id: doc.id || doc.nombre?.toLowerCase().replace(/\s+/g, '_') || `doc-${Math.random()}`,
+    nombre: doc.nombre || "Documento",
+    descripcion: doc.descripcion || "Sin descripción",
+    archivo: typeof doc.archivo === 'string' ? doc.archivo :
+      (doc.url ? doc.url.split('/').pop() : "Documento"),
+    requerido: !!doc.requerido,
+    url: doc.url || null,
+    status: doc.status || 'pending',
+    isReadOnly: !!doc.isReadOnly,
+    rejectionReason: doc.rejectionReason || ''
+  }));
+
   // Ahora es seguro usar filter
-  const documentosFiltrados = docs.filter(filter);
+  const documentosFiltrados = normalizedDocs.filter(filter);
   const [documentoParaSubir, setDocumentoParaSubir] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
 
   // Manejadores de eventos
   const handleReemplazarDocumento = useCallback((documento) => {
@@ -34,7 +50,10 @@ export function DocumentSection({
     setError("");
   }, []);
 
-  const handleFileChange = useCallback((file) => {
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     // Validar archivo
     const validTypes = ["application/pdf", "image/jpeg", "image/png"];
     const maxSize = 5 * 1024 * 1024; // 5MB
@@ -42,19 +61,49 @@ export function DocumentSection({
     if (!validTypes.includes(file.type)) {
       setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
       setSelectedFile(null);
-      return false;
+      return;
     }
 
     if (file.size > maxSize) {
       setError("El archivo es demasiado grande. El tamaño máximo es 5MB.");
       setSelectedFile(null);
-      return false;
+      return;
     }
 
     setSelectedFile(file);
     setError("");
-    return true;
-  }, []);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+
+      // Validar archivo
+      const validTypes = ["application/pdf", "image/jpeg", "image/png"];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!validTypes.includes(file.type)) {
+        setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
+        return;
+      }
+
+      if (file.size > maxSize) {
+        setError("El archivo es demasiado grande. El tamaño máximo es 5MB.");
+        return;
+      }
+
+      setSelectedFile(file);
+      setError("");
+    }
+  };
 
   const handleUpload = useCallback(async () => {
     if (!selectedFile) {
@@ -66,7 +115,7 @@ export function DocumentSection({
     setError("");
 
     try {
-      if (onUpdateDocument) {
+      if (onUpdateDocument && documentoParaSubir) {
         const formData = new FormData();
         formData.append(documentoParaSubir.id, selectedFile);
         await onUpdateDocument(formData);
@@ -105,9 +154,9 @@ export function DocumentSection({
             <DocumentCard
               key={documento.id}
               documento={documento}
-              onView={() => onViewDocument(documento)}
+              onView={() => onViewDocument && onViewDocument(documento)}
               onReplace={() => handleReemplazarDocumento(documento)}
-              onStatusChange={onStatusChange}
+              onStatusChange={onDocumentStatusChange}
             />
           ))
         ) : (
@@ -120,15 +169,100 @@ export function DocumentSection({
 
       {/* Modal para subir documentos */}
       {documentoParaSubir && (
-        <DocumentUploadModal
-          documento={documentoParaSubir}
-          selectedFile={selectedFile}
-          error={error}
-          isUploading={isUploading}
-          onClose={() => setDocumentoParaSubir(null)}
-          onFileChange={handleFileChange}
-          onUpload={handleUpload}
-        />
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-lg shadow-xl w-full max-w-md"
+          >
+            <div className="flex justify-between items-center p-4 border-b">
+              <div className="flex items-center">
+                <FileText className="text-[#C40180] mr-2" size={20} />
+                <h3 className="text-lg font-medium text-gray-900">
+                  {documentoParaSubir.archivo ? "Actualizar documento" : "Subir documento"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setDocumentoParaSubir(null)}
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-4">
+                <h4 className="font-medium text-gray-800 mb-1">{documentoParaSubir.nombre}</h4>
+                <p className="text-sm text-gray-500">{documentoParaSubir.descripcion}</p>
+              </div>
+
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 ${error ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-[#C40180] bg-gray-50"
+                  }`}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={(e) => handleFileChange(e)}
+                  className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                />
+
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+
+                <p className="mt-2 text-sm font-medium text-gray-700">
+                  {selectedFile ? selectedFile.name : "Haga clic o arrastre un archivo aquí"}
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">PDF, JPG o PNG (máx. 5MB)</p>
+
+                {selectedFile && (
+                  <div className="mt-2 text-sm text-green-600 font-medium">
+                    Archivo seleccionado: {selectedFile.name}
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <div className="mb-4 flex items-start bg-red-100 p-3 rounded text-sm text-red-600">
+                  <AlertCircle size={16} className="mr-2 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setDocumentoParaSubir(null)}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                  disabled={isUploading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleUpload}
+                  disabled={!selectedFile || isUploading}
+                  className={`px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${!selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
+                    }`}
+                >
+                  {isUploading ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                      <span>Subiendo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={16} />
+                      <span>{documentoParaSubir.archivo ? "Actualizar documento" : "Subir documento"}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </motion.div>
   );
@@ -352,7 +486,7 @@ export function DocumentVerificationSwitch({
 
       {/* Modal de razón de rechazo */}
       {isRejectionOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
               <AlertCircle className="text-red-500 mr-2" size={20} />
@@ -423,175 +557,30 @@ export function DocumentVerificationSwitch({
   );
 }
 
-// Modal para subir documentos
-function DocumentUploadModal({
-  documento,
-  selectedFile,
-  error,
-  isUploading,
-  onClose,
-  onFileChange,
-  onUpload
-}) {
-  const fileInputRef = React.useRef(null);
+// Función helper para normalizar documentos
+export function mapDocumentsForSection(documentos = []) {
+  if (!Array.isArray(documentos)) return [];
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      onFileChange(file);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-xl w-full max-w-md"
-      >
-        <div className="flex justify-between items-center p-4 border-b">
-          <div className="flex items-center">
-            <FileText className="text-[#C40180] mr-2" size={20} />
-            <h3 className="text-lg font-medium text-gray-900">
-              {documento.archivo ? "Actualizar documento" : "Subir documento"}
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <div className="p-6">
-          <div className="mb-4">
-            <h4 className="font-medium text-gray-800 mb-1">{documento.nombre}</h4>
-            <p className="text-sm text-gray-500">{documento.descripcion}</p>
-          </div>
-
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 ${error ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-[#C40180] bg-gray-50"
-              }`}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={(e) => e.target.files && e.target.files[0] && onFileChange(e.target.files[0])}
-              className="hidden"
-              accept=".pdf,.jpg,.jpeg,.png"
-            />
-
-            <Upload className="mx-auto h-12 w-12 text-gray-400" />
-
-            <p className="mt-2 text-sm font-medium text-gray-700">
-              {selectedFile ? selectedFile.name : "Haga clic o arrastre un archivo aquí"}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-500">PDF, JPG o PNG (máx. 5MB)</p>
-
-            {selectedFile && (
-              <div className="mt-2 text-sm text-green-600 font-medium">
-                Archivo seleccionado: {selectedFile.name}
-              </div>
-            )}
-          </div>
-
-          {error && (
-            <div className="mb-4 flex items-start bg-red-100 p-3 rounded text-sm text-red-600">
-              <AlertCircle size={16} className="mr-2 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
-              disabled={isUploading}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={onUpload}
-              disabled={!selectedFile || isUploading}
-              className={`px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${!selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-            >
-              {isUploading ? (
-                <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  <span>Subiendo...</span>
-                </>
-              ) : (
-                <>
-                  <Upload size={16} />
-                  <span>{documento.archivo ? "Actualizar documento" : "Subir documento"}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-// Componente para la sección de pagos/comprobantes
-export function PaymentSection({
-  documentos,
-  pendiente,
-  onViewDocument,
-  onUpdateDocument
-}) {
-  // Filtrar solo comprobantes de pago
-  const comprobantes = documentos.filter(doc =>
-    doc.id.includes('comprobante_pago') || doc.nombre.toLowerCase().includes('comprobante')
-  );
-
-  return (
-    <DocumentSection
-      documentos={comprobantes}
-      onViewDocument={onViewDocument}
-      onUpdateDocument={onUpdateDocument}
-      title="Comprobantes de Pago"
-      subtitle="Comprobantes de inscripción y otros pagos"
-      icon={<CreditCard size={20} className="text-[#C40180] mr-2" />}
-      filter={() => true} // No filtrar, mostrar todos los comprobantes
-    />
-  );
+  return documentos.map(doc => ({
+    id: doc.id || doc.nombre?.toLowerCase().replace(/\s+/g, '_') || `doc-${Math.random()}`,
+    nombre: doc.nombre || "Documento",
+    descripcion: doc.descripcion || "Sin descripción",
+    archivo: typeof doc.archivo === 'string' ? doc.archivo :
+      (doc.url ? doc.url.split('/').pop() : "Documento"),
+    requerido: !!doc.requerido,
+    url: doc.url || null,
+    status: doc.status || 'pending',
+    isReadOnly: !!doc.isReadOnly,
+    rejectionReason: doc.rejectionReason || ''
+  }));
 }
 
 // Modal para visualizar documentos
-export function DocumentViewer({ documento, onClose, pendiente }) {
+export function DocumentViewer({ documento, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Determinar si es un documento exonerado
   const isExonerado = documento && documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
-
-  // Determinar si es un comprobante de pago
-  const isComprobantePago = documento && (
-    documento.id?.includes("comprobante_pago") ||
-    documento.nombre?.toLowerCase().includes("comprobante")
-  );
-
-  // Obtener el usuario que autorizó la exoneración
-  const usuarioExoneracion = pendiente?.exoneracionPagos?.usuario;
-  const nombreUsuario = usuarioExoneracion
-    ? usuarioExoneracion.username || usuarioExoneracion.name || usuarioExoneracion.email
-    : "Administración COV";
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -608,55 +597,17 @@ export function DocumentViewer({ documento, onClose, pendiente }) {
     return () => clearTimeout(timer);
   }, [documento, isExonerado]);
 
-  // Determinar el tamaño del modal basado en el contenido
-  const getModalSize = () => {
-    if (isExonerado) {
-      return "max-w-lg h-auto max-h-[90vh]"; // Modal más pequeño para exoneraciones
-    } else {
-      return "max-w-4xl h-[80vh]"; // Tamaño original para documentos
-    }
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`bg-white rounded-lg shadow-xl w-full flex flex-col ${getModalSize()}`}
+        className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex flex-col"
       >
-        {/* Encabezado */}
         <div className="flex justify-between items-center p-4 border-b">
           <div className="flex items-center">
             <FileText className="text-[#C40180] mr-2" size={20} />
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">{documento.nombre}</h3>
-              {documento.status && (
-                <div className="flex items-center mt-1">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                    ${documento.status === 'approved'
-                        ? 'bg-green-100 text-green-800'
-                        : documento.status === 'rejected'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                  >
-                    {documento.status === 'approved' && <CheckCircle size={12} className="mr-1" />}
-                    {documento.status === 'rejected' && <XCircle size={12} className="mr-1" />}
-                    {documento.status === 'approved' && 'Aprobado'}
-                    {documento.status === 'rejected' && 'Rechazado'}
-                    {documento.status === 'pending' && 'Pendiente'}
-                  </span>
-
-                  {/* Si está rechazado y tiene motivo de rechazo */}
-                  {documento.status === 'rejected' && documento.rejectionReason && (
-                    <span className="ml-2 text-xs text-red-600">
-                      Motivo: {documento.rejectionReason}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+            <h3 className="text-lg font-medium text-gray-900">{documento.nombre}</h3>
           </div>
           <button
             onClick={onClose}
@@ -666,86 +617,36 @@ export function DocumentViewer({ documento, onClose, pendiente }) {
           </button>
         </div>
 
-        {/* Contenido */}
-        <div className={`overflow-auto p-4 bg-gray-100 ${isExonerado ? '' : 'flex-1'}`}>
+        <div className="flex-1 overflow-auto p-4 bg-gray-100 flex items-center justify-center">
           {loading ? (
-            <div className="flex items-center justify-center h-full min-h-[300px]">
+            <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
             </div>
           ) : error ? (
-            <div className="flex items-center justify-center h-full min-h-[300px]">
-              <div className="text-center text-red-500">
-                <p className="text-xl mb-2">Error</p>
-                <p>{error}</p>
-              </div>
+            <div className="text-center text-red-500">
+              <p className="text-xl mb-2">Error</p>
+              <p>{error}</p>
             </div>
           ) : isExonerado ? (
-            <div className="py-6">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                <CheckCircle size={56} className="text-green-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-green-800 mb-2">Pago Exonerado</h3>
-                <p className="text-green-700 mb-4">
-                  Este pago ha sido exonerado administrativamente y no requiere comprobante.
-                </p>
-                <div className="text-left bg-white p-4 rounded-md border border-green-100 mt-2">
-                  <p className="text-sm text-gray-700 mb-1">
-                    <span className="font-semibold">Autorizado por:</span> {nombreUsuario}
-                  </p>
-                  {pendiente?.exoneracionPagos?.fecha && (
-                    <p className="text-sm text-gray-700 mb-1">
-                      <span className="font-semibold">Fecha:</span>{" "}
-                      {new Date(pendiente.exoneracionPagos.fecha).toLocaleDateString()}
-                    </p>
-                  )}
-                  {pendiente?.exoneracionPagos?.motivo && (
-                    <p className="text-sm text-gray-700">
-                      <span className="font-semibold">Motivo:</span> {pendiente.exoneracionPagos.motivo}
-                    </p>
-                  )}
-                </div>
-              </div>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <CheckCircle size={56} className="text-green-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-green-800 mb-2">Documento Exonerado</h3>
+              <p className="text-green-700 mb-4">
+                Este documento ha sido exonerado administrativamente.
+              </p>
             </div>
           ) : documento.url ? (
-            <div className="h-full flex items-center justify-center min-h-[400px]">
-              {/* Aquí iría el visor de PDF/imágenes, usar un iframe o componente específico */}
-              <img
-                src={process.env.NEXT_PUBLIC_BACK_HOST + documento.url || "/placeholder.svg"}
-                alt={documento.nombre || ""}
-                className="max-h-full max-w-full object-contain"
-              />
-            </div>
+            <img
+              src={document.url}
+              alt={documento.nombre}
+              className="max-h-full max-w-full object-contain"
+              onError={() => setError("No se pudo cargar el documento")}
+            />
           ) : (
-            <div className="flex items-center justify-center h-full min-h-[300px]">
-              <div className="text-center text-gray-500">
-                <p className="text-xl mb-2">No hay vista previa disponible</p>
-                <p>No se puede mostrar este documento.</p>
-              </div>
+            <div className="text-center text-gray-500">
+              <p className="text-xl mb-2">No hay vista previa disponible</p>
+              <p>No se puede mostrar este documento.</p>
             </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t justify-between items-center hidden md:flex">
-          <div>
-            <p className="text-sm text-gray-500">
-              {isExonerado
-                ? "Documento exonerado administrativamente"
-                : documento.archivo
-                  ? `Archivo: ${documento.archivo}`
-                  : "No hay archivo disponible"}
-            </p>
-          </div>
-          {documento.url && !isExonerado && (
-            <a>
-              href={process.env.NEXT_PUBLIC_BACK_HOST + documento.url}
-              download={documento.archivo || "documento"}
-              className="px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A00160] transition-colors flex items-center gap-2"
-              target="_blank"
-              rel="noopener noreferrer"
-
-              <Download size={16} />
-              <span>Descargar</span>
-            </a>
           )}
         </div>
       </motion.div>

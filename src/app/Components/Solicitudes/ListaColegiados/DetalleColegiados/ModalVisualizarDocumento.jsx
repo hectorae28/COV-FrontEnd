@@ -1,8 +1,8 @@
-import { FileText, X, FileCheck } from "lucide-react"
+import { FileCheck, FileText, X } from "lucide-react"
 
 export default function ModalVisualizarDocumento({ documento, onClose }) {
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center p-4 border-b">
                     <div className="flex items-center">

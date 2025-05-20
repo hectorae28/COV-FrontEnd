@@ -167,7 +167,7 @@ export default function UserProfileCard({
               <div className="flex items-center bg-gray-50 p-3 rounded-md sm:w-[45%]">
                 <GraduationCap className="text-[#C40180] h-5 w-5 mr-3" />
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Ejercicio profesional</p>
+                  <p className="text-xs text-gray-500 font-medium">Profesión/Ocupación</p>
                   <p className="text-sm text-gray-700">
                     {data.recaudos.tipo_profesion_display}
                   </p>

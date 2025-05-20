@@ -12,17 +12,16 @@ import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/Sh
 import ProfessionalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/ProfessionalInfoSection";
 
 // Componentes existentes
+import CarnetInfo from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/CarnetInfo";
+import ChatSection from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/ChatSection";
+import TablaInscripciones from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/TablaInscripciones";
+import TablaPagos from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/TablaPagos";
+import TablaSolicitudes from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/TablaSolicitudes";
+import { DocumentSection, DocumentViewer } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
+import { TitleConfirmationModal } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ModalSystem";
 import UserProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/UserProfileCard";
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal";
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud";
-import CarnetInfo from "./DetalleColegiado/CarnetInfo";
-import ChatSection from "./DetalleColegiado/ChatSection";
-import DocumentosLista from "./DetalleColegiado/DocumentosLista";
-import EstadisticasUsuario from "./DetalleColegiado/EstadisticasUsuario";
-import ModalVisualizarDocumento from "./DetalleColegiado/ModalVisualizarDocumento";
-import TablaPagos from "./DetalleColegiado/TablaPagos";
-import TablaSolicitudes from "./DetalleColegiado/TablaSolicitudes";
-import ModalConfirmacionTitulo from "@/Components/Solicitudes/ListaColegiados/DetalleColegiado/ModalVisualizarDocumento"
 
 export default function DetalleColegiado({
   params,
@@ -107,6 +106,58 @@ export default function DetalleColegiado({
       loadData(); // Recargar datos
     } catch (error) {
       console.error("Error al actualizar datos:", error);
+    }
+  };
+
+  // Función para manejar el estado de documentos
+  // Función para manejar el estado de documentos - Añadir en ambos componentes
+  const handleDocumentStatusChange = (updatedDocument) => {
+    // Actualizar el estado del documento localmente
+    const docsCopy = [...documentos]; // o [...documentosRequeridos] en DetallePendiente
+    const index = docsCopy.findIndex(doc => doc.id === updatedDocument.id);
+    if (index !== -1) {
+      docsCopy[index] = {
+        ...docsCopy[index],
+        status: updatedDocument.status,
+        rejectionReason: updatedDocument.rejectionReason || ''
+      };
+      setDocumentos(docsCopy); // o setDocumentosRequeridos(docsCopy) en DetallePendiente
+    }
+
+    // Enviar actualización al backend
+    const updateData = {
+      [`${updatedDocument.id}_status`]: updatedDocument.status
+    };
+    if (updatedDocument.rejectionReason) {
+      updateData[`${updatedDocument.id}_rejection_reason`] = updatedDocument.rejectionReason;
+    }
+
+    // Usar la función correcta según el componente
+    if (updateColegiado) {
+      updateColegiado(colegiadoId, updateData);
+    } else if (updateColegiadoPendiente) {
+      updateColegiadoPendiente(pendienteId, updateData);
+    }
+  };
+
+  // Función para actualizar un documento - Añadir en ambos componentes
+  const updateDocumento = async (formData) => {
+    try {
+      // Implementar la lógica para actualizar el documento
+      console.log("Actualizando documento:", formData);
+      // Aquí iría la llamada al API o al store para actualizar el documento
+
+      // Ejemplo:
+      // En DetalleColegiado:
+      // await updateColegiadoDocumento(colegiadoId, formData);
+
+      // En DetallePendiente:
+      // await updateColegiadoPendienteDocumento(pendienteId, formData);
+
+      // Refrescar documentos después de actualizar
+      loadData();
+    } catch (error) {
+      console.error("Error al actualizar documento:", error);
     }
   };
 
@@ -201,7 +252,12 @@ export default function DetalleColegiado({
         .then(data => {
           // Make sure it's an array
           const solicitudesArray = Array.isArray(data) ? data : [];
-          setSolicitudItem(solicitudesArray);
+
+          // Filtrar elementos no válidos o indefinidos
+          const solicitudesValidas = solicitudesArray.filter(item => item && typeof item === 'object');
+
+          console.log("Solicitudes válidas:", solicitudesValidas);
+          setSolicitudItem(solicitudesValidas);
         })
         .catch(error => {
           console.error("Error fetching solicitudes:", error);
@@ -321,7 +377,7 @@ export default function DetalleColegiado({
               </span>
             </div>
             <button
-              onClick={() => setTituloEntregado(true)}
+              onClick={() => setTituloEntregado(false)}
               className="text-green-700"
             >
               <X size={18} />
@@ -504,6 +560,11 @@ export default function DetalleColegiado({
             {tabActivo === "pagos" && (
               <TablaPagos colegiadoId={colegiadoId} handleVerDocumento={handleVerDocumento} documentos={documentos || []} />
             )}
+
+            {tabActivo === "inscripciones" && (
+              <TablaInscripciones colegiadoId={colegiadoId} />
+            )}
+
             {tabActivo === "solicitudes" && (
               <TablaSolicitudes
                 colegiadoId={colegiadoId}
@@ -511,14 +572,22 @@ export default function DetalleColegiado({
                 onVerDetalle={verDetalleSolicitud}
               />
             )}
+
             {tabActivo === "carnet" && <CarnetInfo colegiado={{ ...colegiado, persona: colegiado.recaudos.persona }} />}
+
             {tabActivo === "documentos" && (
-              <DocumentosLista
+              <DocumentSection
                 documentos={documentos}
-                handleVerDocumento={handleVerDocumento}
+                onViewDocument={handleVerDocumento}
+                onUpdateDocument={updateDocumento}
+                onDocumentStatusChange={handleDocumentStatusChange}
+                title="Documentos"
+                subtitle="Documentación del colegiado"
               />
             )}
+
             {tabActivo === "chats" && <ChatSection colegiado={colegiado} />}
+
             {tabActivo === "estadisticas" && (
               <EstadisticasUsuario colegiado={colegiado} />
             )}
@@ -527,15 +596,15 @@ export default function DetalleColegiado({
 
         {/* Modales */}
         {confirmarTitulo && (
-          <ModalConfirmacionTitulo
-            nombreColegiado={`${colegiado.recaudos.persona.nombre} ${colegiado.recaudos.persona.primer_apellido}`}
+          <TitleConfirmationModal
+            nombreColegiado={`${colegiado.recaudos?.persona?.nombre || ''} ${colegiado.recaudos?.persona?.primer_apellido || ''}`}
             onConfirm={handleConfirmarEntregaTitulo}
             onClose={() => setConfirmarTitulo(false)}
           />
         )}
 
         {documentoSeleccionado && (
-          <ModalVisualizarDocumento
+          <DocumentViewer
             documento={documentoSeleccionado}
             onClose={handleCerrarVistaDocumento}
           />
@@ -545,8 +614,8 @@ export default function DetalleColegiado({
           <CrearSolicitudModal
             colegiadoPreseleccionado={{
               id: colegiado.id,
-              nombre: `${colegiado.recaudos.persona.nombre} ${colegiado.recaudos.persona.primer_apellido}`,
-              cedula: colegiado.recaudos.persona.cedula,
+              nombre: `${colegiado.recaudos?.persona?.nombre || ''} ${colegiado.recaudos?.persona?.primer_apellido || ''}`,
+              cedula: colegiado.recaudos?.persona?.cedula || colegiado.recaudos?.persona?.identificacion,
               numeroRegistro: colegiado.numeroRegistro,
             }}
             onClose={() => setMostrarModalSolicitud(false)}
