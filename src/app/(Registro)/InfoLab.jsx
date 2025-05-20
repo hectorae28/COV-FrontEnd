@@ -34,7 +34,7 @@ const formatearTelefonoLocal = (value) => {
   return digits;
 };
 
-export default function InfoLaboral({ formData, onInputChange, validationErrors }) {
+export default function InfoLaboral({ formData, onInputChange, validationErrors, isEditMode = false }) {
   // Lista de estados ordenados alfabéticamente
   const estados = Object.keys(EstadoData).sort().map(capitalizarPalabras);
   // Estado para manejar el estado laboral
@@ -221,6 +221,32 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
     // Para registros adicionales, habría que implementar una lógica más compleja
     // si se quiere validar cada registro individualmente
     return false;
+  };
+
+   const handleSaveClick = () => {
+    // Validar que haya al menos una institución con datos válidos
+    if (workStatus === "labora" && registros.length > 0) {
+      const hasValidInstitution = registros.some(reg => 
+        reg.institutionName && reg.institutionType && reg.institutionAddress
+      );
+      
+      if (!hasValidInstitution) {
+        alert("Debe completar los datos de al menos una institución");
+        return;
+      }
+      
+      // Actualizar datos en el formulario principal
+      onInputChange({
+        workStatus: workStatus,
+        laboralRegistros: registros
+      });
+    } else if (workStatus === "noLabora") {
+      // Si no labora, enviar estado con valores por defecto
+      onInputChange({
+        workStatus: "noLabora",
+        laboralRegistros: []
+      });
+    }
   };
 
   return (
@@ -546,6 +572,18 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors 
               Si comienza a laborar en el futuro, puede volver a esta sección y actualizar su información laboral.
             </p>
           </div>
+        </div>
+      )}
+   {isEditMode && (
+        <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+              rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
+          >
+            Guardar cambios
+          </button>
         </div>
       )}
     </motion.div>

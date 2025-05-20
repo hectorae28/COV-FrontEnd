@@ -1,4 +1,3 @@
-// SharedListColegiado/EditableSection.jsx
 import { motion } from "framer-motion";
 import { Pencil, Save, X } from 'lucide-react';
 import { useState } from 'react';

@@ -95,10 +95,10 @@ export default function DataTable({
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Nombre
                         </th>
+                        {/* N° Registro solo para colegiados registrados */}
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                             Cédula
                         </th>
-                        {/* N° Registro solo para colegiados registrados */}
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                             <button
                                 className="cursor-pointer flex items-center justify-center gap-1 w-full"

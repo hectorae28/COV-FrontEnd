@@ -7,7 +7,8 @@ export default function InfoColegiado({
   formData,
   onInputChange,
   validationErrors,
-  isProfileEdit
+  isProfileEdit,
+  isEditMode = false
 }) {
   const [showTitleDateWarning, setShowTitleDateWarning] = useState(false);
   const [selectedEstado, setSelectedEstado] = useState("");
@@ -223,6 +224,12 @@ export default function InfoColegiado({
   // Checks if a field has validation errors to display the required message
   const isFieldEmpty = (fieldName) => {
     return validationErrors && validationErrors[fieldName];
+  };
+
+  const handleSaveClick = () => {
+    if (validateEditForm()) {
+      onInputChange(formData);
+    }
   };
 
   return (
@@ -798,6 +805,18 @@ export default function InfoColegiado({
           </p>
         </div>
       )}
-    </motion.div >
+    {isEditMode && (
+        <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+              rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
+          >
+            Guardar cambios
+          </button>
+        </div>
+      )}
+    </motion.div>
   );
 }

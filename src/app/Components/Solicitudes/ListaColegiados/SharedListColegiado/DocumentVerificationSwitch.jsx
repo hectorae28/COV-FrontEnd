@@ -7,7 +7,7 @@ export default function DocumentVerificationSwitch({
     readOnly = false
 }) {
     const [isRejectionOpen, setIsRejectionOpen] = useState(false);
-    const [isApprovalOpen, setIsApprovalOpen] = useState(false); // Nuevo estado para confirmación de aprobación
+    const [isApprovalOpen, setIsApprovalOpen] = useState(false);
     const [rejectionPreset, setRejectionPreset] = useState('');
     const [customReason, setCustomReason] = useState('');
     const [useCustomReason, setUseCustomReason] = useState(false);
@@ -97,8 +97,8 @@ export default function DocumentVerificationSwitch({
                     onClick={() => handleStatusChange('approved')}
                     disabled={isApproved || readOnly}
                     className={`p-2 rounded-md transition-all ${isApproved
-                            ? 'bg-green-200 text-green-800 ring-2 ring-green-500 shadow-md'
-                            : 'bg-gray-100 text-gray-500 hover:bg-green-50'
+                        ? 'bg-green-200 text-green-800 ring-2 ring-green-500 shadow-md'
+                        : 'bg-gray-100 text-gray-500 hover:bg-green-50'
                         } ${(isApproved || readOnly) ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
                     title={
                         isApproved
@@ -115,8 +115,8 @@ export default function DocumentVerificationSwitch({
                     onClick={() => handleStatusChange('rejected')}
                     disabled={isApproved || readOnly}
                     className={`p-2 rounded-md transition-all ${status === 'rejected'
-                            ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
-                            : 'bg-gray-100 text-gray-500 hover:bg-red-50'
+                        ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
+                        : 'bg-gray-100 text-gray-500 hover:bg-red-50'
                         } ${(isApproved || readOnly) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     title={
                         isApproved
@@ -130,8 +130,8 @@ export default function DocumentVerificationSwitch({
                 </button>
 
                 <span className={`text-sm font-medium ${status === 'approved' ? 'text-green-700' :
-                        status === 'rejected' ? 'text-red-700' :
-                            'text-gray-600'
+                    status === 'rejected' ? 'text-red-700' :
+                        'text-gray-600'
                     }`}>
                     {status === 'approved' && (
                         <span className="flex items-center">

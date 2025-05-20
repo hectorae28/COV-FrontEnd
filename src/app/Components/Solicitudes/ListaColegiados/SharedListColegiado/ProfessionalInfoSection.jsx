@@ -1,8 +1,8 @@
-// SharedListColegiado/ProfessionalInfoSection.jsx
 "use client";
 
 import { motion } from "framer-motion";
 import { AlertCircle, Briefcase, CheckCircle, Pencil, Save, X } from "lucide-react";
+import { useState } from "react";
 
 export default function ProfessionalInfoSection({
     colegiado,
@@ -15,14 +15,34 @@ export default function ProfessionalInfoSection({
     setCambiosPendientes,
     readonly = false
 }) {
+    // Estado para validaciones
+    const [errors, setErrors] = useState({});
+
     // Función para manejar cambios en datos profesionales
     const handleDatosProfesionalesChange = (e) => {
         const { name, value } = e.target;
+
+        // Aplicar validaciones según el campo
+        let processedValue = value;
+
+        // Para campos numéricos, validar formato
+        if (name === "numeroRegistro" || name === "anios_experiencia") {
+            if (!/^\d*$/.test(value)) {
+                return; // No actualizar si contiene caracteres no numéricos
+            }
+        }
+
         setDatosProfesionales(prev => ({
             ...prev,
-            [name]: value
+            [name]: processedValue
         }));
         setCambiosPendientes(true);
+
+        // Limpiar error específico
+        setErrors(prev => ({
+            ...prev,
+            [name]: undefined
+        }));
     };
 
     // Función para manejar cambios en checkboxes
@@ -35,13 +55,52 @@ export default function ProfessionalInfoSection({
         setCambiosPendientes(true);
     };
 
+    // Validar formulario antes de guardar
+    const validateForm = () => {
+        const newErrors = {};
+
+        // Validar número de registro
+        if (!datosProfesionales.numeroRegistro) {
+            newErrors.numeroRegistro = "El número de registro es obligatorio";
+        }
+
+        // Validar fecha de vencimiento si el carnet está vigente
+        if (datosProfesionales.carnetVigente && !datosProfesionales.carnetVencimiento) {
+            newErrors.carnetVencimiento = "La fecha de vencimiento es obligatoria";
+        }
+
+        // Validar que los años de experiencia sean un número válido
+        if (datosProfesionales.anios_experiencia && !/^\d+$/.test(datosProfesionales.anios_experiencia)) {
+            newErrors.anios_experiencia = "Los años de experiencia deben ser un número";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    }
+
     // Función para guardar cambios en datos profesionales
     const handleGuardarDatosProfesionales = () => {
+        // Validar formulario antes de guardar
+        if (!validateForm()) {
+            return;
+        }
+
         // Implementar lógica para guardar en el backend/store
         const nuevosDatos = { ...datosProfesionales };
         updateColegiadoData(colegiadoId, nuevosDatos);
         setEditandoProfesional(false);
         setCambiosPendientes(false);
+    };
+
+    // Formatear fechas para visualización
+    const formatearFecha = (fechaISO) => {
+        if (!fechaISO) return "No especificada";
+
+        try {
+            return new Date(fechaISO).toLocaleDateString('es-ES');
+        } catch (error) {
+            return fechaISO;
+        }
     };
 
     return (
@@ -79,6 +138,7 @@ export default function ProfessionalInfoSection({
                                 });
                                 setEditandoProfesional(false);
                                 setCambiosPendientes(false);
+                                setErrors({});
                             }}
                             className="cursor-pointer bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-gray-200 transition-colors"
                         >
@@ -120,12 +180,14 @@ export default function ProfessionalInfoSection({
                             {datosProfesionales?.carnetVigente ? (
                                 <>
                                     <CheckCircle size={16} className="mr-1" />
-                                    Vigente hasta {datosProfesionales?.carnetVencimiento || "No especificado"}
+                                    Vigente hasta {formatearFecha(datosProfesionales?.carnetVencimiento)}
                                 </>
                             ) : (
                                 <>
                                     <AlertCircle size={16} className="mr-1" />
-                                    Vencido desde {datosProfesionales?.carnetVencimiento || "No especificado"}
+                                    {datosProfesionales?.carnetVencimiento
+                                        ? `Vencido desde ${formatearFecha(datosProfesionales?.carnetVencimiento)}`
+                                        : "No especificado"}
                                 </>
                             )}
                         </p>
@@ -135,18 +197,26 @@ export default function ProfessionalInfoSection({
                 // Formulario de edición de información profesional
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro</label>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                            Número de registro
+                            <span className="text-red-500 ml-1">*</span>
+                        </label>
                         <input
                             type="text"
                             name="numeroRegistro"
                             value={datosProfesionales?.numeroRegistro || ""}
                             onChange={handleDatosProfesionalesChange}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                            className={`w-full p-2 border ${errors.numeroRegistro ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
                         />
+                        {errors.numeroRegistro && (
+                            <p className="mt-1 text-xs text-red-500">{errors.numeroRegistro}</p>
+                        )}
                     </div>
 
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Especialidad</label>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                            Especialidad
+                        </label>
                         <input
                             type="text"
                             name="especialidad"
@@ -157,25 +227,35 @@ export default function ProfessionalInfoSection({
                     </div>
 
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Años de experiencia</label>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                            Años de experiencia
+                        </label>
                         <input
                             type="number"
                             name="anios_experiencia"
                             value={datosProfesionales?.anios_experiencia || ""}
                             onChange={handleDatosProfesionalesChange}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                            className={`w-full p-2 border ${errors.anios_experiencia ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
                         />
+                        {errors.anios_experiencia && (
+                            <p className="mt-1 text-xs text-red-500">{errors.anios_experiencia}</p>
+                        )}
                     </div>
 
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de vencimiento del carnet</label>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                            Fecha de vencimiento del carnet
+                        </label>
                         <input
                             type="date"
                             name="carnetVencimiento"
                             value={datosProfesionales?.carnetVencimiento ? datosProfesionales.carnetVencimiento.split('T')[0] : ""}
                             onChange={handleDatosProfesionalesChange}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                            className={`w-full p-2 border ${errors.carnetVencimiento ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
                         />
+                        {errors.carnetVencimiento && (
+                            <p className="mt-1 text-xs text-red-500">{errors.carnetVencimiento}</p>
+                        )}
                     </div>
 
                     <div className="col-span-2">
@@ -192,6 +272,9 @@ export default function ProfessionalInfoSection({
                                 Carnet vigente
                             </label>
                         </div>
+                        <p className="mt-1 text-xs text-gray-500">
+                            Si marca esta opción, asegúrese de especificar la fecha de vencimiento.
+                        </p>
                     </div>
                 </div>
             )}

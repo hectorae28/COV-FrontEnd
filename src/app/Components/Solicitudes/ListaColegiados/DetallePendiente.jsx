@@ -9,9 +9,16 @@ import { useEffect, useState } from "react";
 import PagosColg from "@/app/Components/PagosModal";
 
 // Componentes compartidos
+<<<<<<< HEAD
 import AcademicInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
 import InstitutionsSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
 import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
+=======
+import AcademicInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
+import ContactInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ContactInfoSection";
+import InstitutionsSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
+import PersonalInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
+>>>>>>> QA---Dedications
 
 import { DocumentSection, DocumentViewer } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import {
@@ -39,9 +46,30 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
   // Estados locales
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [pendiente, setPendiente] = useState(null);
   const [cambiosPendientes, setCambiosPendientes] = useState(false);
+
+  // Estados para datos
+  const [datosPersonales, setDatosPersonales] = useState(null);
+  const [datosContacto, setDatosContacto] = useState({
+    email: "",
+    phoneNumber: "",
+    countryCode: "+58",
+    homePhone: "",
+    address: "",
+    city: "",
+    state: ""
+  });
+  const [datosAcademicos, setDatosAcademicos] = useState(null);
+  const [instituciones, setInstituciones] = useState([]);
+  const [nuevaInstitucion, setNuevaInstitucion] = useState({
+    nombre: "",
+    cargo: "",
+    telefono: "",
+    direccion: "",
+    tipo_institucion: ""
+  });
+  const [agregarInstitucion, setAgregarInstitucion] = useState(false);
 
   // Estados para modales
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -50,7 +78,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
 
-  // Estados para datos
+  // Estados para documentos y pagos
   const [pagosPendientes, setPagosPendientes] = useState(false);
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [motivoExoneracion, setMotivoExoneracion] = useState("");
@@ -65,22 +93,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const [rechazoExitoso, setRechazoExitoso] = useState(false);
   const [denegacionExitosa, setDenegacionExitosa] = useState(false);
   const [exoneracionExitosa, setExoneracionExitosa] = useState(false);
-
-  // Estados para edición
-  const [editandoPersonal, setEditandoPersonal] = useState(false);
-  const [editandoAcademico, setEditandoAcademico] = useState(false);
-  const [editandoInstituciones, setEditandoInstituciones] = useState(false);
-  const [datosPersonales, setDatosPersonales] = useState(null);
-  const [datosAcademicos, setDatosAcademicos] = useState(null);
-  const [instituciones, setInstituciones] = useState([]);
-  const [agregarInstitucion, setAgregarInstitucion] = useState(false);
-  const [nuevaInstitucion, setNuevaInstitucion] = useState({
-    nombre: "",
-    cargo: "",
-    telefono: "",
-    direccion: "",
-    tipo_institucion: ""
-  });
 
   // Estados para datos de registro
   const [datosRegistro, setDatosRegistro] = useState({
@@ -138,23 +150,18 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const allDocumentsApproved = () => {
     if (!documentosRequeridos || documentosRequeridos.length === 0) return false;
 
-    // Verificar que todos los documentos requeridos tengan estado 'approved'
     return documentosRequeridos
-      .filter(doc => doc.requerido) // Solo considerar documentos requeridos
+      .filter(doc => doc.requerido)
       .every(doc => {
-        // Si el documento no tiene URL (no está cargado), no puede estar aprobado
         if (!doc.url) return false;
-
-        // Obtener el estado del documento, ya sea del estado local o del documento
         const status = documentosStatus[doc.id]?.status || doc.status;
         return status === 'approved';
       });
   };
 
-  // Función para manejar el estado de documentos - CORREGIDO
+  // Función para manejar el estado de documentos
   const handleDocumentStatusChange = (updatedDocument) => {
-    // Actualizar el estado del documento localmente
-    const docsCopy = [...documentosRequeridos]; // Usando documentosRequeridos en lugar de documentos
+    const docsCopy = [...documentosRequeridos];
     const index = docsCopy.findIndex(doc => doc.id === updatedDocument.id);
     if (index !== -1) {
       docsCopy[index] = {
@@ -162,10 +169,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         status: updatedDocument.status,
         rejectionReason: updatedDocument.rejectionReason || ''
       };
-      setDocumentosRequeridos(docsCopy); // Usando setDocumentosRequeridos en lugar de setDocumentos
+      setDocumentosRequeridos(docsCopy);
     }
 
-    // Enviar actualización al backend
     const updateData = {
       [`${updatedDocument.id}_status`]: updatedDocument.status
     };
@@ -173,7 +179,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       updateData[`${updatedDocument.id}_rejection_reason`] = updatedDocument.rejectionReason;
     }
 
-    // Usar la función correcta según el componente
     updateColegiadoPendiente(pendienteId, updateData);
   };
 
@@ -182,16 +187,12 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
     try {
       setIsLoading(true);
 
-      // Extraer el ID del documento - asumiendo que hay una sola clave en formData
       const documentId = Object.keys(formData)[0];
       const file = formData.get(documentId);
 
-      // Subir el archivo al servidor
       if (!recaudos) {
-        // Lógica para subir documento si es administrador
         console.log(`Subiendo documento ${documentId} para pendiente ${pendienteId}`);
       } else {
-        // Lógica para subir con token si es usuario
         const newFormData = new FormData();
         newFormData.append(documentId, file);
         await updateColegiadoPendienteWithToken(pendienteId, newFormData, true);
@@ -210,14 +211,44 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const loadData = async () => {
     try {
       setIsLoading(true);
-      // Obtener datos del pendiente desde el store
-      let pendienteData
+      let pendienteData;
       if (!recaudos) {
         pendienteData = await getColegiadoPendiente(pendienteId);
       } else {
-        pendienteData = recaudos
+        pendienteData = recaudos;
       }
+
       if (pendienteData) {
+        // Datos personales
+        setDatosPersonales({ ...pendienteData.persona });
+
+        // Datos de contacto
+        setDatosContacto({
+          email: pendienteData.persona?.correo || "",
+          phoneNumber: pendienteData.persona?.telefono_movil?.split(" ")[1] || "",
+          countryCode: pendienteData.persona?.telefono_movil?.split(" ")[0] || "+58",
+          homePhone: pendienteData.persona?.telefono_de_habitacion || "",
+          address: pendienteData.persona?.direccion?.referencia || "",
+          city: pendienteData.persona?.direccion?.ciudad || "",
+          state: pendienteData.persona?.direccion?.estado || ""
+        });
+
+        // Datos académicos
+        setDatosAcademicos({
+          instituto_bachillerato: pendienteData.instituto_bachillerato || "",
+          universidad: pendienteData.universidad || "",
+          fecha_egreso_universidad: pendienteData.fecha_egreso_universidad || "",
+          num_registro_principal: pendienteData.num_registro_principal || "",
+          fecha_registro_principal: pendienteData.fecha_registro_principal || "",
+          num_mpps: pendienteData.num_mpps || "",
+          fecha_mpps: pendienteData.fecha_mpps || "",
+          observaciones: pendienteData.observaciones || "",
+        });
+
+        // Instituciones
+        setInstituciones(pendienteData.instituciones ? [...pendienteData.instituciones] : []);
+
+        // Documentos
         const documentosFormateados = [
           {
             id: "file_ci",
@@ -297,34 +328,12 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
             rejectionReason: pendienteData.fondo_negro_titulo_bachiller_rejection_reason || ''
           },
         ];
+
         setPendiente(pendienteData);
-
-        // Inicializar estados de edición
-        setDatosPersonales({ ...pendienteData.persona });
-        setDatosAcademicos({
-          instituto_bachillerato: pendienteData.instituto_bachillerato || "",
-          universidad: pendienteData.universidad || "",
-          fecha_egreso_universidad:
-            pendienteData.fecha_egreso_universidad || "",
-          num_registro_principal: pendienteData.num_registro_principal || "",
-          fecha_registro_principal:
-            pendienteData.fecha_registro_principal || "",
-          num_mpps: pendienteData.num_mpps || "",
-          fecha_mpps: pendienteData.fecha_mpps || "",
-          observaciones: pendienteData.observaciones || "",
-        });
-        setInstituciones(
-          pendienteData.instituciones ? [...pendienteData.instituciones] : []
-        );
-
-        // Verificar si los documentos están completos
-        setDocumentosCompletos(
-          !pendienteData.archivos_faltantes?.tiene_faltantes
-        );
-
+        setDocumentosCompletos(!pendienteData.archivos_faltantes?.tiene_faltantes);
         setDocumentosRequeridos(documentosFormateados);
 
-        // Inicializar el estado de los documentos
+        // Estado de documentos
         const initialDocStatus = {};
         documentosFormateados.forEach(doc => {
           initialDocStatus[doc.id] = {
@@ -337,6 +346,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
         setPagosPendientes(pendienteData.pago === null && !pendienteData.pago_exonerado);
       }
+
       setIsLoading(false);
     } catch (error) {
       console.error("Error al cargar datos del pendiente:", error);
@@ -361,9 +371,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
         setMetodoPago(Mpagos.data);
       } catch (error) {
-        setError(
-          "Ocurrió un error al cargar los datos, verifique su conexión a internet"
-        );
+        setError("Ocurrió un error al cargar los datos, verifique su conexión a internet");
       }
     };
     if (!isLoading && pendiente) {
@@ -371,12 +379,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
     }
   }, [isLoading, pendiente]);
 
-  // Función para obtener iniciales del nombre
-  const obtenerIniciales = () => {
-    if (!pendiente) return "CN";
-
-    const { nombre, primer_apellido } = pendiente.persona;
-    return `${nombre.charAt(0)}${primer_apellido.charAt(0)}`;
+  const updateData = (id, newData) => {
+    if (!recaudos) updateColegiadoPendiente(id, newData);
+    else updateColegiadoPendienteWithToken(id, newData);
   };
 
   const handlePaymentComplete = async ({
@@ -394,17 +399,16 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         metodo_de_pago: metodo_de_pago.id,
       },
     });
-    const Form = new FormData()
+    const Form = new FormData();
     Form.append("comprobante", paymentFile);
-    await updateColegiadoPendienteWithToken(pendienteId, Form, true)
-    loadData()
-    setPagosPendientes(false)
-    handleForward()
-  }
+    await updateColegiadoPendienteWithToken(pendienteId, Form, true);
+    loadData();
+    setPagosPendientes(false);
+    handleForward();
+  };
 
   // Funciones para gestión de documentos
   const handleVerDocumento = (documento) => {
-    // Agregar el estado del documento al documento seleccionado
     const docStatus = documentosStatus[documento.id] || { status: 'pending', rejectionReason: '' };
     setDocumentoSeleccionado({
       ...documento,
@@ -418,31 +422,20 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
     setDocumentoSeleccionado(null);
   };
 
-  const updateData = (id, newData) => {
-    if (!recaudos) updateColegiadoPendiente(id, newData)
-    else updateColegiadoPendienteWithToken(id, newData)
-  }
-
   // Función para manejar aprobación
   const handleAprobarSolicitud = async () => {
     try {
       if (isSubmitting) return;
       setIsSubmitting(true);
 
-      // Verificar que todos los documentos requeridos estén aprobados
       if (!allDocumentsApproved()) {
-        alert(
-          "No se puede aprobar esta solicitud. Algunos documentos no han sido aprobados."
-        );
+        alert("No se puede aprobar esta solicitud. Algunos documentos no han sido aprobados.");
         setIsSubmitting(false);
         return;
       }
 
-      // Verificar que los pagos estén completos o exonerados
       if (pagosPendientes) {
-        alert(
-          "No se puede aprobar esta solicitud. Los pagos están pendientes y no han sido exonerados."
-        );
+        alert("No se puede aprobar esta solicitud. Los pagos están pendientes y no han sido exonerados.");
         setIsSubmitting(false);
         return;
       }
@@ -467,17 +460,14 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         }
       });
 
-      // Llamar a la función de aprobación del store con los datos de registro y estados de documentos
       const colegiadoAprobado = approveRegistration(pendienteId, {
         ...datosRegistro,
         ...documentosData
       });
 
-      // Mostrar confirmación
       setConfirmacionExitosa(true);
       setMostrarConfirmacion(false);
 
-      // Volver a la lista después de un tiempo con el colegiado aprobado
       setTimeout(() => {
         if (onVolver) {
           onVolver({
@@ -503,7 +493,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
       setIsSubmitting(true);
 
-      // Obtener los documentos rechazados y sus motivos
       const documentosRechazados = Object.entries(documentosStatus)
         .filter(([_, data]) => data.status === 'rejected')
         .map(([docId, data]) => {
@@ -515,7 +504,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           };
         });
 
-      // Guardar estados de los documentos
       const documentosData = {};
       Object.entries(documentosStatus).forEach(([docId, data]) => {
         documentosData[`${docId}_status`] = data.status;
@@ -535,9 +523,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       setRechazoExitoso(true);
       setMostrarRechazo(false);
       onVolver({ rechazado: true });
-      loadData()
-
-      // Volver a la lista después de un tiempo
+      loadData();
     } catch (error) {
       console.error("Error al rechazar solicitud:", error);
     } finally {
@@ -555,7 +541,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
       setIsSubmitting(true);
 
-      // Obtener los documentos rechazados y sus motivos
       const documentosRechazados = Object.entries(documentosStatus)
         .filter(([_, data]) => data.status === 'rejected')
         .map(([docId, data]) => {
@@ -567,7 +552,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           };
         });
 
-      // Guardar estados de los documentos
       const documentosData = {};
       Object.entries(documentosStatus).forEach(([docId, data]) => {
         documentosData[`${docId}_status`] = data.status;
@@ -587,7 +571,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       setDenegacionExitosa(true);
       setMostrarRechazo(false);
       onVolver({ denegado: true });
-      loadData()
+      loadData();
     } catch (error) {
       console.error("Error al rechazar solicitud:", error);
     } finally {
@@ -609,14 +593,11 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         "motivo_exonerado": motivoExoneracion
       };
 
-      // Actualizar en el store
       await updateColegiadoPendiente(pendienteId, nuevosDatos);
-      loadData()
+      loadData();
 
       setExoneracionExitosa(true);
       setMostrarExoneracion(false);
-
-      // Limpiar el motivo
       setMotivoExoneracion("");
     } catch (error) {
       console.error("Error al exonerar pagos:", error);
@@ -627,7 +608,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
   // Función para manejar retroceso
   const handleVolver = () => {
-    // Preguntar si hay cambios sin guardar
     if (cambiosPendientes) {
       if (confirm("Hay cambios sin guardar. ¿Desea salir sin guardar?")) {
         onVolver({ aprobado: false });
@@ -641,11 +621,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const handleReportSubmit = (reportData) => {
     try {
       console.log("Reporte enviado:", reportData);
-
-      // Aquí puedes enviar el reporte a tu backend
-      // Por ejemplo: await sendIllegalityReport(reportData);
-
-      // Cerrar modal y mostrar notificación
       setShowReportModal(false);
       alert("El reporte de ilegalidad ha sido enviado correctamente y será revisado por el comité de ética");
     } catch (error) {
@@ -679,31 +654,20 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const nombreCompleto = `${pendiente.persona.nombre} ${pendiente.persona.segundo_nombre || ""
     } ${pendiente.persona.primer_apellido} ${pendiente.persona.segundo_apellido || ""
     }`.trim();
+
   const fechaSolicitud = pendiente.created_at
     ? (() => {
       const fecha = new Date(pendiente.created_at);
-      const dia = String(fecha.getDate()).padStart(
-        2,
-        "0"
-      );
-      const mes = String(
-        fecha.getMonth() + 1
-      ).padStart(2, "0"); // Los meses empiezan en 0
+      const dia = String(fecha.getDate()).padStart(2, "0");
+      const mes = String(fecha.getMonth() + 1).padStart(2, "0");
       const año = fecha.getFullYear();
-      const horas = String(
-        fecha.getHours()
-      ).padStart(2, "0");
-      const minutos = String(
-        fecha.getMinutes()
-      ).padStart(2, "0");
-      const segundos = String(
-        fecha.getSeconds()
-      ).padStart(2, "0");
+      const horas = String(fecha.getHours()).padStart(2, "0");
+      const minutos = String(fecha.getMinutes()).padStart(2, "0");
+      const segundos = String(fecha.getSeconds()).padStart(2, "0");
       return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
     })()
     : "-";
 
-  // Determinar si la solicitud está rechazada o denegada
   const isRechazada = pendiente.status === "rechazado";
   const isDenegada = pendiente.status === "denegado";
 
@@ -724,20 +688,22 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
       {/* Alertas de estado */}
       <StatusAlerts
-        confirmacionExitosa={confirmacionExitosa}
-        rechazoExitoso={rechazoExitoso}
-        denegacionExitosa={denegacionExitosa}
-        exoneracionExitosa={exoneracionExitosa}
-        cambiosPendientes={cambiosPendientes}
-        documentosCompletos={documentosCompletos}
-        isRechazada={isRechazada}
-        isDenegada={isDenegada}
+        notifications={{
+          confirmacionExitosa,
+          rechazoExitoso,
+          denegacionExitosa,
+          exoneracionExitosa,
+          cambiosPendientes,
+          documentosCompletos
+        }}
+        handlers={{
+          setConfirmacionExitosa,
+          setRechazoExitoso,
+          setDenegacionExitosa,
+          setExoneracionExitosa,
+          setCambiosPendientes
+        }}
         pendiente={pendiente}
-        setConfirmacionExitosa={setConfirmacionExitosa}
-        setRechazoExitoso={setRechazoExitoso}
-        setDenegacionExitosa={setDenegacionExitosa}
-        setExoneracionExitosa={setExoneracionExitosa}
-        setCambiosPendientes={setCambiosPendientes}
       />
 
       {/* Profile Card */}
@@ -752,14 +718,12 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         allDocumentsApproved={allDocumentsApproved}
       />
 
-      {/* Main content sections - Componentes compartidos */}
+      {/* Main content sections */}
       <PersonalInfoSection
         props={{
           pendiente,
           datosPersonales,
           setDatosPersonales,
-          editandoPersonal,
-          setEditandoPersonal,
           updateData,
           pendienteId,
           setCambiosPendientes,
@@ -768,13 +732,23 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         }}
       />
 
+      {/* Nueva sección de contacto */}
+      <ContactInfoSection
+        pendiente={pendiente}
+        datosContacto={datosContacto}
+        setDatosContacto={setDatosContacto}
+        updateData={updateData}
+        pendienteId={pendienteId}
+        setCambiosPendientes={setCambiosPendientes}
+        isAdmin={isAdmin}
+        readOnly={isDenegada}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <AcademicInfoSection
           pendiente={pendiente}
           datosAcademicos={datosAcademicos}
           setDatosAcademicos={setDatosAcademicos}
-          editandoAcademico={editandoAcademico}
-          setEditandoAcademico={setEditandoAcademico}
           updateColegiadoPendiente={updateData}
           pendienteId={pendienteId}
           setCambiosPendientes={setCambiosPendientes}
@@ -789,8 +763,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           setNuevaInstitucion={setNuevaInstitucion}
           agregarInstitucion={agregarInstitucion}
           setAgregarInstitucion={setAgregarInstitucion}
-          editandoInstituciones={editandoInstituciones}
-          setEditandoInstituciones={setEditandoInstituciones}
           updateColegiadoPendiente={updateData}
           pendienteId={pendienteId}
           setCambiosPendientes={setCambiosPendientes}
@@ -879,7 +851,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         />
       )}
 
-      {/* Modal de reporte de ilegalidades */}
       {showReportModal && (
         <ReportIllegalityModal
           isOpen={showReportModal}

@@ -1,4 +1,3 @@
-// SharedListColegiado/ModalSystem.jsx
 import { motion } from "framer-motion";
 import {
   AlertOctagon, AlertTriangle, CheckCircle, ChevronLeft,

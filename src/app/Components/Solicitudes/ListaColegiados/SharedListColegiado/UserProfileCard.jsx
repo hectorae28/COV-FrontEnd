@@ -1,4 +1,3 @@
-// SharedListColegiado/UserProfileCard.jsx
 import SessionInfo from "@/Components/SessionInfo";
 import { motion } from "framer-motion";
 import {
@@ -10,7 +9,7 @@ import {
 
 export default function UserProfileCard({
   data,
-  variant = "pending", // "pending" o "registered"
+  variant = "pending",
   onNuevaSolicitud,
   onConfirmarTitulo,
   onMostrarConfirmacion,
