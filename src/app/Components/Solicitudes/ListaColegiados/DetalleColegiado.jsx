@@ -47,6 +47,7 @@ export default function DetalleColegiado({
   const [refreshSolicitudes, setRefreshSolicitudes] = useState(0);
   const [solicitudItem, setSolicitudItem] = useState(null);
   const [cambiosPendientes, setCambiosPendientes] = useState(false);
+  const [editandoProfesional, setEditandoProfesional] = useState(false);
 
   // Estados para datos 
   const [datosPersonales, setDatosPersonales] = useState(null);
@@ -100,10 +101,59 @@ export default function DetalleColegiado({
   // Función para actualizar datos del colegiado
   const updateColegiadoData = async (colegiadoId, datosActualizados) => {
     try {
-      await updateColegiado(colegiadoId, datosActualizados);
-      loadData(); // Recargar datos
+      // Para asegurar que no se modifican objetos originales
+      const dataToSend = JSON.parse(JSON.stringify(datosActualizados));
+
+      // Actualizar estados locales primero para feedback inmediato
+      if (dataToSend.persona) {
+        setDatosPersonales(prev => ({
+          ...prev,
+          ...dataToSend.persona
+        }));
+      }
+
+      if (dataToSend.email || dataToSend.phoneNumber || dataToSend.address) {
+        setDatosContacto(prev => ({
+          ...prev,
+          ...dataToSend
+        }));
+      }
+
+      if (dataToSend.instituto_bachillerato || dataToSend.universidad ||
+        dataToSend.num_registro_principal || dataToSend.fecha_registro_principal ||
+        dataToSend.num_mpps || dataToSend.fecha_mpps ||
+        dataToSend.fecha_egreso_universidad || dataToSend.observaciones) {
+        setDatosAcademicos(prev => ({
+          ...prev,
+          ...dataToSend
+        }));
+      }
+
+      if (dataToSend.instituciones) {
+        setInstituciones(dataToSend.instituciones);
+      }
+
+      if (dataToSend.numeroRegistro || dataToSend.especialidad ||
+        dataToSend.anios_experiencia || dataToSend.carnetVigente ||
+        dataToSend.carnetVencimiento) {
+        setDatosProfesionales(prev => ({
+          ...prev,
+          ...dataToSend
+        }));
+      }
+
+      // Luego, enviar al backend
+      await updateColegiado(colegiadoId, dataToSend);
+
+      // Opcionalmente recargar datos completos
+      // await loadData();
+
+      // Indicar que los cambios están guardados
+      setCambiosPendientes(false);
     } catch (error) {
       console.error("Error al actualizar datos:", error);
+      // Mantener la bandera de cambios pendientes
+      setCambiosPendientes(true);
     }
   };
 
@@ -154,9 +204,9 @@ export default function DetalleColegiado({
       setColegiado(colegiadoData);
 
       if (colegiadoData) {
-        // Datos personales
+        // Datos personales - crear copia profunda para evitar referencias
         setDatosPersonales({
-          ...(colegiadoData.recaudos?.persona || {}),
+          ...(JSON.parse(JSON.stringify(colegiadoData.recaudos?.persona || {}))),
         });
 
         // Datos de contacto
@@ -191,8 +241,8 @@ export default function DetalleColegiado({
           carnetVencimiento: colegiadoData.carnetVencimiento || ""
         });
 
-        // Instituciones
-        setInstituciones(colegiadoData.instituciones || []);
+        // Instituciones - crear copia profunda
+        setInstituciones(JSON.parse(JSON.stringify(colegiadoData.instituciones || [])));
       }
 
       // Cargar documentos del colegiado
@@ -523,6 +573,8 @@ export default function DetalleColegiado({
                   colegiado={colegiado}
                   datosProfesionales={datosProfesionales}
                   setDatosProfesionales={setDatosProfesionales}
+                  editandoProfesional={editandoProfesional}
+                  setEditandoProfesional={setEditandoProfesional}
                   updateColegiadoData={updateColegiadoData}
                   colegiadoId={colegiadoId}
                   setCambiosPendientes={setCambiosPendientes}

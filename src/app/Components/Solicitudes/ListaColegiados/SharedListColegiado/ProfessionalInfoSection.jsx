@@ -119,7 +119,7 @@ export default function ProfessionalInfoSection({
                 {!editandoProfesional && !readonly ? (
                     <button
                         onClick={() => setEditandoProfesional(true)}
-                        className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors"
+                        className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:opacity-90 transition-colors"
                     >
                         <Pencil size={16} className="mr-1" />
                         Editar
@@ -157,124 +157,140 @@ export default function ProfessionalInfoSection({
             </div>
 
             {!editandoProfesional ? (
-                // Vista de información profesional
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro</p>
-                        <p className="font-medium text-gray-800">{datosProfesionales?.numeroRegistro || "No especificado"}</p>
+                // Vista de información profesional con layout mejorado
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 p-4 rounded-md">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro</p>
+                            <p className="font-medium text-gray-800">{datosProfesionales?.numeroRegistro || "No especificado"}</p>
+                        </div>
+
+                        <div className="bg-gray-50 p-4 rounded-md">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Especialidad</p>
+                            <p className="font-medium text-gray-800">{datosProfesionales?.especialidad || "No especificada"}</p>
+                        </div>
                     </div>
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Especialidad</p>
-                        <p className="font-medium text-gray-800">{datosProfesionales?.especialidad || "No especificada"}</p>
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 p-4 rounded-md">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Años de experiencia</p>
+                            <p className="font-medium text-gray-800">{datosProfesionales?.anios_experiencia || "No especificado"}</p>
+                        </div>
 
-                    <div className="bg-gray-50 p-3 rounded-md">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Años de experiencia</p>
-                        <p className="font-medium text-gray-800">{datosProfesionales?.anios_experiencia || "No especificado"}</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado del carnet</p>
-                        <p className={`font-medium ${datosProfesionales?.carnetVigente ? 'text-green-600' : 'text-amber-600'} flex items-center`}>
-                            {datosProfesionales?.carnetVigente ? (
-                                <>
-                                    <CheckCircle size={16} className="mr-1" />
-                                    Vigente hasta {formatearFecha(datosProfesionales?.carnetVencimiento)}
-                                </>
-                            ) : (
-                                <>
-                                    <AlertCircle size={16} className="mr-1" />
-                                    {datosProfesionales?.carnetVencimiento
-                                        ? `Vencido desde ${formatearFecha(datosProfesionales?.carnetVencimiento)}`
-                                        : "No especificado"}
-                                </>
-                            )}
-                        </p>
+                        <div className="bg-gray-50 p-4 rounded-md">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado del carnet</p>
+                            <p className={`font-medium ${datosProfesionales?.carnetVigente ? 'text-green-600' : 'text-amber-600'} flex items-center`}>
+                                {datosProfesionales?.carnetVigente ? (
+                                    <>
+                                        <CheckCircle size={16} className="mr-1" />
+                                        Vigente hasta {formatearFecha(datosProfesionales?.carnetVencimiento)}
+                                    </>
+                                ) : (
+                                    <>
+                                        <AlertCircle size={16} className="mr-1" />
+                                        {datosProfesionales?.carnetVencimiento
+                                            ? `Vencido desde ${formatearFecha(datosProfesionales?.carnetVencimiento)}`
+                                            : "No especificado"}
+                                    </>
+                                )}
+                            </p>
+                        </div>
                     </div>
                 </div>
             ) : (
-                // Formulario de edición de información profesional
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                            Número de registro
-                            <span className="text-red-500 ml-1">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="numeroRegistro"
-                            value={datosProfesionales?.numeroRegistro || ""}
-                            onChange={handleDatosProfesionalesChange}
-                            className={`w-full p-2 border ${errors.numeroRegistro ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
-                        />
-                        {errors.numeroRegistro && (
-                            <p className="mt-1 text-xs text-red-500">{errors.numeroRegistro}</p>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                            Especialidad
-                        </label>
-                        <input
-                            type="text"
-                            name="especialidad"
-                            value={datosProfesionales?.especialidad || ""}
-                            onChange={handleDatosProfesionalesChange}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                            Años de experiencia
-                        </label>
-                        <input
-                            type="number"
-                            name="anios_experiencia"
-                            value={datosProfesionales?.anios_experiencia || ""}
-                            onChange={handleDatosProfesionalesChange}
-                            className={`w-full p-2 border ${errors.anios_experiencia ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
-                        />
-                        {errors.anios_experiencia && (
-                            <p className="mt-1 text-xs text-red-500">{errors.anios_experiencia}</p>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                            Fecha de vencimiento del carnet
-                        </label>
-                        <input
-                            type="date"
-                            name="carnetVencimiento"
-                            value={datosProfesionales?.carnetVencimiento ? datosProfesionales.carnetVencimiento.split('T')[0] : ""}
-                            onChange={handleDatosProfesionalesChange}
-                            className={`w-full p-2 border ${errors.carnetVencimiento ? "border-red-500" : "border-gray-300"} rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
-                        />
-                        {errors.carnetVencimiento && (
-                            <p className="mt-1 text-xs text-red-500">{errors.carnetVencimiento}</p>
-                        )}
-                    </div>
-
-                    <div className="col-span-2">
-                        <div className="flex items-center">
-                            <input
-                                type="checkbox"
-                                id="carnetVigente"
-                                name="carnetVigente"
-                                checked={datosProfesionales?.carnetVigente || false}
-                                onChange={handleCheckboxChange}
-                                className="h-4 w-4 text-[#C40180] focus:ring-[#C40180] border-gray-300 rounded"
-                            />
-                            <label htmlFor="carnetVigente" className="ml-2 block text-sm text-gray-700">
-                                Carnet vigente
+                // Formulario de edición de información profesional con layout mejorado
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-[#41023B] mb-2">
+                                Número de registro
+                                <span className="text-red-500 ml-1">*</span>
                             </label>
+                            <input
+                                type="text"
+                                name="numeroRegistro"
+                                value={datosProfesionales?.numeroRegistro || ""}
+                                onChange={handleDatosProfesionalesChange}
+                                className={`w-full px-4 py-3 border ${errors.numeroRegistro ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                                placeholder="Ingrese el número de registro"
+                            />
+                            {errors.numeroRegistro && (
+                                <p className="mt-1 text-xs text-red-500">{errors.numeroRegistro}</p>
+                            )}
                         </div>
-                        <p className="mt-1 text-xs text-gray-500">
-                            Si marca esta opción, asegúrese de especificar la fecha de vencimiento.
-                        </p>
+
+                        <div>
+                            <label className="block text-sm font-medium text-[#41023B] mb-2">
+                                Especialidad
+                            </label>
+                            <input
+                                type="text"
+                                name="especialidad"
+                                value={datosProfesionales?.especialidad || ""}
+                                onChange={handleDatosProfesionalesChange}
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
+                                placeholder="Ingrese la especialidad"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-[#41023B] mb-2">
+                                Años de experiencia
+                            </label>
+                            <input
+                                type="number"
+                                name="anios_experiencia"
+                                value={datosProfesionales?.anios_experiencia || ""}
+                                onChange={handleDatosProfesionalesChange}
+                                className={`w-full px-4 py-3 border ${errors.anios_experiencia ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                                placeholder="Ingrese los años de experiencia"
+                            />
+                            {errors.anios_experiencia && (
+                                <p className="mt-1 text-xs text-red-500">{errors.anios_experiencia}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <div className="mb-3">
+                                <label className="block text-sm font-medium text-[#41023B] mb-2">
+                                    Estado del carnet
+                                </label>
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="carnetVigente"
+                                        name="carnetVigente"
+                                        checked={datosProfesionales?.carnetVigente || false}
+                                        onChange={handleCheckboxChange}
+                                        className="w-5 h-5 text-[#C40180] rounded border-gray-300 focus:ring-[#D7008A]"
+                                    />
+                                    <label htmlFor="carnetVigente" className="ml-2 text-sm text-gray-700">
+                                        Carnet vigente
+                                    </label>
+                                </div>
+                            </div>
+
+                            {datosProfesionales?.carnetVigente && (
+                                <div>
+                                    <label className="block text-sm font-medium text-[#41023B] mb-2">
+                                        Fecha de vencimiento
+                                        <span className="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        name="carnetVencimiento"
+                                        value={datosProfesionales?.carnetVencimiento || ""}
+                                        onChange={handleDatosProfesionalesChange}
+                                        className={`w-full px-4 py-3 border ${errors.carnetVencimiento ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+                                    />
+                                    {errors.carnetVencimiento && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.carnetVencimiento}</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

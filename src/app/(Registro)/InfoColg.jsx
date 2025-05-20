@@ -8,7 +8,8 @@ export default function InfoColegiado({
   onInputChange,
   validationErrors,
   isProfileEdit,
-  isEditMode = false
+  isEditMode = false,
+  onSave
 }) {
   const [showTitleDateWarning, setShowTitleDateWarning] = useState(false);
   const [selectedEstado, setSelectedEstado] = useState("");
@@ -16,6 +17,9 @@ export default function InfoColegiado({
   const [otraUniversidad, setOtraUniversidad] = useState(false);
   const [nombreUniversidad, setNombreUniversidad] = useState("");
   const [acronimoUniversidad, setAcronimoUniversidad] = useState("");
+
+  // Estado local para el formulario en modo edición
+  const [localFormData, setLocalFormData] = useState(formData);
 
   // Añadir estados para las partes de las fechas
   const [mppsDateParts, setMppsDateParts] = useState({
@@ -69,10 +73,22 @@ export default function InfoColegiado({
     });
   };
 
+  // Actualizar el estado local cuando cambian las props
+  useEffect(() => {
+    setLocalFormData(formData);
+  }, [formData]);
+
   // Manejador general para campos que no requieren formato especial
   const handleChange = (e) => {
     const { name, value } = e.target;
-    onInputChange({ [name]: value });
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    } else {
+      onInputChange({ [name]: value });
+    }
   };
 
   // Actualizar las universidades disponibles cuando se selecciona un estado
@@ -104,7 +120,14 @@ export default function InfoColegiado({
     const formattedValue = capitalizarPalabras(rawValue);
 
     // Actualizar el formData con el valor formateado
-    onInputChange({ graduateInstitute: formattedValue });
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        graduateInstitute: formattedValue
+      }));
+    } else {
+      onInputChange({ graduateInstitute: formattedValue });
+    }
   };
 
   // Manejar el cambio de estado
@@ -114,13 +137,24 @@ export default function InfoColegiado({
     setOtraUniversidad(false);
 
     // Actualizar el formData
-    onInputChange({
-      universityState: nuevoEstado,
-      universityTitle: "", // Resetear la universidad seleccionada
-      isCustomUniversity: false,
-      customUniversityName: "",
-      customUniversityAcronym: ""
-    });
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        universityState: nuevoEstado,
+        universityTitle: "", // Resetear la universidad seleccionada
+        isCustomUniversity: false,
+        customUniversityName: "",
+        customUniversityAcronym: ""
+      }));
+    } else {
+      onInputChange({
+        universityState: nuevoEstado,
+        universityTitle: "", // Resetear la universidad seleccionada
+        isCustomUniversity: false,
+        customUniversityName: "",
+        customUniversityAcronym: ""
+      });
+    }
   };
 
   // Manejar el cambio de universidad
@@ -133,12 +167,22 @@ export default function InfoColegiado({
       setAcronimoUniversidad("");
 
       // Actualizar el formData
-      onInputChange({
-        universityTitle: "",
-        isCustomUniversity: true,
-        customUniversityName: "",
-        customUniversityAcronym: ""
-      });
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          universityTitle: "",
+          isCustomUniversity: true,
+          customUniversityName: "",
+          customUniversityAcronym: ""
+        }));
+      } else {
+        onInputChange({
+          universityTitle: "",
+          isCustomUniversity: true,
+          customUniversityName: "",
+          customUniversityAcronym: ""
+        });
+      }
     } else {
       setOtraUniversidad(false);
 
@@ -146,12 +190,22 @@ export default function InfoColegiado({
       const universidadSeleccionada = universidadesDisponibles.find(u => u.nombre === value);
 
       // Actualizar el formData
-      onInputChange({
-        universityTitle: value,
-        isCustomUniversity: false,
-        customUniversityName: "",
-        customUniversityAcronym: universidadSeleccionada ? universidadSeleccionada.acronimo : ""
-      });
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          universityTitle: value,
+          isCustomUniversity: false,
+          customUniversityName: "",
+          customUniversityAcronym: universidadSeleccionada ? universidadSeleccionada.acronimo : ""
+        }));
+      } else {
+        onInputChange({
+          universityTitle: value,
+          isCustomUniversity: false,
+          customUniversityName: "",
+          customUniversityAcronym: universidadSeleccionada ? universidadSeleccionada.acronimo : ""
+        });
+      }
     }
   };
 
@@ -162,10 +216,18 @@ export default function InfoColegiado({
     setNombreUniversidad(formattedValue);
 
     // Actualizar el formData
-    onInputChange({
-      customUniversityName: formattedValue,
-      universityTitle: formattedValue
-    });
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        customUniversityName: formattedValue,
+        universityTitle: formattedValue
+      }));
+    } else {
+      onInputChange({
+        customUniversityName: formattedValue,
+        universityTitle: formattedValue
+      });
+    }
   };
 
   // Manejar el ingreso de acrónimo personalizado
@@ -174,7 +236,14 @@ export default function InfoColegiado({
     setAcronimoUniversidad(value);
 
     // Actualizar el formData
-    onInputChange({ customUniversityAcronym: value });
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        customUniversityAcronym: value
+      }));
+    } else {
+      onInputChange({ customUniversityAcronym: value });
+    }
   };
 
   // Manejar el cambio en campo numérico (solo números permitidos)
@@ -182,7 +251,15 @@ export default function InfoColegiado({
     const { name, value } = e.target;
     // Filtrar para permitir solo dígitos
     const numericValue = value.replace(/\D/g, '');
-    onInputChange({ [name]: numericValue });
+    
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        [name]: numericValue
+      }));
+    } else {
+      onInputChange({ [name]: numericValue });
+    }
   };
 
   // Para manejar cambios en los selectores de fecha MPPS
@@ -193,7 +270,15 @@ export default function InfoColegiado({
     // Si tenemos las tres partes, actualizar la fecha completa
     if (newDateParts.year && newDateParts.month && newDateParts.day) {
       const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
-      onInputChange({ mppsRegistrationDate: fullDate });
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          mppsRegistrationDate: fullDate
+        }));
+      } else {
+        onInputChange({ mppsRegistrationDate: fullDate });
+      }
     }
   };
 
@@ -205,7 +290,15 @@ export default function InfoColegiado({
     // Si tenemos las tres partes, actualizar la fecha completa
     if (newDateParts.year && newDateParts.month && newDateParts.day) {
       const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
-      onInputChange({ titleIssuanceDate: fullDate });
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          titleIssuanceDate: fullDate
+        }));
+      } else {
+        onInputChange({ titleIssuanceDate: fullDate });
+      }
     }
   };
 
@@ -217,7 +310,15 @@ export default function InfoColegiado({
     // Si tenemos las tres partes, actualizar la fecha completa
     if (newDateParts.year && newDateParts.month && newDateParts.day) {
       const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
-      onInputChange({ mainRegistrationDate: fullDate });
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          mainRegistrationDate: fullDate
+        }));
+      } else {
+        onInputChange({ mainRegistrationDate: fullDate });
+      }
     }
   };
 
@@ -227,8 +328,11 @@ export default function InfoColegiado({
   };
 
   const handleSaveClick = () => {
-    if (validateEditForm()) {
-      onInputChange(formData);
+    // Simplemente guardamos sin validación estricta en modo edición
+    if (onSave) {
+      onSave(localFormData);
+    } else {
+      onInputChange(localFormData);
     }
   };
 

@@ -213,8 +213,8 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       }
 
       if (pendienteData) {
-        // Datos personales
-        setDatosPersonales({ ...pendienteData.persona });
+        // Datos personales - asegurar que sea un objeto nuevo
+        setDatosPersonales(JSON.parse(JSON.stringify(pendienteData.persona || {})));
 
         // Datos de contacto
         setDatosContacto({
@@ -239,8 +239,8 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           observaciones: pendienteData.observaciones || "",
         });
 
-        // Instituciones
-        setInstituciones(pendienteData.instituciones ? [...pendienteData.instituciones] : []);
+        // Instituciones - crear copia para evitar referencias
+        setInstituciones(pendienteData.instituciones ? JSON.parse(JSON.stringify(pendienteData.instituciones)) : []);
 
         // Documentos
         const documentosFormateados = [
@@ -374,8 +374,54 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   }, [isLoading, pendiente]);
 
   const updateData = (id, newData) => {
-    if (!recaudos) updateColegiadoPendiente(id, newData);
-    else updateColegiadoPendienteWithToken(id, newData);
+    // Crear copia profunda para evitar modificaciones accidentales
+    const dataToUpdate = JSON.parse(JSON.stringify(newData));
+
+    // Actualizar los estados locales según el tipo de datos
+    if (dataToUpdate.persona) {
+      setDatosPersonales(prev => ({
+        ...prev,
+        ...dataToUpdate.persona
+      }));
+    }
+
+    // Si se están actualizando datos de contacto
+    if (dataToUpdate.persona?.correo || dataToUpdate.persona?.telefono_movil || dataToUpdate.persona?.direccion) {
+      const updatedContacto = { ...datosContacto };
+      if (dataToUpdate.persona.correo) updatedContacto.email = dataToUpdate.persona.correo;
+      if (dataToUpdate.persona.telefono_movil) {
+        const parts = dataToUpdate.persona.telefono_movil.split(' ');
+        if (parts.length === 2) {
+          updatedContacto.countryCode = parts[0];
+          updatedContacto.phoneNumber = parts[1];
+        }
+      }
+      if (dataToUpdate.persona.telefono_de_habitacion) updatedContacto.homePhone = dataToUpdate.persona.telefono_de_habitacion;
+      if (dataToUpdate.persona.direccion) {
+        if (dataToUpdate.persona.direccion.referencia) updatedContacto.address = dataToUpdate.persona.direccion.referencia;
+        if (dataToUpdate.persona.direccion.estado) updatedContacto.state = dataToUpdate.persona.direccion.estado;
+        if (dataToUpdate.persona.direccion.ciudad) updatedContacto.city = dataToUpdate.persona.direccion.ciudad;
+      }
+      setDatosContacto(updatedContacto);
+    }
+
+    // Si son datos académicos
+    if (dataToUpdate.instituto_bachillerato || dataToUpdate.universidad || dataToUpdate.num_registro_principal ||
+      dataToUpdate.fecha_registro_principal || dataToUpdate.num_mpps || dataToUpdate.fecha_mpps ||
+      dataToUpdate.fecha_egreso_universidad || dataToUpdate.observaciones) {
+      setDatosAcademicos(prev => ({
+        ...prev,
+        ...dataToUpdate
+      }));
+    }
+
+    // Si son instituciones
+    if (dataToUpdate.instituciones) {
+      setInstituciones(dataToUpdate.instituciones);
+    }
+
+    // Marcar que hay cambios pendientes
+    setCambiosPendientes(true);
   };
 
   const handlePaymentComplete = async ({
@@ -436,13 +482,14 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
       // Guardar cambios pendientes antes de aprobar
       if (cambiosPendientes) {
+        // Crear un objeto completo con todos los datos actualizados
         const nuevosDatos = {
-          ...pendiente,
-          persona: datosPersonales,
-          ...datosAcademicos,
-          instituciones,
+          persona: JSON.parse(JSON.stringify(datosPersonales)),
+          ...JSON.parse(JSON.stringify(datosAcademicos)),
+          instituciones: JSON.parse(JSON.stringify(instituciones)),
         };
         updateColegiadoPendiente(pendienteId, nuevosDatos);
+        setCambiosPendientes(false);
       }
 
       // Guardar el estado de los documentos
@@ -454,7 +501,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         }
       });
 
-      const colegiadoAprobado = approveRegistration(pendienteId, {
+      const colegiadoAprobado = await approveRegistration(pendienteId, {
         ...datosRegistro,
         ...documentosData
       });
@@ -712,7 +759,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         allDocumentsApproved={allDocumentsApproved}
       />
 
-      {/* Main content sections */}
+      {/* Organización según los pasos originales */}
       <PersonalInfoSection
         props={{
           pendiente,
@@ -726,7 +773,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         }}
       />
 
-      {/* Nueva sección de contacto */}
       <ContactInfoSection
         pendiente={pendiente}
         datosContacto={datosContacto}
