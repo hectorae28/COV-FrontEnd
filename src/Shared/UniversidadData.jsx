@@ -209,7 +209,7 @@ export const UniversidadData = {
         { nombre: "Universidad Politécnica Territorial del Estado Trujillo Mario Briceño Iragorry", acronimo: "UPTETMBI" },
         { nombre: "Instituto Universitario de Tecnología del Estado Trujillo", acronimo: "IUTET" }
     ],
-    Vargas: [
+    "La Guaira": [
         { nombre: "Universidad Marítima del Caribe", acronimo: "UMC" },
         { nombre: "Universidad Simón Bolívar", acronimo: "USB" },
         { nombre: "Universidad Nacional Experimental Politécnica de la Fuerza Armada", acronimo: "UNEFA" },
