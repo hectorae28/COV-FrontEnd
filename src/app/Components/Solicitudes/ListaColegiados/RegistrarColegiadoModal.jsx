@@ -240,11 +240,8 @@ export default function RegistroColegiados({
         formData.fondo_negro_titulo_bachiller
       );
     }
-    console.log(!pagarLuego && !exonerarPagos)
-    console.log(pagarLuego, exonerarPagos);
-
-
-    (!pagarLuego && !exonerarPagos)
+    
+    (!pagarLuego&&!exonerarPagos)
       ? Form.append(
         "pago",
         JSON.stringify({
@@ -535,8 +532,8 @@ export default function RegistroColegiados({
                   {index < 4 && (
                     <div
                       className={`h-1 flex-1 mx-1 ${completedSteps.includes(paso)
-                          ? "bg-[#41023B]"
-                          : "bg-gray-200"
+                        ? "bg-[#41023B]"
+                        : "bg-gray-200"
                         }`}
                     ></div>
                   )}

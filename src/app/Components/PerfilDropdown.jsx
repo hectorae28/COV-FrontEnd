@@ -23,7 +23,7 @@ export default function ProfileDropdown() {
     
   const navigateToProfile = () => {
     setIsOpen(false);
-    router.push("/Perfil");
+    router.push("/Colegiado/Perfil");
   };
   // Determinar si estamos en el panel de administradores o en la sección de colegiados
   const isAdminPanel = pathname?.startsWith('/PanelControl');

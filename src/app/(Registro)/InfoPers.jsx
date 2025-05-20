@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-export default function InfoPersonal({ formData, onInputChange, validationErrors, isProfileEdit }) {
+export default function InfoPersonal({ formData, onInputChange, validationErrors, isProfileEdit, isEditMode = false }) {
   const [age, setAge] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
   const [isAdult, setIsAdult] = useState(true);
@@ -653,6 +653,19 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           )}
         </div>
       </div>
+     {/* Si estamos en modo edición, mostrar botones de guardar/cancelar */}
+      {isEditMode && (
+        <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+          <button
+            type="button"
+            onClick={() => onInputChange(formData)} // En modo edición, simplemente actualiza con los datos actuales
+            className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+              rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
+          >
+            Guardar cambios
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }

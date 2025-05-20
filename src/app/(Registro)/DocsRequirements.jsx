@@ -5,7 +5,8 @@ export default function DocsRequirements({
   formData,
   onInputChange,
   validationErrors,
-  attemptedNext
+  attemptedNext,
+  isEditMode = false
 }) {
   // Inicializar fileNames basado en archivos existentes en formData
   const [fileNames, setFileNames] = useState({
@@ -43,6 +44,12 @@ export default function DocsRequirements({
     } else {
       return "Fondo Negro del Título";
     }
+  };
+
+   const handleSaveClick = () => {
+    // Aquí podría haber validación, pero en este caso probablemente
+    // solo queremos enviar los archivos que se han actualizado
+    onInputChange(formData);
   };
 
   return (
@@ -285,6 +292,19 @@ export default function DocsRequirements({
           y vigentes para evitar retrasos en su proceso de colegiación.
         </p>
       </div>
+    {/* Si estamos en modo edición, mostrar botones de guardar/cancelar */}
+      {isEditMode && (
+        <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+              rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
+          >
+            Guardar cambios
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }

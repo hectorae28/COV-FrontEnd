@@ -20,11 +20,10 @@ const nextConfig = {
                 port: '8000',
                 pathname: '/**',
             },
-            {//https://underlying-assured-ambien-button.trycloudflare.com
+            {//https://hoped-metropolitan-gene-action.trycloudflare.com
                 protocol: "https",
-                hostname: "underlying-assured-ambien-button.trycloudflare.com",
+                hostname: "hoped-metropolitan-gene-action.trycloudflare.com",
                 pathname: '/**',
-
             }
         ],
     },

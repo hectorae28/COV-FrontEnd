@@ -1,4 +1,3 @@
-// SharedListColegiado/NotificationSystem.jsx
 import { motion } from "framer-motion";
 import {
   AlertCircle,

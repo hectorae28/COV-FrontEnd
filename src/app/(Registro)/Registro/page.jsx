@@ -378,10 +378,7 @@ export default function RegistrationForm(props) {
     const res = await postDataUsuario(`send-verification-email`, {
       "email": formData.email,
     })
-    setTimeout(() => {
-      setIsResendingCode(false)
-      console.log(`Reenviando código de verificación a ${formData.email}`)
-    }, 2000)
+    setIsResendingCode(false)
 
     // Aquí puedes implementar la llamada real a tu API para reenviar el código
   }
@@ -533,7 +530,6 @@ export default function RegistrationForm(props) {
     totalAmount = null,
     metodo_de_pago = null,
   }) => {
-    console.log("Metodo de pago:", metodo_de_pago)
     if(!pagarLuego){
       const Form = new FormData()
       Form.append(
@@ -555,9 +551,19 @@ export default function RegistrationForm(props) {
           `register/${recaudoCreado.id}`,
           Form,
         );
-      }
-      if (res?.status === 201 || pagarLuego ) {
-        setError("¡Registro exitoso!")
+        if (res?.status === 200 ) {
+          setError(null)
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+          })
+          setShowPaymentScreen(false)
+          setIsComplete(true)
+          setIsSubmitting(false)
+          return
+        }
+      }else {
         confetti({
           particleCount: 100,
           spread: 70,
@@ -565,6 +571,7 @@ export default function RegistrationForm(props) {
         })
         setShowPaymentScreen(false)
         setIsComplete(true)
+        setIsSubmitting(false)
       }
     } catch (error) {
       setError(`error ${error.response?.data || error}`)
@@ -779,7 +786,7 @@ export default function RegistrationForm(props) {
                         {pagarLuego && (
                           <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
                             <p className="text-yellow-800 font-medium">
-                              Hemos enviado un correo electrónico a su dirección registrada con un enlace para completar el pago pendiente. Recuerde que su solicitud no será procesada hasta que se haya realizado el pago correspondiente.
+                            Para completar su solicitud, primero debe solicitar el enlace de pago desde la página de inicio de sesión. Una vez haya recibido el enlace y realizado el pago correspondiente, su solicitud será procesada.
                             </p>
                           </div>
                         )}
