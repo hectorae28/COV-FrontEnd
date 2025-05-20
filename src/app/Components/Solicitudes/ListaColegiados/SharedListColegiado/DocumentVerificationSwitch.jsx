@@ -1,4 +1,5 @@
-import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
+// DocumentVerificationSwitch.jsx
+import { AlertCircle, CheckCircle, Shield, XCircle } from "lucide-react";
 import { useState } from "react";
 
 export default function DocumentVerificationSwitch({
@@ -7,6 +8,7 @@ export default function DocumentVerificationSwitch({
     readOnly = false
 }) {
     const [isRejectionOpen, setIsRejectionOpen] = useState(false);
+    const [isApprovalOpen, setIsApprovalOpen] = useState(false); // Nuevo estado para confirmación de aprobación
     const [rejectionPreset, setRejectionPreset] = useState('');
     const [customReason, setCustomReason] = useState('');
     const [useCustomReason, setUseCustomReason] = useState(false);
@@ -28,20 +30,31 @@ export default function DocumentVerificationSwitch({
     // El estado actual del documento (approved, rejected, pending)
     const status = documento.status || 'pending';
 
-    const handleStatusChange = (newStatus) => {
-        if (readOnly) return;
+    // Verificar si el documento ya está aprobado
+    const isApproved = status === 'approved';
 
-        // Si se rechaza, abrir modal para motivo
-        if (newStatus === 'rejected') {
-            setIsRejectionOpen(true);
-        } else {
-            // Si se aprueba, actualizar inmediatamente
-            onChange({
-                ...documento,
-                status: newStatus,
-                rejectionReason: ''
-            });
+    const handleStatusChange = (newStatus) => {
+        // Si el documento ya está aprobado, no permitas cambios
+        if (isApproved || readOnly) return;
+
+        // Si se intenta aprobar, mostrar el modal de confirmación
+        if (newStatus === 'approved') {
+            setIsApprovalOpen(true);
         }
+        // Si se intenta rechazar, mostrar el modal de rechazo
+        else if (newStatus === 'rejected') {
+            setIsRejectionOpen(true);
+        }
+    };
+
+    // Función para confirmar la aprobación
+    const confirmApproval = () => {
+        onChange({
+            ...documento,
+            status: 'approved',
+            rejectionReason: ''
+        });
+        setIsApprovalOpen(false);
     };
 
     const submitRejection = () => {
@@ -83,34 +96,103 @@ export default function DocumentVerificationSwitch({
             <div className="flex items-center space-x-2">
                 <button
                     onClick={() => handleStatusChange('approved')}
-                    disabled={readOnly}
-                    className={`p-2 rounded-md transition-all ${status === 'approved'
-                        ? 'bg-green-100 text-green-700 ring-2 ring-green-500'
-                        : 'bg-gray-100 text-gray-500 hover:bg-green-50'
-                        } ${readOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                    title={readOnly ? "No se puede modificar un documento aprobado" : "Aprobar documento"}
+                    disabled={isApproved || readOnly}
+                    className={`p-2 rounded-md transition-all ${isApproved
+                            ? 'bg-green-200 text-green-800 ring-2 ring-green-500 shadow-md'
+                            : 'bg-gray-100 text-gray-500 hover:bg-green-50'
+                        } ${(isApproved || readOnly) ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
+                    title={
+                        isApproved
+                            ? "Este documento ya ha sido aprobado"
+                            : readOnly
+                                ? "No se puede modificar este documento"
+                                : "Aprobar documento"
+                    }
                 >
                     <CheckCircle size={20} />
                 </button>
 
                 <button
                     onClick={() => handleStatusChange('rejected')}
-                    disabled={readOnly}
+                    disabled={isApproved || readOnly}
                     className={`p-2 rounded-md transition-all ${status === 'rejected'
-                        ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
-                        : 'bg-gray-100 text-gray-500 hover:bg-red-50'
-                        } ${readOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                    title={readOnly ? "No se puede modificar un documento aprobado" : "Rechazar documento"}
+                            ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
+                            : 'bg-gray-100 text-gray-500 hover:bg-red-50'
+                        } ${(isApproved || readOnly) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    title={
+                        isApproved
+                            ? "No se puede rechazar un documento aprobado"
+                            : readOnly
+                                ? "No se puede modificar este documento"
+                                : "Rechazar documento"
+                    }
                 >
                     <XCircle size={20} />
                 </button>
 
-                <span className="text-sm font-medium">
-                    {status === 'approved' && 'Aprobado'}
+                <span className={`text-sm font-medium ${status === 'approved' ? 'text-green-700' :
+                        status === 'rejected' ? 'text-red-700' :
+                            'text-gray-600'
+                    }`}>
+                    {status === 'approved' && (
+                        <span className="flex items-center">
+                            <Shield size={16} className="mr-1" />
+                            Aprobado
+                        </span>
+                    )}
                     {status === 'rejected' && 'Rechazado'}
                     {status === 'pending' && 'Pendiente'}
                 </span>
             </div>
+
+            {/* Si está aprobado, mostrar un mensaje destacado */}
+            {isApproved && (
+                <div className="mt-2 text-xs text-green-600 bg-green-50 p-2 rounded-md border border-green-200">
+                    <p className="font-medium flex items-center">
+                        <Shield size={14} className="mr-1" />
+                        Documento verificado y aprobado
+                    </p>
+                    <p className="mt-1">Este documento ha sido verificado y no puede ser modificado.</p>
+                </div>
+            )}
+
+            {/* Modal de confirmación de aprobación */}
+            {isApprovalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+                        <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
+                            <CheckCircle className="text-green-500 mr-2" size={20} />
+                            Confirmar aprobación
+                        </h3>
+
+                        <div className="mb-4">
+                            <p className="text-gray-700">
+                                ¿Está seguro de que desea aprobar este documento? Esta acción es <strong>irreversible</strong> y una vez aprobado:
+                            </p>
+                            <ul className="mt-2 ml-6 list-disc text-sm text-gray-600 space-y-1">
+                                <li>No podrá cambiar el estado a rechazado</li>
+                                <li>No se podrá reemplazar el archivo</li>
+                                <li>Solo se permitirá visualizar el documento</li>
+                            </ul>
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-6">
+                            <button
+                                onClick={() => setIsApprovalOpen(false)}
+                                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmApproval}
+                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                            >
+                                Confirmar aprobación
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal de razón de rechazo */}
             {isRejectionOpen && (
@@ -177,7 +259,7 @@ export default function DocumentVerificationSwitch({
 
             {/* Mostrar motivo del rechazo si existe */}
             {status === 'rejected' && documento.rejectionReason && (
-                <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-md">
+                <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-md border border-red-200">
                     <span className="font-medium">Motivo de rechazo:</span> {documento.rejectionReason}
                 </div>
             )}

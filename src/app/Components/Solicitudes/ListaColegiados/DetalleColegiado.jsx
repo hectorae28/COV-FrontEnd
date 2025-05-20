@@ -138,24 +138,21 @@ export default function DetalleColegiado({
 
   // Función para actualizar un documento
   const updateDocumento = async (formData) => {
-    try {
-      // Implementar la lógica para actualizar el documento
-      console.log("Actualizando documento:", formData);
-      // Aquí iría la llamada al API o al store para actualizar el documento
-
-      // Ejemplo:
-      // En DetalleColegiado:
-      // await updateColegiadoDocumento(colegiadoId, formData);
-
-      // En DetallePendiente:
-      // await updateColegiadoPendienteDocumento(pendienteId, formData);
-
-      // Refrescar documentos después de actualizar
-      loadData();
-    } catch (error) {
-      console.error("Error al actualizar documento:", error);
-    }
-  };
+  try {
+    setIsLoading(true); // Mostrar indicador de carga
+    
+    // Aquí iría la llamada al API o al store para actualizar el documento
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulación de tiempo de carga
+    await loadData(); // Cargar datos nuevamente para mostrar el documento actualizado
+    
+    setIsLoading(false);
+    return true; // Indica que la carga fue exitosa
+  } catch (error) {
+    console.error("Error al actualizar documento:", error);
+    setIsLoading(false);
+    throw error; // Propaga el error para que se maneje en handleUpload
+  }
+};
 
   // Cargar datos del colegiado
   const loadData = async () => {

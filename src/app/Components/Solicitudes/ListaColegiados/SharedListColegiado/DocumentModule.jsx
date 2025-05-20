@@ -42,6 +42,8 @@ export function DocumentSection({
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadedDocumentName, setUploadedDocumentName] = useState("");
 
   // Manejadores de eventos
   const handleReemplazarDocumento = useCallback((documento) => {
@@ -118,9 +120,23 @@ export function DocumentSection({
       if (onUpdateDocument && documentoParaSubir) {
         const formData = new FormData();
         formData.append(documentoParaSubir.id, selectedFile);
-        await onUpdateDocument(formData);
+
+        // Guardar el nombre del documento que estamos subiendo
+        setUploadedDocumentName(documentoParaSubir.nombre);
+
+        // Llamar a la función de actualización y esperar su resultado
+        const result = await onUpdateDocument(formData);
+
+        // Mostrar notificación de éxito
+        setUploadSuccess(true);
+
+        // Ocultar notificación después de 5 segundos
+        setTimeout(() => {
+          setUploadSuccess(false);
+        }, 5000);
       }
 
+      // Cerrar el modal después de subir exitosamente
       setDocumentoParaSubir(null);
       setSelectedFile(null);
     } catch (error) {
@@ -138,6 +154,24 @@ export function DocumentSection({
       transition={{ delay: 0.4 }}
       className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
     >
+      {/* Notificación de éxito - agregar esto al principio del componente */}
+      {uploadSuccess && (
+        <div className="mb-4 bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-md flex items-start justify-between">
+          <div className="flex items-start">
+            <CheckCircle className="mr-2 h-5 w-5 text-green-500 mt-0.5" />
+            <div>
+              <p className="font-medium">Documento subido exitosamente</p>
+              <p className="text-sm">{uploadedDocumentName} ha sido cargado al sistema.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setUploadSuccess(false)}
+            className="text-green-700 hover:bg-green-200 p-1 rounded-full"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
         <div className="flex items-center mb-5 md:mb-0 border-b md:border-b-0 pb-3 md:pb-0">
           {icon}
@@ -364,7 +398,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange }) {
             )}
 
             {/* Botón de reemplazo solo visible si el documento no está aprobado o fue rechazado */}
-            {(!isReadOnly && !isExonerado) && (
+            {(!isReadOnly && !isExonerado && documento.status !== 'approved') && (
               <button
                 onClick={onReplace}
                 className={`${tieneArchivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}

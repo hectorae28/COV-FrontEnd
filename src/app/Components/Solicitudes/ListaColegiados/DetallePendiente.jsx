@@ -180,21 +180,30 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   // Función para actualizar un documento
   const updateDocumento = async (formData) => {
     try {
-      // Implementar la lógica para actualizar el documento
-      console.log("Actualizando documento:", formData);
-      // Aquí iría la llamada al API o al store para actualizar el documento
+      setIsLoading(true);
 
-      // Ejemplo:
-      // En DetalleColegiado:
-      // await updateColegiadoDocumento(colegiadoId, formData);
+      // Extraer el ID del documento - asumiendo que hay una sola clave en formData
+      const documentId = Object.keys(formData)[0];
+      const file = formData.get(documentId);
 
-      // En DetallePendiente:
-      // await updateColegiadoPendienteDocumento(pendienteId, formData);
+      // Subir el archivo al servidor
+      if (!recaudos) {
+        // Lógica para subir documento si es administrador
+        console.log(`Subiendo documento ${documentId} para pendiente ${pendienteId}`);
+      } else {
+        // Lógica para subir con token si es usuario
+        const newFormData = new FormData();
+        newFormData.append(documentId, file);
+        await updateColegiadoPendienteWithToken(pendienteId, newFormData, true);
+      }
+      await loadData();
 
-      // Refrescar documentos después de actualizar
-      loadData();
+      setIsLoading(false);
+      return true;
     } catch (error) {
       console.error("Error al actualizar documento:", error);
+      setIsLoading(false);
+      throw error;
     }
   };
 
