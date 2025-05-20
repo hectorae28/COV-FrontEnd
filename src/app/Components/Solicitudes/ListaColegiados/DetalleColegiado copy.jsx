@@ -5,13 +5,6 @@ import { CheckCircle, ChevronLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-// Componentes compartidos
-import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
-import AcademicInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
-import InstitutionsSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
-import ProfessionalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/ProfessionalInfoSection";
-
-// Componentes existentes
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal";
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud";
 import CarnetInfo from "./DetalleColegiado/CarnetInfo";
@@ -21,9 +14,10 @@ import DocumentosLista from "./DetalleColegiado/DocumentosLista";
 import EstadisticasUsuario from "./DetalleColegiado/EstadisticasUsuario";
 import ModalConfirmacionTitulo from "./DetalleColegiado/ModalConfirmacionTitulo";
 import ModalVisualizarDocumento from "./DetalleColegiado/ModalVisualizarDocumento";
+import TablaInformacionPersonal from "./DetalleColegiado/TablaInformacionPersonal";
+import TablaInscripciones from "./DetalleColegiado/TablaInscripciones";
 import TablaPagos from "./DetalleColegiado/TablaPagos";
 import TablaSolicitudes from "./DetalleColegiado/TablaSolicitudes";
-
 export default function DetalleColegiado({
   params,
   onVolver,
@@ -32,7 +26,6 @@ export default function DetalleColegiado({
   // Obtenemos el ID desde los parámetros de la URL
   const colegiadoId = params?.id || "1";
 
-  // Estado actual y vistas
   const [vistaActual, setVistaActual] = useState("informacion");
   const [solicitudSeleccionadaId, setSolicitudSeleccionadaId] = useState(null);
   const [colegiado, setColegiado] = useState(null);
@@ -46,27 +39,6 @@ export default function DetalleColegiado({
   const [refreshSolicitudes, setRefreshSolicitudes] = useState(0);
   const [solicitudItem, setSolicitudItem] = useState(null);
 
-  // Estados para edición (nuevos)
-  const [editandoPersonal, setEditandoPersonal] = useState(false);
-  const [editandoAcademico, setEditandoAcademico] = useState(false);
-  const [editandoProfesional, setEditandoProfesional] = useState(false);
-  const [editandoInstituciones, setEditandoInstituciones] = useState(false);
-  const [cambiosPendientes, setCambiosPendientes] = useState(false);
-
-  // Estados para datos (nuevos)
-  const [datosPersonales, setDatosPersonales] = useState(null);
-  const [datosAcademicos, setDatosAcademicos] = useState(null);
-  const [datosProfesionales, setDatosProfesionales] = useState(null);
-  const [instituciones, setInstituciones] = useState([]);
-  const [nuevaInstitucion, setNuevaInstitucion] = useState({
-    nombre: "",
-    cargo: "",
-    telefono: "",
-    direccion: "",
-    tipo_institucion: ""
-  });
-  const [agregarInstitucion, setAgregarInstitucion] = useState(false);
-
   // Obtenemos funciones del store centralizado
   const {
     getColegiado,
@@ -74,7 +46,6 @@ export default function DetalleColegiado({
     marcarTituloEntregado,
     addSolicitud,
     getSolicitudes,
-    updateColegiado
   } = useDataListaColegiados();
 
   // Función para ver detalle de solicitud
@@ -92,74 +63,31 @@ export default function DetalleColegiado({
       setSolicitudSeleccionadaId(null);
       setRefreshSolicitudes((prev) => prev + 1);
     }
-  };
 
-  // Función para actualizar una solicitud (cuando se aprueba, rechaza, etc.)
+    // Función para actualizar una solicitud (cuando se aprueba, rechaza, etc.)
+  };
   const actualizarSolicitud = (solicitudActualizada) => {
     console.log("Solicitud actualizada:", solicitudActualizada);
   };
 
-  // Función para actualizar datos del colegiado
-  const updateColegiadoData = async (colegiadoId, datosActualizados) => {
-    try {
-      console.log("Actualizando datos del colegiado:", datosActualizados);
-      await updateColegiado(colegiadoId, datosActualizados);
-      loadData(); // Recargar datos
-    } catch (error) {
-      console.error("Error al actualizar datos:", error);
-    }
-  };
-
-  // Cargar datos del colegiado
-  const loadData = async () => {
-  try {
-    setIsLoading(true)
-    const colegiadoData = await getColegiado(colegiadoId)
-    setColegiado(colegiadoData)
-
-    // Inicializar datos para componentes compartidos
-    if (colegiadoData) {
-      // Datos personales - Make sure to safely access persona
-      setDatosPersonales({
-        ...(colegiadoData.recaudos?.persona || {}),
-      });
-      
-      // Datos académicos
-      setDatosAcademicos({
-        universidad: colegiadoData.universidad || colegiadoData.recaudos?.universidad || "",
-        fecha_egreso_universidad: colegiadoData.fecha_egreso_universidad || "",
-        num_registro_principal: colegiadoData.num_registro_principal || "",
-        fecha_registro_principal: colegiadoData.fecha_registro_principal || "",
-        num_mpps: colegiadoData.num_mpps || "",
-        fecha_mpps: colegiadoData.fecha_mpps || "",
-        observaciones: colegiadoData.observaciones || ""
-      });
-      
-      // Datos profesionales
-      setDatosProfesionales({
-        numeroRegistro: colegiadoData.numeroRegistro || "",
-        especialidad: colegiadoData.especialidad || "",
-        anios_experiencia: colegiadoData.anios_experiencia || "",
-        carnetVigente: colegiadoData.carnetVigente || false,
-        carnetVencimiento: colegiadoData.carnetVencimiento || ""
-      });
-      
-      // Instituciones
-      setInstituciones(colegiadoData.instituciones || []);
-    }
-
-    // Cargar documentos del colegiado
-    const docs = await getDocumentos(colegiadoId)
-    setDocumentos(docs || [])
-
-    setIsLoading(false)
-  } catch (error) {
-    console.error("Error al cargar datos del colegiado:", error);
-    setIsLoading(false);
-  }
-};
-
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        const colegiadoData = await getColegiado(colegiadoId)
+        setColegiado(colegiadoData)
+
+        // Cargar documentos del colegiado
+        const docs = await getDocumentos(colegiadoId)
+        setDocumentos(docs || [])
+
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Error al cargar datos del colegiado:", error);
+        setIsLoading(false);
+      }
+    };
+
     loadData();
   }, [colegiadoId]);
 
@@ -295,22 +223,6 @@ export default function DetalleColegiado({
           )}
         </div>
 
-        {/* Notificación de cambios pendientes (nuevo) */}
-        {cambiosPendientes && (
-          <div className="bg-blue-100 text-blue-800 p-4 rounded-md mb-6 flex items-start justify-between shadow-sm">
-            <div className="flex items-center">
-              <AlertCircle size={20} className="mr-2 flex-shrink-0" />
-              <span>Hay cambios sin guardar. Por favor guarde los cambios antes de continuar.</span>
-            </div>
-            <button
-              onClick={() => setCambiosPendientes(false)}
-              className="text-blue-700 hover:bg-blue-200 p-1 rounded-full transition-colors"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
-
         {/* Notificación de título entregado */}
         {tituloEntregado && (
           <div className="bg-green-100 text-green-800 p-4 rounded-md mb-6 flex items-start justify-between">
@@ -426,65 +338,7 @@ export default function DetalleColegiado({
 
           {/* Contenido según el tab activo */}
           <div className="p-6">
-            {tabActivo === "informacion" && (
-              <>
-                {/* Usando componentes compartidos */}
-                <PersonalInfoSection
-  props={{
-    pendiente: colegiado,
-    datosPersonales,
-    setDatosPersonales,
-    editandoPersonal,
-    setEditandoPersonal,
-    updateData: updateColegiadoData,
-    pendienteId: colegiadoId,
-    setCambiosPendientes,
-    isAdmin: true,
-    readOnly: false
-  }}
-/>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <AcademicInfoSection
-                    pendiente={colegiado}
-                    datosAcademicos={datosAcademicos}
-                    setDatosAcademicos={setDatosAcademicos}
-                    editandoAcademico={editandoAcademico}
-                    setEditandoAcademico={setEditandoAcademico}
-                    updateColegiadoPendiente={updateColegiadoData}
-                    pendienteId={colegiadoId}
-                    setCambiosPendientes={setCambiosPendientes}
-                  />
-
-                  <ProfessionalInfoSection
-                    colegiado={colegiado}
-                    datosProfesionales={datosProfesionales}
-                    setDatosProfesionales={setDatosProfesionales}
-                    editandoProfesional={editandoProfesional}
-                    setEditandoProfesional={setEditandoProfesional}
-                    updateColegiadoData={updateColegiadoData}
-                    colegiadoId={colegiadoId}
-                    setCambiosPendientes={setCambiosPendientes}
-                  />
-                </div>
-
-                <InstitutionsSection
-                  pendiente={colegiado}
-                  instituciones={instituciones}
-                  setInstituciones={setInstituciones}
-                  nuevaInstitucion={nuevaInstitucion}
-                  setNuevaInstitucion={setNuevaInstitucion}
-                  agregarInstitucion={agregarInstitucion}
-                  setAgregarInstitucion={setAgregarInstitucion}
-                  editandoInstituciones={editandoInstituciones}
-                  setEditandoInstituciones={setEditandoInstituciones}
-                  updateColegiadoPendiente={updateColegiadoData}
-                  pendienteId={colegiadoId}
-                  setCambiosPendientes={setCambiosPendientes}
-                />
-              </>
-            )}
-            
+            {tabActivo === "informacion" && <TablaInformacionPersonal colegiado={colegiado} />}
             {tabActivo === "pagos" && (
               <TablaPagos colegiadoId={colegiadoId} handleVerDocumento={handleVerDocumento} documentos={documentos || []} />
             )}
@@ -552,6 +406,3 @@ export default function DetalleColegiado({
 
   return content;
 }
-
-// Importaciones faltantes (para componentes como AlertCircle)
-import { AlertCircle } from "lucide-react";
