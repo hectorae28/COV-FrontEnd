@@ -87,6 +87,11 @@ export default function DataTable({
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                     <tr>
+                        {tabActivo === "registrados" && (
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                                N° COV
+                            </th>
+                        )}
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Nombre
                         </th>
@@ -94,11 +99,6 @@ export default function DataTable({
                             Cédula
                         </th>
                         {/* N° Registro solo para colegiados registrados */}
-                        {tabActivo === "registrados" && (
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                N° COV
-                            </th>
-                        )}
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                             <button
                                 className="cursor-pointer flex items-center justify-center gap-1 w-full"
@@ -129,6 +129,9 @@ export default function DataTable({
                                 className="hover:bg-gray-50 cursor-pointer"
                                 onClick={() => verDetalleColegiado(colegiado.id)}
                             >
+                                <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
+                                    {colegiado.num_cov || "-"}
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                     <div className="font-medium text-gray-900">
                                         {colegiado.recaudos.persona.nombre+" "+colegiado.recaudos.persona.primer_apellido || "-"}
@@ -136,9 +139,6 @@ export default function DataTable({
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
                                     {colegiado.recaudos.persona.identificacion || "-"}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
-                                    {colegiado.num_cov || "-"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
                                     {obtenerFechaFormateada(colegiado.recaudos.fecha_registro_principal)}

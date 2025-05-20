@@ -20,9 +20,9 @@ const nextConfig = {
                 port: '8000',
                 pathname: '/**',
             },
-            {//https://stands-infections-hunting-visual.trycloudflare.com
+            {//https://hoped-metropolitan-gene-action.trycloudflare.com
                 protocol: "https",
-                hostname: "stands-infections-hunting-visual.trycloudflare.com",
+                hostname: "hoped-metropolitan-gene-action.trycloudflare.com",
                 pathname: '/**',
             }
         ],
