@@ -598,7 +598,7 @@ export default function SeleccionarSolicitudesStep({
                         </p>
                         {tipo !== "Constancia" ? (
                           <p className="text-xs text-gray-500">
-                            Costo: ${tipos_solicitud[tipo]?.costo?.monto?.toFixed(2) || "0.00"}
+                            Costo: ${tipos_solicitud[tipo]?.costo?.monto.toFixed(2)}
                           </p>
                         ) : (
                           <p className="text-xs text-gray-500">

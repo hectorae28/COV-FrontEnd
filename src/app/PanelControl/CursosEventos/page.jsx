@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 // Import components
-import CardPreview from "@/app/Components/CursosEventos/CardPreview";
-import EventList from "@/app/Components/CursosEventos/EventList";
-import FormBuilder from "@/app/Components/CursosEventos/FormInscripcion/FormBuilder";
+import CardPreview from "@/Components/CursosEventos/CardPreview";
+import EventList from "@/Components/CursosEventos/EventList";
+import FormBuilder from "@/Components/CursosEventos/FormInscripcion/FormBuilder";
 
 const initialValues = {
   title: "",

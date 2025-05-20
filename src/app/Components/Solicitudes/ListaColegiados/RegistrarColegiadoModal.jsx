@@ -241,6 +241,7 @@ export default function RegistroColegiados({
       );
     }
     
+    
     (!pagarLuego&&!exonerarPagos)
       ? Form.append(
         "pago",

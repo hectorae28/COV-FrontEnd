@@ -60,7 +60,7 @@ export default function DashboardLayout({
           showSolvencyWarning={()=>checkSolvencyStatus()}
         />
         <main className="flex-1 overflow-y-auto pt-20">
-          <div className="max-w-8xl mx-auto flex flex-col gap-8">
+          <div className="max-w-8xl mx-auto flex flex-col gap-8 px-10">
             {children}
           </div>
         </main>

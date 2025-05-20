@@ -147,6 +147,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       if (newBirthDateParts.year && newBirthDateParts.month && newBirthDateParts.day) {
         const fullDate = `${newBirthDateParts.year}-${newBirthDateParts.month}-${newBirthDateParts.day}`;
         calculateAge(fullDate);
+        onInputChange({ birthDate: fullDate });
       } else {
         setAge("");
         setIsAdult(true);

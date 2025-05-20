@@ -31,10 +31,14 @@ export default function DetalleSolicitud({ props }) {
   const getSolicitudById = useSolicitudesStore(
     (state) => state.getSolicitudById
   );
+  const addPagosSolicitud = useSolicitudesStore(
+    (state) => state.addPagosSolicitud
+  );
 
   const [solicitud, setSolicitud] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [alertaExito, setAlertaExito] = useState(null);
+  const pagosSolicitud = useSolicitudesStore((state) => state.pagosSolicitud);
 
   // Estados de modales
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -55,7 +59,7 @@ export default function DetalleSolicitud({ props }) {
 
   useEffect(() => {
     loadSolicitudById();
-  }, []);
+  }, [id, ]);
 
   // Calcular totales
   const calcularTotales = (solicitudData) => {
@@ -173,6 +177,7 @@ export default function DetalleSolicitud({ props }) {
   // Función para iniciar proceso de pago
   const handleIniciarPago = () => {
     console.log({ solicitud });
+    console.log(pagosSolicitud)
     if (totales.totalPendiente === 0) {
       alert("No hay montos pendientes por pagar");
       return;
@@ -182,11 +187,36 @@ export default function DetalleSolicitud({ props }) {
   };
 
   // Función que se ejecuta cuando se completa un pago
-  const handlePaymentComplete = (pagoInfo) => {
-    // Actualizar los items pagados según el monto pagado
+  const handlePaymentComplete = async(pagoInfo) => {
+    //Actualizar los items pagados según el monto pagado
+    console.log({pagoInfo})
+    await addPagosSolicitud(solicitud.id, pagoInfo);
+    return
     let montoRestante = parseFloat(pagoInfo.monto);
     const itemsActualizados = [...solicitud.itemsSolicitud];
+    console.log(pagoInfo)
+    
 
+    /**
+     * 
+     * 	
+
+{
+  "monto": "string",
+  "moneda": "bs",
+  "num_referencia": "string",
+  "metodo_de_pago": 0,
+  "status": "revisando",
+  "tasa_bcv_del_dia": "string",
+  "solicitud": 0,
+  "inscripcion": 0,
+  "solicitud_solvencia": {
+    "additionalProp1": "string",
+    "additionalProp2": "string",
+    "additionalProp3": "string"
+  }
+}
+     */
     for (let item of itemsActualizados) {
       if (montoRestante <= 0) break;
       if (item.pagado || item.exonerado) continue;
@@ -214,7 +244,7 @@ export default function DetalleSolicitud({ props }) {
       }
     }
 
-    // Actualizar la solicitud
+    //Actualizar la solicitud
     const solicitudActualizada = {
       ...solicitud,
       itemsSolicitud: itemsActualizados,
@@ -360,7 +390,7 @@ export default function DetalleSolicitud({ props }) {
       {/* Historial de pagos */}
       {solicitud.comprobantesPago && solicitud.comprobantesPago.length > 0 && (
         <HistorialPagosSection
-          comprobantes={solicitud.comprobantesPago}
+          comprobantes={pagosSolicitud}
           onVerDocumento={handleVerDocumento}
         />
       )}

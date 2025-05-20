@@ -1,9 +1,10 @@
 import { TIPOS_SOLICITUD } from '@/store/SolicitudesStore';
 
 export default function transformBackendData(backendData) {
+  const detallesSolicitud = backendData?.detalles_solicitud || {};
   const frontendData = {
     id: backendData.id, // Generar un ID similar al frontend
-    tipo:  Object.keys(backendData.detalles_solicitud).length + " ítems",
+    tipo:  Object.keys(detallesSolicitud).length + " ítems",
     colegiadoId: "1", // Asignar un ID temporal
     colegiadoNombre: backendData.colegiado,
     fecha: formatDate(backendData.created_at),

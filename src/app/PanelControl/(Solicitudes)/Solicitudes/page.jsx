@@ -20,7 +20,7 @@ import {useSolicitudesStore} from "@/store/SolicitudesStore.jsx"
 import useColegiadoUserStore from "@/store/colegiadoUserStore"
 import transformBackendData from "@/utils/formatDataSolicitudes";
 import {useRouter} from "next/navigation"
-export default function ListaSolicitudes() {
+export default function ListaSolicitudes({isAdmin  = false}) {
   
   // Estados para manejar los datos
   //const [solicitudes, setSolicitudes] = useState([])
@@ -28,6 +28,7 @@ export default function ListaSolicitudes() {
   const initStore = useSolicitudesStore((state) => state.initStore)
   const solicitudes = useSolicitudesStore((state)=>state.solicitudes)
   const solicitudesPagination = useSolicitudesStore((state)=>state.solicitudesPagination)
+  const tipos_solicitud = useSolicitudesStore((state)=>state.tipos_solicitud)
 
   const solicitudesAbiertas = useSolicitudesStore((state)=>state.solicitudesAbiertas)
   const solicitudesAbiertasPagination = useSolicitudesStore((state)=>state.solicitudesAbiertasPagination)
@@ -54,6 +55,7 @@ export default function ListaSolicitudes() {
   const loadTiposSolicitud = async () => {
     try {
       await initStore();
+      console.log(tipos_solicitud)
     } catch (error) {
       console.error("Error al cargar tipos de solicitud:", error);
     }
@@ -314,7 +316,8 @@ export default function ListaSolicitudes() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {solicitudesFiltradas.map((solicitudNoFormat, index) => {
+                  {solicitudesFiltradas?.map((solicitudNoFormat, index) => {
+                    console.log({solicitudNoFormat,text:'solicitudNoFormat'});
                     const solicitud = transformBackendData(solicitudNoFormat);
                     return (
                       <tr
@@ -452,11 +455,11 @@ export default function ListaSolicitudes() {
               name: "Administrador",
               email: "admin@ejemplo.com",
               role: "admin",
-              isAdmin: true,
+              isAdmin: isAdmin,
             },
           }}
           solicitudCreada={solicitudCreada}
-          isAdmin={true}
+          isAdmin={isAdmin}
         />
       )}
     </div>

@@ -9,17 +9,17 @@ const HistorialPagosSection = ({ comprobantes, onVerDocumento }) => {
             </h2>
 
             <div className="space-y-3">
-                {comprobantes.map((comprobante) => (
-                    <div key={comprobante.id} className="border rounded-lg p-3 flex justify-between items-center bg-gray-50">
+                {comprobantes.map((comprobante,index) => (
+                    <div key={index} className="border rounded-lg p-3 flex justify-between items-center bg-gray-50">
                         <div className="flex items-center">
                             <FileCheck size={18} className="text-green-500 mr-2" />
                             <div>
                                 <p className="font-medium">{comprobante.archivo}</p>
                                 <div className="grid grid-cols-2 text-xs text-gray-500 gap-x-4">
-                                    <p>Fecha: {comprobante.fecha}</p>
+                                    <p>Fecha: {comprobante?.fecha || 'No especificada'}</p>
                                     <p>Monto: ${parseFloat(comprobante.monto).toFixed(2)}</p>
-                                    <p>Método: {comprobante.metodoPago}</p>
-                                    <p>Referencia: {comprobante.referencia}</p>
+                                    <p>Método: {comprobante.metodo_de_pago}</p>
+                                    <p>Referencia: {comprobante.num_referencia}</p>
                                 </div>
                             </div>
                         </div>

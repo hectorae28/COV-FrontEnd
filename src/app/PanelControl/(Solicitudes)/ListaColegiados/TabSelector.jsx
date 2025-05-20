@@ -16,13 +16,14 @@ export default function TabSelector({
     });
 
     // Efecto para cargar todos los datos necesarios para los contadores
+    //para el futuro hector en diferentes stores
     useEffect(() => {
         const cargarContadores = async () => {
             try {
                 // Cargar datos sin filtros para obtener todos los registros
                 const [pendientesResponse, colegiadosResponse] = await Promise.all([
-                    fetchDataUsuario("register", null, "?limit=1000"),  // Obtener todos los pendientes
-                    fetchDataUsuario("colegiado", null, "?limit=1000")  // Obtener todos los colegiados
+                    fetchDataUsuario("register"),  // Obtener todos los pendientes
+                    fetchDataUsuario("colegiado")  // Obtener todos los colegiados
                 ]);
 
                 // Extraer los resultados
