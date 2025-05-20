@@ -14,7 +14,7 @@ export default function DocsRequirements({
     titulo: formData.titulo ? (formData.titulo.name || "Archivo seleccionado") : "",
     mpps: formData.mpps ? (formData.mpps.name || "Archivo seleccionado") : "",
     fondo_negro_titulo_bachiller: formData.fondo_negro_titulo_bachiller ? (formData.fondo_negro_titulo_bachiller.name || "Archivo seleccionado") : "",
-    Fondo_negro_credencial: formData.Fondo_negro_credencial ? (formData.Fondo_negro_credencial.name || "Archivo seleccionado") : "",
+    fondo_negro_credencial: formData.fondo_negro_credencial ? (formData.fondo_negro_credencial.name || "Archivo seleccionado") : "",
     notas_curso: formData.notas_curso ? (formData.notas_curso.name || "Archivo seleccionado") : ""
   });
 
@@ -188,25 +188,25 @@ export default function DocsRequirements({
               <div className="relative">
                 <input
                   type="file"
-                  name="Fondo_negro_credencial"
-                  id="Fondo_negro_credencial"
+                  name="fondo_negro_credencial"
+                  id="fondo_negro_credencial"
                   onChange={handleFileChange}
                   className="hidden"
                   accept=".pdf,.jpg,.jpeg,.png"
                 />
                 <label
-                  htmlFor="Fondo_negro_credencial"
-                  className={`w-full px-4 py-3 border ${isFieldEmpty("Fondo_negro_credencial") ? "border-gray-200 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
+                  htmlFor="fondo_negro_credencial"
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("fondo_negro_credencial") ? "border-gray-200 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] bg-white flex items-center justify-between cursor-pointer`}
                 >
-                  <span className={`truncate ${!fileNames.Fondo_negro_credencial ? 'text-gray-400' : 'text-gray-800'}`}>
-                    {fileNames.Fondo_negro_credencial || "Seleccionar archivo."}
+                  <span className={`truncate ${!fileNames.fondo_negro_credencial ? 'text-gray-400' : 'text-gray-800'}`}>
+                    {fileNames.fondo_negro_credencial || "Seleccionar archivo."}
                   </span>
                   <span className="bg-[#D7008A] text-white px-3 py-1 rounded-lg text-sm">
                     Adjuntar Archivo
                   </span>
                 </label>
               </div>
-              {isFieldEmpty("Fondo_negro_credencial") && (
+              {isFieldEmpty("fondo_negro_credencial") && (
                 <p className="mt-1 text-xs text-red-300">Este campo es obligatorio</p>
               )}
             </div>

@@ -27,7 +27,7 @@ export default function DocumentVerificationSwitch({
         "Documento dañado"
     ];
 
-    // El estado actual del documento (approved, rejected, pending)
+    // El estado actual del documento (approved, rechazado, pending)
     const status = documento.status || 'pending';
 
     // Verificar si el documento ya está aprobado
@@ -42,7 +42,7 @@ export default function DocumentVerificationSwitch({
             setIsApprovalOpen(true);
         }
         // Si se intenta rechazar, mostrar el modal de rechazo
-        else if (newStatus === 'rejected') {
+        else if (newStatus === 'rechazado') {
             setIsRejectionOpen(true);
         }
     };
@@ -71,7 +71,7 @@ export default function DocumentVerificationSwitch({
         // Actualizar documento con estado rechazado y motivo
         onChange({
             ...documento,
-            status: 'rejected',
+            status: 'rechazado',
             rejectionReason: finalReason
         });
 
@@ -113,9 +113,9 @@ export default function DocumentVerificationSwitch({
                 </button>
 
                 <button
-                    onClick={() => handleStatusChange('rejected')}
+                    onClick={() => handleStatusChange('rechazado')}
                     disabled={isApproved || readOnly}
-                    className={`p-2 rounded-md transition-all ${status === 'rejected'
+                    className={`p-2 rounded-md transition-all ${status === 'rechazado'
                             ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
                             : 'bg-gray-100 text-gray-500 hover:bg-red-50'
                         } ${(isApproved || readOnly) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -131,7 +131,7 @@ export default function DocumentVerificationSwitch({
                 </button>
 
                 <span className={`text-sm font-medium ${status === 'approved' ? 'text-green-700' :
-                        status === 'rejected' ? 'text-red-700' :
+                        status === 'rechazado' ? 'text-red-700' :
                             'text-gray-600'
                     }`}>
                     {status === 'approved' && (
@@ -140,7 +140,7 @@ export default function DocumentVerificationSwitch({
                             Aprobado
                         </span>
                     )}
-                    {status === 'rejected' && 'Rechazado'}
+                    {status === 'rechazado' && 'Rechazado'}
                     {status === 'pending' && 'Pendiente'}
                 </span>
             </div>
@@ -258,7 +258,7 @@ export default function DocumentVerificationSwitch({
             )}
 
             {/* Mostrar motivo del rechazo si existe */}
-            {status === 'rejected' && documento.rejectionReason && (
+            {status === 'rechazado' && documento.rejectionReason && (
                 <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-md border border-red-200">
                     <span className="font-medium">Motivo de rechazo:</span> {documento.rejectionReason}
                 </div>
