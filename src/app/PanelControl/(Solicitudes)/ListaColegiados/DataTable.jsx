@@ -90,15 +90,15 @@ export default function DataTable({
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Nombre
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                            Cédula
-                        </th>
                         {/* N° Registro solo para colegiados registrados */}
                         {tabActivo === "registrados" && (
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                                 N° Registro
                             </th>
                         )}
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                            Cédula
+                        </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                             <button
                                 className="cursor-pointer flex items-center justify-center gap-1 w-full"

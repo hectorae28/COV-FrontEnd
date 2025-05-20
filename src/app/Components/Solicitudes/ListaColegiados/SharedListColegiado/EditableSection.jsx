@@ -1,4 +1,3 @@
-// SharedListColegiado/EditableSection.jsx
 import { motion } from "framer-motion";
 import { Pencil, Save, X } from 'lucide-react';
 import { useState } from 'react';
@@ -11,7 +10,6 @@ export default function EditableSection({
   onCancel,
   renderViewMode,
   renderEditMode,
-  initialData,
   initiallyEditing = false,
   transitionDelay = 0,
   className = ""

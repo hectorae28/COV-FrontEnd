@@ -21,6 +21,7 @@ export default function InfoContacto({
   validationErrors,
   isProfileEdit,
   requestEmailVerification,
+  isEditMode = false
 }) {
   const [cities, setCities] = useState([])
   const [isFormValid, setIsFormValid] = useState(false)
@@ -101,13 +102,13 @@ export default function InfoContacto({
 
   // Actualizar las ciudades cuando cambia el estado
   useEffect(() => {
-    if (formData.state) {
-      const normalizedState = formData.state.toLowerCase()
-      setCities(PhoneEstData[normalizedState] || [])
+    if (formData.state && typeof formData.state === 'string') {
+      const normalizedState = formData.state.toLowerCase();
+      setCities(PhoneEstData[normalizedState] || []);
     } else {
-      setCities([])
+      setCities([]);
     }
-  }, [formData.state])
+  }, [formData.state]);
 
   // Actualizar estados locales cuando cambia formData
   useEffect(() => {
@@ -198,6 +199,14 @@ export default function InfoContacto({
   // Determinar si mostrar "Parroquias" en lugar de "Municipio"
   const isDistritoCapital = formData.state && formData.state.toLowerCase() === "distrito capital";
   const municipioLabel = isDistritoCapital ? "Parroquia" : "Municipio";
+
+  const handleSaveClick = () => {
+    // Validar datos antes de guardar
+    const isValid = validateForm();
+    if (isValid) {
+      onInputChange(formData);
+    }
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="space-y-6">
@@ -419,6 +428,18 @@ export default function InfoContacto({
           {isFieldEmpty("address") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
         </div>
       </div>
+      {isEditMode && (
+        <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+              rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
+          >
+            Guardar cambios
+          </button>
+        </div>
+      )}
     </motion.div>
-  )
+  );
 }
