@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 
+
 // Import components
 import PagosColg from "@/app/Components/PagosModal";
 import {
@@ -14,22 +15,20 @@ import {
   Upload,
   XCircle
 } from "lucide-react";
-
-// Componentes compartidos
-import PersonalInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
-import AcademicInfoSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
-import InstitutionsSection from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
-
-import DocumentsSection from "./DetallePendiente/DocumentsSection";
-import DocumentViewerModal from "./DetallePendiente/DocumentViewerModal";
-import ProfileCard from "./DetallePendiente/ProfileCard";
-import StatusAlerts from "./DetallePendiente/StatusAlerts";
+import AcademicInfoSection from "./DetallePendiente/AcademicInfoSection ";
 import {
   ApprovalModal,
   ExonerationModal,
   RejectModal,
 } from "./DetallePendiente/ActionsModals";
+import DocumentsSection from "./DetallePendiente/DocumentsSection";
+import DocumentViewerModal from "./DetallePendiente/DocumentViewerModal";
+import InstitutionsSection from "./DetallePendiente/InstitutionsSection ";
+import PersonalInfoSection from "./DetallePendiente/PersonalInfoSection ";
+import ProfileCard from "./DetallePendiente/ProfileCard";
+import StatusAlerts from "./DetallePendiente/StatusAlerts";
 
+// Componente de reporte de ilegalidades
 // Componente de reporte de irregularidades
 function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo }) {
   const [reportType, setReportType] = useState("");
@@ -365,15 +364,23 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const pendienteId = params?.id || "p1";
 
   // Obtenemos funciones del store centralizado
-  const {
-    getColegiadoPendiente,
-    updateColegiadoPendiente,
-    approveRegistration,
-    rejectRegistration,
-    denyRegistration,
-    initSession,
-    updateColegiadoPendienteWithToken
-  } = useDataListaColegiados();
+  const getColegiadoPendiente = useDataListaColegiados(
+    (state) => state.getColegiadoPendiente
+  );
+  const updateColegiadoPendiente = useDataListaColegiados(
+    (state) => state.updateColegiadoPendiente
+  );
+  const approveRegistration = useDataListaColegiados(
+    (state) => state.approveRegistration
+  );
+  const rejectRegistration = useDataListaColegiados(
+    (state) => state.rejectRegistration
+  );
+  const denyRegistration = useDataListaColegiados(
+    (state) => state.denyRegistration
+  );
+  const initSession = useDataListaColegiados((state) => state.initSession);
+  const updateColegiadoPendienteWithToken = useDataListaColegiados((state) => state.updateColegiadoPendienteWithToken)
 
   // Estados locales
   const [isLoading, setIsLoading] = useState(true);
@@ -417,7 +424,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
     cargo: "",
     telefono: "",
     direccion: "",
-    tipo_institucion: ""
   });
 
   // Estados para datos de registro
@@ -626,7 +632,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
         // Verificar si los documentos están completos
         setDocumentosCompletos(
-          !pendienteData.archivos_faltantes?.tiene_faltantes
+          !pendienteData.archivos_faltantes.tiene_faltantes
         );
 
         setDocumentosRequeridos(documentosFormateados);
@@ -1080,12 +1086,12 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           isRechazada,
           isDenegada,
           isAdmin,
-          setShowReportModal,
-          allDocumentsApproved: allDocumentsApproved()
+          setShowReportModal, // Añadimos la función para mostrar el modal de reporte
+          allDocumentsApproved: allDocumentsApproved() // Añadimos la verificación de documentos aprobados
         }}
       />
 
-      {/* Main content sections - Componentes compartidos */}
+      {/* Main content sections */}
       <PersonalInfoSection
         props={{
           pendiente,
@@ -1096,8 +1102,8 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           updateData,
           pendienteId,
           setCambiosPendientes,
+          isDenegada,
           isAdmin,
-          readOnly: isDenegada
         }}
       />
 
@@ -1136,7 +1142,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         documentosRequeridos={documentosRequeridos}
         handleVerDocumento={handleVerDocumento}
         updateDocumento={updateDocumento}
-        onDocumentStatusChange={handleDocumentStatusChange}
+        onDocumentStatusChange={handleDocumentStatusChange} // Nueva prop para manejar los cambios de estado
       />
 
       {!isAdmin && pendiente.pago == null && pagosPendientes && (
@@ -1166,7 +1172,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           pasoModal={pasoModal}
           setPasoModal={setPasoModal}
           handleAprobarSolicitud={handleAprobarSolicitud}
-          documentosCompletos={allDocumentsApproved()}
+          documentosCompletos={allDocumentsApproved()} // Usar la nueva función de verificación
           onClose={() => setMostrarConfirmacion(false)}
         />
       )}
@@ -1233,6 +1239,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           >
             <span>Reenviar Solicitud De Inscripcion</span>
           </button>
+
         </div>
       )}
     </div>
