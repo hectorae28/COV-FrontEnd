@@ -14,6 +14,7 @@ import ProfessionalInfoSection from "@/app/Components/Solicitudes/ListaColegiado
 // Componentes existentes
 import CarnetInfo from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/CarnetInfo";
 import ChatSection from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/ChatSection";
+import EstadisticasUsuario from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/EstadisticasUsuario"; // Añadida importación
 import TablaInscripciones from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/TablaInscripciones";
 import TablaPagos from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/TablaPagos";
 import TablaSolicitudes from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/TablaSolicitudes";
@@ -109,11 +110,10 @@ export default function DetalleColegiado({
     }
   };
 
-  // Función para manejar el estado de documentos
-  // Función para manejar el estado de documentos - Añadir en ambos componentes
+  // Función para manejar el estado de documentos - CORREGIDO
   const handleDocumentStatusChange = (updatedDocument) => {
     // Actualizar el estado del documento localmente
-    const docsCopy = [...documentos]; // o [...documentosRequeridos] en DetallePendiente
+    const docsCopy = [...documentos]; // Usando documentos en lugar de documentosRequeridos
     const index = docsCopy.findIndex(doc => doc.id === updatedDocument.id);
     if (index !== -1) {
       docsCopy[index] = {
@@ -121,7 +121,7 @@ export default function DetalleColegiado({
         status: updatedDocument.status,
         rejectionReason: updatedDocument.rejectionReason || ''
       };
-      setDocumentos(docsCopy); // o setDocumentosRequeridos(docsCopy) en DetallePendiente
+      setDocumentos(docsCopy); // Usando setDocumentos en lugar de setDocumentosRequeridos
     }
 
     // Enviar actualización al backend
@@ -132,15 +132,11 @@ export default function DetalleColegiado({
       updateData[`${updatedDocument.id}_rejection_reason`] = updatedDocument.rejectionReason;
     }
 
-    // Usar la función correcta según el componente
-    if (updateColegiado) {
-      updateColegiado(colegiadoId, updateData);
-    } else if (updateColegiadoPendiente) {
-      updateColegiadoPendiente(pendienteId, updateData);
-    }
+    // Usar la función correcta para este componente
+    updateColegiado(colegiadoId, updateData);
   };
 
-  // Función para actualizar un documento - Añadir en ambos componentes
+  // Función para actualizar un documento
   const updateDocumento = async (formData) => {
     try {
       // Implementar la lógica para actualizar el documento
