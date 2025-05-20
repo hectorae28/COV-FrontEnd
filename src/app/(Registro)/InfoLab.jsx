@@ -34,12 +34,16 @@ const formatearTelefonoLocal = (value) => {
   return digits;
 };
 
-export default function InfoLaboral({ formData, onInputChange, validationErrors, isEditMode = false }) {
+export default function InfoLaboral({ formData, onInputChange, validationErrors, isEditMode = false, onSave }) {
   // Lista de estados ordenados alfabéticamente
   const estados = Object.keys(EstadoData).sort().map(capitalizarPalabras);
   // Estado para manejar el estado laboral
   const [workStatus, setWorkStatus] = useState(formData.workStatus || "labora");
-  // Estado para manejar múltiples registros laborales
+  
+  // Estado local para el formulario en modo edición
+  const [localFormData, setLocalFormData] = useState(formData);
+  
+  // Registros laborales
   const [registros, setRegistros] = useState(
     formData.laboralRegistros && formData.laboralRegistros.length > 0
       ? formData.laboralRegistros.map(registro => ({
@@ -64,6 +68,25 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
         }
       ]
   );
+  
+  // Actualizar el estado local cuando cambian las props
+  useEffect(() => {
+    setLocalFormData(formData);
+    
+    // Actualizar registros si cambian en las props
+    if (formData.laboralRegistros && formData.laboralRegistros.length > 0) {
+      setRegistros(formData.laboralRegistros.map(registro => ({
+        ...registro,
+        institutionName: capitalizarPalabras(registro.institutionName || ""),
+        institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
+        cargo: capitalizarPalabras(registro.cargo || ""),
+        selectedEstado: registro.selectedEstado || "",
+        selectedCiudad: registro.selectedCiudad || ""
+      })));
+    }
+    
+  }, [formData]);
+
   // Estados para manejar ciudades disponibles para cada registro
   const [ciudadesDisponibles, setCiudadesDisponibles] = useState({});
 
@@ -98,7 +121,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     // Si selecciona "No Laborando", limpiamos los campos laborales
     if (value === "noLabora") {
       // Limpiar campos laborales
-      onInputChange({
+      const updatedData = {
         workStatus: value,
         institutionType: "N/A",
         institutionName: "N/A",
@@ -108,13 +131,29 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
         selectedEstado: "N/A",
         selectedCiudad: "N/A",
         laboralRegistros: []
-      });
+      };
+      
+      if (isEditMode) {
+        setLocalFormData(updatedData);
+        setRegistros([]);
+      } else {
+        onInputChange(updatedData);
+      }
     } else {
       // Si cambia a "Laborando", restauramos los registros
-      onInputChange({
+      const updatedData = {
         workStatus: value,
         laboralRegistros: registros
-      });
+      };
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          ...updatedData
+        }));
+      } else {
+        onInputChange(updatedData);
+      }
     }
   };
 
@@ -133,13 +172,24 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     }
     // Actualizar el campo en el registro
     registro[field] = value;
-    // Actualizar los campos principales con el primer registro (para compatibilidad)
-    if (index === 0) {
-      onInputChange({ [field]: value });
-    }
     // Actualizar el array completo de registros
     setRegistros(nuevosRegistros);
-    onInputChange({ laboralRegistros: nuevosRegistros });
+    
+    // Actualizar los campos principales con el primer registro (para compatibilidad)
+    const updatedData = { laboralRegistros: nuevosRegistros };
+    
+    if (index === 0) {
+      updatedData[field] = value;
+    }
+    
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        ...updatedData
+      }));
+    } else {
+      onInputChange(updatedData);
+    }
   };
 
   // Manejar cambios en la dirección (después de seleccionar estado y ciudad)
@@ -181,7 +231,17 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
       }
     ];
     setRegistros(nuevosRegistros);
-    onInputChange({ laboralRegistros: nuevosRegistros });
+    
+    const updatedData = { laboralRegistros: nuevosRegistros };
+    
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        ...updatedData
+      }));
+    } else {
+      onInputChange(updatedData);
+    }
   };
 
   // Eliminar un registro
@@ -190,10 +250,12 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
       const nuevosRegistros = [...registros];
       nuevosRegistros.splice(index, 1);
       setRegistros(nuevosRegistros);
-      onInputChange({ laboralRegistros: nuevosRegistros });
+      
+      const updatedData = { laboralRegistros: nuevosRegistros };
+      
       // Si se elimina el primer registro, actualizar los campos principales
       if (index === 0 && nuevosRegistros.length > 0) {
-        onInputChange({
+        Object.assign(updatedData, {
           institutionType: nuevosRegistros[0].institutionType,
           institutionName: nuevosRegistros[0].institutionName,
           institutionAddress: nuevosRegistros[0].institutionAddress,
@@ -202,6 +264,15 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
           selectedEstado: nuevosRegistros[0].selectedEstado,
           selectedCiudad: nuevosRegistros[0].selectedCiudad
         });
+      }
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          ...updatedData
+        }));
+      } else {
+        onInputChange(updatedData);
       }
     }
   };
@@ -223,7 +294,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     return false;
   };
 
-   const handleSaveClick = () => {
+  const handleSaveClick = () => {
     // Validar que haya al menos una institución con datos válidos
     if (workStatus === "labora" && registros.length > 0) {
       const hasValidInstitution = registros.some(reg => 
@@ -236,16 +307,28 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
       }
       
       // Actualizar datos en el formulario principal
-      onInputChange({
+      const updatedData = {
         workStatus: workStatus,
         laboralRegistros: registros
-      });
+      };
+      
+      if (onSave && isEditMode) {
+        onSave(updatedData);
+      } else {
+        onInputChange(updatedData);
+      }
     } else if (workStatus === "noLabora") {
       // Si no labora, enviar estado con valores por defecto
-      onInputChange({
+      const updatedData = {
         workStatus: "noLabora",
         laboralRegistros: []
-      });
+      };
+      
+      if (onSave && isEditMode) {
+        onSave(updatedData);
+      } else {
+        onInputChange(updatedData);
+      }
     }
   };
 

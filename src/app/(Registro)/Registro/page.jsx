@@ -130,7 +130,7 @@ export default function RegistrationForm(props) {
     mpps: props?.file_mpps_url || null,
 
     // Archivos adicionales para técnicos e higienistas
-    Fondo_negro_credencial: props?.file_fondo_negro_credencial_url || null,
+    fondo_negro_credencial: props?.file_fondo_negro_credencial_url || null,
     notas_curso: props?.file_notas_curso_url || null,
     fondo_negro_titulo_bachiller: props?.file_fondo_negro_titulo_bachiller_url || null,
 
@@ -243,7 +243,7 @@ export default function RegistrationForm(props) {
         fieldsToValidate = [
           ...fieldsToValidate,
           "fondo_negro_titulo_bachiller",
-          "Fondo_negro_credencial",
+          "fondo_negro_credencial",
           "notas_curso",
         ]
       }
@@ -479,8 +479,8 @@ export default function RegistrationForm(props) {
           formData.tipo_profesion === "higienista"
         ) {
           Form.append(
-            "Fondo_negro_credencial",
-            formData.Fondo_negro_credencial
+            "fondo_negro_credencial",
+            formData.fondo_negro_credencial
           );
           Form.append("notas_curso", formData.notas_curso);
           Form.append(

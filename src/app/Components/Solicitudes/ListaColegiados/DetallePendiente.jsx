@@ -97,7 +97,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   const [pasoModal, setPasoModal] = useState(1);
 
   const documentosMetadata = {
-    Fondo_negro_credencial: {
+    fondo_negro_credencial: {
       nombre: "Credencial fondo negro",
       descripcion: "Credencial profesional con fondo negro",
       requerido: (tipo_profesion) => tipo_profesion !== "odontologo"
@@ -167,40 +167,28 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
     }
 
     const updateData = {
-      [`${updatedDocument.id}_status`]: updatedDocument.status
+      [`${updatedDocument.id}_validate`]: updatedDocument.status === 'pending' ? null : updatedDocument.status === 'approved' ? true : false,
     };
     if (updatedDocument.rejectionReason) {
-      updateData[`${updatedDocument.id}_rejection_reason`] = updatedDocument.rejectionReason;
+      updateData[`${updatedDocument.id}_motivo_rechazo`] = updatedDocument.rejectionReason;
     }
 
     updateColegiadoPendiente(pendienteId, updateData);
   };
 
   // Función para actualizar un documento
-  const updateDocumento = async (formData) => {
-    try {
-      setIsLoading(true);
-
-      const documentId = Object.keys(formData)[0];
-      const file = formData.get(documentId);
-
-      if (!recaudos) {
-        console.log(`Subiendo documento ${documentId} para pendiente ${pendienteId}`);
-      } else {
-        const newFormData = new FormData();
-        newFormData.append(documentId, file);
-        await updateColegiadoPendienteWithToken(pendienteId, newFormData, true);
+  const updateDocumento = (documentoActualizado) => {
+      try {
+        if (!recaudos) {
+          updateColegiadoPendiente(pendienteId, documentoActualizado, true);
+        } else {
+          updateColegiadoPendienteWithToken(pendienteId, documentoActualizado, true)
+        }
+        loadData()
+      } catch (error) {
+        console.error("Error al actualizar documento:", error);
       }
-      await loadData();
-
-      setIsLoading(false);
-      return true;
-    } catch (error) {
-      console.error("Error al actualizar documento:", error);
-      setIsLoading(false);
-      throw error;
-    }
-  };
+  }
 
   const loadData = async () => {
     try {
@@ -213,8 +201,8 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       }
 
       if (pendienteData) {
-        // Datos personales
-        setDatosPersonales({ ...pendienteData.persona });
+        // Datos personales - asegurar que sea un objeto nuevo
+        setDatosPersonales(JSON.parse(JSON.stringify(pendienteData.persona || {})));
 
         // Datos de contacto
         setDatosContacto({
@@ -239,8 +227,8 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           observaciones: pendienteData.observaciones || "",
         });
 
-        // Instituciones
-        setInstituciones(pendienteData.instituciones ? [...pendienteData.instituciones] : []);
+        // Instituciones - crear copia para evitar referencias
+        setInstituciones(pendienteData.instituciones ? JSON.parse(JSON.stringify(pendienteData.instituciones)) : []);
 
         // Documentos
         const documentosFormateados = [
@@ -251,9 +239,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
             archivo: obtenerNombreArchivo(pendienteData.file_ci_url),
             requerido: documentosMetadata.file_ci.requerido,
             url: pendienteData.file_ci_url,
-            status: pendienteData.file_ci_status || 'pending',
+            status: pendienteData.file_ci_validate === null ? 'pending' : pendienteData.file_ci_validate ? 'approved' : 'rechazado',
             isReadOnly: pendienteData.file_ci_status === 'approved' && pendienteData.status === 'rechazado',
-            rejectionReason: pendienteData.file_ci_rejection_reason || ''
+            rejectionReason: pendienteData.file_ci_motivo_rechazo || ''
           },
           {
             id: "file_rif",
@@ -262,9 +250,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
             archivo: obtenerNombreArchivo(pendienteData.file_rif_url),
             requerido: documentosMetadata.file_rif.requerido,
             url: pendienteData.file_rif_url,
-            status: pendienteData.file_rif_status || 'pending',
+            status: pendienteData.file_rif_validate === null ? 'pending' : pendienteData.file_rif_validate ? 'approved' : 'rechazado',
             isReadOnly: pendienteData.file_rif_status === 'approved' && pendienteData.status === 'rechazado',
-            rejectionReason: pendienteData.file_rif_rejection_reason || ''
+            rejectionReason: pendienteData.file_rif_motivo_rechazo || ''
           },
           {
             id: "file_fondo_negro",
@@ -273,9 +261,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
             archivo: obtenerNombreArchivo(pendienteData.file_fondo_negro_url),
             requerido: documentosMetadata.file_fondo_negro.requerido,
             url: pendienteData.file_fondo_negro_url,
-            status: pendienteData.file_fondo_negro_status || 'pending',
+            status: pendienteData.file_fondo_negro_validate === null ? 'pending' : pendienteData.file_fondo_negro_validate ? 'approved' : 'rechazado',
             isReadOnly: pendienteData.file_fondo_negro_status === 'approved' && pendienteData.status === 'rechazado',
-            rejectionReason: pendienteData.file_fondo_negro_rejection_reason || ''
+            rejectionReason: pendienteData.file_fondo_negro_motivo_rechazo || ''
           },
           {
             id: "file_mpps",
@@ -284,20 +272,20 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
             archivo: obtenerNombreArchivo(pendienteData.file_mpps_url),
             requerido: documentosMetadata.file_mpps.requerido,
             url: pendienteData.file_mpps_url,
-            status: pendienteData.file_mpps_status || 'pending',
+            status: pendienteData.file_mpps_validate === null ? 'pending' : pendienteData.file_mpps_validate ? 'approved' : 'rechazado',
             isReadOnly: pendienteData.file_mpps_status === 'approved' && pendienteData.status === 'rechazado',
-            rejectionReason: pendienteData.file_mpps_rejection_reason || ''
+            rejectionReason: pendienteData.file_mpps_motivo_rechazo || ''
           },
           {
-            id: "Fondo_negro_credencial",
-            nombre: documentosMetadata.Fondo_negro_credencial.nombre,
-            descripcion: documentosMetadata.Fondo_negro_credencial.descripcion,
-            archivo: obtenerNombreArchivo(pendienteData.Fondo_negro_credencial_url),
-            requerido: documentosMetadata.Fondo_negro_credencial.requerido(pendienteData.tipo_profesion),
-            url: pendienteData.Fondo_negro_credencial_url,
-            status: pendienteData.Fondo_negro_credencial_status || 'pending',
-            isReadOnly: pendienteData.Fondo_negro_credencial_status === 'approved' && pendienteData.status === 'rechazado',
-            rejectionReason: pendienteData.Fondo_negro_credencial_rejection_reason || ''
+            id: "fondo_negro_credencial",
+            nombre: documentosMetadata.fondo_negro_credencial.nombre,
+            descripcion: documentosMetadata.fondo_negro_credencial.descripcion,
+            archivo: obtenerNombreArchivo(pendienteData.fondo_negro_credencial_url),
+            requerido: documentosMetadata.fondo_negro_credencial.requerido(pendienteData.tipo_profesion),
+            url: pendienteData.fondo_negro_credencial_url,
+            status: pendienteData.fondo_negro_credencial_validate === null ? 'pending' : pendienteData.fondo_negro_credencial_validate ? 'approved' : 'rechazado',
+            isReadOnly: pendienteData.fondo_negro_credencial_status === 'approved' && pendienteData.status === 'rechazado',
+            rejectionReason: pendienteData.fondo_negro_credencial_motivo_rechazo || ''
           },
           {
             id: "notas_curso",
@@ -306,9 +294,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
             archivo: obtenerNombreArchivo(pendienteData.notas_curso_url),
             requerido: documentosMetadata.notas_curso.requerido(pendienteData.tipo_profesion),
             url: pendienteData.notas_curso_url,
-            status: pendienteData.notas_curso_status || 'pending',
+            status: pendienteData.notas_curso_validate === null ? 'pending' : pendienteData.notas_curso_validate ? 'approved' : 'rechazado',
             isReadOnly: pendienteData.notas_curso_status === 'approved' && pendienteData.status === 'rechazado',
-            rejectionReason: pendienteData.notas_curso_rejection_reason || ''
+            rejectionReason: pendienteData.notas_curso_motivo_rechazo || ''
           },
           {
             id: "fondo_negro_titulo_bachiller",
@@ -317,9 +305,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
             archivo: obtenerNombreArchivo(pendienteData.fondo_negro_titulo_bachiller_url),
             requerido: documentosMetadata.fondo_negro_titulo_bachiller.requerido(pendienteData.tipo_profesion),
             url: pendienteData.fondo_negro_titulo_bachiller_url,
-            status: pendienteData.fondo_negro_titulo_bachiller_status || 'pending',
+            status: pendienteData.fondo_negro_titulo_bachiller_validate === null ? 'pending' : pendienteData.fondo_negro_titulo_bachiller_validate ? 'approved' : 'rechazado',
             isReadOnly: pendienteData.fondo_negro_titulo_bachiller_status === 'approved' && pendienteData.status === 'rechazado',
-            rejectionReason: pendienteData.fondo_negro_titulo_bachiller_rejection_reason || ''
+            rejectionReason: pendienteData.fondo_negro_titulo_bachiller_motivo_rechazo || ''
           },
         ];
 
@@ -374,8 +362,54 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
   }, [isLoading, pendiente]);
 
   const updateData = (id, newData) => {
-    if (!recaudos) updateColegiadoPendiente(id, newData);
-    else updateColegiadoPendienteWithToken(id, newData);
+    // Crear copia profunda para evitar modificaciones accidentales
+    const dataToUpdate = JSON.parse(JSON.stringify(newData));
+
+    // Actualizar los estados locales según el tipo de datos
+    if (dataToUpdate.persona) {
+      setDatosPersonales(prev => ({
+        ...prev,
+        ...dataToUpdate.persona
+      }));
+    }
+
+    // Si se están actualizando datos de contacto
+    if (dataToUpdate.persona?.correo || dataToUpdate.persona?.telefono_movil || dataToUpdate.persona?.direccion) {
+      const updatedContacto = { ...datosContacto };
+      if (dataToUpdate.persona.correo) updatedContacto.email = dataToUpdate.persona.correo;
+      if (dataToUpdate.persona.telefono_movil) {
+        const parts = dataToUpdate.persona.telefono_movil.split(' ');
+        if (parts.length === 2) {
+          updatedContacto.countryCode = parts[0];
+          updatedContacto.phoneNumber = parts[1];
+        }
+      }
+      if (dataToUpdate.persona.telefono_de_habitacion) updatedContacto.homePhone = dataToUpdate.persona.telefono_de_habitacion;
+      if (dataToUpdate.persona.direccion) {
+        if (dataToUpdate.persona.direccion.referencia) updatedContacto.address = dataToUpdate.persona.direccion.referencia;
+        if (dataToUpdate.persona.direccion.estado) updatedContacto.state = dataToUpdate.persona.direccion.estado;
+        if (dataToUpdate.persona.direccion.ciudad) updatedContacto.city = dataToUpdate.persona.direccion.ciudad;
+      }
+      setDatosContacto(updatedContacto);
+    }
+
+    // Si son datos académicos
+    if (dataToUpdate.instituto_bachillerato || dataToUpdate.universidad || dataToUpdate.num_registro_principal ||
+      dataToUpdate.fecha_registro_principal || dataToUpdate.num_mpps || dataToUpdate.fecha_mpps ||
+      dataToUpdate.fecha_egreso_universidad || dataToUpdate.observaciones) {
+      setDatosAcademicos(prev => ({
+        ...prev,
+        ...dataToUpdate
+      }));
+    }
+
+    // Si son instituciones
+    if (dataToUpdate.instituciones) {
+      setInstituciones(dataToUpdate.instituciones);
+    }
+
+    // Marcar que hay cambios pendientes
+    setCambiosPendientes(true);
   };
 
   const handlePaymentComplete = async ({
@@ -436,13 +470,14 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
       // Guardar cambios pendientes antes de aprobar
       if (cambiosPendientes) {
+        // Crear un objeto completo con todos los datos actualizados
         const nuevosDatos = {
-          ...pendiente,
-          persona: datosPersonales,
-          ...datosAcademicos,
-          instituciones,
+          persona: JSON.parse(JSON.stringify(datosPersonales)),
+          ...JSON.parse(JSON.stringify(datosAcademicos)),
+          instituciones: JSON.parse(JSON.stringify(instituciones)),
         };
         updateColegiadoPendiente(pendienteId, nuevosDatos);
+        setCambiosPendientes(false);
       }
 
       // Guardar el estado de los documentos
@@ -454,7 +489,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         }
       });
 
-      const colegiadoAprobado = approveRegistration(pendienteId, {
+      const colegiadoAprobado = await approveRegistration(pendienteId, {
         ...datosRegistro,
         ...documentosData
       });
@@ -712,7 +747,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         allDocumentsApproved={allDocumentsApproved}
       />
 
-      {/* Main content sections */}
+      {/* Organización según los pasos originales */}
       <PersonalInfoSection
         props={{
           pendiente,
@@ -726,7 +761,6 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         }}
       />
 
-      {/* Nueva sección de contacto */}
       <ContactInfoSection
         pendiente={pendiente}
         datosContacto={datosContacto}
@@ -768,10 +802,11 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       <DocumentSection
         documentos={documentosRequeridos}
         onViewDocument={handleVerDocumento}
-        onUpdateDocument={updateDocumento}
+        updateDocumento={updateDocumento}
         onDocumentStatusChange={handleDocumentStatusChange}
         title="Documentos requeridos"
         subtitle="Documentación obligatoria del solicitante"
+        recaudosId={pendienteId}
       />
 
       {!isAdmin && pendiente.pago == null && pagosPendientes && (

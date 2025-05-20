@@ -200,7 +200,7 @@ const useDataListaColegiados = create((set, get) => ({
     const res = await patchDataUsuario(
       `register/${id}`,
       updatedData,
-      docs && docs
+      docs
     );
 
     return res.data;

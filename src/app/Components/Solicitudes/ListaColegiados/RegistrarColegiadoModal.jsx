@@ -233,14 +233,13 @@ export default function RegistroColegiados({
       formData.tipo_profesion === "tecnico" ||
       formData.tipo_profesion === "higienista"
     ) {
-      Form.append("Fondo_negro_credencial", formData.Fondo_negro_credencial);
+      Form.append("fondo_negro_credencial", formData.fondo_negro_credencial);
       Form.append("notas_curso", formData.notas_curso);
       Form.append(
         "fondo_negro_titulo_bachiller",
         formData.fondo_negro_titulo_bachiller
       );
     }
-    
     
     (!pagarLuego&&!exonerarPagos)
       ? Form.append(

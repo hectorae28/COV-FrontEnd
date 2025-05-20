@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-export default function InfoPersonal({ formData, onInputChange, validationErrors, isProfileEdit, isEditMode = false }) {
+export default function InfoPersonal({ formData, onInputChange, validationErrors, isProfileEdit, isEditMode = false, onSave }) {
   const [age, setAge] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
   const [isAdult, setIsAdult] = useState(true);
@@ -39,6 +39,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     month: "",
     day: ""
   });
+
+  // Estado local para el formulario en modo edición
+  const [localFormData, setLocalFormData] = useState(formData);
 
   // Función para capitalizar texto (primera letra después de espacio)
   const capitalizeText = (text) => {
@@ -79,6 +82,11 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     }
   }, [birthDateParts.month, birthDateParts.year]);
 
+  // Actualizar el estado local cuando cambian las props
+  useEffect(() => {
+    setLocalFormData(formData);
+  }, [formData]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     let processedValue = value;
@@ -96,23 +104,41 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     }
 
     // Modificar la validación para pasaporte: permitir formato alfanumérico
-    if (name === "identityCard" && formData.documentType === "pasaporte") {
+    if (name === "identityCard" && localFormData.documentType === "pasaporte") {
       // Permitir letras y números para pasaporte, convertir letras a mayúsculas
       processedValue = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-    } else if (name === "identityCard" && formData.documentType === "cedula") {
+    } else if (name === "identityCard" && localFormData.documentType === "cedula") {
       // Para cédula, solo permitir números
       processedValue = value.replace(/\D/g, "");
     }
 
-    onInputChange({ [name]: processedValue });
+    // Si estamos en modo edición, actualizamos el estado local
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        [name]: processedValue
+      }));
+    } else {
+      // Si no estamos en modo edición, comportamiento normal
+      onInputChange({ [name]: processedValue });
+    }
 
     // Si cambia el tipo de documento, reiniciar el valor de identityCard
     if (name === "documentType") {
-      onInputChange({
-        documentType: value,
-        identityCard: "",
-        idType: value === "cedula" ? "V" : ""
-      });
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          documentType: value,
+          identityCard: "",
+          idType: value === "cedula" ? "V" : ""
+        }));
+      } else {
+        onInputChange({
+          documentType: value,
+          identityCard: "",
+          idType: value === "cedula" ? "V" : ""
+        });
+      }
       // Limpiar errores al cambiar de tipo de documento
       setIdentityCardError("");
       setPassportError("");
@@ -120,13 +146,13 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
 
     // Validate identity card length when it changes
     if (name === "identityCard") {
-      if (formData.documentType === "cedula") {
+      if ((isEditMode ? localFormData.documentType : formData.documentType) === "cedula") {
         if (value.length > 0 && (value.length < 7 || value.length > 8)) {
           setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
         } else {
           setIdentityCardError("");
         }
-      } else if (formData.documentType === "pasaporte") {
+      } else if ((isEditMode ? localFormData.documentType : formData.documentType) === "pasaporte") {
         // Validar longitud de pasaporte (entre 4 y 15 caracteres)
         if (processedValue.length > 0 && (processedValue.length < 4 || processedValue.length > 15)) {
           setPassportError("El pasaporte debe tener entre 4 y 15 caracteres");
@@ -151,11 +177,16 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
       } else {
         setAge("");
         setIsAdult(true);
-        onInputChange({ birthDate: "", age: "" });
+        if (isEditMode) {
+          setLocalFormData(prev => ({ ...prev, birthDate: "", age: "" }));
+        } else {
+          onInputChange({ birthDate: "", age: "" });
+        }
       }
     }
   };
 
+  // Modificar calculateAge para que actualice el estado local cuando estamos en modo edición
   const calculateAge = (birthDate) => {
     if (!birthDate) {
       setAge("");
@@ -175,10 +206,20 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     // Verificar si es mayor de edad
     const isUserAdult = calculatedAge >= 18;
     setIsAdult(isUserAdult);
-    onInputChange({
-      age: calculatedAge.toString(),
-      birthDate: isUserAdult ? birthDate : ""
-    });
+    
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        age: calculatedAge.toString(),
+        birthDate: isUserAdult ? birthDate : ""
+      }));
+    } else {
+      onInputChange({
+        age: calculatedAge.toString(),
+        birthDate: isUserAdult ? birthDate : ""
+      });
+    }
+    
     setAge(calculatedAge.toString());
   };
 
@@ -658,7 +699,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           <button
             type="button"
-            onClick={() => onInputChange(formData)} // En modo edición, simplemente actualiza con los datos actuales
+            onClick={() => onSave ? onSave(localFormData) : onInputChange(localFormData)}
             className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
               rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
           >

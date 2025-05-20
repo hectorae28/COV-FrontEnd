@@ -11,10 +11,11 @@ import DocumentVerificationSwitch from "./DocumentVerificationSwitch";
 export function DocumentSection({
   documentos = [], // Proporciona un valor predeterminado de array vacío
   onViewDocument,
-  onUpdateDocument,
+  updateDocumento,
   onDocumentStatusChange,
   title = "Documentos",
   subtitle = "Documentación obligatoria del colegiado",
+  recaudosId,
   icon = <FileText size={20} className="text-[#C40180] mr-2" />,
   filter = doc => !doc.id?.includes('comprobante_pago')
 }) {
@@ -107,45 +108,40 @@ export function DocumentSection({
     }
   };
 
-  const handleUpload = useCallback(async () => {
-    if (!selectedFile) {
-      setError("Por favor seleccione un archivo para subir.");
-      return;
+  const handleUpload = async () => {
+        if (!selectedFile) {
+            setError("Por favor seleccione un archivo para subir.")
+            return
+        }
+
+        setIsUploading(true)
+        setError("")
+
+        try {
+            const uploadedFileUrl = URL.createObjectURL(selectedFile)
+            if (updateDocumento) {
+                const Form = new FormData();
+                Form.append(`${documentoParaSubir.id}`, selectedFile)
+
+                // Check if this is a payment receipt
+                const isPaymentReceipt =
+                    documentoParaSubir.id.includes("comprobante_pago") ||
+                    documentoParaSubir.nombre.toLowerCase().includes("comprobante")
+
+                // Update the document
+                updateDocumento(Form)
+            }
+
+            // Cerrar modal después de subir
+            setDocumentoParaSubir(null)
+            setSelectedFile(null)
+        } catch (error) {
+            console.error("Error al subir documento:", error)
+            setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.")
+        } finally {
+            setIsUploading(false)
+        }
     }
-
-    setIsUploading(true);
-    setError("");
-
-    try {
-      if (onUpdateDocument && documentoParaSubir) {
-        const formData = new FormData();
-        formData.append(documentoParaSubir.id, selectedFile);
-
-        // Guardar el nombre del documento que estamos subiendo
-        setUploadedDocumentName(documentoParaSubir.nombre);
-
-        // Llamar a la función de actualización y esperar su resultado
-        const result = await onUpdateDocument(formData);
-
-        // Mostrar notificación de éxito
-        setUploadSuccess(true);
-
-        // Ocultar notificación después de 5 segundos
-        setTimeout(() => {
-          setUploadSuccess(false);
-        }, 5000);
-      }
-
-      // Cerrar el modal después de subir exitosamente
-      setDocumentoParaSubir(null);
-      setSelectedFile(null);
-    } catch (error) {
-      console.error("Error al subir documento:", error);
-      setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.");
-    } finally {
-      setIsUploading(false);
-    }
-  }, [documentoParaSubir, onUpdateDocument, selectedFile]);
 
   return (
     <motion.div
@@ -188,7 +184,7 @@ export function DocumentSection({
             <DocumentCard
               key={documento.id}
               documento={documento}
-              onView={() => onViewDocument && onViewDocument(documento)}
+              onView={() => onViewDocument(documento)}
               onReplace={() => handleReemplazarDocumento(documento)}
               onStatusChange={onDocumentStatusChange}
             />
@@ -494,7 +490,7 @@ export function DocumentViewer({ documento, onClose }) {
             </div>
           ) : documento.url ? (
             <img
-              src={documento.url}
+              src={process.env.NEXT_PUBLIC_BACK_HOST + documento.url}
               alt={documento.nombre}
               className="max-h-full max-w-full object-contain"
               onError={() => setError("No se pudo cargar el documento")}
