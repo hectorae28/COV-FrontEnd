@@ -22,6 +22,7 @@ import EstadisticasUsuario from "./DetalleColegiado/EstadisticasUsuario";
 import ModalVisualizarDocumento from "./DetalleColegiado/ModalVisualizarDocumento";
 import TablaPagos from "./DetalleColegiado/TablaPagos";
 import TablaSolicitudes from "./DetalleColegiado/TablaSolicitudes";
+import ModalConfirmacionTitulo from "@/Components/Solicitudes/ListaColegiados/DetalleColegiado/ModalVisualizarDocumento"
 
 export default function DetalleColegiado({
   params,
