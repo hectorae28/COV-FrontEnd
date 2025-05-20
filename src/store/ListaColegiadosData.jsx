@@ -12,23 +12,33 @@ const useDataListaColegiados = create((set, get) => ({
   colegiadosPendientes: [],
   colegiadosPendientesPagination: {},
 
+  recaudosAnulados: [],
+  recaudosAnuladosPagination: {},
+  
+  recaudosRechazados: [],
+  recaudosRechazadosPagination: {},
+
   loading: true,
   error: null,
 
   async initStore() {
+    set({ loading: true });
     try {
-      const colegiadosResponse = await fetchDataUsuario("colegiado");
-      set({ colegiados: colegiadosResponse.data.results });
-      set({ colegiadosPendientesPagination: colegiadosResponse.data });
+      // Fetch colegiados
+      await get().fetchColegiados();
+      
+      // Fetch all status types in parallel
+      await Promise.all([
+        get().fetchPendientes(1, 10, "", { status: "revisando" }),
+        get().fetchPendientes(1, 10, "", { status: "por_pagar" }),
+        get().fetchPendientes(1, 10, "", { status: "anulado" }),
+        get().fetchPendientes(1, 10, "", { status: "rechazado" })
+      ]);
 
-      const pendientesResponse = await fetchDataUsuario("register");
-      set({ colegiadosPendientes: pendientesResponse.data.results });
-      set({ colegiadosPendientesPagination: pendientesResponse.data });
+      set({ loading: false });
     } catch (error) {
       console.error("Error al cargar los datos iniciales:", error);
-      set({ error: error.message || "Error al cargar los datos" });
-    } finally {
-      set({ loading: false });
+      set({ error: error.message || "Error al cargar los datos", loading: false });
     }
   },
 
@@ -43,14 +53,30 @@ const useDataListaColegiados = create((set, get) => ({
       let params = `?page=${page}&page_size=${pageSize}`;
       if (search) params += `&search=${encodeURIComponent(search)}`;
       Object.entries(otrosFiltros).forEach(([key, value]) => {
-        if (value) params += `&${key}=${encodeURIComponent(value)}`;
+        if (value) params += `&${key}=${key == "status" ? value : encodeURIComponent(value)}`;
       });
       const res = await fetchDataUsuario("register", null, params);
-      set({
-        colegiadosPendientes: res.data.results,
-        colegiadosPendientesPagination: res.data,
-        loading: false,
-      });
+      console.log(otrosFiltros)
+      
+      if (otrosFiltros.status === "revisando" || otrosFiltros.status === "por_pagar" || otrosFiltros.status === "por_pagar,revisando") {
+        set({
+          colegiadosPendientes: res.data.results,
+          colegiadosPendientesPagination: res.data,
+          loading: false,
+        });
+      } else if (otrosFiltros.status === "anulado") {
+        set({
+          recaudosAnulados: res.data.results,
+          recaudosAnuladosPagination: res.data,
+          loading: false,
+        });
+      } else if (otrosFiltros.status === "rechazado") {
+        set({
+          recaudosRechazados: res.data.results,
+          recaudosRechazadosPagination: res.data,
+          loading: false,
+        });
+      }
     } catch (error) {
       set({
         loading: false,
@@ -300,5 +326,8 @@ const useDataListaColegiados = create((set, get) => ({
   },
 })
 );
+
+// Initialize the store immediately
+useDataListaColegiados.getState().initStore();
 
 export default useDataListaColegiados;

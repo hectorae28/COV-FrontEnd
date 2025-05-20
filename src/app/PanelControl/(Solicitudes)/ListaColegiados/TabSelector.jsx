@@ -1,12 +1,14 @@
 // TabSelector.jsx
 import { fetchDataUsuario } from "@/api/endpoints/colegiado";
 import { useEffect, useState } from "react";
-
+import useDataListaColegiados  from "@/store/ListaColegiadosData";
 export default function TabSelector({
     tabActivo,
     setTabActivo,
-    setCurrentPage
+    setCurrentPage,
+    pagination
 }) {
+    const {colegiadosPendientesPagination,recaudosAnuladosPagination,recaudosRechazadosPagination,colegiadosPagination} = useDataListaColegiados()
     // Estado para almacenar los contadores
     const [contadores, setContadores] = useState({
         pendientes: 0,
@@ -31,11 +33,10 @@ export default function TabSelector({
                 const colegiados = colegiadosResponse.data.results || [];
 
                 // Calcular contadores
-                const pendientesCount = pendientes.filter(p => p.status === "revisando").length;
-                console.log({ pendientes, pendientesCount })
-                const rechazadosCount = pendientes.filter(p => p.status === "rechazado").length;
-                const anuladosCount = pendientes.filter(p => p.status === "denegado" || p.estado === "Anuladas").length;
-                const registradosCount = colegiados.length;
+                const pendientesCount = colegiadosPendientesPagination.count
+                const rechazadosCount = recaudosRechazadosPagination.count
+                const anuladosCount = recaudosAnuladosPagination.count
+                const registradosCount = colegiadosPagination.count
 
                 // Actualizar contadores
                 setContadores({
@@ -89,7 +90,7 @@ export default function TabSelector({
                         } transition-colors`}
                     onClick={handleClickPendientes}
                 >
-                    Pendientes ({contadores.pendientes})
+                    Pendientes ({pagination?.pendientes?.count || 0})
                 </button>
 
                 <button
@@ -99,7 +100,7 @@ export default function TabSelector({
                         } transition-colors`}
                     onClick={handleClickRechazados}
                 >
-                    Rechazados ({contadores.rechazados})
+                    Rechazados ({pagination?.rechazados?.count || 0})
                 </button>
 
                 <button
@@ -109,7 +110,7 @@ export default function TabSelector({
                         } transition-colors`}
                     onClick={handleClickAnulados}
                 >
-                    Anulados ({contadores.anulados})
+                    Anulados ({pagination?.anulados?.count || 0})
                 </button>
 
                 <button
@@ -119,7 +120,7 @@ export default function TabSelector({
                         } transition-colors`}
                     onClick={handleClickRegistrados}
                 >
-                    Aprobados ({contadores.registrados})
+                    Aprobados ({pagination?.registrados?.count || 0})
                 </button>
             </nav>
         </div>

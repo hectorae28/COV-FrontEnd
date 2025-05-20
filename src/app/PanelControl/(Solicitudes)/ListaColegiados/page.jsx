@@ -7,7 +7,7 @@ import useDataListaColegiados from "@/store/ListaColegiadosData";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState,useMemo } from "react";
 
 // Componentes
 import DataTable from "./DataTable";
@@ -19,7 +19,7 @@ import TabSelector from "./TabSelector";
 
 export default function ListaColegiadosPage() {
   // Estado del store de Zustand
-  const initStore = useSolicitudesStore((state) => state.initStore);
+  const initStore = useDataListaColegiados((state) => state.initStore);
   const colegiados = useDataListaColegiados((state) => state.colegiados);
   const colegiadosPagination = useDataListaColegiados(
     (state) => state.colegiadosPagination
@@ -39,6 +39,10 @@ export default function ListaColegiadosPage() {
   const getColegiadoPendiente = useDataListaColegiados(
     (state) => state.getColegiadoPendiente
   );
+  const recaudosAnulados = useDataListaColegiados((state)=>state.recaudosAnulados)
+  const recaudosAnuladosPagination = useDataListaColegiados((state)=>state.recaudosAnuladosPagination)
+  const recaudosRechazados = useDataListaColegiados((state)=>state.recaudosRechazados)
+  const recaudosRechazadosPagination = useDataListaColegiados((state)=>state.recaudosRechazadosPagination)
 
   // Estado local de UI
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,6 +66,7 @@ export default function ListaColegiadosPage() {
 
   // Estado para filtros activos
   const [activeFilters, setActiveFilters] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Definir todos los filtros disponibles
 const allFilters = [
@@ -71,9 +76,9 @@ const allFilters = [
   { id: "solicitudes", group: "Estado de solvencia", label: "Con Solicitudes", value: "solicitudes" },
 
   // Profesiones (cambiado a Profesión/Ocupación)
-  { id: "prof-odontologo", group: "Profesión/Ocupación", label: "Odontólogo", value: "Odontólogo" },
-  { id: "prof-tecnico", group: "Profesión/Ocupación", label: "Técnico Dental", value: "Técnico Dental" },
-  { id: "prof-higienista", group: "Profesión/Ocupación", label: "Higienista", value: "Higienista" },
+  { id: "prof-odontologo", group: "Profesión/Ocupación", label: "Odontólogo", value: "odontologo" },
+  { id: "prof-tecnico", group: "Profesión/Ocupación", label: "Técnico Dental", value: "tecnico" },
+  { id: "prof-higienista", group: "Profesión/Ocupación", label: "Higienista", value: "higienista" },
   
   // Especialidad
   { id: "especialidad-armonizacion", group: "Especialidades", label: "Armonización facial", value: "Armonización facial" },
@@ -86,13 +91,13 @@ const allFilters = [
   { id: "edad-rango", group: "Edad", label: "Edad", value: "personalizado" },
 
   // Estado laboral
-  { id: "laborando", group: "Estado laboral", label: "Laborando", value: "laborando" },
-  { id: "no-laborando", group: "Estado laboral", label: "No laborando", value: "no-laborando" },
+  { id: "laborando", group: "Estado laboral", label: "Laborando", value: true },
+  { id: "no-laborando", group: "Estado laboral", label: "No laborando", value: false },
 
   // Género
-  { id: "masculino", group: "Género", label: "Masculino", value: "M" },
-  { id: "femenino", group: "Género", label: "Femenino", value: "F" },
-  { id: "otros", group: "Género", label: "Otros", value: "O" },
+  { id: "masculino", group: "Género", label: "Masculino", value: "masculino" },
+  { id: "femenino", group: "Género", label: "Femenino", value: "femenino" },
+  { id: "otros", group: "Género", label: "Otros", value: "otro" },
 
   // Documentos
   { id: "documentos-incompletos", group: "Documentos", label: "Incompletos", value: "documentosIncompletos" },
@@ -106,8 +111,8 @@ const allFilters = [
   { id: "pagos-rechazados", group: "Pagos", label: "Rechazados", value: "pagosRechazados" },
 
   // Creado por
-  { id: "creado-admin", group: "Creado por", label: "Admin", value: "admin" },
-  { id: "creado-colegiado", group: "Creado por", label: "Colegiado", value: "colegiado" },
+  { id: "creado-admin", group: "Creado por", label: "Admin", value: true},
+  { id: "creado-colegiado", group: "Creado por", label: "Colegiado", value: false },
 
   // Institución
   { id: "inst-asp", group: "Institución", label: "Agencias de Salud Pública", value: "ASP" },
@@ -145,7 +150,16 @@ const allFilters = [
   }
 
   useEffect(() => {
-    initStoreAsync();
+    const initializeData = async () => {
+      try {
+        await initStore();
+        setIsInitialized(true);
+        await fetchPendientes(1, 10, "", { status: "por_pagar,revisando" });
+      } catch (error) {
+        console.error("Error initializing store:", error);
+      }
+    };
+    initializeData();
   }, []);
 
   // Inicialización
@@ -166,8 +180,7 @@ const allFilters = [
   // Fetch de datos basado en filtros
   useEffect(() => {
     const filtros = {};
-
-    // Procesar los filtros activos
+  
     activeFilters.forEach(filter => {
       switch (filter.group) {
         case "Estado de solvencia":
@@ -175,97 +188,88 @@ const allFilters = [
           if (filter.id === "noSolventes") filtros.solvencia_status = "false";
           if (filter.id === "solicitudes") filtros.tiene_solicitudes_pendientes = "true";
           break;
-
-        case "Profesiones":
+  
+        case "Profesión/Ocupación":
           if (!filtros.profesiones) filtros.profesiones = [];
           filtros.profesiones.push(filter.value);
           break;
-
+  
         case "Especialidades":
           if (!filtros.especialidades) filtros.especialidades = [];
           filtros.especialidades.push(filter.value);
           break;
-
+  
         case "Edad":
-          const [min, max] = filter.value.split("-");
-          if (min) filtros.edad_min = min;
-          if (max && max !== "") filtros.edad_max = max;
+          if (edadExacta) {
+            filtros.edad_min = edadExacta;
+            filtros.edad_max = edadExacta;
+          } else {
+            if (edadMin) filtros.edad_min = edadMin;
+            if (edadMax) filtros.edad_max = edadMax;
+          }
           break;
-
+  
         case "Estado laboral":
-          filtros.laborando = filter.id === "laborando" ? "true" : "false";
+          filtros.laborando = filter.value.toString();
           break;
-
+  
         case "Género":
           filtros.genero = filter.value;
           break;
-
+  
         case "Documentos":
           if (filter.id === "documentos-incompletos") filtros.documentos_completos = "false";
           if (filter.id === "documentos-rechazados") filtros.documentos_rechazados = "true";
           if (filter.id === "documentos-completos") filtros.documentos_completos = "true";
           if (filter.id === "documentos-pendientes") filtros.documentos_pendientes = "true";
           break;
-
+  
         case "Pagos":
           if (filter.id === "pagos-pendientes") filtros.tiene_pago = "false";
           if (filter.id === "pagos-exonerados") filtros.pago_exonerado = "true";
           if (filter.id === "pagos-rechazados") filtros.pago_rechazado = "true";
           break;
-
+  
         case "Creado por":
-          filtros.creado_por = filter.value;
+          filtros.user_admin_create = filter.value;
           break;
-
+  
         case "Ubicación":
           if (!filtros.estados) filtros.estados = [];
           filtros.estados.push(filter.value);
           break;
-
-        case "Municipio":
-          if (!filtros.municipios) filtros.municipios = [];
-          filtros.municipios.push(filter.value);
-          break;
-
+  
         case "Universidad":
           if (!filtros.universidades) filtros.universidades = [];
           filtros.universidades.push(filter.value);
           break;
-
+  
         case "Institución":
           if (!filtros.instituciones) filtros.instituciones = [];
           filtros.instituciones.push(filter.value);
           break;
       }
     });
-
-    // Añadir fechas desde-hasta
+  
     if (fromDate) filtros.fecha_solicitud_desde = fromDate;
     if (toDate) filtros.fecha_solicitud_hasta = toDate;
-
-    // Si hay arrays, convertirlos a strings separados por comas
+  
     if (filtros.profesiones) filtros.profesiones = filtros.profesiones.join(',');
     if (filtros.especialidades) filtros.especialidades = filtros.especialidades.join(',');
     if (filtros.estados) filtros.estados = filtros.estados.join(',');
-    if (filtros.municipios) filtros.municipios = filtros.municipios.join(',');
     if (filtros.universidades) filtros.universidades = filtros.universidades.join(',');
     if (filtros.instituciones) filtros.instituciones = filtros.instituciones.join(',');
-
-    // Añadir ordenamiento por fecha
+  
     filtros.ordering = ordenFecha === "desc" ? "-created_at" : "created_at";
-
-    // Filtrar según el tab activo
+  
     if (tabActivo === "pendientes") {
-      filtros.status = "revisando";
+      filtros.status = "por_pagar,revisando";
     } else if (tabActivo === "rechazados") {
       filtros.status = "rechazado";
     } else if (tabActivo === "anulados") {
-      filtros.status = "denegado";
+      filtros.status = "anulado";
     }
-
-    console.log({ filtros, tabActivo });
-
-    // Ejecutar la función fetch adecuada
+    setCurrentPage(1) 
     if (tabActivo === "registrados") {
       fetchColegiados(currentPage, recordsPerPage, searchTerm, filtros);
     } else {
@@ -279,6 +283,9 @@ const allFilters = [
     activeFilters,
     fromDate,
     toDate,
+    edadExacta,
+    edadMin,
+    edadMax,
     tabActivo,
   ]);
 
@@ -348,6 +355,27 @@ const allFilters = [
     }
   };
 
+  const TypoPendiente = {
+    pendientes: colegiadosPendientes,
+    rechazados: recaudosRechazados,
+    anulados: recaudosAnulados
+  };
+
+  const PaginationType = {
+    pendientes: colegiadosPendientesPagination,
+    rechazados: recaudosRechazadosPagination,
+    anulados: recaudosAnuladosPagination,
+    registrados: colegiadosPagination
+  };
+
+  const pendientesFilter = useMemo(() => {
+    return TypoPendiente[tabActivo] || [];
+  }, [TypoPendiente, tabActivo]);
+
+  const paginationFilter = useMemo(() => {
+    return PaginationType[tabActivo] || {};
+  }, [PaginationType, tabActivo]);
+
   // Renderizar vista basada en el estado actual
   if (vistaActual === "detalleColegiado") {
     const colegiadoActual = getColegiado(colegiadoSeleccionadoId);
@@ -405,7 +433,9 @@ const allFilters = [
         tabActivo={tabActivo}
         setTabActivo={handleTabChange}
         setCurrentPage={setCurrentPage}
+        pagination={PaginationType}
       />
+
       {/* Sección de filtros */}
       <div className="mb-2">
         <MultiSelectFilter
@@ -437,14 +467,14 @@ const allFilters = [
         tabActivo={tabActivo}
         loading={loading}
         colegiados={colegiados}
-        colegiadosPendientes={colegiadosPendientes}
+        colegiadosPendientes={pendientesFilter}
         verDetalleColegiado={verDetalleColegiado}
         verDetallePendiente={verDetallePendiente}
         ordenFecha={ordenFecha}
         toggleOrdenFecha={toggleOrdenFecha}
         currentPage={currentPage}
         colegiadosPagination={colegiadosPagination}
-        colegiadosPendientesPagination={colegiadosPendientesPagination}
+        colegiadosPendientesPagination={paginationFilter}
         setCurrentPage={setCurrentPage}
         recordsPerPage={recordsPerPage}
       />
