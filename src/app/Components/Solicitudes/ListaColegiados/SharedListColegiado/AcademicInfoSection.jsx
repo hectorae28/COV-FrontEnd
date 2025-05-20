@@ -1,7 +1,8 @@
+// SharedListColegiado/AcademicInfoSection.jsx
 "use client";
 
-import { Award, Pencil, X, Save } from "lucide-react";
 import { motion } from "framer-motion";
+import { Award, Pencil, Save, X } from "lucide-react";
 
 export default function AcademicInfoSection({
     pendiente,
@@ -11,7 +12,8 @@ export default function AcademicInfoSection({
     setEditandoAcademico,
     updateColegiadoPendiente,
     pendienteId,
-    setCambiosPendientes
+    setCambiosPendientes,
+    readonly = false
 }) {
     // Función para manejar cambios en datos académicos
     const handleDatosAcademicosChange = (e) => {
@@ -27,7 +29,7 @@ export default function AcademicInfoSection({
     const handleGuardarDatosAcademicos = () => {
         // Aquí implementarías la lógica para guardar en el backend/store
         const nuevosDatos = { ...datosAcademicos };
-        if(pendiente.tipo_profesion !== "odontologo"){
+        if (pendiente.tipo_profesion !== "odontologo") {
             delete nuevosDatos.num_registro_principal;
             delete nuevosDatos.fecha_registro_principal;
         }
@@ -49,7 +51,7 @@ export default function AcademicInfoSection({
                     <h2 className="text-lg font-semibold text-gray-900">Información académica y profesional</h2>
                 </div>
 
-                {!editandoAcademico ? (
+                {!editandoAcademico && !readonly ? (
                     <button
                         onClick={() => setEditandoAcademico(true)}
                         className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors"
@@ -57,7 +59,7 @@ export default function AcademicInfoSection({
                         <Pencil size={16} className="mr-1" />
                         Editar
                     </button>
-                ) : (
+                ) : !readonly ? (
                     <div className="flex gap-2">
                         <button
                             onClick={() => {
@@ -88,7 +90,7 @@ export default function AcademicInfoSection({
                             Guardar
                         </button>
                     </div>
-                )}
+                ) : null}
             </div>
 
             {!editandoAcademico ? (
@@ -96,17 +98,17 @@ export default function AcademicInfoSection({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {/* Primera columna */}
 
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.universidad.titulo || "No especificado"}</p>
-                        </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</p>
+                        <p className="font-medium text-gray-800">{datosAcademicos?.universidad?.titulo || datosAcademicos?.universidad || "No especificado"}</p>
+                    </div>
 
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de egreso</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.fecha_egreso_universidad ? new Date(datosAcademicos.fecha_egreso_universidad).toLocaleDateString('es-ES') : "No especificada"}</p>
-                        </div>
-                        {pendiente.tipo_profesion === "odontologo" && (
-                            <>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de egreso</p>
+                        <p className="font-medium text-gray-800">{datosAcademicos?.fecha_egreso_universidad ? new Date(datosAcademicos.fecha_egreso_universidad).toLocaleDateString('es-ES') : "No especificada"}</p>
+                    </div>
+                    {pendiente?.tipo_profesion === "odontologo" && (
+                        <>
                             <div className="bg-gray-50 p-3 rounded-md">
                                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro principal</p>
                                 <p className="font-medium text-gray-800">{datosAcademicos?.num_registro_principal || "No especificado"}</p>
@@ -116,28 +118,28 @@ export default function AcademicInfoSection({
                                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de registro principal</p>
                                 <p className="font-medium text-gray-800">{datosAcademicos?.fecha_registro_principal ? new Date(datosAcademicos.fecha_registro_principal).toLocaleDateString('es-ES') : "No especificado"}</p>
                             </div>
-                            
-                            </>
-                        )}
 
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número MPPS</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.num_mpps || "No especificado"}</p>
-                        </div>
+                        </>
+                    )}
 
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha MPPS</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.fecha_mpps ? new Date(datosAcademicos.fecha_mpps).toLocaleDateString('es-ES') : "No especificada"}</p>
-                        </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número MPPS</p>
+                        <p className="font-medium text-gray-800">{datosAcademicos?.num_mpps || "No especificado"}</p>
+                    </div>
 
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Observaciones</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.observaciones || "Ninguna"}</p>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Instituto de bachillerato</p>
-                            <p className="font-medium text-gray-800">{datosAcademicos?.instituto_bachillerato || "No especificado"}</p>
-                        </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha MPPS</p>
+                        <p className="font-medium text-gray-800">{datosAcademicos?.fecha_mpps ? new Date(datosAcademicos.fecha_mpps).toLocaleDateString('es-ES') : "No especificada"}</p>
+                    </div>
+
+                    <div className="bg-gray-50 p-3 rounded-md">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Observaciones</p>
+                        <p className="font-medium text-gray-800">{datosAcademicos?.observaciones || "Ninguna"}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Instituto de bachillerato</p>
+                        <p className="font-medium text-gray-800">{datosAcademicos?.instituto_bachillerato || "No especificado"}</p>
+                    </div>
 
                 </div>
             ) : (
@@ -148,7 +150,7 @@ export default function AcademicInfoSection({
                         <input
                             type="text"
                             name="universidad"
-                            value={datosAcademicos?.universidad?.titulo || ""}
+                            value={datosAcademicos?.universidad?.titulo || datosAcademicos?.universidad || ""}
                             onChange={handleDatosAcademicosChange}
                             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
                         />
@@ -165,7 +167,7 @@ export default function AcademicInfoSection({
                         />
                     </div>
 
-                    {pendiente.tipo_profesion === "odontologo" && (
+                    {pendiente?.tipo_profesion === "odontologo" && (
                         <>
                             <div>
                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de registro principal</label>
@@ -183,7 +185,7 @@ export default function AcademicInfoSection({
                                 <input
                                     type="date"
                                     name="fecha_registro_principal"
-                                    value={datosAcademicos?.fecha_registro_principal || ""}
+                                    value={datosAcademicos?.fecha_registro_principal ? datosAcademicos.fecha_registro_principal.split('T')[0] : ""}
                                     onChange={handleDatosAcademicosChange}
                                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
                                 />
@@ -222,6 +224,17 @@ export default function AcademicInfoSection({
                             onChange={handleDatosAcademicosChange}
                             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Observaciones</label>
+                        <textarea
+                            name="observaciones"
+                            value={datosAcademicos?.observaciones || ""}
+                            onChange={handleDatosAcademicosChange}
+                            rows={3}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        ></textarea>
                     </div>
                 </div>
             )}

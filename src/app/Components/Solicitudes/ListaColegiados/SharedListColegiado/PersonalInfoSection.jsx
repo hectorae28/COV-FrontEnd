@@ -1,23 +1,26 @@
+// SharedListColegiado/PersonalInfoSection.jsx
 "use client";
 
-import { User, Pencil, X, Save, Clock } from "lucide-react";
-import { motion } from "framer-motion";
 import SessionInfo from "@/Components/SessionInfo";
+import { motion } from "framer-motion";
+import { Clock, Pencil, Save, User, X } from "lucide-react";
 
 export default function PersonalInfoSection({
     props
 }) {
     const {
-      pendiente,
-      datosPersonales,
-      setDatosPersonales,
-      editandoPersonal,
-      setEditandoPersonal,
-      updateData,
-      pendienteId,
-      setCambiosPendientes,
-      isAdmin
+        pendiente,
+        datosPersonales,
+        setDatosPersonales,
+        editandoPersonal,
+        setEditandoPersonal,
+        updateData,
+        pendienteId,
+        setCambiosPendientes,
+        isAdmin,
+        readOnly = false
     } = props;
+
     // Función para manejar cambios en datos personales
     const handleDatosPersonalesChange = (e) => {
         const { name, value } = e.target;
@@ -41,33 +44,40 @@ export default function PersonalInfoSection({
         setCambiosPendientes(true);
     };
 
-    const handleGuardarDatosPersonales = () => {
+    // Helper function to safely get persona data from different structures
+    const getPersona = () => {
+        if (!pendiente) return null;
+        return pendiente.persona || (pendiente.recaudos && pendiente.recaudos.persona) || null;
+    };
 
+    const handleGuardarDatosPersonales = () => {
         const getDifferences = (original, updated) => {
             const differences = {};
-            
+
             Object.keys(updated).forEach(key => {
                 if (
-                    typeof updated[key] === 'object' && 
-                    updated[key] !== null && 
-                    !Array.isArray(updated[key]) && 
-                    original && 
+                    typeof updated[key] === 'object' &&
+                    updated[key] !== null &&
+                    !Array.isArray(updated[key]) &&
+                    original &&
                     original[key]
                 ) {
                     const nestedDiff = getDifferences(original[key], updated[key]);
                     if (Object.keys(nestedDiff).length > 0) {
                         differences[key] = nestedDiff;
                     }
-                } 
-                else if (JSON.stringify(updated[key]) !== JSON.stringify(original[key])) {
+                }
+                else if (JSON.stringify(updated[key]) !== JSON.stringify(original && original[key])) {
                     differences[key] = updated[key];
                 }
             });
-            
+
             return differences;
         };
-        
-        const personaDifferences = getDifferences(pendiente.persona, datosPersonales);
+
+        // Get persona data from appropriate structure
+        const persona = getPersona() || {};
+        const personaDifferences = getDifferences(persona, datosPersonales);
 
         if (Object.keys(personaDifferences).length > 0) {
             const nuevosDatos = { persona: personaDifferences };
@@ -78,8 +88,8 @@ export default function PersonalInfoSection({
     };
 
     // Formatear el nombre completo para mostrar
-    const nombreCompleto = pendiente ?
-        `${pendiente.persona.nombre} ${pendiente.persona.segundo_nombre || ''} ${pendiente.persona.primer_apellido} ${pendiente.persona.segundo_apellido || ''}`.trim()
+    const nombreCompleto = datosPersonales ?
+        `${datosPersonales.nombre || ''} ${datosPersonales.segundo_nombre || ''} ${datosPersonales.primer_apellido || ''} ${datosPersonales.segundo_apellido || ''}`.trim()
         : "";
 
     return (
@@ -89,7 +99,7 @@ export default function PersonalInfoSection({
             transition={{ delay: 0.1 }}
             className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
         >
-            
+
             {/* Información del creador */}
             {pendiente?.creador && (
                 <div className="pt-6 mb-8">
@@ -113,7 +123,7 @@ export default function PersonalInfoSection({
                     <h2 className="text-lg font-semibold text-gray-900">Información personal</h2>
                 </div>
 
-                {!editandoPersonal ? (
+                {!readOnly && !editandoPersonal ? (
                     <button
                         onClick={() => setEditandoPersonal(true)}
                         className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors"
@@ -121,12 +131,12 @@ export default function PersonalInfoSection({
                         <Pencil size={16} className="mr-1" />
                         Editar
                     </button>
-                ) : (
+                ) : readOnly ? null : (
                     <div className="flex gap-2">
                         <button
                             onClick={() => {
                                 // Revertir cambios
-                                setDatosPersonales({ ...pendiente.persona });
+                                setDatosPersonales({ ...getPersona() });
                                 setEditandoPersonal(false);
                                 setCambiosPendientes(false);
                             }}
@@ -201,125 +211,120 @@ export default function PersonalInfoSection({
             ) : (
                 // Formulario de edición de información personal
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Primera columna */}
-                    <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre</label>
+                        <input
+                            type="text"
+                            name="nombre"
+                            value={datosPersonales?.nombre || ""}
+                            onChange={handleDatosPersonalesChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo nombre</label>
+                        <input
+                            type="text"
+                            name="segundo_nombre"
+                            value={datosPersonales?.segundo_nombre || ""}
+                            onChange={handleDatosPersonalesChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer apellido</label>
+                        <input
+                            type="text"
+                            name="primer_apellido"
+                            value={datosPersonales?.primer_apellido || ""}
+                            onChange={handleDatosPersonalesChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo apellido</label>
+                        <input
+                            type="text"
+                            name="segundo_apellido"
+                            value={datosPersonales?.segundo_apellido || ""}
+                            onChange={handleDatosPersonalesChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
                         <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nombre</label>
-                            <input
-                                type="text"
-                                name="nombre"
-                                value={datosPersonales?.nombre || ""}
+                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nacionalidad</label>
+                            <select
+                                name="nacionalidad"
+                                value={datosPersonales?.nacionalidad || "V"}
                                 onChange={handleDatosPersonalesChange}
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                            />
+                            >
+                                <option value="V">V</option>
+                                <option value="E">E</option>
+                            </select>
                         </div>
-
                         <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo nombre</label>
+                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Identificación</label>
                             <input
                                 type="text"
-                                name="segundo_nombre"
-                                value={datosPersonales?.segundo_nombre || ""}
-                                onChange={handleDatosPersonalesChange}
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer apellido</label>
-                            <input
-                                type="text"
-                                name="primer_apellido"
-                                value={datosPersonales?.primer_apellido || ""}
-                                onChange={handleDatosPersonalesChange}
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo apellido</label>
-                            <input
-                                type="text"
-                                name="segundo_apellido"
-                                value={datosPersonales?.segundo_apellido || ""}
-                                onChange={handleDatosPersonalesChange}
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Nacionalidad</label>
-                                <select
-                                    name="nacionalidad"
-                                    value={datosPersonales?.nacionalidad || "V"}
-                                    onChange={handleDatosPersonalesChange}
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                                >
-                                    <option value="V">V</option>
-                                    <option value="E">E</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Identificación</label>
-                                <input
-                                    type="text"
-                                    name="identificacion"
-                                    value={datosPersonales?.identificacion.split("-")[1] || ""}
-                                    onChange={handleDatosPersonalesChange}
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</label>
-                            <input
-                                type="date"
-                                name="fecha_de_nacimiento"
-                                value={datosPersonales?.fecha_de_nacimiento ? datosPersonales.fecha_de_nacimiento.split('T')[0] : ""}
+                                name="identificacion"
+                                value={datosPersonales?.identificacion || ""}
                                 onChange={handleDatosPersonalesChange}
                                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
                             />
                         </div>
                     </div>
 
-                    {/* Segunda columna */}
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</label>
-                            <input
-                                type="email"
-                                name="correo"
-                                disabled={!isAdmin}
-                                value={datosPersonales?.correo || ""}
-                                onChange={handleDatosPersonalesChange}
-                                className={`w-full p-2 border ${ !isAdmin&& "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
-                            />
-                        </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</label>
+                        <input
+                            type="date"
+                            name="fecha_de_nacimiento"
+                            value={datosPersonales?.fecha_de_nacimiento ? datosPersonales.fecha_de_nacimiento.split('T')[0] : ""}
+                            onChange={handleDatosPersonalesChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
 
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono</label>
-                            <input
-                                type="tel"
-                                name="telefono_movil"
-                                value={datosPersonales?.telefono_movil || ""}
-                                onChange={handleDatosPersonalesChange}
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                            />
-                        </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Correo electrónico</label>
+                        <input
+                            type="email"
+                            name="correo"
+                            disabled={!isAdmin}
+                            value={datosPersonales?.correo || ""}
+                            onChange={handleDatosPersonalesChange}
+                            className={`w-full p-2 border ${!isAdmin && "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
+                        />
+                    </div>
 
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección completa</label>
-                            <input
-                                type="text"
-                                name="direccion.completa"
-                                value={datosPersonales?.direccion?.referencia || ""}
-                                onChange={handleDatosPersonalesChange}
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                            />
-                        </div>
-                        {isAdmin && (
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Teléfono</label>
+                        <input
+                            type="tel"
+                            name="telefono_movil"
+                            value={datosPersonales?.telefono_movil || ""}
+                            onChange={handleDatosPersonalesChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Dirección completa</label>
+                        <input
+                            type="text"
+                            name="direccion.completa"
+                            value={datosPersonales?.direccion?.referencia || ""}
+                            onChange={handleDatosPersonalesChange}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                    </div>
+                    {isAdmin && (
                         <div className="grid grid-cols-2 gap-2">
                             <div>
                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Título entregado</label>
@@ -328,7 +333,7 @@ export default function PersonalInfoSection({
                                     disabled={!isAdmin}
                                     value={datosPersonales?.titulo_entregado ? "true" : "false"}
                                     onChange={handleDatosPersonalesChange}
-                                    className={`w-full p-2 border ${ !isAdmin&& "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
+                                    className={`w-full p-2 border ${!isAdmin && "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
                                 >
                                     <option value="false">No entregado</option>
                                     <option value="true">Entregado</option>
@@ -342,12 +347,11 @@ export default function PersonalInfoSection({
                                     disabled={!isAdmin}
                                     value={datosPersonales?.fecha_registro ? datosPersonales.fecha_registro.split('T')[0] : ""}
                                     onChange={handleDatosPersonalesChange}
-                                    className={`w-full p-2 border ${ !isAdmin&& "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
+                                    className={`w-full p-2 border ${!isAdmin && "bg-gray-300"} border-gray-300 rounded-md focus:ring-2 focus:ring-purple-200 focus:border-purple-500`}
                                 />
                             </div>
                         </div>
-                        )}
-                    </div>
+                    )}
                 </div>
             )}
         </motion.div>

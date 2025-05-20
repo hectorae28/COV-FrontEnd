@@ -89,20 +89,22 @@ export default function SeleccionarSolicitudesStep({
                 if (tipoFormateado !== "Constancia") {
                     // Para los demás tipos, pre-agregar al carrito
                     const tipoInfo = tipos_solicitud[tipoFormateado];
-                    const nuevoItem = {
-                        id: `${tipoInfo.codigo}-${Date.now()}`,
-                        tipo: tipoFormateado,
-                        subtipo: null,
-                        nombre: tipoInfo.nombre,
-                        costo: tipoInfo.costo,
-                        exonerado: false,
-                        codigo: tipoInfo.codigo,
-                        documentosRequeridos: tipoInfo.documentosRequeridos.map(
-                            (doc) => doc.displayName
-                        ),
-                    };
-                    setItemsCarrito([nuevoItem]);
-                    actualizarTotal([nuevoItem]);
+                    // Verificamos que tipoInfo y sus propiedades existan antes de usarlas
+                    if (tipoInfo && tipoInfo.codigo && tipoInfo.nombre && tipoInfo.costo) {
+                        const nuevoItem = {
+                            id: `${tipoInfo.codigo}-${Date.now()}`,
+                            tipo: tipoFormateado,
+                            subtipo: null,
+                            nombre: tipoInfo.nombre,
+                            costo: tipoInfo.costo,
+                            exonerado: false,
+                            codigo: tipoInfo.codigo,
+                            documentosRequeridos: tipoInfo.documentosRequeridos ? 
+                                tipoInfo.documentosRequeridos.map(doc => doc.displayName) : []
+                        };
+                        setItemsCarrito([nuevoItem]);
+                        actualizarTotal([nuevoItem]);
+                    }
                 }
             }
         }
@@ -120,27 +122,41 @@ export default function SeleccionarSolicitudesStep({
         } else {
             // Para otros tipos de solicitud
             const tipoInfo = tipos_solicitud[tipo]
+            // Verificar que tipoInfo exista
+            if (!tipoInfo) return;
+            
             const nuevoItem = {
                 id: `${tipoInfo.codigo}-${Date.now()}`,
                 tipo: tipo,
                 subtipo: null,
                 nombre: tipoInfo.nombre,
-                costo: tipoInfo.costo,
+                costo: tipoInfo.costo || { monto: 0 }, // Valor predeterminado para costo
                 exonerado: false,
                 codigo: tipoInfo.codigo,
-                documentosRequeridos: tipoInfo.documentosRequeridos.map(doc => doc.displayName),
+                documentosRequeridos: tipoInfo.documentosRequeridos ? 
+                    tipoInfo.documentosRequeridos.map(doc => doc.displayName) : [],
             }
             setItemsCarrito([...itemsCarrito, nuevoItem])
             actualizarTotal([...itemsCarrito, nuevoItem])
         }
     }
 
-    // Función para actualizar el total del carrito
+    // Función para actualizar el total del carrito con protección contra undefined
     const actualizarTotal = (items) => {
+        if (!items || !Array.isArray(items)) {
+            setTotalCarrito(0);
+            return;
+        }
+        
         const nuevoTotal = items.reduce((sum, item) => {
-            return sum + (item.exonerado ? 0 : item.costo.monto)
-        }, 0)
-        setTotalCarrito(nuevoTotal)
+            // Verificar que item.costo y item.costo.monto existen
+            if (!item || !item.costo || typeof item.costo.monto === 'undefined') {
+                return sum;
+            }
+            return sum + (item.exonerado ? 0 : item.costo.monto);
+        }, 0);
+        
+        setTotalCarrito(nuevoTotal);
     }
 
     // Función para eliminar un item del carrito
@@ -199,6 +215,9 @@ export default function SeleccionarSolicitudesStep({
 
     // Manejar selección de tipos
     const handleSeleccionTipo = (tipo) => {
+        // Verificar que tipos_solicitud existe y contiene el tipo
+        if (!tipos_solicitud || !tipos_solicitud[tipo]) return;
+        
         // Ignorar si es Solvencia
         if (tipo === "Solvencia") {
             return
@@ -233,15 +252,18 @@ export default function SeleccionarSolicitudesStep({
                 setTiposSeleccionados([...tiposSeleccionados, tipo])
                 // Y agregamos automáticamente al carrito
                 const tipoInfo = tipos_solicitud[tipo]
+                // Verificar que tipoInfo y sus propiedades existen
+                if (!tipoInfo) return;
+                
                 const nuevoItem = {
                     id: `${tipoInfo.codigo}`,
                     tipo: tipo,
                     subtipo: null,
-                    nombre: tipoInfo.nombre,
-                    costo: tipoInfo.costo,
+                    nombre: tipoInfo.nombre || "",
+                    costo: tipoInfo.costo || { monto: 0 },
                     exonerado: false,
-                    codigo: tipoInfo.codigo,
-                    documentosRequeridos: [...tipoInfo.documentosRequeridos],
+                    codigo: tipoInfo.codigo || "",
+                    documentosRequeridos: tipoInfo.documentosRequeridos ? [...tipoInfo.documentosRequeridos] : [],
                 }
                 // Actualizar carrito
                 const nuevosItems = [...itemsCarrito, nuevoItem]
@@ -253,6 +275,9 @@ export default function SeleccionarSolicitudesStep({
 
     // Función para manejar la selección de subtipos de constancia
     const handleSeleccionSubtipoConstancia = (subtipo) => {
+        // Verificar que subtipo existe y tiene las propiedades requeridas
+        if (!subtipo || !subtipo.nombre) return;
+        
         // Verificar si ya está seleccionado
         const yaSeleccionado = subtiposConstanciaSeleccionados.includes(subtipo.nombre)
         if (yaSeleccionado) {
@@ -269,13 +294,13 @@ export default function SeleccionarSolicitudesStep({
             setSubtiposConstanciaSeleccionados((prev) => [...prev, subtipo.nombre])
             // Y agregamos al carrito - Constancias no tienen documentos requeridos
             const nuevoItem = {
-                id: `${subtipo.codigo}`,
+                id: `${subtipo.codigo || "constancia"}-${Date.now()}`,
                 tipo: "Constancia",
                 subtipo: subtipo.nombre,
                 nombre: `Constancia: ${subtipo.nombre}`,
-                costo: subtipo.costo,
+                costo: subtipo.costo || { monto: 0 },
                 exonerado: false,
-                codigo: subtipo.codigo,
+                codigo: subtipo.codigo || "constancia",
                 documentosRequeridos: [], // Constancias no tienen documentos requeridos
             }
             const nuevosItems = [...itemsCarrito, nuevoItem]
@@ -313,6 +338,8 @@ export default function SeleccionarSolicitudesStep({
 
     // Seleccionar un colegiado de la lista
     const selectColegiado = (colegiado) => {
+        if (!colegiado) return;
+        
         setFormData((prev) => ({
             ...prev,
             colegiadoId: colegiado.id,
@@ -329,10 +356,10 @@ export default function SeleccionarSolicitudesStep({
     }
 
     // Filtrar colegiados por término de búsqueda
-    const colegiadosFiltrados = colegiados
+    const colegiadosFiltrados = colegiados || []
 
     // Obtener el colegiado seleccionado
-    const colegiadoSeleccionado = colegiadoPreseleccionado || colegiados.find((c) => c.id === formData.colegiadoId)
+    const colegiadoSeleccionado = colegiadoPreseleccionado || colegiados.find((c) => c && c.id === formData.colegiadoId)
 
     // Verificar si todo está exonerado
     const todoExonerado = totalCarrito === 0 && itemsCarrito.length > 0
@@ -345,11 +372,14 @@ export default function SeleccionarSolicitudesStep({
         
         const documentosFaltantes = []
         itemsCarrito.forEach(item => {
+            if (!item || !item.documentosRequeridos) return;
+            
             item.documentosRequeridos.forEach(doc => {
-                const campo = doc.campo
+                // Verificar si doc es un objeto o un string
+                const campo = typeof doc === 'object' ? doc.campo : doc;
                 if (!documentosAdjuntos[campo] || 
                     (documentosAdjuntos[campo] instanceof File && documentosAdjuntos[campo].size === 0)) {
-                    documentosFaltantes.push(doc.displayName)
+                    documentosFaltantes.push(typeof doc === 'object' ? doc.displayName : doc);
                 }
             })
         })
@@ -372,6 +402,8 @@ export default function SeleccionarSolicitudesStep({
         // Crear lista de documentos requeridos única (sin duplicados)
         const todosDocumentosRequeridos = [];
         itemsCarrito.forEach((item) => {
+          if (!item || !item.documentosRequeridos) return;
+          
           item.documentosRequeridos.forEach((doc) => {
             if (!todosDocumentosRequeridos.includes(doc)) {
               todosDocumentosRequeridos.push(doc);
@@ -383,7 +415,12 @@ export default function SeleccionarSolicitudesStep({
         if (itemsCarrito.length > 1) {
           tipoMostrar = `Solicitud múltiple (${itemsCarrito.length} ítems)`;
         } else if (itemsCarrito.length === 1) {
-          tipoMostrar = itemsCarrito[0].nombre;
+          tipoMostrar = itemsCarrito[0]?.nombre || "Solicitud";
+        }
+
+        // Verificar que el colegiado seleccionado existe
+        if (!colegiadoSeleccionado) {
+            throw new Error("No se pudo identificar al colegiado seleccionado");
         }
 
         // Crear objeto de nueva solicitud
@@ -392,8 +429,8 @@ export default function SeleccionarSolicitudesStep({
           tipo: tipoMostrar,
           colegiadoId: formData.colegiadoId,
           colegiadoNombre:
-            colegiadoSeleccionado?.recaudos?.persona?.nombre ||
-            colegiadoSeleccionado?.firstname ||
+            (colegiadoSeleccionado.recaudos?.persona?.nombre) ||
+            colegiadoSeleccionado.firstname ||
             "Colegiado",
           fecha: new Date().toLocaleDateString(),
           estado: todoExonerado ? "Exonerada" : "Pendiente",
@@ -464,11 +501,11 @@ export default function SeleccionarSolicitudesStep({
                       <User size={20} className="text-gray-400 mr-2" />
                       <div>
                         <p className="font-medium">
-                          {colegiadoSeleccionado.recaudos.persona.nombre}
+                          {colegiadoSeleccionado.recaudos?.persona?.nombre || "Nombre no disponible"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {colegiadoSeleccionado.recaudos.persona.identificacion} ·{" "}
-                          COV: {colegiadoSeleccionado.num_cov}
+                          {colegiadoSeleccionado.recaudos?.persona?.identificacion || "ID no disponible"} ·{" "}
+                          COV: {colegiadoSeleccionado.num_cov || "Nº no disponible"}
                         </p>
                       </div>
                     </div>
@@ -508,16 +545,18 @@ export default function SeleccionarSolicitudesStep({
                       </div>
                     ) : (
                       colegiadosFiltrados.map((colegiado) => (
-                        <div
-                          key={colegiado.id}
-                          className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
-                          onClick={() => selectColegiado(colegiado)}
-                        >
-                          <p className="font-medium">{colegiado.recaudos.persona.nombre}</p>
-                          <p className="text-xs text-gray-500">
-                            {colegiado.recaudos.persona.identificacion} · COV: {colegiado.num_cov}
-                          </p>
-                        </div>
+                        colegiado && colegiado.id && (
+                          <div
+                            key={colegiado.id}
+                            className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                            onClick={() => selectColegiado(colegiado)}
+                          >
+                            <p className="font-medium">{colegiado.recaudos?.persona?.nombre || "Nombre no disponible"}</p>
+                            <p className="text-xs text-gray-500">
+                              {colegiado.recaudos?.persona?.identificacion || "ID no disponible"} · COV: {colegiado.num_cov || "Nº no disponible"}
+                            </p>
+                          </div>
+                        )
                       ))
                     )}
                   </div>
@@ -540,7 +579,7 @@ export default function SeleccionarSolicitudesStep({
             )}
               {/* Si no hay tipo preseleccionado o es "multiple", mostrar todos los tipos*/}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                {Object.keys(tipos_solicitud).map((tipo) => (
+                {tipos_solicitud && Object.keys(tipos_solicitud).map((tipo) => (
                   <div
                     key={tipo}
                     className={`
@@ -555,11 +594,11 @@ export default function SeleccionarSolicitudesStep({
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-medium text-gray-800">
-                          {tipos_solicitud[tipo].nombre}
+                          {tipos_solicitud[tipo]?.nombre || tipo}
                         </p>
                         {tipo !== "Constancia" ? (
                           <p className="text-xs text-gray-500">
-                            Costo: ${tipos_solicitud[tipo]?.costo?.monto.toFixed(2)}
+                            Costo: ${tipos_solicitud[tipo]?.costo?.monto?.toFixed(2) || "0.00"}
                           </p>
                         ) : (
                           <p className="text-xs text-gray-500">
@@ -578,38 +617,40 @@ export default function SeleccionarSolicitudesStep({
               </div>
 
             {/* Subtipos de constancia si está seleccionada */}
-            {tiposSeleccionados.includes("Constancia") && (
+            {tiposSeleccionados.includes("Constancia") && tipos_solicitud?.Constancia?.subtipos && (
               <div className="border border-[#C40180] rounded-md p-4 mb-4 bg-purple-50">
                 <h3 className="text-sm font-medium text-gray-800 mb-2">
                   Seleccione los tipos de constancia que necesita:
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {tipos_solicitud.Constancia.subtipos.map((subtipo) => (
-                    <div
-                      key={subtipo.codigo}
-                      className={`
-                                        border rounded p-2 cursor-pointer
-                                        ${
-                                          subtiposConstanciaSeleccionados.includes(
-                                            subtipo.nombre
-                                          )
-                                            ? "border-[#C40180] bg-white"
-                                            : "border-gray-200 hover:border-gray-300"
-                                        }`}
-                      onClick={() => handleSeleccionSubtipoConstancia(subtipo)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="text-sm">{subtipo.nombre}</p>
-                          <p className="text-xs text-gray-500">
-                            ${subtipo.costo.monto.toFixed(2)}
-                          </p>
+                    subtipo && subtipo.codigo && (
+                      <div
+                        key={subtipo.codigo}
+                        className={`
+                                          border rounded p-2 cursor-pointer
+                                          ${
+                                            subtiposConstanciaSeleccionados.includes(
+                                              subtipo.nombre
+                                            )
+                                              ? "border-[#C40180] bg-white"
+                                              : "border-gray-200 hover:border-gray-300"
+                                          }`}
+                        onClick={() => handleSeleccionSubtipoConstancia(subtipo)}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm">{subtipo.nombre}</p>
+                            <p className="text-xs text-gray-500">
+                              ${subtipo.costo?.monto?.toFixed(2) || "0.00"}
+                            </p>
+                          </div>
+                          {subtiposConstanciaSeleccionados.includes(
+                            subtipo.nombre
+                          ) && <Check size={16} className="text-[#C40180]" />}
                         </div>
-                        {subtiposConstanciaSeleccionados.includes(
-                          subtipo.nombre
-                        ) && <Check size={16} className="text-[#C40180]" />}
                       </div>
-                    </div>
+                    )
                   ))}
                 </div>
               </div>
@@ -646,97 +687,103 @@ export default function SeleccionarSolicitudesStep({
                 {/* Lista de items */}
                 <ul className="divide-y">
                   {itemsCarrito.map((item) => (
-                    <li key={item.id} className="p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <div>
-                          <span className="font-medium">{item.nombre}</span>
-                          <span
-                            className={`ml-3 ${
-                              item.exonerado
-                                ? "line-through text-gray-400"
-                                : "text-[#C40180]"
-                            }`}
-                          >
-                            ${item.costo.monto.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {isAdmin && (
-                            <label className="inline-flex items-center cursor-pointer">
-                              <span className="text-xs text-gray-600 mr-2">
-                                Exonerar
-                              </span>
-                              <input
-                                type="checkbox"
-                                className="sr-only peer"
-                                checked={item.exonerado}
-                                onChange={() => toggleExoneracion(item.id)}
-                              />
-                              <div className="relative w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-600"></div>
-                            </label>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => eliminarDelCarrito(item.id)}
-                            className="cursor-pointer text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      {/* Documentos requeridos para este item - Solo mostrar si no es constancia */}
-                      {item.tipo !== "Constancia" &&
-                        item.documentosRequeridos.length > 0 && (
-                          <div className="pl-2 border-l-2 border-gray-200 mt-1">
-                            <p className="text-xs text-gray-500 mb-1">
-                              Documentos requeridos:
-                            </p>
-                            <ul className="space-y-2">
-                              {item.documentosRequeridos.map((doc, index) => (
-                                <li
-                                  key={`${item.id}-${index}`}
-                                  className="flex items-center"
-                                >
-                                  <FileText
-                                    size={14}
-                                    className="text-gray-400 mr-1"
-                                  />
-                                  <span className={`text-xs ${errors?.documentos?.list?.includes(doc.displayName) ? "text-red-500" : ""}`}>{doc.displayName}</span>
-                                  <input
-                                    type="file"
-                                    id={`documento-${item.id}-${index}`}
-                                    onChange={(e) =>
-                                      handleFileChange(e, doc.campo)
-                                    }
-                                    className="hidden"
-                                    accept=".pdf,.jpg,.jpeg,.png"
-                                  />
-                                  <label
-                                    htmlFor={`documento-${item.id}-${index}`}
-                                    className="ml-2 text-xs text-blue-600 cursor-pointer hover:underline"
-                                  >
-                                    {documentosAdjuntos[`${doc.campo}`] ? (
-                                      <span className="text-green-600 flex items-center">
-                                        <FileCheck size={14} className="mr-1" />
-                                        {documentosAdjuntos[`${doc.campo}`]
-                                          .name.length > 15
-                                          ? documentosAdjuntos[
-                                              `${doc.campo}`
-                                            ].name.substring(0, 15) + "..."
-                                          : documentosAdjuntos[
-                                              `${doc.campo}`
-                                            ].name}
-                                      </span>
-                                    ) : (
-                                      "Adjuntar"
-                                    )}
-                                  </label>
-                                </li>
-                              ))}
-                            </ul>
+                    item && item.id && (
+                      <li key={item.id} className="p-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <div>
+                            <span className="font-medium">{item.nombre || "Sin nombre"}</span>
+                            <span
+                              className={`ml-3 ${
+                                item.exonerado
+                                  ? "line-through text-gray-400"
+                                  : "text-[#C40180]"
+                              }`}
+                            >
+                              ${item.costo?.monto?.toFixed(2) || "0.00"}
+                            </span>
                           </div>
-                        )}
-                    </li>
+                          <div className="flex items-center gap-3">
+                            {isAdmin && (
+                              <label className="inline-flex items-center cursor-pointer">
+                                <span className="text-xs text-gray-600 mr-2">
+                                  Exonerar
+                                </span>
+                                <input
+                                  type="checkbox"
+                                  className="sr-only peer"
+                                  checked={item.exonerado}
+                                  onChange={() => toggleExoneracion(item.id)}
+                                />
+                                <div className="relative w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-600"></div>
+                              </label>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => eliminarDelCarrito(item.id)}
+                              className="cursor-pointer text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        {/* Documentos requeridos para este item - Solo mostrar si no es constancia */}
+                        {item.tipo !== "Constancia" &&
+                          item.documentosRequeridos &&
+                          item.documentosRequeridos.length > 0 && (
+                            <div className="pl-2 border-l-2 border-gray-200 mt-1">
+                              <p className="text-xs text-gray-500 mb-1">
+                                Documentos requeridos:
+                              </p>
+                              <ul className="space-y-2">
+                                {item.documentosRequeridos.map((doc, index) => {
+                                  // Manejar tanto el caso donde doc es un objeto como donde es un string
+                                  const displayName = typeof doc === 'object' ? doc.displayName : doc;
+                                  const campo = typeof doc === 'object' ? doc.campo : doc;
+                                  
+                                  return (
+                                    <li
+                                      key={`${item.id}-${index}`}
+                                      className="flex items-center"
+                                    >
+                                      <FileText
+                                        size={14}
+                                        className="text-gray-400 mr-1"
+                                      />
+                                      <span className={`text-xs ${errors?.documentos?.list?.includes(displayName) ? "text-red-500" : ""}`}>
+                                        {displayName}
+                                      </span>
+                                      <input
+                                        type="file"
+                                        id={`documento-${item.id}-${index}`}
+                                        onChange={(e) =>
+                                          handleFileChange(e, campo)
+                                        }
+                                        className="hidden"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                      />
+                                      <label
+                                        htmlFor={`documento-${item.id}-${index}`}
+                                        className="ml-2 text-xs text-blue-600 cursor-pointer hover:underline"
+                                      >
+                                        {documentosAdjuntos[campo] ? (
+                                          <span className="text-green-600 flex items-center">
+                                            <FileCheck size={14} className="mr-1" />
+                                            {documentosAdjuntos[campo].name.length > 15
+                                              ? documentosAdjuntos[campo].name.substring(0, 15) + "..."
+                                              : documentosAdjuntos[campo].name}
+                                          </span>
+                                        ) : (
+                                          "Adjuntar"
+                                        )}
+                                      </label>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
+                      </li>
+                    )
                   ))}
                 </ul>
                 {/* Acciones del carrito */}

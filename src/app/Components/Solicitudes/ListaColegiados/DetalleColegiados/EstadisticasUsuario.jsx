@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
-import { Activity, Clock, ArrowUp, ArrowDown } from "lucide-react"
+import { Activity, ArrowDown, ArrowUp, Clock } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 /**
  * Componente para mostrar estadísticas y gráficos de un colegiado
@@ -21,7 +21,7 @@ export default function EstadisticasUsuario({ colegiado }) {
       try {
         // Simulamos la carga con un retardo
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         // Datos simulados para el gráfico de asistencia
         setDatosAsistencia([
           { mes: 'Ene', eventos: 1, promedio: 0.8 },
@@ -31,7 +31,7 @@ export default function EstadisticasUsuario({ colegiado }) {
           { mes: 'May', eventos: 0, promedio: 1.1 },
           { mes: 'Jun', eventos: 1, promedio: 0.7 }
         ])
-        
+
         // Datos simulados para el gráfico de pagos
         setDatosPagos([
           { name: 'Cuotas anuales', value: 120 },
@@ -39,7 +39,7 @@ export default function EstadisticasUsuario({ colegiado }) {
           { name: 'Trámites', value: 50 },
           { name: 'Otros', value: 20 }
         ])
-        
+
         // Estadísticas generales
         setEstadisticasGenerales([
           {
@@ -71,14 +71,14 @@ export default function EstadisticasUsuario({ colegiado }) {
             color: colegiado.solvente ? "green" : "red"
           }
         ])
-        
+
         setIsLoading(false)
       } catch (error) {
         console.error("Error al cargar datos estadísticos:", error)
         setIsLoading(false)
       }
     }
-    
+
     cargarDatos()
   }, [colegiado])
 
@@ -91,7 +91,7 @@ export default function EstadisticasUsuario({ colegiado }) {
         <h3 className="text-lg font-medium text-gray-900">Estadísticas del colegiado</h3>
         <p className="text-sm text-gray-500 mt-1">Actividad y comportamiento dentro del sistema</p>
       </div>
-      
+
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
@@ -115,7 +115,7 @@ export default function EstadisticasUsuario({ colegiado }) {
               </div>
             ))}
           </div>
-          
+
           {/* Gráficos */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Gráfico de asistencia a eventos */}
@@ -138,7 +138,7 @@ export default function EstadisticasUsuario({ colegiado }) {
                 </ResponsiveContainer>
               </div>
             </div>
-            
+
             {/* Gráfico de distribución de pagos */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <h4 className="text-base font-medium text-gray-900 mb-4">Distribución de pagos (USD)</h4>
@@ -166,24 +166,24 @@ export default function EstadisticasUsuario({ colegiado }) {
               </div>
             </div>
           </div>
-          
+
           {/* Sección informativa */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex flex-col sm:flex-row items-start gap-4">
               <div className="p-3 bg-purple-100 rounded-full">
                 <Clock className="h-6 w-6 text-purple-600" />
               </div>
-              
+
               <div>
                 <h4 className="text-base font-medium text-gray-900 mb-1">Análisis de actividad</h4>
                 <p className="text-sm text-gray-500">
-                  {colegiado.nombre} muestra un nivel de participación {colegiado.estadisticas?.asistenciaEventos > 3 ? 'por encima del promedio' : 'normal'} en eventos del COV. 
+                  {colegiado.nombre} muestra un nivel de participación {colegiado.estadisticas?.asistenciaEventos > 3 ? 'por encima del promedio' : 'normal'} en eventos del COV.
                   En los últimos 6 meses, ha asistido a {colegiado.estadisticas?.asistenciaEventos || "5"} eventos y ha realizado {colegiado.estadisticas?.solicitudesMes || "2"} solicitudes.
-                  {colegiado.solvente 
+                  {colegiado.solvente
                     ? ' Mantiene un excelente historial de pagos y está al día con todas sus obligaciones.'
                     : ' Presenta algunas obligaciones pendientes de pago que deben ser regularizadas.'}
                 </p>
-                
+
                 <div className="mt-4 bg-blue-50 text-blue-800 p-3 rounded-md text-sm">
                   <p className="font-medium">Recomendaciones</p>
                   <ul className="mt-1 list-disc pl-5 space-y-1">
