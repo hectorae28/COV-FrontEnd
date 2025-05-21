@@ -35,27 +35,30 @@ export default function DashboardEventos() {
   const [currentFormItem, setCurrentFormItem] = useState(null);
 
   useEffect(() => {
-  const currentData = tabIndex === 0 ? eventos : cursos;
-  if (searchTerm) {
-    setFilteredData(
-      currentData.filter(item =>
-        item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.location?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  } else {
-    setFilteredData(currentData);
-    
-    // Auto-select first item for preview without opening edit form
-    if (currentData.length > 0 && !editingId && !isCreating) {
-      // Just update formValues without setting editingId
-      setFormValues({
-        ...initialValues,
-        ...currentData[0]
-      });
+    const currentData = tabIndex === 0 ? eventos : cursos;
+    if (searchTerm) {
+      setFilteredData(
+        currentData.filter(item =>
+          item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.location?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredData(currentData);
+
+      // Auto-select first item for preview without opening edit form
+      if (currentData.length > 0 && !editingId && !isCreating && !currentFormItem) {
+        setFormValues(prev => {
+          // Evita sobrescribir si el form actual tiene datos válidos
+          if (prev.id === currentData[0].id) return prev;
+          return {
+            ...initialValues,
+            ...currentData[0]
+          };
+        });
+      }
     }
-  }
-}, [searchTerm, tabIndex, eventos, cursos, editingId, isCreating]);
+  }, [searchTerm, tabIndex, eventos, cursos, editingId, isCreating]);
 
   const handleAdd = () => {
     // Reset any current editing
