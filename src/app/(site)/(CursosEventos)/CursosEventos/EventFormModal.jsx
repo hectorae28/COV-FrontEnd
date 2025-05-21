@@ -57,7 +57,7 @@ export default function EventFormModal({ isOpen, onClose, event }) {
                     />
 
                     {/* Capa negra con blur encima de la imagen */}
-                    <div className="fixed inset-0 z-10 bg-black/40 backdrop-blur-sm" />
+                    <div className="fixed inset-0 z-10 bg-black/40 backdrop-blur-md" />
 
                     {/* Modal principal con sombra blanca */}
                     <motion.div
