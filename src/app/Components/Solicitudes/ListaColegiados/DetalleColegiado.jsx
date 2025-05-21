@@ -1,6 +1,7 @@
 "use client";
 
 import useDataListaColegiados from "@/store/ListaColegiadosData";
+import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle, ChevronLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -25,6 +26,9 @@ import UserProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedList
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal";
 import DetalleSolicitud from "@/Components/Solicitudes/Solicitudes/DetalleSolicitud";
 
+// Importar componente de formulario de registro para documentos
+import DocsRequirements from "@/app/(Registro)/DocsRequirements";
+
 export default function DetalleColegiado({
   params,
   onVolver,
@@ -44,6 +48,7 @@ export default function DetalleColegiado({
   const [confirmarTitulo, setConfirmarTitulo] = useState(false);
   const [documentos, setDocumentos] = useState([]);
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null);
+  const [documentoParaEditar, setDocumentoParaEditar] = useState(null);
   const [refreshSolicitudes, setRefreshSolicitudes] = useState(0);
   const [solicitudItem, setSolicitudItem] = useState(null);
   const [cambiosPendientes, setCambiosPendientes] = useState(false);
@@ -71,6 +76,11 @@ export default function DetalleColegiado({
     tipo_institucion: ""
   });
   const [agregarInstitucion, setAgregarInstitucion] = useState(false);
+
+  // Estado para manejar la edición de documentos usando el formulario de registro
+  const [editandoDocumentos, setEditandoDocumentos] = useState(false);
+  const [docsFormData, setDocsFormData] = useState({});
+  const [docsValidationErrors, setDocsValidationErrors] = useState({});
 
   // Obtenemos funciones del store centralizado
   const {
@@ -284,6 +294,11 @@ export default function DetalleColegiado({
     setDocumentoSeleccionado(null);
   };
 
+  // Nuevo manejador para editar documento
+  const handleEditarDocumento = (documento) => {
+    setDocumentoParaEditar(documento);
+  };
+
   // Función para registrar nueva solicitud
   const handleNuevaSolicitud = (nuevaSolicitud) => {
     console.log(nuevaSolicitud);
@@ -307,6 +322,80 @@ export default function DetalleColegiado({
         });
     }
   }, [vistaActual, solicitudSeleccionadaId, colegiadoId]);
+
+  // Función para editar documentos
+  const handleEditarDocumentos = () => {
+    // Preparar la data para el formulario de documentos
+    const formDataDocs = {
+      tipo_profesion: colegiado?.tipo_profesion || 'odontologo',
+      ci: null,
+      rif: null,
+      titulo: null,
+      mpps: null,
+      fondo_negro_titulo_bachiller: null,
+      fondo_negro_credencial: null,
+      notas_curso: null
+    };
+
+    // Actualizamos el estado
+    setDocsFormData(formDataDocs);
+    setEditandoDocumentos(true);
+  };
+
+  // Función para manejar cambios en el formulario de documentos
+  const handleDocsInputChange = (changes) => {
+    setDocsFormData(prev => ({
+      ...prev,
+      ...changes
+    }));
+    setCambiosPendientes(true);
+  };
+
+  // Función para guardar cambios en documentos
+  const handleSaveDocsChanges = (e) => {
+    // Prevenir el comportamiento por defecto que podría recargar la página
+    if (e) e.preventDefault();
+    
+    // Validar archivos requeridos
+    const requiredDocs = ['ci', 'rif', 'titulo', 'mpps'];
+    
+    // Añadir documentos específicos para técnicos e higienistas
+    if (colegiado.tipo_profesion === "tecnico" || colegiado.tipo_profesion === "higienista") {
+      requiredDocs.push('fondo_negro_titulo_bachiller', 'fondo_negro_credencial', 'notas_curso');
+    }
+
+    // Crear objeto para la validación
+    const validationErrors = {};
+    let hasExistingDocs = false;
+
+    // Verificar si ya hay documentos existentes
+    documentos.forEach(doc => {
+      if (doc.url) {
+        hasExistingDocs = true;
+      }
+    });
+
+    // Si hay documentos existentes, no es necesario validar estrictamente
+    if (!hasExistingDocs) {
+      // Validar campos requeridos
+      requiredDocs.forEach(field => {
+        if (!docsFormData[field]) {
+          validationErrors[field] = true;
+        }
+      });
+
+      if (Object.keys(validationErrors).length > 0) {
+        setDocsValidationErrors(validationErrors);
+        return;
+      }
+    }
+
+    // Aquí solo guardamos localmente, no enviamos al servidor todavía
+    setCambiosPendientes(true);
+    
+    // Cerrar el modal de edición
+    setEditandoDocumentos(false);
+  };
 
   // Renderizados condicionales para diferentes vistas
   if (vistaActual === "solicitudDetalle" && solicitudSeleccionadaId) {
@@ -618,10 +707,11 @@ export default function DetalleColegiado({
             <DocumentSection
               documentos={documentos}
               onViewDocument={handleVerDocumento}
-              onUpdateDocument={updateDocumento}
+              updateDocumento={updateDocumento}
               onDocumentStatusChange={handleDocumentStatusChange}
               title="Documentos"
               subtitle="Documentación del colegiado"
+              onEditSection={handleEditarDocumentos}
             />
           )}
 
@@ -669,6 +759,56 @@ export default function DetalleColegiado({
             },
           }}
         />
+      )}
+
+      {/* Modal para editar documentos */}
+      {editandoDocumentos && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-lg shadow-xl w-full max-w-4xl my-8"
+          >
+            <div className="flex justify-between items-center p-4 border-b">
+              <div className="flex items-center">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Editar documentos
+                </h3>
+              </div>
+              <button
+                onClick={() => setEditandoDocumentos(false)}
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <DocsRequirements
+                formData={docsFormData}
+                onInputChange={handleDocsInputChange}
+                validationErrors={docsValidationErrors}
+                attemptedNext={Object.keys(docsValidationErrors).length > 0}
+                isEditMode={true}
+              />
+
+              <div className="flex justify-end gap-3 mt-6 border-t pt-4">
+                <button
+                  onClick={() => setEditandoDocumentos(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveDocsChanges}
+                  className="px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors"
+                >
+                  Guardar cambios
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );

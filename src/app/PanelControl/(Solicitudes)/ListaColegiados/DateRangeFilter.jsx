@@ -1,5 +1,5 @@
-import { Calendar, ChevronDown, X } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Calendar, ChevronDown } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function DateRangeFilter({
     fromDate,
@@ -48,7 +48,7 @@ export default function DateRangeFilter({
             {/* Always keep the button white/neutral */}
             <div className="flex items-center gap-2 px-4 py-2 rounded-lg border shadow-sm cursor-pointer bg-white text-gray-700 border-gray-300 hover:bg-gray-50">
                 {/* Botón principal para abrir el selector */}
-                <div 
+                <div
                     onClick={() => setIsOpen(!isOpen)}
                     className="flex items-center gap-2 flex-grow cursor-pointer"
                 >

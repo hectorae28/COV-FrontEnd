@@ -3,7 +3,7 @@
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import useDataListaColegiados from "@/store/ListaColegiadosData";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import PagosColg from "@/app/Components/PagosModal";
@@ -23,6 +23,9 @@ import {
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ModalSystem";
 import StatusAlerts from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/NotificationSystem";
 import ProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/UserProfileCard";
+
+// Importar componente de formulario de registro para documentos
+import DocsRequirements from "@/app/(Registro)/DocsRequirements";
 
 export default function DetallePendiente({ params, onVolver, isAdmin = false, recaudos = null, handleForward = null }) {
   const [metodoPago, setMetodoPago] = useState([]);
@@ -95,6 +98,13 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
     num_cov: "",
   });
   const [pasoModal, setPasoModal] = useState(1);
+
+  const [documentoParaEditar, setDocumentoParaEditar] = useState(null);
+
+  // Estado para manejar la edición de documentos usando el formulario de registro
+  const [editandoDocumentos, setEditandoDocumentos] = useState(false);
+  const [docsFormData, setDocsFormData] = useState({});
+  const [docsValidationErrors, setDocsValidationErrors] = useState({});
 
   const documentosMetadata = {
     fondo_negro_credencial: {
@@ -448,6 +458,78 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
 
   const handleCerrarVistaDocumento = () => {
     setDocumentoSeleccionado(null);
+  };
+
+  // Nuevo manejador para editar documento
+  const handleEditarDocumento = (documento) => {
+    setDocumentoParaEditar(documento);
+  };
+
+  // Función para editar documentos
+  const handleEditarDocumentos = () => {
+    // Preparar la data para el formulario de documentos
+    const formDataDocs = {
+      tipo_profesion: pendiente?.tipo_profesion || 'odontologo',
+      ci: null,
+      rif: null,
+      titulo: null,
+      mpps: null,
+      fondo_negro_titulo_bachiller: null,
+      fondo_negro_credencial: null,
+      notas_curso: null
+    };
+
+    // Actualizamos el estado
+    setDocsFormData(formDataDocs);
+    setEditandoDocumentos(true);
+  };
+
+  // Función para manejar cambios en el formulario de documentos
+  const handleDocsInputChange = (changes) => {
+    setDocsFormData(prev => ({
+      ...prev,
+      ...changes
+    }));
+    setCambiosPendientes(true);
+  };
+
+  // Función para guardar cambios en documentos
+  const handleSaveDocsChanges = (e) => {
+    // Prevenir el comportamiento por defecto que podría recargar la página
+    if (e) e.preventDefault();
+    
+    // Validar archivos requeridos
+    const requiredDocs = ['ci', 'rif', 'titulo', 'mpps'];
+    
+    // Añadir documentos específicos para técnicos e higienistas
+    if (pendiente.tipo_profesion === "tecnico" || pendiente.tipo_profesion === "higienista") {
+      requiredDocs.push('fondo_negro_titulo_bachiller', 'fondo_negro_credencial', 'notas_curso');
+    }
+
+    // Crear objeto para la validación
+    const validationErrors = {};
+    let isValid = true;
+
+    // Validar campos requeridos solo si no tienen documentos previos
+    requiredDocs.forEach(field => {
+      const fieldUrlKey = `${field}_url`;
+      // Solo validar si no hay un archivo previo ya cargado
+      if (!pendiente[fieldUrlKey] && !docsFormData[field]) {
+        validationErrors[field] = true;
+        isValid = false;
+      }
+    });
+
+    if (!isValid) {
+      setDocsValidationErrors(validationErrors);
+      return;
+    }
+
+    // Aquí solo guardamos localmente, no enviamos al servidor todavía
+    setCambiosPendientes(true);
+    
+    // Cerrar el modal
+    setEditandoDocumentos(false);
   };
 
   // Función para manejar aprobación
@@ -807,6 +889,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         title="Documentos requeridos"
         subtitle="Documentación obligatoria del solicitante"
         recaudosId={pendienteId}
+        onEditSection={handleEditarDocumentos}
       />
 
       {!isAdmin && pendiente.pago == null && pagosPendientes && (
