@@ -2,7 +2,6 @@ import { UniversidadData, capitalizarPalabras, estados } from "@/Shared/Universi
 import { motion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
-import useFormValidation from "@/utils/useFormValidation";
 
 export default function InfoColegiado({
   formData,
@@ -18,14 +17,6 @@ export default function InfoColegiado({
   const [otraUniversidad, setOtraUniversidad] = useState(false);
   const [nombreUniversidad, setNombreUniversidad] = useState("");
   const [acronimoUniversidad, setAcronimoUniversidad] = useState("");
-
-  // Usar el hook de validación con paso 'collegueInfo'
-  const {
-    values,
-    errors: localErrors,
-    handleChange: handleValidatedChange,
-    setValues
-  } = useFormValidation(formData, 'collegueInfo');
 
   // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
@@ -85,13 +76,11 @@ export default function InfoColegiado({
   // Actualizar el estado local cuando cambian las props
   useEffect(() => {
     setLocalFormData(formData);
-    setValues(formData);
-  }, [formData, setValues]);
+  }, [formData]);
 
   // Manejador general para campos que no requieren formato especial
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
@@ -100,8 +89,6 @@ export default function InfoColegiado({
     } else {
       onInputChange({ [name]: value });
     }
-    
-    handleValidatedChange({ [name]: value });
   };
 
   // Actualizar las universidades disponibles cuando se selecciona un estado
@@ -141,8 +128,6 @@ export default function InfoColegiado({
     } else {
       onInputChange({ graduateInstitute: formattedValue });
     }
-    
-    handleValidatedChange({ graduateInstitute: formattedValue });
   };
 
   // Manejar el cambio de estado
@@ -152,28 +137,27 @@ export default function InfoColegiado({
     setOtraUniversidad(false);
 
     // Actualizar el formData
-    const updates = {
-      universityState: nuevoEstado,
-      universityTitle: "", // Resetear la universidad seleccionada
-      isCustomUniversity: false,
-      customUniversityName: "",
-      customUniversityAcronym: ""
-    };
-    
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
-        ...updates
+        universityState: nuevoEstado,
+        universityTitle: "", // Resetear la universidad seleccionada
+        isCustomUniversity: false,
+        customUniversityName: "",
+        customUniversityAcronym: ""
       }));
     } else {
-      onInputChange(updates);
+      onInputChange({
+        universityState: nuevoEstado,
+        universityTitle: "", // Resetear la universidad seleccionada
+        isCustomUniversity: false,
+        customUniversityName: "",
+        customUniversityAcronym: ""
+      });
     }
-    
-    handleValidatedChange(updates);
   };
 
   // Manejar el cambio de universidad
- // Manejar el cambio de universidad
   const handleUniversidadChange = (e) => {
     const value = e.target.value;
 
@@ -183,47 +167,45 @@ export default function InfoColegiado({
       setAcronimoUniversidad("");
 
       // Actualizar el formData
-      const updates = {
-        universityTitle: "",
-        isCustomUniversity: true,
-        customUniversityName: "",
-        customUniversityAcronym: ""
-      };
-      
       if (isEditMode) {
         setLocalFormData(prev => ({
           ...prev,
-          ...updates
+          universityTitle: "",
+          isCustomUniversity: true,
+          customUniversityName: "",
+          customUniversityAcronym: ""
         }));
       } else {
-        onInputChange(updates);
+        onInputChange({
+          universityTitle: "",
+          isCustomUniversity: true,
+          customUniversityName: "",
+          customUniversityAcronym: ""
+        });
       }
-      
-      handleValidatedChange(updates);
     } else {
       setOtraUniversidad(false);
 
       // Buscar la universidad seleccionada para obtener el acrónimo
       const universidadSeleccionada = universidadesDisponibles.find(u => u.nombre === value);
-      
+
       // Actualizar el formData
-      const updates = {
-        universityTitle: value,
-        isCustomUniversity: false,
-        customUniversityName: "",
-        customUniversityAcronym: universidadSeleccionada ? universidadSeleccionada.acronimo : ""
-      };
-      
       if (isEditMode) {
         setLocalFormData(prev => ({
           ...prev,
-          ...updates
+          universityTitle: value,
+          isCustomUniversity: false,
+          customUniversityName: "",
+          customUniversityAcronym: universidadSeleccionada ? universidadSeleccionada.acronimo : ""
         }));
       } else {
-        onInputChange(updates);
+        onInputChange({
+          universityTitle: value,
+          isCustomUniversity: false,
+          customUniversityName: "",
+          customUniversityAcronym: universidadSeleccionada ? universidadSeleccionada.acronimo : ""
+        });
       }
-      
-      handleValidatedChange(updates);
     }
   };
 
@@ -234,21 +216,18 @@ export default function InfoColegiado({
     setNombreUniversidad(formattedValue);
 
     // Actualizar el formData
-    const updates = {
-      customUniversityName: formattedValue,
-      universityTitle: formattedValue
-    };
-    
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
-        ...updates
+        customUniversityName: formattedValue,
+        universityTitle: formattedValue
       }));
     } else {
-      onInputChange(updates);
+      onInputChange({
+        customUniversityName: formattedValue,
+        universityTitle: formattedValue
+      });
     }
-    
-    handleValidatedChange(updates);
   };
 
   // Manejar el ingreso de acrónimo personalizado
@@ -257,18 +236,14 @@ export default function InfoColegiado({
     setAcronimoUniversidad(value);
 
     // Actualizar el formData
-    const updates = { customUniversityAcronym: value };
-    
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
-        ...updates
+        customUniversityAcronym: value
       }));
     } else {
-      onInputChange(updates);
+      onInputChange({ customUniversityAcronym: value });
     }
-    
-    handleValidatedChange(updates);
   };
 
   // Manejar el cambio en campo numérico (solo números permitidos)
@@ -285,8 +260,6 @@ export default function InfoColegiado({
     } else {
       onInputChange({ [name]: numericValue });
     }
-    
-    handleValidatedChange({ [name]: numericValue });
   };
 
   // Para manejar cambios en los selectores de fecha MPPS
@@ -306,8 +279,6 @@ export default function InfoColegiado({
       } else {
         onInputChange({ mppsRegistrationDate: fullDate });
       }
-      
-      handleValidatedChange({ mppsRegistrationDate: fullDate });
     }
   };
 
@@ -328,8 +299,6 @@ export default function InfoColegiado({
       } else {
         onInputChange({ titleIssuanceDate: fullDate });
       }
-      
-      handleValidatedChange({ titleIssuanceDate: fullDate });
     }
   };
 
@@ -350,14 +319,12 @@ export default function InfoColegiado({
       } else {
         onInputChange({ mainRegistrationDate: fullDate });
       }
-      
-      handleValidatedChange({ mainRegistrationDate: fullDate });
     }
   };
 
   // Checks if a field has validation errors to display the required message
   const isFieldEmpty = (fieldName) => {
-    return (validationErrors && validationErrors[fieldName]) || (localErrors && localErrors[fieldName]);
+    return validationErrors && validationErrors[fieldName];
   };
 
   const handleSaveClick = () => {
@@ -421,7 +388,7 @@ export default function InfoColegiado({
           )}
         </div>
         {isFieldEmpty("tipo_profesion") && !isProfileEdit && (
-          <p className="mt-1 text-xs text-red-500">{localErrors.tipo_profesion || "Este campo es obligatorio"}</p>
+          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
         )}
       </div>
 
@@ -441,7 +408,7 @@ export default function InfoColegiado({
           placeholder="Nombre del instituto de graduación"
         />
         {isFieldEmpty("graduateInstitute") && (
-          <p className="mt-1 text-xs text-red-500">{localErrors.graduateInstitute || "Este campo es obligatorio"}</p>
+          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
         )}
       </div>
 
@@ -486,7 +453,7 @@ export default function InfoColegiado({
               </div>
             </div>
             {isFieldEmpty("universityState") && (
-              <p className="mt-1 text-xs text-red-500">{localErrors.universityState || "Debe seleccionar un estado"}</p>
+              <p className="mt-1 text-xs text-red-500">Debe seleccionar un estado</p>
             )}
           </div>
 
@@ -525,7 +492,7 @@ export default function InfoColegiado({
               </div>
             </div>
             {isFieldEmpty("universityTitle") && selectedEstado && (
-              <p className="mt-1 text-xs text-red-500">{localErrors.universityTitle || "Debe seleccionar una universidad"}</p>
+              <p className="mt-1 text-xs text-red-500">Debe seleccionar una universidad</p>
             )}
           </div>
         </div>
@@ -550,7 +517,7 @@ export default function InfoColegiado({
                 placeholder="Nombre completo de la universidad"
               />
               {isFieldEmpty("customUniversityName") && (
-                <p className="mt-1 text-xs text-red-500">{localErrors.customUniversityName || "Debe ingresar el nombre de la universidad"}</p>
+                <p className="mt-1 text-xs text-red-500">Debe ingresar el nombre de la universidad</p>
               )}
             </div>
 
@@ -569,7 +536,7 @@ export default function InfoColegiado({
                 placeholder="Ejemplo: UCV, USB, LUZ"
               />
               {isFieldEmpty("customUniversityAcronym") && (
-                <p className="mt-1 text-xs text-red-500">{localErrors.customUniversityAcronym || "Debe ingresar el acrónimo de la universidad"}</p>
+                <p className="mt-1 text-xs text-red-500">Debe ingresar el acrónimo de la universidad</p>
               )}
             </div>
           </div>
@@ -612,7 +579,7 @@ export default function InfoColegiado({
               <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
             )}
             {isFieldEmpty("mainRegistrationNumber") && !isProfileEdit && (
-              <p className="mt-1 text-xs text-red-500">{localErrors.mainRegistrationNumber || "Este campo es obligatorio"}</p>
+              <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
             )}
           </div>
           <div>
@@ -702,7 +669,7 @@ export default function InfoColegiado({
               <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
             )}
             {isFieldEmpty("mainRegistrationDate") && !isProfileEdit && (
-              <p className="mt-1 text-xs text-red-500">{localErrors.mainRegistrationDate || "Este campo es obligatorio"}</p>
+              <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
             )}
           </div>
         </div>
@@ -743,7 +710,7 @@ export default function InfoColegiado({
             <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
           )}
           {isFieldEmpty("mppsRegistrationNumber") && !isProfileEdit && (
-            <p className="mt-1 text-xs text-red-500">{localErrors.mppsRegistrationNumber || "Este campo es obligatorio"}</p>
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
         <div>
@@ -798,7 +765,7 @@ export default function InfoColegiado({
                       </option>
                     ))}
                   </select>
-                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                       <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                     </svg>
@@ -833,7 +800,7 @@ export default function InfoColegiado({
             <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
           )}
           {isFieldEmpty("mppsRegistrationDate") && !isProfileEdit && (
-            <p className="mt-1 text-xs text-red-500">{localErrors.mppsRegistrationDate || "Este campo es obligatorio"}</p>
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
       </div>
@@ -920,7 +887,7 @@ export default function InfoColegiado({
         </div>
       </div>
       {isFieldEmpty("titleIssuanceDate") && (
-        <p className="mt-1 text-xs text-red-500">{localErrors.titleIssuanceDate || "Este campo es obligatorio"}</p>
+        <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
       )}
 
       {/* Warning message that appears when date field is focused */}

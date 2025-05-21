@@ -1,20 +1,14 @@
 "use client";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import useFormValidation from "@/utils/useFormValidation";
-import { formatters, validators } from "@/utils/validation";
 
 export default function InfoPersonal({ formData, onInputChange, validationErrors, isProfileEdit, isEditMode = false, onSave }) {
+  const [age, setAge] = useState("");
+  const [isFormValid, setIsFormValid] = useState(false);
   const [isAdult, setIsAdult] = useState(true);
+  const [identityCardError, setIdentityCardError] = useState("");
+  const [passportError, setPassportError] = useState("");
   const [days, setDays] = useState([]);
-
-  // Usar el hook de validación con paso 'personalInfo'
-  const {
-    values,
-    errors: localErrors,
-    handleChange: handleValidatedChange,
-    setValues
-  } = useFormValidation(formData, 'personalInfo');
 
   // Constantes para los meses en español
   const months = [
@@ -49,6 +43,22 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
   // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
 
+  // Función para capitalizar texto (primera letra después de espacio)
+  const capitalizeText = (text) => {
+    if (!text) return "";
+    return text
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  // Función para validar caracteres en nombres y apellidos
+  const validateNameChars = (value) => {
+    // Usamos una expresión regular más permisiva que acepte letras, apóstrofes y espacios
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ'\s]+$/;
+    return regex.test(value);
+  };
+
   // Actualizar días según el mes y año seleccionados
   useEffect(() => {
     if (birthDateParts.month && birthDateParts.year) {
@@ -72,98 +82,85 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     }
   }, [birthDateParts.month, birthDateParts.year]);
 
-  // Inicializar las partes de la fecha a partir de formData.birthDate cuando se carga el componente
-  useEffect(() => {
-    if (formData.birthDate) {
-      const [year, month, day] = formData.birthDate.split('-');
-      setBirthDateParts({ year, month, day });
-    }
-  }, [formData.birthDate]);
-
   // Actualizar el estado local cuando cambian las props
   useEffect(() => {
     setLocalFormData(formData);
-    setValues(formData);
-  }, [formData, setValues]);
-
-  // Calcular edad y verificar si es adulto cuando cambia la fecha de nacimiento
-  useEffect(() => {
-    if (values.birthDate) {
-      const age = validators.calculateAge(values.birthDate);
-      const isUserAdult = validators.isAdult(values.birthDate);
-      setIsAdult(isUserAdult);
-      
-      if (isEditMode) {
-        setLocalFormData(prev => ({
-          ...prev,
-          age: age.toString(),
-          birthDate: isUserAdult ? values.birthDate : ""
-        }));
-      } else {
-        onInputChange({
-          age: age.toString(),
-          birthDate: isUserAdult ? values.birthDate : ""
-        });
-      }
-    }
-  }, [values.birthDate, isEditMode, onInputChange]);
+  }, [formData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     let processedValue = value;
 
-    // Aplicar formateo específico según el campo
+    // Aplicar capitalización y validación según el campo
     if (["firstName", "secondName", "firstLastName", "secondLastName"].includes(name)) {
-      processedValue = formatters.capitalizeWords(value);
-      
-      // Validar caracteres permitidos en nombres
-      if (processedValue && !validators.isValidName(processedValue)) {
+      // Permitimos escribir espacios, pero eliminamos espacios dobles al procesar
+      // No bloqueamos la entrada si hay espacios dobles
+      processedValue = value.replace(/\s{2,}/g, ' ');
+      processedValue = capitalizeText(processedValue);
+      // Solo retornamos si hay caracteres no permitidos (que no sean espacios)
+      if (processedValue && !validateNameChars(processedValue)) {
         return;
       }
     }
 
-    // Formateo específico para tipos de documento
-    if (name === "identityCard") {
-      if (localFormData.documentType === "pasaporte") {
-        processedValue = formatters.passportFormat(value);
-      } else if (localFormData.documentType === "cedula") {
-        processedValue = formatters.numbersOnly(value);
-      }
+    // Modificar la validación para pasaporte: permitir formato alfanumérico
+    if (name === "identityCard" && localFormData.documentType === "pasaporte") {
+      // Permitir letras y números para pasaporte, convertir letras a mayúsculas
+      processedValue = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    } else if (name === "identityCard" && localFormData.documentType === "cedula") {
+      // Para cédula, solo permitir números
+      processedValue = value.replace(/\D/g, "");
     }
 
-    // Si cambia el tipo de documento, reiniciar el valor de identityCard
-    if (name === "documentType") {
-      const updates = {
-        documentType: value,
-        identityCard: "",
-        idType: value === "cedula" ? "V" : ""
-      };
-      
-      if (isEditMode) {
-        setLocalFormData(prev => ({
-          ...prev,
-          ...updates
-        }));
-      } else {
-        onInputChange(updates);
-      }
-      
-      handleValidatedChange(updates);
-      return;
-    }
-
-    // Actualizar estado local o enviar cambio al padre
+    // Si estamos en modo edición, actualizamos el estado local
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
         [name]: processedValue
       }));
     } else {
+      // Si no estamos en modo edición, comportamiento normal
       onInputChange({ [name]: processedValue });
     }
-    
-    // Actualizar el estado validado
-    handleValidatedChange({ [name]: processedValue });
+
+    // Si cambia el tipo de documento, reiniciar el valor de identityCard
+    if (name === "documentType") {
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          documentType: value,
+          identityCard: "",
+          idType: value === "cedula" ? "V" : ""
+        }));
+      } else {
+        onInputChange({
+          documentType: value,
+          identityCard: "",
+          idType: value === "cedula" ? "V" : ""
+        });
+      }
+      // Limpiar errores al cambiar de tipo de documento
+      setIdentityCardError("");
+      setPassportError("");
+    }
+
+    // Validate identity card length when it changes
+    if (name === "identityCard") {
+      if ((isEditMode ? localFormData.documentType : formData.documentType) === "cedula") {
+        if (value.length > 0 && (value.length < 7 || value.length > 8)) {
+          setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
+        } else {
+          setIdentityCardError("");
+        }
+      } else if ((isEditMode ? localFormData.documentType : formData.documentType) === "pasaporte") {
+        // Validar longitud de pasaporte (entre 4 y 15 caracteres)
+        if (processedValue.length > 0 && (processedValue.length < 4 || processedValue.length > 15)) {
+          setPassportError("El pasaporte debe tener entre 4 y 15 caracteres");
+        } else {
+          setPassportError("");
+        }
+      }
+    }
 
     // Manejar los cambios en las partes de la fecha de nacimiento
     if (["birthDateYear", "birthDateMonth", "birthDateDay"].includes(name)) {
@@ -172,45 +169,111 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
         [name.replace("birthDate", "").toLowerCase()]: value
       };
       setBirthDateParts(newBirthDateParts);
-      
       // Si tenemos las tres partes, construir la fecha completa
       if (newBirthDateParts.year && newBirthDateParts.month && newBirthDateParts.day) {
         const fullDate = `${newBirthDateParts.year}-${newBirthDateParts.month}-${newBirthDateParts.day}`;
-        
-        if (isEditMode) {
-          setLocalFormData(prev => ({ ...prev, birthDate: fullDate }));
-        } else {
-          onInputChange({ birthDate: fullDate });
-        }
-        
-        handleValidatedChange({ birthDate: fullDate });
+        calculateAge(fullDate);
+        onInputChange({ birthDate: fullDate });
       } else {
+        setAge("");
+        setIsAdult(true);
         if (isEditMode) {
           setLocalFormData(prev => ({ ...prev, birthDate: "", age: "" }));
         } else {
           onInputChange({ birthDate: "", age: "" });
         }
-        
-        handleValidatedChange({ birthDate: "" });
       }
     }
   };
 
+  // Modificar calculateAge para que actualice el estado local cuando estamos en modo edición
+  const calculateAge = (birthDate) => {
+    if (!birthDate) {
+      setAge("");
+      setIsAdult(true);
+      return;
+    }
+    const today = new Date();
+    const birthDateObj = new Date(birthDate);
+    let calculatedAge = today.getFullYear() - birthDateObj.getFullYear();
+    const monthDifference = today.getMonth() - birthDateObj.getMonth();
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 && today.getDate() < birthDateObj.getDate())
+    ) {
+      calculatedAge--;
+    }
+    // Verificar si es mayor de edad
+    const isUserAdult = calculatedAge >= 18;
+    setIsAdult(isUserAdult);
+    
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        age: calculatedAge.toString(),
+        birthDate: isUserAdult ? birthDate : ""
+      }));
+    } else {
+      onInputChange({
+        age: calculatedAge.toString(),
+        birthDate: isUserAdult ? birthDate : ""
+      });
+    }
+    
+    setAge(calculatedAge.toString());
+  };
+
+  // Inicializar las partes de la fecha a partir de formData.birthDate cuando se carga el componente
+  useEffect(() => {
+    if (formData.birthDate) {
+      const [year, month, day] = formData.birthDate.split('-');
+      setBirthDateParts({ year, month, day });
+    }
+  }, []);
+
+  // Validate form when formData changes
+  useEffect(() => {
+    const requiredFields = [
+      "documentType",
+      "identityCard",
+      "firstName",
+      "firstLastName",
+      "birthDate",
+      "gender",
+      "maritalStatus"
+    ];
+
+    // Validar cédula o pasaporte según el tipo de documento
+    let isIdentityCardValid = true;
+
+    if (formData.documentType === "cedula" && formData.identityCard) {
+      isIdentityCardValid = formData.identityCard.length >= 7 && formData.identityCard.length <= 8;
+      if (!isIdentityCardValid) {
+        setIdentityCardError("La cédula debe tener entre 7 y 8 dígitos");
+      } else {
+        setIdentityCardError("");
+      }
+    } else if (formData.documentType === "pasaporte" && formData.identityCard) {
+      // Validar longitud de pasaporte
+      if (formData.identityCard.length < 4 || formData.identityCard.length > 15) {
+        setPassportError("El pasaporte debe tener entre 4 y 15 caracteres");
+        isIdentityCardValid = false;
+      } else {
+        setPassportError("");
+      }
+    }
+
+    const isValid = requiredFields.every(field => formData[field] && formData[field].trim() !== "") && isIdentityCardValid;
+    setIsFormValid(isValid);
+  }, [formData]);
+
   // Checks if a field has validation errors to display the required message
   const isFieldEmpty = (fieldName) => {
-    return (validationErrors && validationErrors[fieldName]) || (localErrors && localErrors[fieldName]);
+    return validationErrors && validationErrors[fieldName];
   };
 
   // Determinar si es pasaporte para la validación
   const isPasaporte = formData.documentType === "pasaporte";
-
-  const handleSaveClick = () => {
-    if (onSave) {
-      onSave(localFormData);
-    } else {
-      onInputChange(localFormData);
-    }
-  };
 
   return (
     <motion.div
@@ -296,13 +359,13 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                   value={formData.identityCard}
                   maxLength={15}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") || passportError ? "border-red-500 bg-red-50" : "border-gray-200"
                     } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
                   placeholder="Ingrese su número de pasaporte"
                   style={{ height: "48px" }}
                 />
-                {isFieldEmpty("identityCard") && (
-                  <p className="mt-1 text-xs text-red-500">{localErrors.identityCard || "Este campo es obligatorio"}</p>
+                {passportError && (
+                  <p className="mt-1 text-xs text-red-500">{passportError}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
                   Puede contener letras y números
@@ -332,8 +395,11 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
                   value={formData.identityCard}
                   minLength={7}
                   maxLength={8}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") ? "border-red-500 bg-red-50" : "border-gray-200"
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    handleChange({ target: { name: "identityCard", value } });
+                  }}
+                  className={`w-full px-4 py-3 border ${isFieldEmpty("identityCard") || identityCardError ? "border-red-500 bg-red-50" : "border-gray-200"
                     } rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
                   placeholder="Ingrese su número de cédula"
                   style={{ height: "48px" }}
@@ -344,8 +410,11 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           {isProfileEdit && (
             <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
           )}
-          {isFieldEmpty("identityCard") && !isProfileEdit && !isPasaporte && (
-            <p className="mt-1 text-xs text-red-500">{localErrors.identityCard || "Este campo es obligatorio"}</p>
+          {isFieldEmpty("identityCard") && !isProfileEdit && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
+          {identityCardError && !isProfileEdit && formData.documentType === "cedula" && (
+            <p className="mt-1 text-xs text-red-500">{identityCardError}</p>
           )}
         </div>
       </div>
@@ -381,7 +450,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
           )}
           {isFieldEmpty("firstName") && !isProfileEdit && (
-            <p className="mt-1 text-xs text-red-500">{localErrors.firstName || "Este campo es obligatorio"}</p>
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
         {/* Second Name - Siempre editable */}
@@ -431,7 +500,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
           )}
           {isFieldEmpty("firstLastName") && !isProfileEdit && (
-            <p className="mt-1 text-xs text-red-500">{localErrors.firstLastName || "Este campo es obligatorio"}</p>
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
         {/* Second Last Name - Siempre editable */}
@@ -545,7 +614,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             </div>
           </div>
           {isFieldEmpty("birthDate") && (
-            <p className="mt-1 text-xs text-red-500">{localErrors.birthDate || "Este campo es obligatorio"}</p>
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
           {!isAdult && formData.birthDate && (
             <p className="mt-1 text-xs text-red-500">Debe ser mayor de edad (18 años o más)</p>
@@ -584,7 +653,7 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             </div>
           </div>
           {isFieldEmpty("gender") && (
-            <p className="mt-1 text-xs text-red-500">{localErrors.gender || "Este campo es obligatorio"}</p>
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
 
@@ -621,16 +690,16 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
             </div>
           </div>
           {isFieldEmpty("maritalStatus") && (
-            <p className="mt-1 text-xs text-red-500">{localErrors.maritalStatus || "Este campo es obligatorio"}</p>
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
           )}
         </div>
       </div>
-      {/* Si estamos en modo edición, mostrar botones de guardar/cancelar */}
+     {/* Si estamos en modo edición, mostrar botones de guardar/cancelar */}
       {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           <button
             type="button"
-            onClick={handleSaveClick}
+            onClick={() => onSave ? onSave(localFormData) : onInputChange(localFormData)}
             className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
               rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
           >

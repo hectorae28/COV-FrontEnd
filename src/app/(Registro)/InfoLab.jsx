@@ -3,22 +3,42 @@ import institucionesList from "@/Shared/InstitucionesData";
 import { motion } from "framer-motion";
 import { Briefcase, BriefcaseBusiness, MapPin, Phone, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import useFormValidation from "@/utils/useFormValidation";
-import { formatters } from "@/utils/validation";
+
+// Función para capitalizar cada palabra de un texto
+const capitalizarPalabras = (texto) => {
+  if (!texto) return "";
+  return texto
+    .split(' ')
+    .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+    .join(' ');
+};
+
+// Función para formatear número de teléfono local
+const formatearTelefonoLocal = (value) => {
+  if (!value) return '';
+  // Eliminar todos los caracteres no numéricos
+  const digits = value.replace(/\D/g, '');
+  // Si tiene suficientes dígitos, formatear como 0212 123 4567
+  if (digits.length >= 4) {
+    const areaCode = digits.substring(0, 4);
+    const firstPart = digits.substring(4, 7);
+    const secondPart = digits.substring(7, 11);
+    if (digits.length <= 4) {
+      return areaCode;
+    } else if (digits.length <= 7) {
+      return `${areaCode} ${firstPart}`;
+    } else {
+      return `${areaCode} ${firstPart} ${secondPart}`;
+    }
+  }
+  return digits;
+};
 
 export default function InfoLaboral({ formData, onInputChange, validationErrors, isEditMode = false, onSave }) {
   // Lista de estados ordenados alfabéticamente
-  const estados = Object.keys(EstadoData).sort().map(formatters.capitalizeWords);
+  const estados = Object.keys(EstadoData).sort().map(capitalizarPalabras);
   // Estado para manejar el estado laboral
   const [workStatus, setWorkStatus] = useState(formData.workStatus || "labora");
-  
-  // Usar el hook de validación con paso 'laboralInfo'
-  const {
-    values,
-    errors: localErrors,
-    handleChange: handleValidatedChange,
-    setValues
-  } = useFormValidation(formData, 'laboralInfo');
   
   // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
@@ -29,9 +49,9 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
       ? formData.laboralRegistros.map(registro => ({
         ...registro,
         // Asegurar que los campos tengan el formato correcto
-        institutionName: formatters.capitalizeWords(registro.institutionName || ""),
-        institutionAddress: formatters.capitalizeWords(registro.institutionAddress || ""),
-        cargo: formatters.capitalizeWords(registro.cargo || ""),
+        institutionName: capitalizarPalabras(registro.institutionName || ""),
+        institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
+        cargo: capitalizarPalabras(registro.cargo || ""),
         selectedEstado: registro.selectedEstado || "",
         selectedCiudad: registro.selectedCiudad || ""
       }))
@@ -39,10 +59,10 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
         {
           id: 1,
           institutionType: formData.institutionType || "",
-          institutionName: formatters.capitalizeWords(formData.institutionName || ""),
-          institutionAddress: formatters.capitalizeWords(formData.institutionAddress || ""),
+          institutionName: capitalizarPalabras(formData.institutionName || ""),
+          institutionAddress: capitalizarPalabras(formData.institutionAddress || ""),
           institutionPhone: formData.institutionPhone || "",
-          cargo: formatters.capitalizeWords(formData.cargo || ""),
+          cargo: capitalizarPalabras(formData.cargo || ""),
           selectedEstado: formData.selectedEstado || "",
           selectedCiudad: formData.selectedCiudad || ""
         }
@@ -52,21 +72,20 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
   // Actualizar el estado local cuando cambian las props
   useEffect(() => {
     setLocalFormData(formData);
-    setValues(formData);
     
     // Actualizar registros si cambian en las props
     if (formData.laboralRegistros && formData.laboralRegistros.length > 0) {
       setRegistros(formData.laboralRegistros.map(registro => ({
         ...registro,
-        institutionName: formatters.capitalizeWords(registro.institutionName || ""),
-        institutionAddress: formatters.capitalizeWords(registro.institutionAddress || ""),
-        cargo: formatters.capitalizeWords(registro.cargo || ""),
+        institutionName: capitalizarPalabras(registro.institutionName || ""),
+        institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
+        cargo: capitalizarPalabras(registro.cargo || ""),
         selectedEstado: registro.selectedEstado || "",
         selectedCiudad: registro.selectedCiudad || ""
       })));
     }
     
-  }, [formData, setValues]);
+  }, [formData]);
 
   // Estados para manejar ciudades disponibles para cada registro
   const [ciudadesDisponibles, setCiudadesDisponibles] = useState({});
@@ -82,7 +101,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
           // Ordenar ciudades alfabéticamente y capitalizar cada palabra
           nuevosCiudadesDisponibles[registro.id] = EstadoData[estadoKey]
             .sort()
-            .map(ciudad => formatters.capitalizeWords(ciudad));
+            .map(ciudad => capitalizarPalabras(ciudad));
         }
       }
     });
@@ -120,8 +139,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
       } else {
         onInputChange(updatedData);
       }
-      
-      handleValidatedChange(updatedData);
     } else {
       // Si cambia a "Laborando", restauramos los registros
       const updatedData = {
@@ -137,8 +154,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
       } else {
         onInputChange(updatedData);
       }
-      
-      handleValidatedChange(updatedData);
     }
   };
 
@@ -146,20 +161,17 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
   const handleRegistroChange = (index, field, value) => {
     const nuevosRegistros = [...registros];
     const registro = nuevosRegistros[index];
-    
     // Aplicar formato según el campo
     if (field === "institutionName" || field === "cargo") {
-      value = formatters.capitalizeWords(value);
+      value = capitalizarPalabras(value);
     } else if (field === "institutionPhone") {
-      value = formatters.formatPhoneNumber(value);
+      value = formatearTelefonoLocal(value);
     } else if (field === "selectedEstado") {
       // Al cambiar el estado, resetear la ciudad
       registro.selectedCiudad = "";
     }
-    
     // Actualizar el campo en el registro
     registro[field] = value;
-    
     // Actualizar el array completo de registros
     setRegistros(nuevosRegistros);
     
@@ -178,18 +190,14 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     } else {
       onInputChange(updatedData);
     }
-    
-    handleValidatedChange(updatedData);
   };
 
   // Manejar cambios en la dirección (después de seleccionar estado y ciudad)
   const handleDireccionChange = (index, value) => {
     const nuevosRegistros = [...registros];
     const registro = nuevosRegistros[index];
-    
     // Formatear la dirección con la primera letra de cada palabra en mayúscula
-    const direccionFormateada = formatters.capitalizeWords(value);
-    
+    const direccionFormateada = capitalizarPalabras(value);
     // Construir la dirección completa con el formato: "Ciudad, Estado - Dirección específica"
     if (registro.selectedEstado && registro.selectedCiudad) {
       const direccionCompleta = `${registro.selectedCiudad}, ${registro.selectedEstado} - ${direccionFormateada}`;
@@ -197,26 +205,13 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     } else {
       registro.institutionAddress = direccionFormateada;
     }
-    
     // Actualizar los campos principales con el primer registro (para compatibilidad)
     if (index === 0) {
       onInputChange({ institutionAddress: registro.institutionAddress });
     }
-    
     // Actualizar el array completo de registros
     setRegistros(nuevosRegistros);
-    const updatedData = { laboralRegistros: nuevosRegistros };
-    
-    if (isEditMode) {
-      setLocalFormData(prev => ({
-        ...prev,
-        ...updatedData
-      }));
-    } else {
-      onInputChange(updatedData);
-    }
-    
-    handleValidatedChange(updatedData);
+    onInputChange({ laboralRegistros: nuevosRegistros });
   };
 
   // Agregar un nuevo registro laboral
@@ -247,8 +242,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     } else {
       onInputChange(updatedData);
     }
-    
-    handleValidatedChange(updatedData);
   };
 
   // Eliminar un registro
@@ -281,8 +274,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
       } else {
         onInputChange(updatedData);
       }
-      
-      handleValidatedChange(updatedData);
     }
   };
 
@@ -292,9 +283,15 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     if (workStatus === "noLabora") {
       return false;
     }
-    
-    // Usar errores de validación locales o pasados como prop
-    return (localErrors && localErrors[fieldName]) || (validationErrors && validationErrors[fieldName]);
+    // Solo mostrar errores si validationErrors existe y contiene campos de este registro
+    if (!validationErrors) return false;
+    // Para el primer registro, podemos usar los nombres de campo directos
+    if (registro.id === 1) {
+      return validationErrors[fieldName];
+    }
+    // Para registros adicionales, habría que implementar una lógica más compleja
+    // si se quiere validar cada registro individualmente
+    return false;
   };
 
   const handleSaveClick = () => {
@@ -436,7 +433,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                     </div>
                   </div>
                   {isFieldEmpty(registro, "institutionType") && (
-                    <p className="mt-1 text-xs text-red-500">{localErrors?.institutionType || "Este campo es obligatorio"}</p>
+                                      <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                 </div>
                 {/* Nombre de Institución */}
@@ -454,7 +451,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                     placeholder="Nombre de la institución donde presta servicio"
                   />
                   {isFieldEmpty(registro, "institutionName") && (
-                    <p className="mt-1 text-xs text-red-500">{localErrors?.institutionName || "Este campo es obligatorio"}</p>
+                    <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                 </div>
                 {/* Cargo */}
@@ -472,7 +469,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                     placeholder="Cargo o posición que ocupa"
                   />
                   {isFieldEmpty(registro, "cargo") && (
-                    <p className="mt-1 text-xs text-red-500">{localErrors?.cargo || "Este campo es obligatorio"}</p>
+                    <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                 </div>
                 {/* Teléfono de Institución */}
@@ -492,8 +489,8 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                     />
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   </div>
-                 {isFieldEmpty(registro, "institutionPhone") && (
-                    <p className="mt-1 text-xs text-red-500">{localErrors?.institutionPhone || "Este campo es obligatorio"}</p>
+                  {isFieldEmpty(registro, "institutionPhone") && (
+                    <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                   <p className="mt-1 text-xs text-gray-500">
                     Ingrese código de área y número. Ej: 0212 123 4567
@@ -539,7 +536,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                       </div>
                     </div>
                     {isFieldEmpty(registro, "selectedEstado") && (
-                      <p className="mt-1 text-xs text-red-500">{localErrors?.selectedEstado || "Debe seleccionar un estado"}</p>
+                      <p className="mt-1 text-xs text-red-500">Debe seleccionar un estado</p>
                     )}
                   </div>
                   {/* Paso 2: Selección de Municipio o Parroquia según el estado */}
@@ -583,9 +580,9 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                     </div>
                     {isFieldEmpty(registro, "selectedCiudad") && registro.selectedEstado && (
                       <p className="mt-1 text-xs text-red-500">
-                        {localErrors?.selectedCiudad || (registro.selectedEstado.toLowerCase() === "distrito capital"
+                        {registro.selectedEstado.toLowerCase() === "distrito capital"
                           ? "Debe seleccionar una parroquia"
-                          : "Debe seleccionar un municipio")}
+                          : "Debe seleccionar un municipio"}
                       </p>
                     )}
                   </div>
@@ -615,7 +612,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                     <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   </div>
                   {isFieldEmpty(registro, "institutionAddress") && (
-                    <p className="mt-1 text-xs text-red-500">{localErrors?.institutionAddress || "Este campo es obligatorio"}</p>
+                    <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                 </div>
               </div>
@@ -660,7 +657,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
           </div>
         </div>
       )}
-      {isEditMode && (
+   {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           <button
             type="button"
