@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { DocumentViewer } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 
 // Componentes importados
 import PagosColg from "@/Components/PagosModal"
@@ -188,9 +189,15 @@ export default function DetalleSolicitud({ props }) {
   // Función que se ejecuta cuando se completa un pago
   const handlePaymentComplete = async (pagoInfo) => {
     //Actualizar los items pagados según el monto pagado
-    console.log({ pagoInfo })
-    await addPagosSolicitud(solicitud.id, { monto: Number(pagoInfo.totalAmount), moneda: pagoInfo.metodo_de_pago.moneda, num_referencia: pagoInfo.referenceNumber, metodo_de_pago: pagoInfo.metodo_de_pago.id, tasa_bcv_del_dia, solicitud: solicitud.id, });
-    return
+    console.log({ pagoInfo, tasa_bcv_del_dia: pagoInfo.tasa_bcv_del_dia })
+    await addPagosSolicitud(solicitud.id, {
+      monto: Number(pagoInfo.totalAmount),
+      moneda: pagoInfo.metodo_de_pago.moneda,
+      num_referencia: pagoInfo.referenceNumber,
+      metodo_de_pago: pagoInfo.metodo_de_pago.id,
+      tasa_bcv_del_dia: pagoInfo.tasa_bcv_del_dia,
+    });
+    return;
     let montoRestante = parseFloat(pagoInfo.monto);
     const itemsActualizados = [...solicitud.itemsSolicitud];
     console.log(pagoInfo)
@@ -444,10 +451,9 @@ export default function DetalleSolicitud({ props }) {
 
       {/* Modal para ver documento */}
       {documentoSeleccionado && (
-        <DocumentViewerModal
+        <DocumentViewer
           documento={{ url: documentoSeleccionado }}
           onClose={() => setDocumentoSeleccionado(null)}
-          pendiente={null}
         />
       )}
 
@@ -468,9 +474,6 @@ export default function DetalleSolicitud({ props }) {
             </div>
 
             <div className="flex-1 overflow-auto p-4">
-              <PagosColgSolic                onPaymentComplete={handlePaymentComplete}
-                totalPendiente={totales.totalPendiente}
-              />
               <PagosColg
                 props={{
                   costo: totales.totalPendiente,

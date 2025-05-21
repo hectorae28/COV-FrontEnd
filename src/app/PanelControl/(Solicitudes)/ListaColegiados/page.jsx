@@ -269,7 +269,6 @@ const allFilters = [
     } else if (tabActivo === "anulados") {
       filtros.status = "anulado";
     }
-    setCurrentPage(1) 
     if (tabActivo === "registrados") {
       fetchColegiados(currentPage, recordsPerPage, searchTerm, filtros);
     } else {

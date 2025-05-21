@@ -196,8 +196,10 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
       let pendienteData;
       if (!recaudos) {
         pendienteData = await getColegiadoPendiente(pendienteId);
+        console.log({pendienteData})
       } else {
         pendienteData = recaudos;
+        console.log({recaudos})
       }
 
       if (pendienteData) {
@@ -327,6 +329,7 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         setDocumentosStatus(initialDocStatus);
 
         setPagosPendientes(pendienteData.pago === null && !pendienteData.pago_exonerado);
+        console.log(pendienteData.pago === null && !pendienteData.pago_exonerado);
       }
 
       setIsLoading(false);
@@ -349,6 +352,8 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
           "costo",
           `?search=Inscripcion+${pendiente.tipo_profesion}&es_vigente=true`
         );
+        console.log(Number(costo.data[0].monto_usd));
+        
         setCostoInscripcion(Number(costo.data[0].monto_usd));
         const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
         setMetodoPago(Mpagos.data);
@@ -818,10 +823,9 @@ export default function DetallePendiente({ params, onVolver, isAdmin = false, re
         >
           <PagosColg
             props={{
-              handlePaymentComplete,
-              tasaBcv,
-              costoInscripcion,
-              metodoPago,
+              costo:costoInscripcion,
+              allowMultiplePayments:false,
+              handlePago:handlePaymentComplete,
             }}
           />
         </motion.div>

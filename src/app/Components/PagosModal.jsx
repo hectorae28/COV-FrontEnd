@@ -13,12 +13,12 @@ export default function PagosColg({ props }) {
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
-  const [paymentAmount, setPaymentAmount] = useState(costo);
+  const [paymentAmount, setPaymentAmount] = useState(parseFloat(costo).toFixed(2));
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [tasaBCV, setTasaBCV] = useState(0);
   const [metodoDePago, setMetodoDePago] = useState([]);
-  const [montoEnBs, setMontoEnBs] = useState((parseFloat(costo) * tasaBCV).toFixed(2));
+  const [montoEnBs, setMontoEnBs] = useState("0.00");
   const [showMethodSelection, setShowMethodSelection] = useState(false);
 
   // Verificar si hay más de 4 métodos de pago para cambiar el estilo de visualización
@@ -32,6 +32,13 @@ export default function PagosColg({ props }) {
     return total.toFixed(2);
   };
   const paypalAmount = calculatePaypalFee(paymentAmount);
+
+  // Actualizar el monto en Bs cuando cambie la tasa BCV
+  useEffect(() => {
+    if (tasaBCV > 0) {
+      setMontoEnBs((parseFloat(costo) * tasaBCV).toFixed(2));
+    }
+  }, [tasaBCV, costo]);
 
   // Actualizar el monto en USD cuando se ingresa en Bs
   const handleBsChange = (e) => {
@@ -91,7 +98,6 @@ export default function PagosColg({ props }) {
     try {
       const tasa = await fetchDataSolicitudes("tasa-bcv");
       setTasaBCV(tasa.data.rate);
-      setMontoEnBs((parseFloat(costo) * tasaBCV).toFixed(2));
     } catch (error) {
       console.log(`Ha ocurrido un error: ${error}`)
     }
@@ -183,7 +189,7 @@ export default function PagosColg({ props }) {
         <div className="text-center mb-8">
           <p className="text-lg text-gray-600">Monto a pagar:</p>
           <p className="text-4xl font-bold text-[#D7008A]">
-            USD$ {costo}
+            USD$ {paymentAmount}
           </p>
           <p className="text-xl font-medium text-gray-700 mt-2">
             Monto en Bs: {montoEnBs}
