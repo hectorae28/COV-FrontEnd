@@ -2,8 +2,8 @@
 import { postDataUsuario } from "@/api/endpoints/colegiado";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MailCheck, RefreshCw } from "lucide-react";
-import { type } from "os";
 import { useEffect, useRef, useState } from "react";
+import { validators } from "@/utils/validation";
 
 export default function EmailVerification({
     email,
@@ -19,26 +19,36 @@ export default function EmailVerification({
     const [canResend, setCanResend] = useState(null);
 
     const inputRefs = useRef([]);
+    
+    // Validar que el email tenga formato correcto
+    const isValidEmail = validators.isValidEmail(email);
+    
     const handleSendEmailCode = async () => {
-        try{
+        if (!isValidEmail) {
+            setError("El formato del correo electrónico no es válido");
+            return;
+        }
+        
+        try {
             const res = await postDataUsuario(`send-verification-email`, {
                 "email": email
-            })
+            });
             if (res.status === 200) {
                 setCanResend(false);
                 setTimeLeft(60);
             }
-        }catch(err){
-            if (err.status === 409){
-                setError("El correo electrónica ya se encuentra registrado")
-            }else{
-                setError("Error al enviar el código. Por favor, intente nuevamente.")
+        } catch(err) {
+            if (err.status === 409) {
+                setError("El correo electrónico ya se encuentra registrado");
+            } else {
+                setError("Error al enviar el código. Por favor, intente nuevamente.");
             }
         }
-    }
+    };
+    
     useEffect(() => {
-        handleSendEmailCode()
-    }, [])
+        handleSendEmailCode();
+    }, []);
 
     // Timer para resentir código
     useEffect(() => {
@@ -90,7 +100,6 @@ export default function EmailVerification({
         // Para entrada normal de un solo caracter
         newCode[index] = value;
         setVerificationCode(newCode);
-
         // Si se ingresó un dígito, pasar al siguiente campo
         if (value && index < 5) {
             inputRefs.current[index + 1].focus();
@@ -120,23 +129,30 @@ export default function EmailVerification({
             setError("Por favor, ingrese el código completo de 6 dígitos");
             return;
         }
+        
+        if (!isValidEmail) {
+            setError("El formato del correo electrónico no es válido");
+            return;
+        }
+        
         setIsVerifying(true);
         setError("");
         try {
             const rest = await postDataUsuario(`verify-email`, {
                 "email": email,
                 "code": code
-               })
-            if(rest.status === 200){
-                onVerificationSuccess()
-            }else{
-                setError("Error al verificar el código. Por favor, intente nuevamente.")
+            });
+            if(rest.status === 200) {
+                onVerificationSuccess();
+            } else {
+                setError("Error al verificar el código. Por favor, intente nuevamente.");
             }
         } catch (err) {
-            if(err.status === 409){
-                setError("El correo electrónica ya se encuentra registrado")
+            if(err.status === 409) {
+                setError("El correo electrónica ya se encuentra registrado");
+            } else {
+                setError("Error al verificar el código. Por favor, intente nuevamente.");
             }
-            setError("Error al verificar el código. Por favor, intente nuevamente.");
         } finally {
             setIsVerifying(false);
         }

@@ -1,16 +1,14 @@
 "use client"
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation"
-import {patchDataUsuario} from "@/api/endpoints/colegiado" 
+import { patchDataUsuario, postDataUsuario } from "@/api/endpoints/colegiado" 
 import confetti from "canvas-confetti"
 import { AnimatePresence, motion } from "framer-motion"
 import { Building, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-// Import step components
 import api from "@/api/api"
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage"
-import { postDataUsuario } from "@/api/endpoints/colegiado";
 import Alert from "@/app/Components/Alert"
 import Head from "next/head"
 import PagosColg from "../../Components/PagosModal"
@@ -20,7 +18,7 @@ import InfoColegiado from "../InfoColg"
 import InfoContacto from "../InfoCont"
 import InfoLaboral from "../InfoLab"
 import InfoPersonal from "../InfoPers"
-import { Form } from "antd"
+import { validateFormData } from "@/utils/validation"
 
 const steps = [
   {
@@ -29,15 +27,7 @@ const steps = [
     description: "Datos básicos de identificación",
     icon: User,
     component: InfoPersonal,
-    requiredFields: [
-      "documentType",
-      "identityCard",
-      "firstName",
-      "firstLastName",
-      "birthDate",
-      "gender",
-      "maritalStatus",
-    ],
+    validationStep: 'personalInfo'
   },
   {
     id: 2,
@@ -45,7 +35,7 @@ const steps = [
     description: "Cómo podemos comunicarnos contigo",
     icon: Phone,
     component: InfoContacto,
-    requiredFields: ["email", "phoneNumber", "address", "city", "state"],
+    validationStep: 'contactInfo'
   },
   {
     id: 3,
@@ -53,14 +43,7 @@ const steps = [
     description: "Datos de tu colegiatura profesional",
     icon: GraduationCap,
     component: InfoColegiado,
-    requiredFields: [
-      "graduateInstitute",
-      "universityTitle",
-      "mppsRegistrationNumber",
-      "mppsRegistrationDate",
-      "titleIssuanceDate",
-      "tipo_profesion",
-    ],
+    validationStep: 'collegueInfo'
   },
   {
     id: 4,
@@ -68,7 +51,7 @@ const steps = [
     description: "Tu experiencia y situación laboral actual",
     icon: Building,
     component: InfoLaboral,
-    requiredFields: ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType"],
+    validationStep: 'laboralInfo'
   },
   {
     id: 5,
@@ -76,7 +59,7 @@ const steps = [
     description: "Documentos necesarios",
     icon: FilePlus,
     component: DocsRequirements,
-    requiredFields: ["ci", "rif", "titulo", "mpps"],
+    validationStep: 'docsRequirements'
   },
 ]
 
@@ -231,65 +214,32 @@ export default function RegistrationForm(props) {
 
   const validateStep = (stepIndex) => {
     const step = steps[stepIndex - 1]
-    const errors = {}
-    let isValid = true
-
-    // Si es el paso 5 (Documentos), agregar campos adicionales según tipo_profesion
-    if (stepIndex === 5) {
-      // Crear una copia de los campos requeridos base
-      let fieldsToValidate = [...step.requiredFields]
-      // Agregar campos adicionales para técnicos e higienistas
-      if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
-        fieldsToValidate = [
-          ...fieldsToValidate,
-          "fondo_negro_titulo_bachiller",
-          "fondo_negro_credencial",
-          "notas_curso",
-        ]
-      }
-      // Validar todos los campos requeridos
-      fieldsToValidate.forEach((field) => {
-        if (!formData[field]) {
-          errors[field] = true
-          isValid = false
-        }
-      })
-      // Establecer errores de validación si estamos validando activamente
-      if (attemptedNext) {
-        setValidationErrors(errors)
-      }
-      return isValid
+    let isValid = true;
+    let errors = {};
+    
+    // Usar el sistema de validación centralizado
+    if (step.validationStep) {
+      errors = validateFormData(formData, step.validationStep);
+      isValid = Object.keys(errors).length === 0;
     }
-
-    // Para los demás pasos, mantener la validación estándar
+    
+    // Caso especial para el paso 4 (Laboral)
     if (stepIndex === 4 && formData.workStatus === "noLabora") {
-      return true // Validación exitosa, no hay errores
+      return true; // Si no está laborando, no hay errores de validación
     }
-
-    if (step.requiredFields && step.requiredFields.length > 0) {
-      step.requiredFields.forEach((field) => {
-        if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
-          errors[field] = true
-          isValid = false
-        }
-      })
+    
+    // Caso especial para el paso 2: verificación de email
+    if (stepIndex === 2 && !formData.emailVerified && attemptedNext) {
+      errors.emailVerified = "El correo debe ser verificado para continuar";
+      isValid = false;
     }
-
-    // Validación específica para cédula (solo en el paso 1)
-    if (stepIndex === 1 && formData.documentType === "cedula" && formData.identityCard) {
-      // Verificar que la cédula tenga entre 7 y 8 dígitos
-      if (formData.identityCard.length < 7 || formData.identityCard.length > 8) {
-        errors["identityCard"] = true
-        isValid = false
-      }
-    }
-
-    // Solo establecer errores de validación si estamos validando activamente
+    
+    // Establecer errores de validación si estamos validando activamente
     if (attemptedNext) {
-      setValidationErrors(errors)
+      setValidationErrors(errors);
     }
-
-    return isValid
+    
+    return isValid;
   }
 
   const nextStep = () => {
@@ -410,7 +360,6 @@ export default function RegistrationForm(props) {
 
     // Validar el paso actual
     const isValid = validateStep(currentStep);
-
 
     if (isValid) {
       // Si todos los campos están completos, proceder
@@ -608,7 +557,7 @@ export default function RegistrationForm(props) {
       )
     }
 
-    return (
+   return (
       CurrentStepComponent && (
         <CurrentStepComponent
           formData={formData}

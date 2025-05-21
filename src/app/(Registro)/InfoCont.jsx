@@ -3,17 +3,10 @@ import CountryFlag from "@/Shared/CountryFlag"
 import PhoneEstData from "@/Shared/EstadoData"
 import phoneCodes from "@/Shared/TelefonoData"
 import { motion } from "framer-motion"
-import { ChevronDown, Mail, MapPin, Phone, Search, X } from "lucide-react"
+import { Mail, MapPin, Phone, Search, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
-
-// Función para capitalizar la primera letra de cada palabra
-const capitalizeWords = (text) => {
-  if (!text) return ""
-  return text
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ")
-}
+import useFormValidation from "@/utils/useFormValidation"
+import { formatters, validators } from "@/utils/validation"
 
 export default function InfoContacto({
   formData,
@@ -21,19 +14,25 @@ export default function InfoContacto({
   validationErrors,
   isProfileEdit,
   requestEmailVerification,
-  isAdmin=false,
+  isAdmin = false,
   isEditMode = false,
   onSave
 }) {
   const [cities, setCities] = useState([])
-  const [isFormValid, setIsFormValid] = useState(false)
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [emailIsVerified, setEmailIsVerified] = useState(formData.emailVerified || false)
   const [originalEmail, setOriginalEmail] = useState(formData.email || "")
   const [emailChanged, setEmailChanged] = useState(false)
-  const [emailError, setEmailError] = useState("")
   const dropdownRef = useRef(null)
+  
+  // Usar el hook de validación con paso 'contactInfo'
+  const {
+    values,
+    errors: localErrors,
+    handleChange: handleValidatedChange,
+    setValues
+  } = useFormValidation(formData, 'contactInfo');
   
   // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
@@ -41,7 +40,8 @@ export default function InfoContacto({
   // Actualizar el estado local cuando cambian las props
   useEffect(() => {
     setLocalFormData(formData);
-  }, [formData]);
+    setValues(formData);
+  }, [formData, setValues]);
 
   // Ordenamos los códigos telefónicos alfabéticamente por nombre de país
   const sortedPhoneCodes = useMemo(() => {
@@ -58,57 +58,55 @@ export default function InfoContacto({
     )
   }, [sortedPhoneCodes, searchTerm])
 
-  // Función para validar formato de correo electrónico
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target
+    let processedValue = value;
+
+    // Aplicar formato específico según el campo
     if (name === "address") {
-      // Capitalizamos la primera letra de cada palabra en la dirección
-      const processedValue = capitalizeWords(value);
+      processedValue = formatters.capitalizeWords(value);
+    } else if (name === "state") {
+      const updates = { [name]: value, city: "" };
       
       if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: processedValue }));
+        setLocalFormData(prev => ({ ...prev, ...updates }));
       } else {
-        onInputChange({ [name]: processedValue });
+        onInputChange(updates);
       }
-    } else if (name === "state") {
-      if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: value, city: "" }));
-      } else {
-        onInputChange({ [name]: value, city: "" });
-      }
+      
+      handleValidatedChange(updates);
+      return;
     } else if (name === "email") {
       // Validar formato de correo electrónico
-      if (value && !validateEmail(value)) {
-        setEmailError("Ingrese un correo electrónico válido");
-      } else {
-        setEmailError("");
-      }
+      const isValidEmailFormat = validators.isValidEmail(value);
       
       if (isEditMode) {
         setLocalFormData(prev => ({ 
           ...prev, 
           [name]: value,
-          emailIsValid: validateEmail(value)
+          emailIsValid: isValidEmailFormat
         }));
       } else {
         // Notificar el cambio de email al componente padre
         onInputChange({
           [name]: value,
-          emailIsValid: validateEmail(value)
+          emailIsValid: isValidEmailFormat
         });
       }
-    } else {
-      if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: value }));
-      } else {
-        onInputChange({ [name]: value });
-      }
+      
+      handleValidatedChange({ [name]: value });
+      return;
+    } else if (name === "phoneNumber" || name === "homePhone") {
+      processedValue = formatters.numbersOnly(value);
     }
+
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, [name]: processedValue }));
+    } else {
+      onInputChange({ [name]: processedValue });
+    }
+    
+    handleValidatedChange({ [name]: processedValue });
   }
 
   // Manejador para seleccionar un código de país
@@ -118,6 +116,7 @@ export default function InfoContacto({
     } else {
       onInputChange({ countryCode: code.codigo });
     }
+    handleValidatedChange({ countryCode: code.codigo });
     setIsCountryDropdownOpen(false);
     setSearchTerm("");
   }
@@ -159,28 +158,11 @@ export default function InfoContacto({
     }
   }, [formData.email, formData.emailVerified, originalEmail])
 
-  // Validar formulario cuando cambia formData
-  useEffect(() => {
-    const requiredFields = ["email", "phoneNumber", "state", "city", "address"];
-    // Validación de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isEmailValid = formData.email && emailRegex.test(formData.email);
-    // Validación de número de teléfono
-    const isPhoneValid = formData.phoneNumber && formData.phoneNumber.length >= 10;
-    // Verificar que todos los campos requeridos estén completos y válidos
-    const isValid =
-      requiredFields.every((field) => {
-        const value = formData[field];
-        return value && typeof value === 'string' && value.trim() !== "";
-      }) && isEmailValid && isPhoneValid;
-    setIsFormValid(isValid);
-  }, [formData]);
-
   const venezuelanStates = Object.keys(PhoneEstData).map((state) => state.charAt(0).toUpperCase() + state.slice(1))
 
   // Checks if a field has validation errors to display the required message
   const isFieldEmpty = (fieldName) => {
-    return validationErrors && validationErrors[fieldName]
+    return (validationErrors && validationErrors[fieldName]) || (localErrors && localErrors[fieldName]);
   }
 
   // Función para mostrar el estado de verificación del correo
@@ -232,7 +214,6 @@ export default function InfoContacto({
           className="text-xs text-[#D7008A] hover:underline"
         >
           {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "El correo debe ser verificado para continuar"}
-          
         </button>
       </div>
     )
@@ -280,7 +261,7 @@ export default function InfoContacto({
                 name="email"
                 value={formData.email || ""}
                 onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("email") || emailError
+                className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("email")
                   ? "border-red-500 bg-red-50"
                   : emailIsVerified && !emailChanged
                     ? "border-green-300"
@@ -294,10 +275,7 @@ export default function InfoContacto({
         </div>
         {isProfileEdit && <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>}
         {isFieldEmpty("email") && !isProfileEdit && (
-          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-        )}
-        {emailError && !isProfileEdit && (
-          <p className="mt-1 text-xs text-red-500">{emailError}</p>
+          <p className="mt-1 text-xs text-red-500">{localErrors.email || "Este campo es obligatorio"}</p>
         )}
         {/* Mostrar el estado de verificación del correo */}
         {renderEmailVerificationStatus()}
@@ -324,7 +302,13 @@ export default function InfoContacto({
                   />
                 </div>
                 <span className="mx-1">{formData.countryCode || "+58"}</span>
-                <ChevronDown size={16} className="ml-1" />
+                <svg
+                  className="fill-current h-4 w-4 ml-1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
               </button>
               {isCountryDropdownOpen && (
                 <div className="absolute left-0 z-10 mt-1 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 max-h-80 overflow-y-auto">
@@ -375,10 +359,7 @@ export default function InfoContacto({
               type="tel"
               name="phoneNumber"
               value={formData.phoneNumber || ""}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "")
-                handleChange({ target: { name: "phoneNumber", value } })
-              }}
+              onChange={handleChange}
               maxLength={sortedPhoneCodes.find((c) => c.codigo === formData.countryCode)?.longitud || 10}
               className={`w-full px-4 py-3 border ${isFieldEmpty("phoneNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
@@ -386,7 +367,9 @@ export default function InfoContacto({
               style={{ height: "48px" }}
             />
           </div>
-          {isFieldEmpty("phoneNumber") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
+          {isFieldEmpty("phoneNumber") && (
+            <p className="mt-1 text-xs text-red-500">{localErrors.phoneNumber || "Este campo es obligatorio"}</p>
+          )}
         </div>
         {/* Home Phone */}
         <div>
@@ -396,10 +379,7 @@ export default function InfoContacto({
               type="tel"
               name="homePhone"
               value={formData.homePhone || ""}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "")
-                handleChange({ target: { name: "homePhone", value } })
-              }}
+              onChange={handleChange}
               maxLength="11"
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
               placeholder="0212 123 4567"
@@ -430,7 +410,9 @@ export default function InfoContacto({
                 </option>
               ))}
             </select>
-            {isFieldEmpty("state") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
+            {isFieldEmpty("state") && (
+              <p className="mt-1 text-xs text-red-500">{localErrors.state || "Este campo es obligatorio"}</p>
+            )}
           </div>
           {/* Municipio o Parroquia según el estado seleccionado */}
           <div>
@@ -451,7 +433,9 @@ export default function InfoContacto({
                 </option>
               ))}
             </select>
-            {isFieldEmpty("city") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
+            {isFieldEmpty("city") && (
+              <p className="mt-1 text-xs text-red-500">{localErrors.city || "Este campo es obligatorio"}</p>
+            )}
           </div>
         </div>
         {/* Dirección específica */}
@@ -469,7 +453,9 @@ export default function InfoContacto({
             />
             <MapPin className="absolute left-3 top-4 text-gray-400" />
           </div>
-          {isFieldEmpty("address") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
+          {isFieldEmpty("address") && (
+            <p className="mt-1 text-xs text-red-500">{localErrors.address || "Este campo es obligatorio"}</p>
+          )}
         </div>
       </div>
       {/* Botones de acción en modo edición */}
