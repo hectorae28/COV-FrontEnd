@@ -252,7 +252,10 @@ export function InlineEditForm({
                 </button>
                 <button
                     type="button"
-                    onClick={handleCancel}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleCancel();
+                    }}
                     className="py-2.5 px-4 rounded-md font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-300 flex items-center"
                 >
                     <FiX className="mr-1" /> Cancelar

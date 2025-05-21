@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import {
-  AlertCircle, CheckCircle, Eye,
-  FileText, RefreshCcw,
+  AlertCircle, CheckCircle,
+  Eye,
+  FileText,
+  RefreshCcw,
   Upload, X
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,7 +19,8 @@ export function DocumentSection({
   subtitle = "Documentación obligatoria del colegiado",
   recaudosId,
   icon = <FileText size={20} className="text-[#C40180] mr-2" />,
-  filter = doc => !doc.id?.includes('comprobante_pago')
+  filter = doc => !doc.id?.includes('comprobante_pago'),
+  onEditSection
 }) {
   // Asegúrate de que documentos sea siempre un array antes de filtrar
   const docs = Array.isArray(documentos) ? documentos : [];
@@ -109,39 +112,39 @@ export function DocumentSection({
   };
 
   const handleUpload = async () => {
-        if (!selectedFile) {
-            setError("Por favor seleccione un archivo para subir.")
-            return
-        }
-
-        setIsUploading(true)
-        setError("")
-
-        try {
-            const uploadedFileUrl = URL.createObjectURL(selectedFile)
-            if (updateDocumento) {
-                const Form = new FormData();
-                Form.append(`${documentoParaSubir.id}`, selectedFile)
-
-                // Check if this is a payment receipt
-                const isPaymentReceipt =
-                    documentoParaSubir.id.includes("comprobante_pago") ||
-                    documentoParaSubir.nombre.toLowerCase().includes("comprobante")
-
-                // Update the document
-                updateDocumento(Form)
-            }
-
-            // Cerrar modal después de subir
-            setDocumentoParaSubir(null)
-            setSelectedFile(null)
-        } catch (error) {
-            console.error("Error al subir documento:", error)
-            setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.")
-        } finally {
-            setIsUploading(false)
-        }
+    if (!selectedFile) {
+      setError("Por favor seleccione un archivo para subir.")
+      return
     }
+
+    setIsUploading(true)
+    setError("")
+
+    try {
+      const uploadedFileUrl = URL.createObjectURL(selectedFile)
+      if (updateDocumento) {
+        const Form = new FormData();
+        Form.append(`${documentoParaSubir.id}`, selectedFile)
+
+        // Check if this is a payment receipt
+        const isPaymentReceipt =
+          documentoParaSubir.id.includes("comprobante_pago") ||
+          documentoParaSubir.nombre.toLowerCase().includes("comprobante")
+
+        // Update the document
+        updateDocumento(Form)
+      }
+
+      // Cerrar modal después de subir
+      setDocumentoParaSubir(null)
+      setSelectedFile(null)
+    } catch (error) {
+      console.error("Error al subir documento:", error)
+      setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.")
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   return (
     <motion.div
@@ -168,15 +171,6 @@ export function DocumentSection({
           </button>
         </div>
       )}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-        <div className="flex items-center mb-5 md:mb-0 border-b md:border-b-0 pb-3 md:pb-0">
-          {icon}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            <p className="text-sm text-gray-500">{subtitle}</p>
-          </div>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {documentosFiltrados.length > 0 ? (

@@ -179,7 +179,7 @@ export default function ContactInfoSection({
           <div className="bg-gray-50 p-4 rounded-md">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
               {typeof (tempFormData?.state || datosContacto?.state) === 'string' && 
-               (tempFormData?.state || datosContacto?.state).toLowerCase() === "distrito capital" ? "Parroquia" : "Municipio"}
+               (tempFormData?.state || datosContacto?.state)?.toLowerCase?.() === "distrito capital" ? "Parroquia" : "Municipio"}
             </p>
             <p className="font-medium text-gray-800">{tempFormData?.city || datosContacto?.city || "No especificada"}</p>
           </div>
@@ -321,7 +321,7 @@ export default function ContactInfoSection({
               {/* Ciudad/Municipio */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-[#41023B]">
-                  {localFormData.state?.toLowerCase() === "distrito capital" ? "Parroquia" : "Municipio"}
+                  {typeof localFormData.state === 'string' && localFormData.state?.toLowerCase?.() === "distrito capital" ? "Parroquia" : "Municipio"}
                   <span className="text-red-500 ml-1">*</span>
                 </label>
                 <input
@@ -330,7 +330,7 @@ export default function ContactInfoSection({
                   value={localFormData.city}
                   onChange={handleLocalInputChange}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
-                  placeholder={localFormData.state?.toLowerCase() === "distrito capital" ? "Ingrese la parroquia" : "Ingrese el municipio"}
+                  placeholder={typeof localFormData.state === 'string' && localFormData.state?.toLowerCase?.() === "distrito capital" ? "Ingrese la parroquia" : "Ingrese el municipio"}
                 />
               </div>
             </div>

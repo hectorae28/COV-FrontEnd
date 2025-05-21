@@ -8,32 +8,76 @@ import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
 
 export default function InstitutionsSection({
+  pendiente,
   instituciones,
   setInstituciones,
+  nuevaInstitucion,
+  setNuevaInstitucion,
+  agregarInstitucion,
+  setAgregarInstitucion,
   updateColegiadoPendiente,
   pendienteId,
   setCambiosPendientes,
   readonly = false
 }) {
-  // Nuevo estado para modal
+  // Estados para modal y validación
   const [showModal, setShowModal] = useState(false);
+  const [tempInstituciones, setTempInstituciones] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [attemptedSave, setAttemptedSave] = useState(false);
 
   // Manejador para guardar cambios
   const handleSaveChanges = (updates) => {
-    // Extraer instituciones actualizadas
-    const updatedInstituciones = updates.laboralRegistros || [];
-
+    // Si updates.laboralRegistros existe, usar eso, sino usar tempInstituciones
+    const updatedInstituciones = updates?.laboralRegistros || tempInstituciones || [];
+    
+    // Validar datos
+    if (!validateInstituciones(updatedInstituciones)) {
+      setAttemptedSave(true);
+      return; // No guardar si hay errores
+    }
+    
     // Actualizar estado local
     setInstituciones(updatedInstituciones);
+    setTempInstituciones(null);
 
-    // Enviar datos al componente padre (sin enviar a API)
-    updateColegiadoPendiente(pendienteId, { instituciones: updatedInstituciones });
+    // Enviar datos al componente padre
+    updateColegiadoPendiente(pendienteId, { 
+      instituciones: updatedInstituciones,
+      workStatus: "labora"
+    });
 
     // Marcar como guardado
     setCambiosPendientes(false);
 
     // Cerrar modal
     setShowModal(false);
+  };
+
+  // Validar instituciones
+  const validateInstituciones = (instituciones) => {
+    if (!instituciones || instituciones.length === 0) {
+      // Si no hay instituciones, es válido (el usuario puede no estar laborando)
+      return true;
+    }
+
+    // Para cada institución, validar los campos requeridos
+    const requiredFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType"];
+    
+    const errors = {};
+    let isValid = true;
+
+    instituciones.forEach((institucion, index) => {
+      requiredFields.forEach(field => {
+        if (!institucion[field] || institucion[field].trim() === "") {
+          errors[`${field}_${index}`] = true;
+          isValid = false;
+        }
+      });
+    });
+
+    setValidationErrors(errors);
+    return isValid;
   };
 
   // Obtener nombre del tipo de institución
@@ -60,7 +104,7 @@ export default function InstitutionsSection({
   const formatearDireccion = (institucion) => {
     if (!institucion) return "No especificada";
     
-    const direccion = institucion.direccion || "";
+    const direccion = institucion.direccion || institucion.institutionAddress || "";
     const estado = institucion.selectedEstado || "";
     const ciudad = institucion.selectedCiudad || "";
     
@@ -99,7 +143,7 @@ export default function InstitutionsSection({
         )}
       </div>
 
-      {/* Vista de instituciones - siguiendo estructura de InfoLab.jsx */}
+      {/* Vista de instituciones */}
       {instituciones && instituciones.length > 0 ? (
         <div className="space-y-6">
           {instituciones.map((institucion, index) => (
@@ -109,7 +153,7 @@ export default function InstitutionsSection({
             >
               <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200 flex items-center">
                 <Briefcase size={16} className="mr-2 text-[#C40180]" />
-                {institucion.nombre || "Institución sin nombre"}
+                {institucion.nombre || institucion.institutionName || "Institución sin nombre"}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -117,7 +161,7 @@ export default function InstitutionsSection({
                     Tipo de institución
                   </p>
                   <p className="font-medium text-gray-800">
-                    {getInstitucionTypeName(institucion.tipo_institucion) || "No especificado"}
+                    {getInstitucionTypeName(institucion.tipo_institucion || institucion.institutionType) || "No especificado"}
                   </p>
                 </div>
                 
@@ -155,7 +199,7 @@ export default function InstitutionsSection({
                   <div className="flex items-center">
                     <Phone size={16} className="mr-2 text-[#C40180]" />
                     <p className="font-medium text-gray-800">
-                      {institucion.telefono || "No especificado"}
+                      {institucion.telefono || institucion.institutionPhone || "No especificado"}
                     </p>
                   </div>
                 </div>
@@ -184,10 +228,15 @@ export default function InstitutionsSection({
         </div>
       )}
 
-      {/* Modal para edición */}
+      {/* Modal para edición utilizando InfoLaboral */}
       <Modal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setTempInstituciones(null);
+          setValidationErrors({});
+          setAttemptedSave(false);
+        }}
         title="Editar instituciones"
         maxWidth="max-w-4xl"
       >
@@ -197,14 +246,13 @@ export default function InstitutionsSection({
             laboralRegistros: instituciones
           }}
           onInputChange={(updates) => {
-            // Guardar cambios temporalmente sin cerrar el modal
-            console.log("Cambios temporales en instituciones:", updates);
-            // No llamar a handleSaveChanges directamente
+            if (updates.laboralRegistros) {
+              setTempInstituciones(updates.laboralRegistros);
+            }
+            setCambiosPendientes(true);
           }}
-          validationErrors={{}}
-          currentStep={4}
-          attemptedNext={false}
-          validateStep={() => true}
+          validationErrors={validationErrors}
+          attemptedNext={attemptedSave}
           isEditMode={true}
           onSave={handleSaveChanges}
         />
