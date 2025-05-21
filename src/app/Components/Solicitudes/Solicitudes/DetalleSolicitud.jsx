@@ -11,7 +11,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 // Componentes importados
-import PagosColg from "@/app/Components/Solicitudes/Solicitudes/PagosModalSolic";
+import PagosColg from "@/Components/PagosModal"
+import {PagosColgSolic} from "@/app/Components/Solicitudes/Solicitudes/PagosModalSolic"
 import ConfirmacionModal from "@/Components/Solicitudes/Solicitudes/ConfirmacionModal";
 import DocumentosSection from "@/Components/Solicitudes/Solicitudes/DocumentsManagerComponent";
 import { DocumentSection as DocumentsSection } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
@@ -59,7 +60,7 @@ export default function DetalleSolicitud({ props }) {
 
   useEffect(() => {
     loadSolicitudById();
-  }, [id, ]);
+  }, [id,]);
 
   // Calcular totales
   const calcularTotales = (solicitudData) => {
@@ -176,8 +177,6 @@ export default function DetalleSolicitud({ props }) {
 
   // Función para iniciar proceso de pago
   const handleIniciarPago = () => {
-    console.log({ solicitud });
-    console.log(pagosSolicitud)
     if (totales.totalPendiente === 0) {
       alert("No hay montos pendientes por pagar");
       return;
@@ -187,15 +186,15 @@ export default function DetalleSolicitud({ props }) {
   };
 
   // Función que se ejecuta cuando se completa un pago
-  const handlePaymentComplete = async(pagoInfo) => {
+  const handlePaymentComplete = async (pagoInfo) => {
     //Actualizar los items pagados según el monto pagado
-    console.log({pagoInfo})
-    await addPagosSolicitud(solicitud.id, pagoInfo);
+    console.log({ pagoInfo })
+    await addPagosSolicitud(solicitud.id, { monto: Number(pagoInfo.totalAmount), moneda: pagoInfo.metodo_de_pago.moneda, num_referencia: pagoInfo.referenceNumber, metodo_de_pago: pagoInfo.metodo_de_pago.id, tasa_bcv_del_dia, solicitud: solicitud.id, });
     return
     let montoRestante = parseFloat(pagoInfo.monto);
     const itemsActualizados = [...solicitud.itemsSolicitud];
     console.log(pagoInfo)
-    
+
 
     /**
      * 
@@ -334,11 +333,10 @@ export default function DetalleSolicitud({ props }) {
       {/* Alertas de éxito o información */}
       {alertaExito && (
         <div
-          className={`mb-4 p-3 rounded-md flex items-start justify-between ${
-            alertaExito.tipo === "exito"
+          className={`mb-4 p-3 rounded-md flex items-start justify-between ${alertaExito.tipo === "exito"
               ? "bg-green-100 text-green-800"
               : "bg-yellow-100 text-yellow-800"
-          }`}
+            }`}
         >
           <div className="flex items-center">
             {alertaExito.tipo === "exito" ? (
@@ -470,9 +468,15 @@ export default function DetalleSolicitud({ props }) {
             </div>
 
             <div className="flex-1 overflow-auto p-4">
-              <PagosColg
-                onPaymentComplete={handlePaymentComplete}
+              <PagosColgSolic                onPaymentComplete={handlePaymentComplete}
                 totalPendiente={totales.totalPendiente}
+              />
+              <PagosColg
+                props={{
+                  costo: totales.totalPendiente,
+                  allowMultiplePayments: true,
+                  handlePago: handlePaymentComplete,
+                }}
               />
             </div>
           </div>

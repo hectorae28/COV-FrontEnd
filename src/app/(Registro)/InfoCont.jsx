@@ -52,6 +52,7 @@ export default function InfoContacto({
     const loadEstados = async () => {
       try {
         const data = await fetchEstados();
+        console.log("Estados cargados:", data);
         setEstados(data);
       } catch (error) {
         console.error("Error al cargar los estados:", error);
@@ -84,6 +85,8 @@ export default function InfoContacto({
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    console.log("Cambio en campo:", name, "Valor:", value);
+    
     if (name === "address") {
       // Capitalizamos la primera letra de cada palabra en la dirección
       const processedValue = capitalizeWords(value);
@@ -94,10 +97,19 @@ export default function InfoContacto({
         onInputChange({ [name]: processedValue });
       }
     } else if (name === "state") {
+      // Encontrar el estado seleccionado para obtener su nombre
+      const estadoSeleccionado = estados.find(e => e.id === value);
+      const nombreEstado = estadoSeleccionado ? estadoSeleccionado.nombre : "";
+      
       if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: value, city: "", municipio: "" }));
+        setLocalFormData(prev => ({ 
+          ...prev, 
+          [name]: value,
+        }));
       } else {
-        onInputChange({ [name]: value, city: "", municipio: "" });
+        onInputChange({ 
+          [name]: value,
+        });
       }
       
       // Cargar municipios según el estado seleccionado
@@ -107,10 +119,24 @@ export default function InfoContacto({
         setMunicipios([]);
       }
     } else if (name === "municipio") {
+      // Encontrar el nombre del municipio seleccionado
+      const municipioSeleccionado = municipios.find(m => m.id === value);
+      const nombreMunicipio = municipioSeleccionado ? municipioSeleccionado.nombre : "";
+      
+      console.log("Municipio seleccionado:", municipioSeleccionado);
+      console.log("Nombre del municipio:", nombreMunicipio);
+      
       if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: value }));
+        setLocalFormData(prev => ({ 
+          ...prev, 
+          [name]: value,
+          city: nombreMunicipio 
+        }));
       } else {
-        onInputChange({ [name]: value });
+        onInputChange({ 
+          [name]: value,
+          city: nombreMunicipio 
+        });
       }
     } else if (name === "email") {
       // Validar formato de correo electrónico
@@ -147,6 +173,7 @@ export default function InfoContacto({
     try {
       setIsLoadingMunicipios(true);
       const data = await fetchMunicipios(estadoId);
+      console.log("Municipios cargados:", data);
       setMunicipios(data);
     } catch (error) {
       console.error("Error al cargar los municipios:", error);
@@ -511,6 +538,9 @@ export default function InfoContacto({
               ))}
             </select>
             {isFieldEmpty("municipio") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
+            <p className="mt-1 text-xs text-gray-500">
+              {formData.city ? `Ciudad seleccionada: ${formData.city}` : ""}
+            </p>
           </div>
         </div>
         {/* Dirección específica */}
