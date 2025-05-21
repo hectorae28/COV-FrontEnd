@@ -45,7 +45,7 @@ const steps = [
     description: "Cómo podemos comunicarnos contigo",
     icon: Phone,
     component: InfoContacto,
-    requiredFields: ["email", "phoneNumber", "address", "city", "state"],
+    requiredFields: ["email", "phoneNumber", "address", "state", "municipio"],
   },
   {
     id: 3,
@@ -230,6 +230,7 @@ export default function RegistrationForm(props) {
   }
 
   const validateStep = (stepIndex) => {
+    console.log({formData})
     const step = steps[stepIndex - 1]
     const errors = {}
     let isValid = true
@@ -288,7 +289,7 @@ export default function RegistrationForm(props) {
     if (attemptedNext) {
       setValidationErrors(errors)
     }
-
+    console.log({isValid})
     return isValid
   }
 
@@ -402,7 +403,6 @@ export default function RegistrationForm(props) {
   }
 
   const handleSubmit = async (e) => {
-    console.log({isSubmitting})
     e.preventDefault();
 
     // Activar la bandera para mostrar errores de validación SOLO cuando intentamos proceder a pagos
@@ -422,7 +422,8 @@ export default function RegistrationForm(props) {
           JSON.stringify({
             direccion: {
               referencia: formData.address,
-              estado: 1,
+              estado: Number(formData.state),
+              municipio: formData.municipio,
             },
             nombre: formData.firstName,
             primer_apellido: formData.firstLastName,
@@ -502,7 +503,7 @@ export default function RegistrationForm(props) {
             setIsSubmitting(false)
           }
         } catch (error) {
-          setError(`Error: ${error.response?.data || error}`);
+          setError({detail: `Error: ${error.response?.data || error}`});
         } finally {
           setIsSubmitting(false);
         }
@@ -574,7 +575,7 @@ export default function RegistrationForm(props) {
         setIsSubmitting(false)
       }
     } catch (error) {
-      setError(`error ${error.response?.data || error}`)
+      setError({detail: `error ${error.response?.data || error}`})
     } finally {
       setIsSubmitting(false)
     }

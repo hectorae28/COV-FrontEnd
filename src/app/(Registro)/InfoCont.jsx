@@ -2,6 +2,7 @@
 import CountryFlag from "@/Shared/CountryFlag"
 import PhoneEstData from "@/Shared/EstadoData"
 import phoneCodes from "@/Shared/TelefonoData"
+import { fetchEstados, fetchMunicipios } from "@/api/endpoints/ubicacion"
 import { motion } from "framer-motion"
 import { ChevronDown, Mail, MapPin, Phone, Search, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -26,6 +27,7 @@ export default function InfoContacto({
   onSave
 }) {
   const [cities, setCities] = useState([])
+  const [municipios, setMunicipios] = useState([])
   const [isFormValid, setIsFormValid] = useState(false)
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -34,6 +36,8 @@ export default function InfoContacto({
   const [emailChanged, setEmailChanged] = useState(false)
   const [emailError, setEmailError] = useState("")
   const dropdownRef = useRef(null)
+  const [estados, setEstados] = useState([])
+  const [isLoadingMunicipios, setIsLoadingMunicipios] = useState(false)
   
   // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
@@ -42,6 +46,21 @@ export default function InfoContacto({
   useEffect(() => {
     setLocalFormData(formData);
   }, [formData]);
+
+  // Cargar estados al montar el componente
+  useEffect(() => {
+    const loadEstados = async () => {
+      try {
+        const data = await fetchEstados();
+        console.log("Estados cargados:", data);
+        setEstados(data);
+      } catch (error) {
+        console.error("Error al cargar los estados:", error);
+      }
+    };
+    
+    loadEstados();
+  }, []);
 
   // Ordenamos los códigos telefónicos alfabéticamente por nombre de país
   const sortedPhoneCodes = useMemo(() => {
@@ -66,6 +85,8 @@ export default function InfoContacto({
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    console.log("Cambio en campo:", name, "Valor:", value);
+    
     if (name === "address") {
       // Capitalizamos la primera letra de cada palabra en la dirección
       const processedValue = capitalizeWords(value);
@@ -76,10 +97,46 @@ export default function InfoContacto({
         onInputChange({ [name]: processedValue });
       }
     } else if (name === "state") {
+      // Encontrar el estado seleccionado para obtener su nombre
+      const estadoSeleccionado = estados.find(e => e.id === value);
+      const nombreEstado = estadoSeleccionado ? estadoSeleccionado.nombre : "";
+      
       if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: value, city: "" }));
+        setLocalFormData(prev => ({ 
+          ...prev, 
+          [name]: value,
+        }));
       } else {
-        onInputChange({ [name]: value, city: "" });
+        onInputChange({ 
+          [name]: value,
+        });
+      }
+      
+      // Cargar municipios según el estado seleccionado
+      if (value) {
+        loadMunicipios(value);
+      } else {
+        setMunicipios([]);
+      }
+    } else if (name === "municipio") {
+      // Encontrar el nombre del municipio seleccionado
+      const municipioSeleccionado = municipios.find(m => m.id === value);
+      const nombreMunicipio = municipioSeleccionado ? municipioSeleccionado.nombre : "";
+      
+      console.log("Municipio seleccionado:", municipioSeleccionado);
+      console.log("Nombre del municipio:", nombreMunicipio);
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({ 
+          ...prev, 
+          [name]: value,
+          city: nombreMunicipio 
+        }));
+      } else {
+        onInputChange({ 
+          [name]: value,
+          city: nombreMunicipio 
+        });
       }
     } else if (name === "email") {
       // Validar formato de correo electrónico
@@ -110,6 +167,21 @@ export default function InfoContacto({
       }
     }
   }
+
+  // Función para cargar los municipios según el estado seleccionado
+  const loadMunicipios = async (estadoId) => {
+    try {
+      setIsLoadingMunicipios(true);
+      const data = await fetchMunicipios(estadoId);
+      console.log("Municipios cargados:", data);
+      setMunicipios(data);
+    } catch (error) {
+      console.error("Error al cargar los municipios:", error);
+      setMunicipios([]);
+    } finally {
+      setIsLoadingMunicipios(false);
+    }
+  };
 
   // Manejador para seleccionar un código de país
   const handleSelectCountry = (code) => {
@@ -161,7 +233,7 @@ export default function InfoContacto({
 
   // Validar formulario cuando cambia formData
   useEffect(() => {
-    const requiredFields = ["email", "phoneNumber", "state", "city", "address"];
+    const requiredFields = ["email", "phoneNumber", "state", "municipio", "address"];
     // Validación de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isEmailValid = formData.email && emailRegex.test(formData.email);
@@ -253,7 +325,12 @@ export default function InfoContacto({
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="w-full sm:w-11/12 md:w-10/12 lg:w-8/12 xl:w-6/12 mx-auto"
+    >
       {/* Email - SOLO ESTE CAMPO será no editable en modo perfil */}
       <div>
         <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -418,15 +495,17 @@ export default function InfoContacto({
               Estado <span className="text-red-500">*</span>
             </label>
             <select
+              id="state"
               name="state"
-              value={formData.state || ""}
+              value={isEditMode ? localFormData.state : formData.state}
               onChange={handleChange}
               className={`w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none`}
+              required
             >
-              <option value="">Seleccionar Estado</option>
-              {venezuelanStates.map((state) => (
-                <option key={state} value={state.toLowerCase()}>
-                  {state}
+              <option value="">Selecciona un estado</option>
+              {estados.map((estado) => (
+                <option key={estado.id} value={estado.id}>
+                  {estado.nombre}
                 </option>
               ))}
             </select>
@@ -438,20 +517,30 @@ export default function InfoContacto({
               {municipioLabel} <span className="text-red-500">*</span>
             </label>
             <select
-              name="city" // Mantenemos el mismo nombre en el formData pero cambiamos el label
-              value={formData.city || ""}
+              id="municipio"
+              name="municipio"
+              value={isEditMode ? localFormData.municipio : formData.municipio}
               onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${!formData.state ? "bg-white" : ""}`}
-              disabled={!formData.state}
+              className={`w-full px-4 py-3 border ${isFieldEmpty("municipio") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${!formData.state ? "bg-white" : ""}`}
+              disabled={isLoadingMunicipios || !formData.state}
             >
-              <option value="">{`Seleccionar ${municipioLabel}`}</option>
-              {cities.map((city) => (
-                <option key={city} value={city.toLowerCase()}>
-                  {city}
+              <option value="">
+                {isLoadingMunicipios 
+                  ? "Cargando municipios..." 
+                  : !formData.state 
+                    ? "Selecciona un estado primero" 
+                    : "Selecciona un municipio"}
+              </option>
+              {municipios.map((municipio) => (
+                <option key={municipio.id} value={municipio.id}>
+                  {municipio.nombre}
                 </option>
               ))}
             </select>
-            {isFieldEmpty("city") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
+            {isFieldEmpty("municipio") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
+            <p className="mt-1 text-xs text-gray-500">
+              {formData.city ? `Ciudad seleccionada: ${formData.city}` : ""}
+            </p>
           </div>
         </div>
         {/* Dirección específica */}

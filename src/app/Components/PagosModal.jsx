@@ -13,17 +13,91 @@ export default function PagosColg({ props }) {
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
-  const [paymentAmount, setPaymentAmount] = useState(costo);
+  const [paymentAmount, setPaymentAmount] = useState(parseFloat(costo).toFixed(2));
   const [paymentFile, setPaymentFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [tasaBCV, setTasaBCV] = useState(0);
   const [metodoDePago, setMetodoDePago] = useState([]);
+  const [montoEnBs, setMontoEnBs] = useState("0.00");
+  const [showMethodSelection, setShowMethodSelection] = useState(false);
+
+  // Verificar si hay más de 4 métodos de pago para cambiar el estilo de visualización
+  const showAsList = metodoDePago.length > 4;
+
+  // PayPal fee calculation
+  const calculatePaypalFee = (amount) => {
+    if (!amount || isNaN(parseFloat(amount))) return "";
+    const numAmount = parseFloat(amount);
+    const total = (numAmount + 0.3) / (1 - 0.054);
+    return total.toFixed(2);
+  };
+  const paypalAmount = calculatePaypalFee(paymentAmount);
+
+  // Actualizar el monto en Bs cuando cambie la tasa BCV
+  useEffect(() => {
+    if (tasaBCV > 0) {
+      setMontoEnBs((parseFloat(costo) * tasaBCV).toFixed(2));
+    }
+  }, [tasaBCV, costo]);
+
+  // Actualizar el monto en USD cuando se ingresa en Bs
+  const handleBsChange = (e) => {
+    const value = e.target.value;
+    if (!value) {
+      setMontoEnBs("");
+      setPaymentAmount("0.00");
+      return;
+    }
+
+    // Solo permitir números y un punto decimal
+    if (!/^\d*\.?\d*$/.test(value)) return;
+
+    setMontoEnBs(value);
+
+    // Convertir a USD
+    const usdAmount = (parseFloat(value) / tasaBCV).toFixed(2);
+
+    // Verificar que no exceda el monto pendiente
+    if (parseFloat(usdAmount) > costo) {
+      alert(`El monto no puede ser mayor a USD$ ${costo}`);
+      // Reajustar al monto máximo
+      setMontoEnBs((costo * tasaBCV).toFixed(2));
+      setPaymentAmount(costo);
+      return;
+    }
+
+    setPaymentAmount(usdAmount);
+  };
+
+  // Validar y actualizar el monto de pago en USD
+  const handleMontoChange = (e) => {
+    const value = e.target.value;
+    if (!value) {
+      setPaymentAmount("0.00");
+      setMontoEnBs("");
+      return;
+    }
+
+    // Solo permitir números y un punto decimal
+    if (!/^\d*\.?\d*$/.test(value)) return;
+
+    const numericValue = parseFloat(value);
+
+    if (numericValue > costo) {
+      alert(`El monto no puede ser mayor a USD$ ${costo}`);
+      return;
+    }
+
+    // Actualizar valor sin formatear para que sea más fácil de editar
+    setPaymentAmount(value);
+    // Calcular el equivalente en Bs
+    setMontoEnBs((numericValue * tasaBCV).toFixed(2));
+  };
 
   const getTasa = async () => {
     try {
       const tasa = await fetchDataSolicitudes("tasa-bcv");
       setTasaBCV(tasa.data.rate);
-      setMontoEnBs((parseFloat(costo) * tasaBCV).toFixed(2));
     } catch (error) {
       console.log(`Ha ocurrido un error: ${error}`)
     }
@@ -42,20 +116,15 @@ export default function PagosColg({ props }) {
     getTasa();
     getMetodosDePago();
   }, [tasaBCV])
-  const [montoEnBs, setMontoEnBs] = useState((parseFloat(costo) * tasaBCV).toFixed(2));
-  const [showMethodSelection, setShowMethodSelection] = useState(false);
 
-  // Verificar si hay más de 4 métodos de pago para cambiar el estilo de visualización
-  const showAsList = metodoDePago.length > 4;
-
-  // PayPal fee calculation
-  const calculatePaypalFee = (amount) => {
-    if (!amount || isNaN(parseFloat(amount))) return "";
-    const numAmount = parseFloat(amount);
-    const total = (numAmount + 0.3) / (1 - 0.054);
-    return total.toFixed(2);
+  // Manejar la selección de método de pago
+  const handleSelectPaymentMethod = (metodo) => {
+    setPaymentMethod({
+      nombre: metodo.datos_adicionales.slug,
+      metodoId: metodo.id
+    });
+    setShowMethodSelection(false);
   };
-  const paypalAmount = calculatePaypalFee(paymentAmount);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,10 +133,11 @@ export default function PagosColg({ props }) {
       paymentDate,
       referenceNumber,
       paymentFile,
-      totalAmount: paymentMethod === "bdv" ? montoEnBs : paypalAmount,
+      totalAmount: paymentMethod.nombre === "bdv" ? montoEnBs : paypalAmount,
       metodo_de_pago: metodoDePago.find(
         (m) => m.datos_adicionales.slug === paymentMethod.nombre
       ),
+      tasa_bcv_del_dia: tasaBCV,
     });
 
     setIsSubmitting(false);
@@ -80,15 +150,6 @@ export default function PagosColg({ props }) {
       const fileUrl = URL.createObjectURL(file);
       setPreviewUrl(fileUrl);
     }
-  };
-
-  // Manejar la selección de método de pago
-  const handleSelectPaymentMethod = (metodo) => {
-    setPaymentMethod({
-      nombre: metodo.datos_adicionales.slug,
-      metodoId: metodo.id
-    });
-    setShowMethodSelection(false);
   };
 
   return (
@@ -124,11 +185,11 @@ export default function PagosColg({ props }) {
           </div>
         </div>
 
-        {/* Amount to pay highlighted */}
+        {/* Monto a pagar destacado */}
         <div className="text-center mb-8">
           <p className="text-lg text-gray-600">Monto a pagar:</p>
           <p className="text-4xl font-bold text-[#D7008A]">
-            USD$ {costo}
+            USD$ {paymentAmount}
           </p>
           <p className="text-xl font-medium text-gray-700 mt-2">
             Monto en Bs: {montoEnBs}
@@ -371,13 +432,34 @@ export default function PagosColg({ props }) {
                     Detalles del Pago
                   </h3>
 
+                  {allowMultiplePayments && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Monto en Bs <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            Bs
+                          </span>
+                          <input
+                            type="text"
+                            value={montoEnBs}
+                            onChange={handleBsChange}
+                            className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] text-sm"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Número de referencia
                     </label>
                     <input
                       type="text"
-                      inputmode="numeric"
                       pattern="[0-9]*"
                       maxLength={14}
                       value={referenceNumber}
