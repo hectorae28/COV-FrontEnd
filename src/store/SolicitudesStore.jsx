@@ -361,7 +361,8 @@ export const useSolicitudesStore = create((set, get) => ({
           costoEspecialSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
           fechaExpSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
           modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
-          grupos: solicitud.solicitudes_solvencia.lista[0].detalles.user_groups
+          grupos: solicitud.solicitudes_solvencia.lista[0].detalles.user_groups,
+          creadoPor: solicitud.solicitudes_solvencia.lista[0].detalles.creado_por
         });
       });
       set({
@@ -369,7 +370,6 @@ export const useSolicitudesStore = create((set, get) => ({
         solicitudesDeSolvenciaPagination: res.data,
         loading: false
       });
-      return solicitudesOrdenadas;
     } catch (error) {
       set({ 
         loading: false, 
