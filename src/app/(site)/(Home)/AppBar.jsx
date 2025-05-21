@@ -28,7 +28,7 @@ const menuItems = [
   },
   {
     title: "Eventos",
-    route: "/Eventos",
+    route: "/CursosEventos",
   },
   { title: "Trámites", route: "/Tramites" },
   { title: "Contáctenos", route: "/Contactenos" },
