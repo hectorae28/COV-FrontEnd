@@ -48,7 +48,7 @@ export default function CarnetInfo({ colegiado }) {
                                     <div>
                                         <h5 className="font-bold text-lg">{nombreCompleto}</h5>
                                         <p className="text-white/80 text-sm">{colegiado.persona.nacionalidad}-{colegiado.persona.identificacion}</p>
-                                        <p className="text-white/80 text-sm">{colegiado.especialidad}</p>
+                                        <p className="text-white/80 text-sm">{typeof colegiado.especialidad === 'object' ? colegiado.especialidad.titulo : colegiado.especialidad || "No especificado"}</p>
                                     </div>
                                 </div>
 
@@ -107,7 +107,7 @@ export default function CarnetInfo({ colegiado }) {
                                 </div>
                                 <div className="bg-gray-50 p-3 rounded-md">
                                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Especialidad</p>
-                                    <p className="font-medium text-gray-800">{colegiado.especialidad}</p>
+                                    <p className="font-medium text-gray-800">{typeof colegiado.especialidad === 'object' ? colegiado.especialidad.titulo : colegiado.especialidad || "No especificado"}</p>
                                 </div>
                             </div>
 

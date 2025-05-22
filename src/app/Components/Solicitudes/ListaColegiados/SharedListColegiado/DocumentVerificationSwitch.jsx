@@ -115,8 +115,8 @@ export default function DocumentVerificationSwitch({
                     onClick={() => handleStatusChange('rechazado')}
                     disabled={isApproved || readOnly}
                     className={`p-2 rounded-md transition-all ${status === 'rechazado'
-                            ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
-                            : 'bg-gray-100 text-gray-500 hover:bg-red-50'
+                        ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
+                        : 'bg-gray-100 text-gray-500 hover:bg-red-50'
                         } ${(isApproved || readOnly) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     title={
                         isApproved
@@ -130,8 +130,8 @@ export default function DocumentVerificationSwitch({
                 </button>
 
                 <span className={`text-sm font-medium ${status === 'approved' ? 'text-green-700' :
-                        status === 'rechazado' ? 'text-red-700' :
-                            'text-gray-600'
+                    status === 'rechazado' ? 'text-red-700' :
+                        'text-gray-600'
                     }`}>
                     {status === 'approved' && (
                         <span className="flex items-center">

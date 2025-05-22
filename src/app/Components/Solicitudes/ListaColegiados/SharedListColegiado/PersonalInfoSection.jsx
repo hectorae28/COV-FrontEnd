@@ -21,18 +21,13 @@ export default function PersonalInfoSection({
     readOnly = false
   } = props;
 
-  // Nuevo estado para el modal
+  // Estados para el modal, siguiendo el patrón de AcademicInfoSection
   const [showModal, setShowModal] = useState(false);
-
-  // Nuevo estado para los cambios temporales durante la edición
   const [tempFormData, setTempFormData] = useState(null);
-  
-  // Estado local para el formulario directo, sin restricciones
   const [localFormData, setLocalFormData] = useState(null);
 
   // Extraer los valores iniciales para el formulario de edición
   const getInitialFormData = () => {
-    // Crear una copia para evitar modificar el objeto original
     return {
       documentType: datosPersonales?.nacionalidad === "extranjera" ? "pasaporte" : "cedula",
       identityCard: datosPersonales?.identificacion?.split('-')[1] || "",
@@ -46,14 +41,12 @@ export default function PersonalInfoSection({
       maritalStatus: datosPersonales?.estado_civil || ""
     };
   };
-  
-  // Inicializar datos locales cuando se abre el modal
+
   const handleOpenModal = () => {
     setLocalFormData(getInitialFormData());
     setShowModal(true);
   };
 
-  // Función para manejar cambios en el formulario sin restricciones
   const handleLocalInputChange = (e) => {
     const { name, value } = e.target;
     setLocalFormData(prev => ({
@@ -63,12 +56,8 @@ export default function PersonalInfoSection({
     setCambiosPendientes(true);
   };
 
-  // Manejador para guardar cambios desde el modal
   const handleSaveChanges = (updates) => {
-    // Usar los datos locales si estamos editando directamente
     const dataToUpdate = localFormData || updates;
-    
-    // Construir el objeto de persona actualizado
     const updatedPersona = {
       ...datosPersonales,
       nombre: dataToUpdate.firstName,
@@ -84,19 +73,13 @@ export default function PersonalInfoSection({
       estado_civil: dataToUpdate.maritalStatus
     };
 
-    // Actualizar estado local primero (importante para feedback inmediato)
     setDatosPersonales(updatedPersona);
     setTempFormData(null);
     setLocalFormData(null);
-
-    // Enviar datos al componente padre
     updateData(pendienteId, { persona: updatedPersona });
-
-    // Cerrar modal
     setShowModal(false);
   };
 
-  // Función para capitalizar texto
   const capitalizeText = (text) => {
     if (!text) return "";
     return text
@@ -105,7 +88,6 @@ export default function PersonalInfoSection({
       .join(' ');
   };
 
-  // Formatear la fecha de nacimiento
   const formatearFecha = (fechaISO) => {
     if (!fechaISO) return "No especificada";
     try {
@@ -122,7 +104,6 @@ export default function PersonalInfoSection({
       transition={{ delay: 0.1 }}
       className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
     >
-      {/* Información del creador */}
       {pendiente?.creador && (
         <div className="pt-6 mb-8">
           <div className="flex items-center mb-5 border-b pb-3">
@@ -156,7 +137,7 @@ export default function PersonalInfoSection({
         )}
       </div>
 
-      {/* Vista de información personal - en formato similar al formulario InfoPers */}
+      {/* Vista de información personal */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Primera fila - Tipo de documento e identificación */}
         <div className="bg-gray-50 p-3 rounded-md">
@@ -203,8 +184,10 @@ export default function PersonalInfoSection({
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo apellido</p>
           <p className="font-medium text-gray-800">{tempFormData?.secondLastName || datosPersonales?.segundo_apellido || "No especificado"}</p>
         </div>
+      </div>
 
-        {/* Cuarta fila - Fecha de nacimiento, género y estado civil */}
+      {/* Cuarta fila - Fecha de nacimiento, género y estado civil */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de nacimiento</p>
           <p className="font-medium text-gray-800">{formatearFecha(tempFormData?.birthDate || datosPersonales?.fecha_de_nacimiento)}</p>
@@ -219,8 +202,7 @@ export default function PersonalInfoSection({
           </p>
         </div>
 
-        {/* Última fila abarca 3 columnas */}
-        <div className="bg-gray-50 p-3 rounded-md md:col-span-1">
+        <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado civil</p>
           <p className="font-medium text-gray-800">
             {tempFormData?.maritalStatus ?

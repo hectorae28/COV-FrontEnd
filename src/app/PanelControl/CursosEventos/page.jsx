@@ -229,7 +229,11 @@ export default function DashboardEventos() {
               </h2>
             </div>
             <div className="mb-6">
-              <CardPreview {...formValues} />
+              <CardPreview 
+    {...formValues} 
+    price={formValues.price || formValues.precio}
+    precio={formValues.precio}
+/>
             </div>
           </div>
         </div>

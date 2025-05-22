@@ -295,42 +295,42 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
   };
 
   const handleSaveClick = () => {
-    // Validar que haya al menos una institución con datos válidos
-    if (workStatus === "labora" && registros.length > 0) {
-      const hasValidInstitution = registros.some(reg => 
-        reg.institutionName && reg.institutionType && reg.institutionAddress
-      );
-      
-      if (!hasValidInstitution) {
-        alert("Debe completar los datos de al menos una institución");
-        return;
-      }
-      
-      // Actualizar datos en el formulario principal
-      const updatedData = {
-        workStatus: workStatus,
-        laboralRegistros: registros
-      };
-      
-      if (onSave && isEditMode) {
-        onSave(updatedData);
-      } else {
-        onInputChange(updatedData);
-      }
-    } else if (workStatus === "noLabora") {
-      // Si no labora, enviar estado con valores por defecto
-      const updatedData = {
-        workStatus: "noLabora",
-        laboralRegistros: []
-      };
-      
-      if (onSave && isEditMode) {
-        onSave(updatedData);
-      } else {
-        onInputChange(updatedData);
-      }
+  // Validar que haya al menos una institución con datos válidos
+  if (workStatus === "labora" && registros.length > 0) {
+    const hasValidInstitution = registros.some(reg => 
+      reg.institutionName && reg.institutionType && reg.institutionAddress
+    );
+    
+    if (!hasValidInstitution) {
+      alert("Debe completar los datos de al menos una institución");
+      return;
     }
-  };
+    
+    // Actualizar datos en el formulario principal
+    const updatedData = {
+      workStatus: workStatus,
+      laboralRegistros: registros
+    };
+    
+    if (onSave && isEditMode) {
+      onSave(updatedData);
+    } else if (onInputChange) { // ← Agregar esta verificación
+      onInputChange(updatedData);
+    }
+  } else if (workStatus === "noLabora") {
+    // Si no labora, enviar estado con valores por defecto
+    const updatedData = {
+      workStatus: "noLabora",
+      laboralRegistros: []
+    };
+    
+    if (onSave && isEditMode) {
+      onSave(updatedData);
+    } else if (onInputChange) { // ← Agregar esta verificación
+      onInputChange(updatedData);
+    }
+  }
+};
 
   return (
     <motion.div
