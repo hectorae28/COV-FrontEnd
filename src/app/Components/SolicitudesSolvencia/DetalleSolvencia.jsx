@@ -62,8 +62,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   // Obtener datos de la solvencia
   useEffect(() => {
     if (solvencias && solvenciaId) {
-      const solvenciaEncontrada = solvencias.find(s => s.id === solvenciaId);
-      
+      const solvenciaEncontrada = solvencias.find(s => s.idSolicitudSolvencia === solvenciaId);
+      console.log('EPA SOLVENCIA ENCONTRADA', solvenciaEncontrada);
       if (solvenciaEncontrada) {
         setSolvencia(solvenciaEncontrada);        
         
@@ -72,13 +72,13 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
           try {
             // Intentar parsear la fecha (podría estar en formato ISO o en formato DD/MM/YYYY)
             let fechaObj;
-            if (solvenciaEncontrada.fechaVencimiento.includes('-')) {
+            if (solvenciaEncontrada.fechaExpSolicitud.includes('-')) {
               // Formato ISO YYYY-MM-DD
               fechaObj = new Date(solvenciaEncontrada.fechaVencimiento);
             } else if (solvenciaEncontrada.fechaVencimiento.includes('/')) {
               // Formato DD/MM/YYYY
-              const [dia, mes, anio] = solvenciaEncontrada.fechaVencimiento.split('/');
-              fechaObj = new Date(anio, mes - 1, dia);
+              const [year, month, day] = solvenciaEncontrada.fechaVencimiento.split('/');
+              fechaObj = new Date(year, month - 1, day);
             }
             
             if (fechaObj && !isNaN(fechaObj.getTime())) {
@@ -284,15 +284,15 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
             <span>Volver a la lista</span>
           </button>
           <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${
-            solvencia.estado === 'Revisión'
+            solvencia.statusSolicitud === 'revisando'
               ? 'bg-yellow-100 text-yellow-800'
-              : solvencia.estado === 'Aprobada'
+              : solvencia.statusSolicitud === 'aprobado'
                 ? 'bg-green-100 text-green-800'
                 : 'bg-red-100 text-red-800'
           }`}>
-            {solvencia.estado === 'Revisión' && <Clock size={16} />}
-            {solvencia.estado === 'Aprobada' && <CheckCircle size={16} />}
-            {solvencia.estado === 'Rechazada' && <X size={16} />}
+            {solvencia.statusSolicitud === 'revisando' && <Clock size={16} />}
+            {solvencia.statusSolicitud === 'aprobado' && <CheckCircle size={16} />}
+            {solvencia.statusSolicitud === 'rechazado' && <X size={16} />}
             {solvencia.estado}
           </div>
         </div>
@@ -300,7 +300,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         {/* Alertas */}
         {alertaExito && (
           <div className={`mt-4 p-4 rounded-xl flex items-center justify-between shadow-md ${
-            alertaExito.tipo === "exito" ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"
+            alertaExito.tipo === "exito" ? "bg-green-50 text-green-800 border" +
+                "border-green-200" : "bg-red-50 text-red-800 border border-red-200"
           }`}>
             <div className="flex items-center">
               {alertaExito.tipo === "exito" ? (
@@ -339,7 +340,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
               {solvencia.estado === "Aprobada" && solvencia.certificadoUrl && (
                 <button
                   onClick={() => window.open(solvencia.certificadoUrl, '_blank')}
-                  className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-lg transition-colors"
+                  className="inline-flex items-center justify-center px-4 py-2
+                  bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-lg transition-colors"
                 >
                   <Download className="mr-2" size={18} />
                   Descargar Certificado
@@ -353,7 +355,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Columna 1: Información del colegiado */}
           <div>
-            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6 border-l-4 border-[#D7008A] mb-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg
+            transition-shadow p-6 border-l-4 border-[#D7008A] mb-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center ">
                 <User className="mr-2 text-[#590248] bg-[#590248]/20 rounded-full px-2 py-0.5 w-10 h-10 "/>
                 Información del Colegiado
@@ -365,14 +368,15 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                 </div>
                 
                 {/* Información del creador */}
-                {solvencia.creador && (
+                {solvencia.creadoPor !== null && (
                   <div className="pt-3 mt-3 border-t border-gray-100">
                     <p className="text-sm text-gray-500 mb-2">Creada por</p>
                     <div className="flex items-center">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                        solvencia.creador.esAdmin ? "bg-[#590248]/20" : "bg-gray-100"
+                        solvencia.creadoPor !== null ? "bg-[#590248]/20" : "bg-gray-100"
                       }`}>
-                        <Shield size={20} className={solvencia.creador.esAdmin ? "text-[#590248]" : "text-gray-600"} />
+                        <Shield size={20} className={solvencia.creadoPor !== null ?
+                            "text-[#590248]" : "text-gray-600"} />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{solvencia.creador.nombre}</p>
@@ -443,28 +447,31 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
               {/* Información de costo con fondo degradado */}
               <div className={`bg-gradient-to-r ${
-                solvencia.exonerado 
+                solvencia.statusSolicitud === 'exonerado' 
                   ? "from-teal-500 to-teal-700" 
-                  : solvencia.costo === null 
+                  : solvencia.costoRegularSolicitud >= 0
                     ? "from-[#D7008A] to-[#41023B]"
                     : "from-[#D7008A] to-[#41023B]"
               } p-6 text-white`}>
                 <h2 className="text-xl font-semibold mb-2 flex items-center">
                   <DollarSign className="mr-2" size={24} />
-                  {solvencia.costo !== null 
+                  {solvencia.costoRegularSolicitud >= 0
                     ? "Información de Pago" 
                     : "Asignación de Costo"}
                 </h2>
                 
-                {solvencia.costo !== null ? (
+                {solvencia.costoRegularSolicitud >= 0 ? (
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <p className="text-white/80 mb-1">Costo de la solvencia</p>
                       <div className="text-3xl font-bold">
-                        {solvencia.exonerado ? (
+                        {solvencia.statusSolicitud === 'exonerado' ? (
                           <span>Exonerado</span>
                         ) : (
-                          <span>${solvencia.costo.toFixed(2)}</span>
+                          <span>
+                            ${solvencia.costoRegularSolicitud < 0 ?
+                              "Costo por definir" : solvencia.costoRegularSolicitud.toFixed(2)}
+                          </span>
                         )}
                       </div>
                       
@@ -486,9 +493,10 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
               {/* Acciones principales o formulario de costo */}
               <div className="p-6">
                 {/* Asignación de costo si es necesario */}
-                {solvencia.costo === null && (
+                {solvencia.costoRegularSolicitud < 0 && (
                   <div className="space-y-6">
-                    <div className="bg-[white p-6 rounded-xl border border-[#41023B] shadow-sm hover:shadow transition-shadow">
+                    <div className="bg-[white p-6 rounded-xl border
+                    border-[#41023B] shadow-sm hover:shadow transition-shadow">
                       <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                         Asignación de Costo
                       </h3>
@@ -498,7 +506,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                           Monto a cobrar ($)
                         </label>
                         <div className="flex">
-                          <span className="inline-flex items-center px-4 py-2.5 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-lg">
+                          <span className="inline-flex items-center px-4 py-2.5 rounded-l-md
+                          border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-lg">
                             $
                           </span>
                           <input
@@ -509,7 +518,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                               const value = e.target.value.replace(/[^0-9.]/g, '');
                               setCostoNuevo(value);
                             }}
-                            className="flex-1 rounded-r-md px-4 py-2.5 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                            className="flex-1 rounded-r-md px-4 py-2.5 border
+                            border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-lg"
                             placeholder="0.00"
                           />
                         </div>
@@ -525,7 +535,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                           className={`flex-1 inline-flex items-center justify-center px-4 py-2.5 
                             ${!costoNuevo || parseFloat(costoNuevo) <= 0 
                               ? 'bg-gray-300 cursor-not-allowed' 
-                              : 'bg-gradient-to-r from-[#D7008A] to-[#41023B] hover:from-blue-700 hover:to-blue-800'}
+                              : 'bg-gradient-to-r from-[#D7008A] to-[#41023B]' +
+                              'hover:from-blue-700 hover:to-blue-800'}
                             text-white rounded-lg transition-colors text-base font-medium`}
                         >
                           <DollarSign className="mr-2" size={20} />
@@ -534,7 +545,9 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                         
                         <button
                           onClick={() => setMostrarExoneracion(true)}
-                          className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors text-base font-medium"
+                          className="flex-1 inline-flex items-center justify-center px-4 py-2.5
+                          bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800
+                          text-white rounded-lg transition-colors text-base font-medium"
                         >
                           <CheckCircle className="mr-2" size={20} />
                           Exonerar de Pago
@@ -545,7 +558,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                 )}
 
                 {/* Acciones para solvencias en revisión con costo asignado */}
-                {solvencia.estado === "Revisión" && solvencia.costo !== null && (
+                {solvencia.statusSolicitud === "revisando" && solvencia.costoRegularSolicitud >= 0 && (
                   <div className="space-y-6">
                     {/* MODIFICADO: Selector de fecha de vencimiento con selects */}
                     <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
@@ -562,7 +575,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                             <select
                               value={diaVencimiento}
                               onChange={(e) => setDiaVencimiento(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#C40180] focus:border-[#C40180]"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md
+                              focus:ring-[#C40180] focus:border-[#C40180]"
                             >
                               <option value="">Día</option>
                               {dias.map(dia => (
@@ -577,7 +591,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                             <select
                               value={mesVencimiento}
                               onChange={(e) => setMesVencimiento(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#C40180] focus:border-[#C40180]"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md
+                              focus:ring-[#C40180] focus:border-[#C40180]"
                             >
                               <option value="">Mes</option>
                               {meses.map(mes => (
@@ -592,7 +607,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                             <select
                               value={anioVencimiento}
                               onChange={(e) => setAnioVencimiento(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#C40180] focus:border-[#C40180]"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md
+                              focus:ring-[#C40180] focus:border-[#C40180]"
                             >
                               <option value="">Año</option>
                               {anios.map(anio => (
@@ -611,7 +627,9 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <button
                         onClick={() => setMostrarConfirmacion(true)}
-                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-colors font-medium text-base"
+                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r
+                        from-green-600 to-green-700 hover:from-green-700 hover:to-green-800
+                        text-white rounded-lg transition-colors font-medium text-base"
                       >
                         <Check className="mr-2" size={20} />
                         Aprobar Solvencia
@@ -619,7 +637,9 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                       
                       <button
                         onClick={() => setMostrarExoneracion(true)}
-                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors font-medium text-base"
+                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r
+                        from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white
+                        rounded-lg transition-colors font-medium text-base"
                       >
                         <CheckCircle className="mr-2" size={20} />
                         Exonerar
@@ -627,7 +647,9 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                       
                       <button
                         onClick={() => setMostrarRechazo(true)}
-                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-colors font-medium text-base"
+                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r
+                        from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg
+                        transition-colors font-medium text-base"
                       >
                         <X className="mr-2" size={20} />
                         Rechazar
@@ -637,7 +659,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                 )}
                 
                 {/* Información adicional - Motivo de rechazo */}
-                {solvencia.estado === "Rechazada" && solvencia.motivoRechazo && (
+                {solvencia.statusSolicitud === "rechazado" && solvencia.motivoRechazo && (
                   <div className="bg-red-50 p-6 rounded-xl border border-red-200">
                     <h3 className="text-lg font-medium text-red-800 mb-3 flex items-center">
                       <X className="mr-2" size={20} />

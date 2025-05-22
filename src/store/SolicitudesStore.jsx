@@ -361,8 +361,15 @@ export const useSolicitudesStore = create((set, get) => ({
           costoEspecialSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
           fechaExpSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
           modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
-          grupos: solicitud.solicitudes_solvencia.lista[0].detalles.user_groups,
-          creadoPor: solicitud.solicitudes_solvencia.lista[0].detalles.creado_por
+          adminCreador: solicitud.solicitudes_solvencia.lista[0].user_admin_create,
+          fechaRechazo: solicitud.solicitudes_solvencia.lista[0].fecha_rechazo,
+          motivoRechazo: solicitud.solicitudes_solvencia.lista[0].motivo_rechazo,
+          adminActualizador: solicitud.solicitudes_solvencia.lista[0].user_admin_update,
+          creador: {
+            nombreCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.nombre_creador,
+            idCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.id_creador,
+            isAdmin: solicitud.solicitudes_solvencia.lista[0].detalles.creador.is_admin,
+          }
         });
       });
       set({

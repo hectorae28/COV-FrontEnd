@@ -71,15 +71,14 @@ const conteoSolvencias = useMemo(() => ({
   // En "rechazadas" solo contar las rechazadas
   rechazadas: solicitudesDeSolvencia.filter(s => s.statusSolicitud === "rechazado").length,
   // En "admin" solo contar las creadas por admin que no estén aprobadas ni rechazadas
-  admin: solicitudesDeSolvencia.filter(s => 
-    s.creadoPor &&
+  admin: solicitudesDeSolvencia.filter(s => s.creador.isAdmin &&
     s.statusSolicitud !== "aprobado" && 
     s.statusSolicitud !== "rechazado"
   ).length,
   
   // En "colegiado" solo contar las creadas por colegiado que no estén aprobadas ni rechazadas
   colegiado: solicitudesDeSolvencia.filter(s => 
-    s.creadoPor === null && 
+    !s.creador.isAdmin &&
     s.statusSolicitud !== "aprobado" && 
     s.statusSolicitud !== "rechazado"
   ).length,
@@ -112,7 +111,7 @@ const conteoSolvencias = useMemo(() => ({
         let matchesTab = true;
 
         // Lógica para cada pestaña
-        if (tabActual === "admin") {
+        /*if (tabActual === "admin") {
           // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
           matchesTab = solvencia.creadoPor &&
                       solvencia.statusSolicitud !== "aprobado" &&
@@ -139,43 +138,71 @@ const conteoSolvencias = useMemo(() => ({
               filtroEstado === "aprobado" ? "Aprobada" :
               "Rechazada"
             );
-          }
+          }*/
+        if (tabActual === "admin") {
+          // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
+          matchesTab = solvencia.creador.isAdmin &&
+              solvencia.statusSolicitud !== "aprobado" &&
+              solvencia.statusSolicitud !== "rechazado";
+
+          // Si hay filtro específico de estado, aplicarlo
+          /*if (filtroEstado !== "todos") {
+            matchesTab = solvencia.creador.isAdmin && solvencia.statusSolicitud === (
+                filtroEstado === "revisando" ? "Revisión" :
+                    filtroEstado === "aprobadas" ? "Aprobada" :
+                        "Rechazada"
+            );
+          }*/
+
+        } else if (tabActual === "colegiado") {
+          // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
+          matchesTab = !solvencia.creador.isAdmin &&
+              solvencia.statusSolicitud !== "aprobado" &&
+              solvencia.statusSolicitud !== "rechazado";
+
+          // Si hay filtro específico de estado, aplicarlo
+          /*if (filtroEstado !== "todos") {
+            matchesTab = solvencia.creador.isAdmin && solvencia.statusSolicitud === (
+                filtroEstado === "revisando" ? "Revisión" :
+                    filtroEstado === "aprobadas" ? "Aprobada" :
+                        "Rechazada"
+            );
+          }*/
+
         } else if (tabActual === "costo_especial") {
           // En "costo_especial" mostrar solo las que tengan costo null
-          matchesTab = solvencia.costoRegularSolicitud < 0;
-        } else if (tabActual === "revisando") {
+          matchesTab = solvencia.statusSolicitud === 'costo_especial';
+        } else if (tabActual === "revision") {
           // En "revisión" mostrar solo las que estén en revisión
-          matchesTab = solvencia.estatusSolicitud === "revisando";
+          matchesTab = solvencia.statusSolicitud === "revisando";
 
           // Aplicar filtro de creador si está activo
-          if (filtroCreador !== "todos") {
+          /*if (filtroCreador !== "todos") {
             matchesTab = matchesTab && (
-              filtroCreador === "admin" ? solvencia.creadoPor !== null:
-              solvencia.creadoPor
+                filtroCreador === "admin" ? solvencia.creador.isAdmin : false
             );
-          }
+          }*/
         } else if (tabActual === "aprobadas") {
           // En "aprobadas" mostrar solo las que estén aprobadas
           matchesTab = solvencia.statusSolicitud === "aprobado";
 
           // Aplicar filtro de creador si está activo
-          if (filtroCreador !== "todos") {
+          /*if (filtroCreador !== "todos") {
             matchesTab = matchesTab && (
-              filtroCreador === "admin" ? solvencia.creadoPor !== null:
-              false
+              filtroCreador === "admin" ? solvencia.creador.isAdmin : false
             );
-          }
+          }*/
         } else if (tabActual === "rechazadas") {
           // En "rechazadas" mostrar solo las que estén rechazadas
           matchesTab = solvencia.statusSolicitud === "rechazado";
 
           // Aplicar filtro de creador si está activo
-          if (filtroCreador !== "todos") {
+          /*if (filtroCreador !== "todos") {
             matchesTab = matchesTab && (
-              filtroCreador === "admin" ? solvencia.creadoPor !== null :
+              filtroCreador === "admin" ? solvencia.creador.isAdmin :
               false
             );
-          }
+          }*/
         }
 
         // Filtro por rango de fechas
@@ -372,108 +399,108 @@ const conteoSolvencias = useMemo(() => ({
       )}
 
       {/* Tabs para filtrar por estado */}
-<div className="mb-6">
-  <div className="border-b border-gray-200">
-    <nav className="-mb-px flex flex-wrap">
-      <button
-        onClick={() => setTabActual("revision")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "revision"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        En revisión
-        {conteoSolvencias.revision > 0 && (
-          <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.revision}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("aprobadas")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "aprobadas"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        Aprobadas
-        {conteoSolvencias.aprobadas > 0 && (
-          <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.aprobadas}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("rechazadas")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "rechazadas"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        Rechazadas
-        {conteoSolvencias.rechazadas > 0 && (
-          <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.rechazadas}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("admin")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "admin"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        Creado por Admin
-        {conteoSolvencias.admin > 0 && (
-          <span className="ml-2 bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.admin}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("colegiado")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "colegiado"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        Creado por Colegiado
-        {conteoSolvencias.colegiado > 0 && (
-          <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.colegiado}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("costo_especial")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "costo_especial"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        <div className="flex items-center">
-          <span>Solicitud de Costo</span>
-          {conteoSolvencias.solicitudCosto > 0 && (
-            <span className={`ml-2 ${
-              tabActual === "costo_especial"
-                ? "bg-[#C40180] text-white"
-                : "bg-red-500 text-white"
-            } text-xs px-2 py-0.5 rounded-full`}>
-              {conteoSolvencias.solicitudCosto}
-            </span>
-          )}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex flex-wrap">
+            <button
+              onClick={() => setTabActual("revision")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "revision"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              En revisión
+              {conteoSolvencias.revision > 0 && (
+                <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.revision}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("aprobadas")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "aprobadas"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Aprobadas
+              {conteoSolvencias.aprobadas > 0 && (
+                <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.aprobadas}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("rechazadas")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "rechazadas"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Rechazadas
+              {conteoSolvencias.rechazadas > 0 && (
+                <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.rechazadas}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("admin")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "admin"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Creado por Admin
+              {conteoSolvencias.admin > 0 && (
+                <span className="ml-2 bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.admin}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("colegiado")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "colegiado"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Creado por Colegiado
+              {conteoSolvencias.colegiado > 0 && (
+                <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.colegiado}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("costo_especial")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "costo_especial"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center">
+                <span>Solicitud de Costo</span>
+                {conteoSolvencias.solicitudCosto > 0 && (
+                  <span className={`ml-2 ${
+                    tabActual === "costo_especial"
+                      ? "bg-[#C40180] text-white"
+                      : "bg-red-500 text-white"
+                  } text-xs px-2 py-0.5 rounded-full`}>
+                    {conteoSolvencias.solicitudCosto}
+                  </span>
+                )}
+              </div>
+            </button>
+          </nav>
         </div>
-      </button>
-    </nav>
-  </div>
-</div>
+      </div>
       
       {/* Mensaje informativo para solicitudes de costo */}
       {tabActual === "costo_especial" && (
@@ -553,7 +580,7 @@ const conteoSolvencias = useMemo(() => ({
                         <div className="flex flex-col items-center">
                           <div className="flex items-center gap-2 mb-1">
                             <div className="text-sm text-gray-900">{solvencia.nombreColegiado}</div>
-                            {solvencia.creadoPor !== null && (
+                            {solvencia.creador.isAdmin && (
                               <div className="flex items-center">
                                 <Shield size={14} className="text-purple-500" />
                                 <span className="ml-1 text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">
