@@ -1,5 +1,6 @@
 "use client"
-import { patchDataUsuario } from "@/api/endpoints/colegiado"
+import { patchDataUsuario, postDataUsuario } from "@/api/endpoints/colegiado"
+import { fetchExistencePersona } from "@/api/endpoints/persona"
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation"
 import confetti from "canvas-confetti"
 import { AnimatePresence, motion } from "framer-motion"
@@ -9,7 +10,6 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 // Import step components
 import api from "@/api/api"
-import { postDataUsuario } from "@/api/endpoints/colegiado"
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage"
 import Alert from "@/app/Components/Alert"
 import { Form } from "antd"
@@ -293,8 +293,24 @@ export default function RegistrationForm(props) {
     return isValid
   }
 
-  const nextStep = () => {
+  const nextStep = async() => {
     if (currentStep < steps.length) {
+      if(currentStep==1){
+        const isStepValid = validateStep(currentStep);
+        if (isStepValid) {
+          const exists = await handleIdentityCardDuplicateVerification()
+          const errors = {}
+          if(exists){
+            errors["identityCard-duplicate"] = true
+            setValidationErrors(errors)
+            return
+          }else{
+            errors["identityCard-duplicate"] = false
+            setValidationErrors(errors)
+          }
+        }
+      }
+
       // Para el paso 2 (Información de Contacto), verificar si el correo ya está verificado
       if (currentStep === 2) {
         // Validar primero el paso actual
@@ -363,6 +379,17 @@ export default function RegistrationForm(props) {
       // Reset attempted next when going back
       setAttemptedNext(false)
     }
+  }
+
+  // Función para validar Número de identificación Duplicado
+  const handleIdentityCardDuplicateVerification = async() => {
+    const queryParams = new URLSearchParams({
+      "tipo_identificacion": formData.documentType,
+      "inicial": formData.idType,
+      "identificacion": formData.identityCard,
+    }).toString();
+    const res = await fetchExistencePersona(`check-existence`, queryParams);
+    return res.exists
   }
 
   // Función para iniciar el proceso de verificación de correo
