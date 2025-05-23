@@ -122,7 +122,7 @@ function PaypalPaymentComponent({
             <PayPalProvider 
               amount={paypalAmount}
               pagoDetalles={pagoDetalles}
-              handlePago={(pagoDetalles) => {console.log({pagoDetalles}); handlePago(pagoDetalles)}}
+              handlePago={(pagoDetalles) => handlePago(pagoDetalles)}
             />
           </div>
         </div>
