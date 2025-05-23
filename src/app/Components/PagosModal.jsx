@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 export default function PagosColg({ props }) {
   const { costo, allowMultiplePayments, handlePago } =
     props;
+    console.log({ props})
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null);

@@ -12,7 +12,6 @@ function PaypalPaymentComponent({
   handlePago,
   tasaBCV
 }) {
-  console.log({metodoDePagoId})
   const [montoPago, setMontoPago] = useState("0.00");
   const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser);
   const [pagoDetalles, setPagoDetalles] = useState(null);

@@ -18,7 +18,7 @@ import DocsRequirements from "../DocsRequirements"
 import EmailVerification from "../EmailVerification"
 import InfoColegiado from "../InfoColg"
 import InfoContacto from "../InfoCont"
-import InfoLaboral from "../InfoLab"
+import InfoLaboralWithDireccionForm from "../InfoLabWithDireccionForm"
 import InfoPersonal from "../InfoPers"
 import { Form } from "antd"
 
@@ -67,7 +67,7 @@ const steps = [
     title: "Situación Laboral",
     description: "Tu experiencia y situación laboral actual",
     icon: Building,
-    component: InfoLaboral,
+    component: InfoLaboralWithDireccionForm,
     requiredFields: ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType"],
   },
   {
@@ -155,6 +155,7 @@ export default function RegistrationForm(props) {
   const [error, setError] = useState(null)
   const [validationErrors, setValidationErrors] = useState({})
   const [attemptedNext, setAttemptedNext] = useState(false)
+  const [isCreated, setIsCreated] = useState(false)
 
   // Guardar el email original cuando se carga el componente o cuando cambia el email
   useEffect(() => {
@@ -407,6 +408,7 @@ export default function RegistrationForm(props) {
 
     // Activar la bandera para mostrar errores de validación SOLO cuando intentamos proceder a pagos
     setAttemptedNext(true);
+    console.log({formData})
 
     // Validar el paso actual
     const isValid = validateStep(currentStep);
@@ -465,7 +467,11 @@ export default function RegistrationForm(props) {
             formData.laboralRegistros.map((registro) => ({
               nombre: registro.institutionName,
               cargo: registro.cargo,
-              direccion: registro.institutionAddress,
+              direccion: {
+                estado: Number(registro.selectedEstado), 
+                municipio: Number(registro.selectedMunicipio), 
+                referencia: registro.institutionAddress
+              },
               telefono: registro.institutionPhone,
               tipo_institucion: registro.institutionType,
             })) || []
@@ -490,17 +496,31 @@ export default function RegistrationForm(props) {
           );
         }
         try {
-          setIsSubmitting(true);
-          const response = await api.post("usuario/register/", Form, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          });
-          if (response.status === 201) {
-            setShowPaymentScreen(true);
-            setIsComplete(false);
-            setRecaudoCreado(response.data);
-            setIsSubmitting(false)
+          if(!isCreated){
+            setIsSubmitting(true);
+            console.log({Form})
+            const response = await api.post("usuario/register/", Form, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            });
+            if (response.status === 201) {
+              setShowPaymentScreen(true);
+              setIsComplete(false);
+              setRecaudoCreado(response.data);
+              setIsSubmitting(false)
+              setIsCreated(true)
+            }
+          }else{
+            const response = await api.patch(`usuario/register/${recaudoCreado.id}/`, Form, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            });
+            if (response.status === 200) {
+              setShowPaymentScreen(true); 
+              setIsSubmitting(false)
+            }
           }
         } catch (error) {
           setError({detail: `Error: ${error.response?.data || error}`});
@@ -524,7 +544,7 @@ export default function RegistrationForm(props) {
     }
   };
 
-  const handlePaymentComplete = async ({
+  const handlePago = async ({
     paymentDate = null,
     referenceNumber = null,
     paymentFile = null,
@@ -814,12 +834,11 @@ export default function RegistrationForm(props) {
                           </button>
                         </div>
                         {!pagarLuego && (
-                          <PagosColg
-                            props={{
-                              costo: costoInscripcion,
-                              allowMultiplePayments:false,
-                              handlePago:handlePaymentComplete,
-                            }}
+                          <PagosColg props={{
+                            costo:costoInscripcion,
+                            allowMultiplePayments:false,
+                            handlePago:handlePago,
+                          }}
                           />
                         )}
                         <div className="flex justify-center mt-12">
@@ -856,7 +875,7 @@ export default function RegistrationForm(props) {
                           {pagarLuego && (
                             <button
                               type="button"
-                              onClick={handlePaymentComplete}
+                              onClick={handlePago}
                               disabled={isSubmitting}
                               className="px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
                             >

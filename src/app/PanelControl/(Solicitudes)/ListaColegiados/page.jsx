@@ -135,7 +135,7 @@ export default function ListaColegiadosPage() {
 
     // Estados -> Ubicación (ahora después de Universidad)
     ...estados.map(estado => ({
-      id: `ubicacion-${estado.toLowerCase().replace(/\s+/g, '-')}`,
+      id: estado.id,
       group: "Ubicación",
       label: estado,
       value: estado
