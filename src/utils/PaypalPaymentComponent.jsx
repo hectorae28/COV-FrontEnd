@@ -12,6 +12,7 @@ function PaypalPaymentComponent({
   handlePago,
   tasaBCV
 }) {
+  console.log({metodoDePagoId})
   const [montoPago, setMontoPago] = useState("0.00");
   const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser);
   const [pagoDetalles, setPagoDetalles] = useState(null);
@@ -31,7 +32,7 @@ function PaypalPaymentComponent({
     }
 
     setPagoDetalles({
-      user_id: colegiadoUser.id,
+      user_id: colegiadoUser?.id,
       metodo_de_pago_id: metodoDePagoId,
       tasa_bcv: tasaBCV,
       monto: parseFloat(montoPago),
@@ -121,7 +122,7 @@ function PaypalPaymentComponent({
             <PayPalProvider 
               amount={paypalAmount}
               pagoDetalles={pagoDetalles}
-              handlePago={(pagoDetalles) => handlePago(pagoDetalles)}
+              handlePago={(pagoDetalles) => {console.log({pagoDetalles}); handlePago(pagoDetalles)}}
             />
           </div>
         </div>
