@@ -588,7 +588,7 @@ export default function RegistroColegiados({
                   onClick={avanzarPaso}
                   className="flex items-center gap-1 px-4 py-2 bg-[#D7008A] text-white rounded-lg hover:bg-[#590248] transition-colors"
                 >
-                  Completar Registro
+                  Completar Solicitud de Registro
                   <ArrowRight size={16} />
                 </button>
               )
@@ -630,7 +630,7 @@ export default function RegistroColegiados({
                   Procesando...
                 </span>
               ) : (
-                "Completar Registro"
+                "Completar Solicitud de Registro"
               )}
             </button>
           </div>
