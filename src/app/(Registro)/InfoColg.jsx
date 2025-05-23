@@ -116,19 +116,17 @@ export default function InfoColegiado({
 
   // Manejar el ingreso de instituto de graduación (liceo)
   const handleGraduateInstituteChange = (e) => {
-    const rawValue = e.target.value;
-    const formattedValue = capitalizarPalabras(rawValue);
+  const rawValue = e.target.value;
 
-    // Actualizar el formData con el valor formateado
-    if (isEditMode) {
-      setLocalFormData(prev => ({
-        ...prev,
-        graduateInstitute: formattedValue
-      }));
-    } else {
-      onInputChange({ graduateInstitute: formattedValue });
-    }
-  };
+  if (isEditMode) {
+    setLocalFormData(prev => ({
+      ...prev,
+      graduateInstitute: rawValue
+    }));
+  } else {
+    onInputChange({ graduateInstitute: rawValue });
+  }
+};
 
   // Manejar el cambio de estado
   const handleEstadoChange = (e) => {

@@ -21,7 +21,7 @@ export default function InfoContacto({
   validationErrors,
   isProfileEdit,
   requestEmailVerification,
-  isAdmin=false,
+  isAdmin = false,
   isEditMode = false
 }) {
   const [cities, setCities] = useState([])
@@ -173,7 +173,7 @@ export default function InfoContacto({
           </svg>
           <span className="text-xs">
             {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "Requiere verificación del nuevo correo"}
-            </span>
+          </span>
         </div>
       )
     }
@@ -194,7 +194,7 @@ export default function InfoContacto({
           className="text-xs text-[#D7008A] hover:underline"
         >
           {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "El correo debe ser verificado para continuar"}
-          
+
         </button>
       </div>
     )
@@ -398,7 +398,7 @@ export default function InfoContacto({
               {municipioLabel} <span className="text-red-500">*</span>
             </label>
             <select
-              name="city" // Mantenemos el mismo nombre en el formData pero cambiamos el label
+              name="city"
               value={formData.city || ""}
               onChange={handleChange}
               className={`w-full px-4 py-3 border ${isFieldEmpty("city") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${!formData.state ? "bg-white" : ""}`}

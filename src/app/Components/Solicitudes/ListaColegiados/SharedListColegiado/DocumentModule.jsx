@@ -5,7 +5,6 @@ import {
   AlertCircle,
   Briefcase,
   CheckCircle,
-  Eye,
   FileText,
   Pencil,
   RefreshCcw,
@@ -212,16 +211,16 @@ export function DocumentSection({
       // Cerrar modal después de subir
       setDocumentoParaSubir(null)
       setSelectedFile(null)
-      
+
       // Mostrar mensaje de éxito
       setUploadSuccess(true);
       setUploadedDocumentName(documentoParaSubir.nombre);
-      
+
       // Ocultar mensaje después de 5 segundos
       setTimeout(() => {
         setUploadSuccess(false);
       }, 5000);
-      
+
     } catch (error) {
       console.error("Error al subir documento:", error)
       setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.")
@@ -468,14 +467,26 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange }) {
     }
   };
 
+  // Función para manejar el click en la card
+  const handleCardClick = (e) => {
+    // Verificar si el click fue en un botón de acción o en el switch de verificación
+    const isActionButton = e.target.closest('.action-button') ||
+      e.target.closest('.document-verification-switch');
+
+    if (!isActionButton && (tieneArchivo || isExonerado)) {
+      onView();
+    }
+  };
+
   return (
     <div
-      className={`border rounded-lg ${isExonerado
+      className={`border rounded-lg transition-all duration-200 ${isExonerado
         ? "border-green-200 bg-green-50"
         : tieneArchivo
-          ? "border-gray-200 hover:border-[#C40180]"
+          ? "border-gray-200 hover:border-[#C40180] hover:shadow-md cursor-pointer"
           : "border-red-200 bg-red-50"
-        } hover:shadow-md transition-all duration-200`}
+        }`}
+      onClick={handleCardClick}
     >
       <div className="p-4">
         <div className="flex justify-between items-start">
@@ -526,7 +537,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange }) {
 
             {/* Switch de verificación si tiene archivo */}
             {tieneArchivo && (
-              <div className="mt-3">
+              <div className="document-verification-switch">
                 <DocumentVerificationSwitch
                   documento={documento}
                   onChange={handleStatusChange}
@@ -536,26 +547,24 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange }) {
             )}
           </div>
 
-          <div className="flex items-center space-x-1">
-            {tieneArchivo || isExonerado ? (
-              <button
-                onClick={onView}
-                className="text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-colors"
-                title="Ver documento"
-              >
-                <Eye size={18} />
-              </button>
-            ) : (
-              <span className="text-gray-400 p-2" title="No hay documento para ver">
-                <Eye size={18} />
-              </span>
+          {/* Botones de acción */}
+          <div className="flex items-center space-x-2 action-button text-[10px] text-gray-400">
+            {/* Texto de acción si el documento es visible */}
+            {(tieneArchivo || isExonerado) && (
+              <span className="whitespace-nowrap opacity-70">Vista Previa </span>
             )}
 
-            {/* Botón de reemplazo solo visible si el documento no está aprobado o fue rechazado */}
+            {/* Botón de reemplazo/subida */}
             {(!isReadOnly && !isExonerado && documento.status !== 'approved') && (
               <button
-                onClick={onReplace}
-                className={`${tieneArchivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} p-2 rounded-full transition-colors`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReplace();
+                }}
+                className={`${tieneArchivo
+                  ? "text-orange-600 hover:bg-orange-50"
+                  : "text-green-600 hover:bg-green-50"
+                  } p-2 rounded-full transition-colors`}
                 title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
               >
                 {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
@@ -587,11 +596,22 @@ export function mapDocumentsForSection(documentos = []) {
 }
 
 // Modal para visualizar documentos
+// Modal para visualizar documentos con zoom
 export function DocumentViewer({ documento, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const containerRef = useRef(null);
+  const imageRef = useRef(null);
 
   const isExonerado = documento && documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
+  const isImage = documento?.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(documento.url);
+  const isPDF = documento?.url && /\.pdf$/i.test(documento.url);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -608,27 +628,235 @@ export function DocumentViewer({ documento, onClose }) {
     return () => clearTimeout(timer);
   }, [documento, isExonerado]);
 
+  // Funciones de zoom
+  const handleZoomIn = () => {
+    setScale(prev => Math.min(prev * 1.25, 5));
+  };
+
+  const handleZoomOut = () => {
+    setScale(prev => Math.max(prev / 1.25, 0.25));
+  };
+
+  const handleResetZoom = () => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const handleFitToScreen = () => {
+    if (containerRef.current && imageRef.current) {
+      const container = containerRef.current;
+      const image = imageRef.current;
+
+      const containerWidth = container.clientWidth - 40; // padding
+      const containerHeight = container.clientHeight - 40;
+      const imageWidth = image.naturalWidth;
+      const imageHeight = image.naturalHeight;
+
+      const scaleX = containerWidth / imageWidth;
+      const scaleY = containerHeight / imageHeight;
+      const newScale = Math.min(scaleX, scaleY, 1);
+
+      setScale(newScale);
+      setPosition({ x: 0, y: 0 });
+    }
+  };
+
+  // Funciones de arrastre
+  const handleMouseDown = (e) => {
+    if (scale > 1) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging && scale > 1) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Zoom con rueda del mouse
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setScale(prev => Math.max(0.25, Math.min(5, prev * delta)));
+  };
+
+  // Fullscreen
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  // Efectos de eventos globales
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      switch (e.key) {
+        case 'Escape':
+          if (isFullscreen) {
+            toggleFullscreen();
+          } else {
+            onClose();
+          }
+          break;
+        case '+':
+        case '=':
+          e.preventDefault();
+          handleZoomIn();
+          break;
+        case '-':
+          e.preventDefault();
+          handleZoomOut();
+          break;
+        case '0':
+          e.preventDefault();
+          handleResetZoom();
+          break;
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          handleFitToScreen();
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart, position, isFullscreen]);
+
+  // Listener para cambios de fullscreen
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex flex-col"
+        className={`bg-white rounded-lg shadow-xl flex flex-col ${isFullscreen
+          ? 'w-full h-full rounded-none'
+          : 'w-[95vw] h-[90vh] max-w-6xl'
+          }`}
+        ref={containerRef}
       >
-        <div className="flex justify-between items-center p-4 border-b">
+        {/* Header con controles */}
+        <div className="flex justify-between items-center p-4 border-b bg-white sticky top-0 z-10 rounded-t-lg">
           <div className="flex items-center">
             <FileText className="text-[#C40180] mr-2" size={20} />
-            <h3 className="text-lg font-medium text-gray-900">{documento.nombre}</h3>
+            <h3 className="text-lg font-medium text-gray-900 truncate max-w-md">
+              {documento.nombre}
+            </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
-          >
-            <X size={24} />
-          </button>
+
+          {/* Controles de zoom */}
+          {isImage && (
+            <div className="flex items-center gap-2 mx-4">
+              <button
+                onClick={handleZoomOut}
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                title="Alejar (-)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                  <line x1="8" y1="11" x2="14" y2="11" />
+                </svg>
+              </button>
+
+              <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded min-w-[60px] text-center">
+                {Math.round(scale * 100)}%
+              </span>
+
+              <button
+                onClick={handleZoomIn}
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                title="Acercar (+)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                  <line x1="11" y1="8" x2="11" y2="14" />
+                  <line x1="8" y1="11" x2="14" y2="11" />
+                </svg>
+              </button>
+
+              <button
+                onClick={handleResetZoom}
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                title="Restablecer (0)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 3l18 18" />
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+              </button>
+
+              <button
+                onClick={handleFitToScreen}
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                title="Ajustar a pantalla (F)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            {/* Botón fullscreen */}
+            <button
+              onClick={toggleFullscreen}
+              className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+              title="Pantalla completa">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                {isFullscreen ? (
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                ) : (
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                )}
+              </svg>
+            </button>
+
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 bg-gray-100 flex items-center justify-center">
+        {/* Contenido del documento */}
+        <div
+          className="flex-1 overflow-hidden bg-gray-100 flex items-center justify-center relative"
+          onWheel={handleWheel}
+        >
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
@@ -646,13 +874,56 @@ export function DocumentViewer({ documento, onClose }) {
                 Este documento ha sido exonerado administrativamente.
               </p>
             </div>
-          ) : documento.url ? (
-            <img
-              src={process.env.NEXT_PUBLIC_BACK_HOST + documento.url}
-              alt={documento.nombre}
-              className="max-h-full max-w-full object-contain"
-              onError={() => setError("No se pudo cargar el documento")}
+          ) : isPDF ? (
+            // Para PDFs, usar iframe
+            <iframe
+              src={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
+              className="w-full h-full border-0"
+              title={documento.nombre}
             />
+          ) : isImage ? (
+            // Para imágenes, implementar zoom y pan
+            <div
+              className="w-full h-full flex items-center justify-center overflow-hidden cursor-move"
+              style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
+            >
+              <img
+                ref={imageRef}
+                src={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
+                alt={documento.nombre}
+                className="max-w-none transition-transform duration-200 ease-out select-none"
+                style={{
+                  transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+                  transformOrigin: 'center center'
+                }}
+                onMouseDown={handleMouseDown}
+                onError={() => setError("No se pudo cargar el documento")}
+                onLoad={() => {
+                  // Auto-fit en la carga inicial
+                  setTimeout(handleFitToScreen, 100);
+                }}
+                draggable={false}
+              />
+            </div>
+          ) : documento.url ? (
+            // Para otros tipos de archivo
+            <div className="text-center">
+              <FileText size={64} className="text-gray-400 mx-auto mb-4" />
+              <p className="text-lg mb-2">Vista previa no disponible</p>
+
+              href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A0016A] transition-colors"
+
+              <svg width="16" height="16" className="mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7,10 12,15 17,10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Descargar archivo
+
+            </div>
           ) : (
             <div className="text-center text-gray-500">
               <p className="text-xl mb-2">No hay vista previa disponible</p>
@@ -660,6 +931,21 @@ export function DocumentViewer({ documento, onClose }) {
             </div>
           )}
         </div>
+
+        {/* Footer con atajos de teclado */}
+        {isImage && (
+          <div className="bg-gray-50 px-4 py-2 text-xs text-gray-500 border-t">
+            <div className="flex flex-wrap gap-4 justify-center">
+              <span><kbd className="bg-gray-200 px-1 rounded">+</kbd> Acercar</span>
+              <span><kbd className="bg-gray-200 px-1 rounded">-</kbd> Alejar</span>
+              <span><kbd className="bg-gray-200 px-1 rounded">0</kbd> Restablecer</span>
+              <span><kbd className="bg-gray-200 px-1 rounded">F</kbd> Ajustar</span>
+              <span><kbd className="bg-gray-200 px-1 rounded">Esc</kbd> Cerrar</span>
+              <span>Rueda del mouse: Zoom</span>
+              <span>Arrastrar: Mover imagen</span>
+            </div>
+          </div>
+        )}
       </motion.div>
     </div>
   );

@@ -460,10 +460,15 @@ export default function PagosColg({ props }) {
                     </label>
                     <input
                       type="text"
+                      inputMode="numeric"
                       pattern="[0-9]*"
-                      maxLength={14}
                       value={referenceNumber}
-                      onChange={(e) => setReferenceNumber(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^\d{0,14}$/.test(value)) {
+                          setReferenceNumber(value);
+                        }
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
                       placeholder="Ingrese el número de referencia completo"
                     />
