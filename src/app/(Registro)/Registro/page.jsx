@@ -1,15 +1,15 @@
 "use client"
-import { patchDataUsuario } from "@/api/endpoints/colegiado"
+import { patchDataUsuario, postDataUsuario } from "@/api/endpoints/colegiado"
+import { fetchExistencePersona } from "@/api/endpoints/persona"
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation"
 import confetti from "canvas-confetti"
 import { AnimatePresence, motion } from "framer-motion"
-import { Building, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User, X } from "lucide-react"
+import { Building, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 // Import step components
 import api from "@/api/api"
-import { postDataUsuario } from "@/api/endpoints/colegiado"
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage"
 import Alert from "@/app/Components/Alert"
 import { Form } from "antd"
@@ -231,7 +231,7 @@ export default function RegistrationForm(props) {
   }
 
   const validateStep = (stepIndex) => {
-    console.log({formData})
+    console.log({ formData })
     const step = steps[stepIndex - 1]
     const errors = {}
     let isValid = true
@@ -290,12 +290,28 @@ export default function RegistrationForm(props) {
     if (attemptedNext) {
       setValidationErrors(errors)
     }
-    console.log({isValid})
+    console.log({ isValid })
     return isValid
   }
 
-  const nextStep = () => {
+  const nextStep = async() => {
     if (currentStep < steps.length) {
+      if(currentStep==1){
+        const isStepValid = validateStep(currentStep);
+        if (isStepValid) {
+          const exists = await handleIdentityCardDuplicateVerification()
+          const errors = {}
+          if(exists){
+            errors["identityCard-duplicate"] = true
+            setValidationErrors(errors)
+            return
+          }else{
+            errors["identityCard-duplicate"] = false
+            setValidationErrors(errors)
+          }
+        }
+      }
+
       // Para el paso 2 (Información de Contacto), verificar si el correo ya está verificado
       if (currentStep === 2) {
         // Validar primero el paso actual
@@ -366,6 +382,17 @@ export default function RegistrationForm(props) {
     }
   }
 
+  // Función para validar Número de identificación Duplicado
+  const handleIdentityCardDuplicateVerification = async() => {
+    const queryParams = new URLSearchParams({
+      "tipo_identificacion": formData.documentType,
+      "inicial": formData.idType,
+      "identificacion": formData.identityCard,
+    }).toString();
+    const res = await fetchExistencePersona(`check-existence`, queryParams);
+    return res.exists
+  }
+
   // Función para iniciar el proceso de verificación de correo
   const handleRequestEmailVerification = (email) => {
     if (!email) return
@@ -373,7 +400,7 @@ export default function RegistrationForm(props) {
   }
 
   // Función para manejar el reenvío del código
-  const handleResendVerificationCode = async() => {
+  const handleResendVerificationCode = async () => {
     setIsResendingCode(true)
 
     // Simulación de reenvío (aquí irían las llamadas a la API real)
@@ -523,7 +550,7 @@ export default function RegistrationForm(props) {
             }
           }
         } catch (error) {
-          setError({detail: `Error: ${error.response?.data || error}`});
+          setError({ detail: `Error: ${error.response?.data || error}` });
         } finally {
           setIsSubmitting(false);
         }
@@ -551,7 +578,7 @@ export default function RegistrationForm(props) {
     totalAmount = null,
     metodo_de_pago = null,
   }) => {
-    if(!pagarLuego){
+    if (!pagarLuego) {
       const Form = new FormData()
       Form.append(
         "pago",
@@ -567,12 +594,12 @@ export default function RegistrationForm(props) {
     }
     try {
       let res
-      if(!pagarLuego){
+      if (!pagarLuego) {
         res = await patchDataUsuario(
           `register/${recaudoCreado.id}`,
           Form,
         );
-        if (res?.status === 200 ) {
+        if (res?.status === 200) {
           setError(null)
           confetti({
             particleCount: 100,
@@ -584,7 +611,7 @@ export default function RegistrationForm(props) {
           setIsSubmitting(false)
           return
         }
-      }else {
+      } else {
         confetti({
           particleCount: 100,
           spread: 70,
@@ -595,14 +622,14 @@ export default function RegistrationForm(props) {
         setIsSubmitting(false)
       }
     } catch (error) {
-      setError({detail: `error ${error.response?.data || error}`})
+      setError({ detail: `error ${error.response?.data || error}` })
     } finally {
       setIsSubmitting(false)
     }
   }
 
   // Determinar qué componente mostrar
-  const renderCurrentStep =() => {
+  const renderCurrentStep = () => {
     if (showEmailVerification) {
       return (
         <EmailVerification
@@ -786,7 +813,7 @@ export default function RegistrationForm(props) {
                     </div>
                   )}
                   <div className="relative overflow-hidden rounded-2xl shadow-lg bg-white pt-10 px-8">
-                  {error && <Alert type="alert">{error.detail}</Alert>}
+                    {error && <Alert type="alert">{error.detail}</Alert>}
                     {isComplete ? (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -807,7 +834,7 @@ export default function RegistrationForm(props) {
                         {pagarLuego && (
                           <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
                             <p className="text-yellow-800 font-medium">
-                            Para completar su solicitud, primero debe solicitar el enlace de pago desde la página de inicio de sesión. Una vez haya recibido el enlace y realizado el pago correspondiente, su solicitud será procesada.
+                              Para completar su solicitud, primero debe solicitar el enlace de pago desde la página de inicio de sesión. Una vez haya recibido el enlace y realizado el pago correspondiente, su solicitud será procesada.
                             </p>
                           </div>
                         )}
@@ -842,34 +869,27 @@ export default function RegistrationForm(props) {
                           />
                         )}
                         <div className="flex justify-center mt-12">
-                          <div className="w-full max-w-xs mx-auto p-4 bg-[#41023B]/10 rounded-xl border border-[#41023B]">
-                            <div className="flex items-center justify-center">
-                              <div>
-                                <span className="text-[#41023B] font-bold text-lg mr-4">Pagar luego</span>
-                              </div>
-
-                              {/* Switch con colores y iconos */}
+                          <div className="w-full max-w-xs mx-auto mt-10">
+                            <div className="flex flex-col items-center gap-4 bg-[#41023B]/10 rounded-xl border border-[#41023B] p-4">
+                              <span className="text-[#41023B] font-bold text-lg">Pagar luego</span>
                               <button
                                 type="button"
                                 onClick={() => setPagarLuego(!pagarLuego)}
-                                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${pagarLuego
-                                  ? "bg-green-500 focus:ring-green-500"
-                                  : "bg-red-500 focus:ring-red-500"
+                                className={`w-full px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300 ${pagarLuego
+                                  ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
+                                  : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/10"
                                   }`}
                               >
-                                <span
-                                  className={`inline-flex h-6 w-6 transform items-center justify-center rounded-full bg-white transition-transform ${pagarLuego ? "translate-x-9" : "translate-x-1"
-                                    }`}
-                                >
-                                  {pagarLuego ? (
-                                    <Check className="h-4 w-4 text-green-500" />
-                                  ) : (
-                                    <X className="h-4 w-4 text-red-500" />
-                                  )}
-                                </span>
+                                {pagarLuego ? "Activado" : "Activar"}
                               </button>
+                              {pagarLuego && (
+                                <p className="text-sm text-[#41023B] text-center">
+                                  El usuario podrá completar el pago más adelante.
+                                </p>
+                              )}
                             </div>
                           </div>
+
                         </div>
                         <div className="flex justify-center p-6 gap-6">
                           {pagarLuego && (

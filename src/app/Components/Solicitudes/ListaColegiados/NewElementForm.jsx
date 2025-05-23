@@ -37,7 +37,7 @@ export default function NewElementForm({
       className="space-y-6"
     >
       {/* Contenido del formulario aquí */}
-      
+
       {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           {onCancel && (

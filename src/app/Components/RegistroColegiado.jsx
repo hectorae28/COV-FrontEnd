@@ -234,63 +234,62 @@ export default function RegistroColegiados({
           />
         );
       case 6:
-        return (
-          <div className="space-y-6">
-            {!exonerarPagos && !pagarLuego && (
-              <PagosColg
-                props={{
-                  handlePaymentComplete,
-                  costo: costoInscripcion,
-                  metodoPago,
-                }}
-              />
-            )}
+  return (
+    <div className="space-y-6">
+      {!exonerarPagos && !pagarLuego && (
+        <PagosColg
+          props={{
+            handlePaymentComplete,
+            costo: costoInscripcion,
+            metodoPago,
+          }}
+        />
+      )}
 
-            {isAdmin && (
-              <div className="flex flex-col space-y-4">
-                {!pagarLuego && (
-                  <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
-                    <label className="flex space-x-3 cursor-pointer items-center">
-                      <input
-                        type="checkbox"
-                        checked={exonerarPagos}
-                        onChange={handleExonerarPagosChange}
-                        className="cursor-pointer mr-4 h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
-                      />
-                      <p className="text-sm text-gray-800">
-                        <span className="text-[#41023B] font-bold text-md">
-                          Exonerar pagos:
-                        </span>{" "}
-                        Al habilitar esta opción, el colegiado quedará registrado
-                        como solvente sin necesidad de realizar un pago.
-                      </p>
-                      </label>
-                  </div>
-                )}
+      <div className="w-full max-w-md mx-auto mt-6">
+        <div className="flex justify-center gap-4">
+          {/* Exonerar */}
+          {!pagarLuego && (
+            <button
+              type="button"
+              onClick={() => setExonerarPagos(!exonerarPagos)}
+              className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300
+                ${exonerarPagos
+                  ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
+                  : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/10"
+                }`}
+            >
+              Exonerar
+            </button>
+          )}
 
-                {!exonerarPagos && (
-                  <div className="p-4 bg-[#41023B]/20 rounded-xl border border-[#41023B]">
-                    <label className="flex cursor-pointer items-center">
-                      <input
-                        type="checkbox"
-                        checked={pagarLuego}
-                        onChange={handlePagarLuegoChange}
-                        className="cursor-pointer mr-4 h-5 w-5 text-[#D7008A] focus:ring-[#41023B] focus:bg-[#D7008A] rounded"
-                      />
-                      <p className="text-sm text-gray-800">
-                        <span className="text-[#41023B] font-bold text-md">
-                          Pagar luego:
-                        </span>{" "}
-                        Al habilitar esta opción, el colegiado quedará registrado
-                        con pago pendiente y podrá completarlo posteriormente.
-                      </p>
-                      </label>
-                  </div>
-                )}
-              </div>
-            )}
+          {/* Pagar Luego */}
+          {!exonerarPagos && (
+            <button
+              type="button"
+              onClick={() => setPagarLuego(!pagarLuego)}
+              className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300
+                ${pagarLuego
+                  ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
+                  : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/10"
+                }`}
+            >
+              Pagar luego
+            </button>
+          )}
+        </div>
+
+        {/* Mensaje informativo */}
+        {(pagarLuego || exonerarPagos) && (
+          <div className="mt-4 text-center text-sm text-[#41023B] font-medium">
+            {pagarLuego && "El usuario podrá completar el pago más adelante."}
+            {exonerarPagos && "El usuario será registrado como solvente sin pago."}
           </div>
-        );
+        )}
+      </div>
+    </div>
+  );
+
       case 7:
         return (
           <div className="text-center py-8">

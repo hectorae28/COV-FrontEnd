@@ -49,6 +49,7 @@ export default function UserProfileCard({
   // Estados y flags
   const isRechazada = variant === "pending" && data.status === "rechazado";
   const isDenegada = variant === "pending" && data.status === "denegado";
+  const isRevisando = variant === "pending" && data.status === "revisando";
   const pagosPendientes = variant === "pending"
     ? (data.pago === null && !data.pago_exonerado)
     : false;
@@ -82,15 +83,13 @@ export default function UserProfileCard({
   ].filter(Boolean).join(" ") || "Sin nombre";
 
   // --- PROFESIÓN: nunca renderices el objeto entero ---
-  // 1) recoge el raw: si existe el campo "_display" úsalo, si no,
-  //    toma directamente el objeto original que viene de la API
   const rawProfesionPendiente = data.tipo_profesion_display ?? data.tipo_profesion;
   const rawProfesionRegistrado = data.recaudos?.tipo_profesion_display
     ?? data.recaudos?.tipo_profesion
     ?? data.tipo_profesion_display
     ?? data.tipo_profesion;
 
-  // 2) helper para que, si es objeto, extraiga el título; si no, lo use tal cual
+  // helper para que, si es objeto, extraiga el título; si no, lo use tal cual
   const mostrarProfesion = (prof) => {
     if (!prof) return "No especificado";
     if (typeof prof === 'object') {
@@ -182,9 +181,13 @@ export default function UserProfileCard({
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
                       <UserX size={12} className="mr-1" /> Anulada
                     </span>
-                  ) : (
+                  ) : isRevisando ? (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                      <Clock size={12} className="mr-1" /> Pendiente de aprobación
+                      <Clock size={12} className="mr-1" /> Pendiente por aprobación
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                      <Clock size={12} className="mr-1" /> En proceso
                     </span>
                   )}
                   {pagosPendientes && (
@@ -314,12 +317,12 @@ export default function UserProfileCard({
                 onClick={onMostrarConfirmacion}
                 disabled={!allDocumentsApproved || pagosPendientes}
                 className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${allDocumentsApproved && !pagosPendientes
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 title={
                   !allDocumentsApproved
-                    ? "Debe aprobar todos los documentos primero"
+                    ? "Debe aprobar todos los documentos y el comprobante de pago primero"
                     : pagosPendientes
                       ? "Debe completar o exonerar los pagos primero"
                       : "Aprobar solicitud"
@@ -329,14 +332,27 @@ export default function UserProfileCard({
                 Aprobar
               </button>
 
-              {/* Botón de Rechazar */}
-              <button
-                onClick={onMostrarRechazo}
-                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700 transition-colors"
-              >
-                <AlertTriangle size={16} className="mr-1" />
-                Rechazar
-              </button>
+              {/* Botón de Rechazar - NO se muestra si ya está rechazada */}
+              {!isRechazada && (
+                <button
+                  onClick={onMostrarRechazo}
+                  className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700 transition-colors"
+                >
+                  <AlertTriangle size={16} className="mr-1" />
+                  Rechazar
+                </button>
+              )}
+
+              {/* Botón de Anular - Se muestra siempre que no esté anulada */}
+              {isRechazada && (
+                <button
+                  onClick={onMostrarRechazo}
+                  className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                >
+                  <UserX size={16} className="mr-1" />
+                  Anular
+                </button>
+              )}
 
               {/* Botón de Exonerar Pagos */}
               {pagosPendientes && (
