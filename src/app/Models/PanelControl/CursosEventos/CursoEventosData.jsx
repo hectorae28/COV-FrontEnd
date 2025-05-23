@@ -8,7 +8,7 @@ export const eventosData = [
         "certificado": "cert1.png",
         "certificado_url": "/assets/eventos/evento1.avif", // Usando la misma imagen como placeholder
         "nombre": "Congreso Internacional 80 Aniversario del Colegio de Odontólogos de Venezuela",
-        "precio": "150.00",
+        "precio": "10",
         "slug": "congreso-internacional-80-aniversario",
         "cupos": 200,
         "hora_inicio": "08:00:00",
@@ -76,7 +76,7 @@ export const eventosData = [
         "fecha": "2025-06-23",
         "lugar": "Auditorio COV Las Palmas, Caracas",
         "descripcion": "Un recorrido por la evolución de las técnicas de biopsia en odontología.",
-        "showPriceTag": true,
+        "showPriceTag": false,
         "currency": "BS",
         "formulario": {
             "campos": [

@@ -328,13 +328,13 @@ export default function InfoColegiado({
   };
 
   const handleSaveClick = () => {
-    // Simplemente guardamos sin validación estricta en modo edición
-    if (onSave) {
-      onSave(localFormData);
-    } else {
-      onInputChange(localFormData);
-    }
-  };
+  // Simplemente guardamos sin validación estricta en modo edición
+  if (onSave) {
+    onSave(localFormData);
+  } else if (onInputChange) { // ← Agregar esta verificación
+    onInputChange(localFormData);
+  }
+};
 
   return (
     <motion.div
@@ -354,7 +354,7 @@ export default function InfoColegiado({
             // En modo perfil, no editable
             <input
               type="text"
-              value={formData.tipo_profesion || "No especificada"}
+              value={typeof formData.tipo_profesion === 'object' ? formData.tipo_profesion.titulo : formData.tipo_profesion || "No especificada"}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
               disabled
             />
@@ -363,7 +363,7 @@ export default function InfoColegiado({
             <>
               <select
                 name="tipo_profesion"
-                value={formData.tipo_profesion}
+                value={typeof formData.tipo_profesion === 'object' ? formData.tipo_profesion.id : formData.tipo_profesion}
                 onChange={handleChange}
                 className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("tipo_profesion") ? "border-red-500 bg-red-50" : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}

@@ -1,8 +1,13 @@
+import DocsRequirements from "@/app/(Registro)/DocsRequirements";
+import Modal from "@/app/Components/Solicitudes/ListaColegiados/Modal";
 import { motion } from "framer-motion";
 import {
-  AlertCircle, CheckCircle,
+  AlertCircle,
+  Briefcase,
+  CheckCircle,
   Eye,
   FileText,
+  Pencil,
   RefreshCcw,
   Upload, X
 } from "lucide-react";
@@ -11,16 +16,12 @@ import DocumentVerificationSwitch from "./DocumentVerificationSwitch";
 
 // Componente principal de gestión de documentos
 export function DocumentSection({
-  documentos = [], // Proporciona un valor predeterminado de array vacío
+  documentos = [],
   onViewDocument,
   updateDocumento,
   onDocumentStatusChange,
-  title = "Documentos",
-  subtitle = "Documentación obligatoria del colegiado",
-  recaudosId,
-  icon = <FileText size={20} className="text-[#C40180] mr-2" />,
+  readonly = false,
   filter = doc => !doc.id?.includes('comprobante_pago'),
-  onEditSection
 }) {
   // Asegúrate de que documentos sea siempre un array antes de filtrar
   const docs = Array.isArray(documentos) ? documentos : [];
@@ -49,12 +50,85 @@ export function DocumentSection({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedDocumentName, setUploadedDocumentName] = useState("");
 
+  // Estados para el modal de edición de documentos
+  const [showModal, setShowModal] = useState(false);
+  const [localFormData, setLocalFormData] = useState(null);
+
   // Manejadores de eventos
   const handleReemplazarDocumento = useCallback((documento) => {
     setDocumentoParaSubir(documento);
     setSelectedFile(null);
     setError("");
   }, []);
+
+  // Función para adaptar documentos al formato que espera DocsRequirements
+  const mapDocumentosToDocsRequirements = useCallback(() => {
+    const mappedFiles = {};
+
+    documentosFiltrados.forEach(doc => {
+      // Mapear cada documento a la estructura esperada por DocsRequirements
+      let fileKey;
+
+      switch (doc.id) {
+        case 'cedula':
+        case 'ci':
+        case 'file_ci':
+          fileKey = 'ci';
+          break;
+        case 'rif':
+        case 'file_rif':
+          fileKey = 'rif';
+          break;
+        case 'titulo':
+        case 'fondo_negro':
+        case 'file_fondo_negro':
+          fileKey = 'titulo';
+          break;
+        case 'mpps':
+        case 'file_mpps':
+          fileKey = 'mpps';
+          break;
+        case 'fondo_negro_credencial':
+          fileKey = 'fondo_negro_credencial';
+          break;
+        case 'notas_curso':
+          fileKey = 'notas_curso';
+          break;
+        case 'fondo_negro_titulo_bachiller':
+          fileKey = 'fondo_negro_titulo_bachiller';
+          break;
+        default:
+          fileKey = doc.id;
+      }
+
+      // Crear un objeto File simulado si hay URL
+      if (doc.url) {
+        mappedFiles[fileKey] = {
+          name: doc.archivo || "Archivo existente",
+          size: 0,
+          type: doc.url.endsWith('pdf') ? 'application/pdf' : 'image/jpeg',
+          lastModified: Date.now(),
+          // Marcar como archivo existente
+          isExisting: true,
+          url: doc.url
+        };
+      }
+    });
+
+    return {
+      ...mappedFiles,
+      // Agregar campos adicionales que DocsRequirements podría necesitar
+      tipo_profesion: "odontologo", // Valor por defecto, actualizar si tienes el tipo real
+      documentos_aprobados: false
+    };
+  }, [documentosFiltrados]);
+
+  // Inicializar datos locales cuando se abre el modal
+  const handleOpenModal = () => {
+    const docsData = mapDocumentosToDocsRequirements();
+    setLocalFormData(docsData);
+    setShowModal(true);
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -138,6 +212,16 @@ export function DocumentSection({
       // Cerrar modal después de subir
       setDocumentoParaSubir(null)
       setSelectedFile(null)
+      
+      // Mostrar mensaje de éxito
+      setUploadSuccess(true);
+      setUploadedDocumentName(documentoParaSubir.nombre);
+      
+      // Ocultar mensaje después de 5 segundos
+      setTimeout(() => {
+        setUploadSuccess(false);
+      }, 5000);
+      
     } catch (error) {
       console.error("Error al subir documento:", error)
       setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.")
@@ -146,6 +230,47 @@ export function DocumentSection({
     }
   }
 
+  // Manejador para guardar cambios desde DocsRequirements
+  const handleSaveChanges = (updates) => {
+    if (!updates) return;
+
+    // Cerrar el modal primero
+    setShowModal(false);
+    setLocalFormData(null);
+
+    // Procesar cada archivo actualizado en DocsRequirements
+    Object.entries(updates).forEach(([key, file]) => {
+      // Solo procesar si es un archivo y tiene propiedades de File
+      if (file && (file instanceof File || (typeof file === 'object' && file.name && !file.isExisting))) {
+        // Buscar el documento correspondiente
+        const docId = key;
+        if (docId) {
+          // Crear FormData para este documento específico
+          const Form = new FormData();
+          Form.append(docId, file);
+
+          if (updateDocumento) {
+            // Actualizar el documento en el backend
+            updateDocumento(Form);
+          }
+        }
+      }
+    });
+  };
+
+  // Función para manejar cambios en el formulario de documentos
+  const handleDocsInputChange = (changes) => {
+    setLocalFormData(prev => ({
+      ...prev,
+      ...changes
+    }));
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setLocalFormData(null);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -153,7 +278,27 @@ export function DocumentSection({
       transition={{ delay: 0.4 }}
       className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
     >
-      {/* Notificación de éxito - agregar esto al principio del componente */}
+
+      <div className="flex items-center justify-between mb-5 border-b pb-3">
+        <div className="flex items-center">
+          <Briefcase size={20} className="text-[#C40180] mr-2" />
+          <h2 className="text-lg font-semibold text-gray-900">
+            Documentos
+          </h2>
+        </div>
+
+        {!readonly && (
+          <button
+            onClick={handleOpenModal}
+            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:opacity-90 transition-colors"
+          >
+            <Pencil size={16} className="mr-1" />
+            Editar
+          </button>
+        )}
+      </div>
+
+      {/* Notificación de éxito */}
       {uploadSuccess && (
         <div className="mb-4 bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-md flex items-start justify-between">
           <div className="flex items-start">
@@ -191,7 +336,7 @@ export function DocumentSection({
         )}
       </div>
 
-      {/* Modal para subir documentos */}
+      {/* Modal para subir documentos individuales */}
       {documentoParaSubir && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <motion.div
@@ -288,6 +433,25 @@ export function DocumentSection({
           </motion.div>
         </div>
       )}
+
+      {/* Modal para gestionar documentos usando DocsRequirements */}
+      <Modal
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        title="Editar documentos"
+        maxWidth="max-w-4xl"
+      >
+        {localFormData && (
+          <DocsRequirements
+            formData={localFormData}
+            onInputChange={handleDocsInputChange}
+            validationErrors={{}}
+            attemptedNext={false}
+            isEditMode={true}
+            onSave={handleSaveChanges}
+          />
+        )}
+      </Modal>
     </motion.div>
   );
 }

@@ -1,4 +1,4 @@
-// Componente Modal.jsx actualizado con botón guardar centralizado
+// Componente Modal.jsx actualizado con mejor manejo de guardado
 
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -11,7 +11,8 @@ export default function Modal({
   maxWidth = "max-w-2xl",
   onSave,  // Nueva prop para manejar el guardado
   isSaveDisabled = false,  // Opcional para deshabilitar el botón
-  saveLabel = "Guardar cambios"  // Personalización del texto del botón
+  saveLabel = "Guardar cambios",  // Personalización del texto del botón
+  showSaveButton = false  // Controlar si mostrar el botón de guardar
 }) {
     if (!isOpen) return null;
 
@@ -36,9 +37,9 @@ export default function Modal({
                     {children}
                 </div>
 
-                {/* Botón guardar centralizado - solo aparece si se proporciona onSave */}
-                {onSave && (
-                    <div className="flex justify-end gap-3 p-4 border-t mt-2">
+                {/* Botón guardar centralizado - solo aparece si se especifica */}
+                {showSaveButton && onSave && (
+                    <div className="flex justify-end gap-3 p-4 border-t mt-2 sticky bottom-0 bg-white">
                         <button
                             onClick={onClose}
                             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
