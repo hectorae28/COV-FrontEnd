@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { ArrowLeft, Maximize2, Minimize2, Save, Undo, X } from "lucide-react"
 import { useRef } from "react"
 import ArticlePreview from "./article-preview"
-import ContentTab from "./Editor/ContentTab"
+// import ContentTab from "./Editor/ContentTab"
 import GeneralInfoTab from "./Editor/GeneralInfoTab"
 import { useArticleEditorState } from "./Editor/useArticleEditorState"
 

@@ -139,7 +139,7 @@ export const useSolicitudesStore = create((set, get) => ({
         tiposActualizados.Carnet.costo = {id: costoCarnet.id, monto:parseFloat(costoCarnet.monto_usd)};
       }
       
-      const costoEspecializacion = costos.find(c => c.tipo_costo_nombre === "Especializacion");
+      const costoEspecializacion = costos.find(c => c.tipo_costo_nombre === "Especialidad");
       if (costoEspecializacion) {
         tiposActualizados.Especializacion.costo = {id: costoCarnet.id, monto:parseFloat(costoEspecializacion.monto_usd)};
       }
@@ -268,6 +268,23 @@ export const useSolicitudesStore = create((set, get) => ({
       set({ 
         loading: false, 
         error: error.message || "Error al actualizar estado de solicitud"
+      });
+      throw error;
+    }
+  },
+  updateDocumentoSolicitud: async (id, updatedData) => {
+    set({ loading: true });
+    try {
+      const res = await patchDataSolicitud(
+        `solicitud/${id}`,
+        updatedData,
+      );
+  
+      return res.data;
+    } catch (error) {
+      set({ 
+        loading: false, 
+        error: error.message || "Error al actualizar estado de documento de solicitud"
       });
       throw error;
     }

@@ -304,6 +304,8 @@ export default function DocsRequirements({
       </div>
       
       {/* Interruptor para aprobar documentos */}
+        {isEditMode && (
+
         <div className="flex items-center justify-between p-2 bg-gray-50 rounded-xl border border-gray-300">
           <div>
             <h3 className="text-sm font-medium text-gray-800">Aprobar todos los documentos</h3>
@@ -333,6 +335,8 @@ export default function DocsRequirements({
             </span>
           </button>
         </div>
+      )}
+
       
 
     {/* Si estamos en modo edición, mostrar botones de guardar/cancelar */}
