@@ -1,5 +1,7 @@
-import { UniversidadData, capitalizarPalabras, estados } from "@/Shared/UniversidadData";
+import { UniversidadData, capitalizarPalabras, estados, obtenerUniversidadesPorEstado } from "@/Shared/UniversidadData";
 import { motion } from "framer-motion";
+import { fetchEstados, fetchMunicipios } from "@/api/endpoints/ubicacion"
+
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -17,6 +19,9 @@ export default function InfoColegiado({
   const [otraUniversidad, setOtraUniversidad] = useState(false);
   const [nombreUniversidad, setNombreUniversidad] = useState("");
   const [acronimoUniversidad, setAcronimoUniversidad] = useState("");
+  const [estados, setEstados] = useState([]);
+  const [municipios, setMunicipios] = useState([]);
+  const [isLoadingMunicipios, setIsLoadingMunicipios] = useState(false);
 
   // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
@@ -72,6 +77,19 @@ export default function InfoColegiado({
       };
     });
   };
+  useEffect(() => {
+    const loadEstados = async () => {
+      try {
+        const data = await fetchEstados();
+        console.log("Estados cargados:", data);
+        setEstados(data);
+      } catch (error) {
+        console.error("Error al cargar los estados:", error);
+      }
+    };
+    
+    loadEstados();
+  }, []);
 
   // Actualizar el estado local cuando cambian las props
   useEffect(() => {
@@ -93,8 +111,8 @@ export default function InfoColegiado({
 
   // Actualizar las universidades disponibles cuando se selecciona un estado
   useEffect(() => {
-    if (selectedEstado && UniversidadData[selectedEstado]) {
-      setUniversidadesDisponibles(UniversidadData[selectedEstado]);
+    if (selectedEstado) {
+      setUniversidadesDisponibles(obtenerUniversidadesPorEstado(selectedEstado));
     } else {
       setUniversidadesDisponibles([]);
     }
@@ -436,9 +454,9 @@ export default function InfoColegiado({
                 disabled={isProfileEdit}
               >
                 <option value="" disabled>Seleccione un estado</option>
-                {estados.map((estado) => (
-                  <option key={estado} value={estado}>
-                    {estado}
+                {estados.map((estado,index) => (
+                  <option key={index} value={estado.id}>
+                    {estado.nombre}
                   </option>
                 ))}
               </select>

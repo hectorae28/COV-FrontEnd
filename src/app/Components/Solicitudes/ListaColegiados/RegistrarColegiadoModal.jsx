@@ -350,7 +350,7 @@ export default function RegistroColegiados({
             {!exonerarPagos && !pagarLuego && (
               <PagosColg
                 props={{
-                  handlePaymentComplete,
+                  handlePago:handlePaymentComplete,
                   costo: costoInscripcion,
                   metodoPago,
                 }}
