@@ -22,7 +22,17 @@ const nextConfig = {
             },
             {//https://toner-sunglasses-legitimate-nominations.trycloudflare.com
                 protocol: "https",
-                hostname: "toner-sunglasses-legitimate-nominations.trycloudflare.com",
+                hostname: "collectibles-falls-dozens-gloves.trycloudflare.com",
+                pathname: '/**',
+            },
+            {
+                protocol: "https",
+                hostname: "www.youtube.com",
+                pathname: '/**',
+            },
+            {
+                protocol: "https",
+                hostname: "www.orientacionlaboral.org",
                 pathname: '/**',
             }
         ],

@@ -1,6 +1,7 @@
 import { ShoppingCart, CreditCard } from "lucide-react"
 
-const ServiciosSection = ({ solicitud, totales, onIniciarPago }) => {
+const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados }) => {
+  console.log({pagosAprobados,solicitud,totales})
   const { 
     totalOriginal, 
     totalExonerado, 
@@ -70,7 +71,7 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago }) => {
           
           {/* Botón de acción */}
           <div className="mt-4">
-            {totalPendiente > 0 && (
+            {totalPendiente > 0 && !pagosAprobados && (
               <button
                 onClick={onIniciarPago}
                 className="cursor-pointer w-full bg-[#C40180] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#A00060] text-sm transition-colors"
