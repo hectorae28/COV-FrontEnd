@@ -30,6 +30,21 @@ export default function NotificationSystem({
     setCambiosPendientes
   } = handlers;
 
+  // Función para formatear fecha (solo fecha sin hora)
+  const formatearFechaSimple = (fechaISO) => {
+    if (!fechaISO) return "fecha desconocida";
+    try {
+      const fecha = new Date(fechaISO);
+      return fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return "fecha desconocida";
+    }
+  };
+
   // Determinar estados especiales
   const isRechazada = pendiente?.status === "rechazado";
   const isDenegada = pendiente?.status === "denegado";
@@ -83,7 +98,7 @@ export default function NotificationSystem({
         >
           <div className="flex items-center">
             <XCircle size={20} className="mr-2 flex-shrink-0" />
-            <span>Se ha denegado la solicitud permanentemente. Redirigiendo a la lista de colegiados...</span>
+            <span>Se ha anulado la solicitud permanentemente. Redirigiendo a la lista de colegiados...</span>
           </div>
           <button
             onClick={() => setDenegacionExitosa(false)}
@@ -144,7 +159,7 @@ export default function NotificationSystem({
             <div>
               <h3 className="text-yellow-800 font-medium">Solicitud rechazada</h3>
               <p className="text-yellow-700 text-sm mt-1">
-                Esta solicitud fue rechazada el {pendiente.updated_at || "N/A"}.
+                Esta solicitud fue rechazada el {formatearFechaSimple(pendiente.updated_at)}.
                 <br />
                 Motivo: {pendiente.motivo_rechazo || "No especificado"}
               </p>
@@ -167,9 +182,9 @@ export default function NotificationSystem({
             <div>
               <h3 className="text-red-800 font-medium">Solicitud Anulada permanentemente</h3>
               <p className="text-red-700 text-sm mt-1">
-                Esta solicitud fue Anulada el {pendiente.fechaDenegacion || "N/A"}.
+                Esta solicitud fue anulada el {formatearFechaSimple(pendiente.updated_at)}.
                 <br />
-                Motivo: {pendiente.motivoDenegacion || "No especificado"}
+                Motivo: {pendiente.motivo_rechazo || "No especificado"}
               </p>
               <p className="text-red-600 text-xs mt-2">
                 Esta solicitud ha sido rechazada definitivamente y no se permitirán más acciones sobre ella.
@@ -191,7 +206,7 @@ export default function NotificationSystem({
             <div>
               <h3 className="text-red-800 font-medium">Documentos incompletos</h3>
               <p className="text-red-700 text-sm mt-1">
-                Esta solicitud no puede ser aprobada hasta que todos los documentos requeridos estén completos.
+                Esta solicitud no puede ser aprobada hasta que todos los documentos requeridos estén completos y aprobados, incluyendo el comprobante de pago.
               </p>
             </div>
           </div>
