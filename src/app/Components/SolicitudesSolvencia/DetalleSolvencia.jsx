@@ -21,6 +21,8 @@ import { useEffect, useState } from "react";
 import ConfirmacionModal from "./ConfirmacionModal";
 import RechazoModal from "./RechazoModal";
 import ExoneracionModal from "./ExoneracionModal";
+import {patchDataSolicitud} from "@/api/endpoints/solicitud"
+import { useSolicitudesStore } from "@/store/SolicitudesStore"
 
 export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, actualizarSolvencia }) {
   // Estados principales
@@ -59,6 +61,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   const anioActual = new Date().getFullYear();
   const anios = Array.from({ length: 10 }, (_, i) => anioActual + i);
 
+  const fetchSolicitudesDeSolvencia = useSolicitudesStore((state) => state.fetchSolicitudesDeSolvencia);
+
   // Obtener datos de la solvencia
   useEffect(() => {
     if (solvencias && solvenciaId) {
@@ -68,16 +72,16 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         setSolvencia(solvenciaEncontrada);
 
         // Si tiene fecha de vencimiento, establecerla en los campos separados
-        if (solvenciaEncontrada.fechaVencimiento) {
+        if (solvenciaEncontrada.fechaExpSolvencia) {
           try {
             // Intentar parsear la fecha (podría estar en formato ISO o en formato DD/MM/YYYY)
             let fechaObj;
-            if (solvenciaEncontrada.fechaExpSolicitud.includes('-')) {
+            if (solvenciaEncontrada.fechaExpSolvencia.includes('-')) {
               // Formato ISO YYYY-MM-DD
-              fechaObj = new Date(solvenciaEncontrada.fechaVencimiento);
-            } else if (solvenciaEncontrada.fechaVencimiento.includes('/')) {
+              fechaObj = new Date(solvenciaEncontrada.fechaExpSolvencia);
+            } else if (solvenciaEncontrada.fechaExpSolvencia.includes('/')) {
               // Formato DD/MM/YYYY
-              const [year, month, day] = solvenciaEncontrada.fechaVencimiento.split('/');
+              const [year, month, day] = solvenciaEncontrada.fechaExpSolvencia.split('/');
               fechaObj = new Date(year, month - 1, day);
             }
 
@@ -139,13 +143,12 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
 
     try {
       const solvenciaActualizada = {
-        ...solvencia,
         costo: parseFloat(costoNuevo),
-        exonerado: false
+        solicitud_solvencia_id: solvenciaId
       };
 
-      actualizarSolvencia(solvenciaActualizada);
-      setSolvencia(solvenciaActualizada);
+      patchDataSolicitud('asignar_costo_solicitud_solvencia', solvenciaActualizada);
+      fetchSolicitudesDeSolvencia();
       mostrarAlerta("exito", "Se ha asignado el costo correctamente");
     } catch (error) {
       console.error("Error al asignar costo:", error);
@@ -325,17 +328,14 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6 text-[#590248]">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold mb-1">
-                {solvencia.tipo}
-              </h1>
               <p className="text-[#590248] flex items-center">
                 <Calendar size={16} className="mr-1" />
                 Solicitada el: {solvencia.fechaSolicitud}
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              {solvencia.estado === "Aprobada" && solvencia.certificadoUrl && (
+            {/*<div className="flex flex-col sm:flex-row gap-3">
+              {solvencia.estado === "aprobado" && (
                 <button
                   onClick={() => window.open(solvencia.certificadoUrl, '_blank')}
                   className="inline-flex items-center justify-center px-4 py-2
@@ -345,7 +345,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                   Descargar Certificado
                 </button>
               )}
-            </div>
+            </div>*/}
           </div>
         </div>
 
@@ -411,14 +411,14 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                   </div>
                 )}
 
-                {solvencia.fechaExpSolicitud && (
+                {solvencia.fechaExpSolvencia && (
                   <div className="flex items-center">
                     <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
                       <Calendar size={20} className="text-orange-600" />
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Fecha de vencimiento</p>
-                      <p className="font-medium text-gray-900">{solvencia.fechaExpSolicitud}</p>
+                      <p className="font-medium text-gray-900">{solvencia.fechaExpSolvencia}</p>
                     </div>
                   </div>
                 )}

@@ -352,19 +352,23 @@ export const useSolicitudesStore = create((set, get) => ({
       res.data.results.forEach((solicitud) => {
       solicitudesOrdenadas.push({
           idColegiado: solicitud.id,
+          idSolicitudSolvencia: solicitud.solicitudes_solvencia.lista[0].id,
+
           nombreColegiado: solicitud.nombre,
           statusSolvencia: solicitud.solvencia_status,
-          idSolicitudSolvencia: solicitud.solicitudes_solvencia.lista[0].id,
           statusSolicitud: solicitud.solicitudes_solvencia.lista[0].status,
           fechaSolicitud: solicitud.solicitudes_solvencia.lista[0].fecha_solicitud,
           costoRegularSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_regular,
           costoEspecialSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
-          fechaExpSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
+          fechaExpSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
           modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
           adminCreador: solicitud.solicitudes_solvencia.lista[0].user_admin_create,
           fechaRechazo: solicitud.solicitudes_solvencia.lista[0].fecha_rechazo,
           motivoRechazo: solicitud.solicitudes_solvencia.lista[0].motivo_rechazo,
           adminActualizador: solicitud.solicitudes_solvencia.lista[0].user_admin_update,
+          fechaAprobacion: solicitud.solicitudes_solvencia.lista[0].fecha_aprobacion,
+          fechaExoneracion: solicitud.solicitudes_solvencia.lista[0].fecha_exoneracion,
+          motivoExoneracion: solicitud.solicitudes_solvencia.lista[0].motivo_exoneracion,
           creador: {
             nombreCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.nombre_creador,
             idCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.id_creador,

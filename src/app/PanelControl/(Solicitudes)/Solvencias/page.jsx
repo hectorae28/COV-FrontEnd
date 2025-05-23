@@ -598,7 +598,7 @@ const conteoSolvencias = useMemo(() => ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                        <div className="text-sm text-gray-500">{solvencia.fechaExpSolicitud || "No establecida"}</div>
+                        <div className="text-sm text-gray-500">{solvencia.fechaExpSolvencia || "No establecida"}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex flex-col items-center">
