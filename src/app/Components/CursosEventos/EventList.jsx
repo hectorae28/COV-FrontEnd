@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { FiCalendar, FiClock, FiFileText, FiMapPin, FiPlus, FiSearch, FiTrash2 } from "react-icons/fi";
 import { InlineEditForm } from "./InlineEditForm";
@@ -11,7 +13,7 @@ export default function EventList({
     handleSelect,
     handleDelete,
     handleFormBuilder,
-    handleCancel={handleCancel},
+    handleCancel,
     handleAdd,
     formValues,
     setFormValues,
@@ -21,9 +23,55 @@ export default function EventList({
     Tab
 }) {
     const [dateFilter, setDateFilter] = useState("");
+    const [itemToDelete, setItemToDelete] = useState(null);
+
+    // Función para iniciar proceso de eliminación
+    const confirmDelete = (e, id, type) => {
+        e.stopPropagation();
+        setItemToDelete({ id, type });
+    };
+
+    // Función para ejecutar la eliminación
+    const executeDelete = () => {
+        if (itemToDelete) {
+            handleDelete(itemToDelete.id, itemToDelete.type);
+            setItemToDelete(null);
+        }
+    };
+
+    // Función para cancelar eliminación
+    const cancelDelete = () => {
+        setItemToDelete(null);
+    };
 
     return (
         <div className="bg-white p-5 rounded-xl shadow-md">
+            {/* Modal de confirmación para eliminación */}
+            {itemToDelete && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-white p-5 rounded-lg shadow-xl max-w-md w-full">
+                        <h3 className="text-lg font-bold text-gray-800 mb-3">Confirmar eliminación</h3>
+                        <p className="text-gray-600 mb-5">
+                            ¿Estás seguro de que deseas eliminar este {itemToDelete.type}? Esta acción no se puede deshacer.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={cancelDelete}
+                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={executeDelete}
+                                className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white transition-colors"
+                            >
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <TabList className="flex space-x-2 mb-4 p-1 rounded-lg bg-gray-100">
                 <Tab className={({ selected }) =>
                     `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
@@ -118,7 +166,7 @@ export default function EventList({
                                         {item.image ? (
                                             <img
                                                 src={item.image}
-                                                alt={item.title || "Imagen"}
+                                                alt={item.title || item.nombre || "Imagen"}
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
@@ -132,49 +180,48 @@ export default function EventList({
                                         className="flex-1"
                                         onClick={() => handleSelect(item)}
                                     >
-                                        <h3 className="font-medium text-gray-800 line-clamp-1">{item.title || "Sin título"}</h3>
+                                        <h3 className="font-medium text-gray-800 line-clamp-1">{item.title || item.nombre || "Sin título"}</h3>
                                         <div className="flex flex-wrap items-center text-sm text-gray-500 mt-1">
                                             <div className="flex items-center mr-4">
                                                 <FiCalendar className="mr-1 text-[#C40180]" size={14} />
-                                                <span>{item.date || "Fecha no definida"}</span>
+                                                <span>{item.date || item.fecha || "Fecha no definida"}</span>
                                             </div>
-                                            {item.hora_inicio && (
+                                            {(item.hora_inicio) && (
                                                 <div className="flex items-center mr-4">
                                                     <FiClock className="mr-1 text-[#C40180]" size={14} />
                                                     <span>{item.hora_inicio}</span>
                                                 </div>
                                             )}
-                                            {item.location && (
+                                            {(item.location || item.lugar) && (
                                                 <div className="flex items-center">
                                                     <FiMapPin className="mr-1 text-[#C40180]" size={14} />
-                                                    <span className="line-clamp-1">{item.location}</span>
+                                                    <span className="line-clamp-1">{item.location || item.lugar}</span>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
                                     <div className="flex">
-                                        <button
+                                        <div
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleFormBuilder(item);
                                             }}
-                                            className="p-1.5 rounded-md text-[#C40180] hover:bg-[#C40180]/10 transition-colors mr-2"
+                                            className="flex flex-col items-center p-1.5 rounded-md text-[#C40180] hover:bg-[#C40180]/10 transition-colors mr-2 cursor-pointer"
                                             title={item.formulario ? "Editar formulario" : "Crear formulario"}
                                         >
                                             <FiFileText size={18} />
-                                        </button>
+                                            <span className="text-xs mt-1">Formulario</span>
+                                        </div>
 
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDelete(item.id, tabIndex === 0 ? "evento" : "curso");
-                                            }}
-                                            className="p-1.5 rounded-md text-red-500 hover:bg-red-50 transition-colors"
+                                        <div
+                                            onClick={(e) => confirmDelete(e, item.id, tabIndex === 0 ? "evento" : "curso")}
+                                            className="flex flex-col items-center p-1.5 rounded-md text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                                             title="Eliminar"
                                         >
                                             <FiTrash2 size={18} />
-                                        </button>
+                                            <span className="text-xs mt-1">Eliminar</span>
+                                        </div>
                                     </div>
                                 </div>
                             )}

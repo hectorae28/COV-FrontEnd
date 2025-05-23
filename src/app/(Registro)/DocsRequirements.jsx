@@ -19,6 +19,9 @@ export default function DocsRequirements({
     notas_curso: formData.notas_curso ? (formData.notas_curso.name || "Archivo seleccionado") : ""
   });
 
+  // Estado para controlar la aprobación de documentos
+  const [docsAprobados, setDocsAprobados] = useState(false);
+
   // Verificar si un campo tiene error de validación
   const isFieldEmpty = (fieldName) => {
     return attemptedNext && validationErrors && validationErrors[fieldName];
@@ -33,6 +36,13 @@ export default function DocsRequirements({
       }));
       onInputChange({ [name]: files[0] });
     }
+  };
+
+  // Función para manejar el cambio de estado del switch de aprobación
+  const handleAprobacionChange = () => {
+    const nuevoEstado = !docsAprobados;
+    setDocsAprobados(nuevoEstado);
+    onInputChange({ documentos_aprobados: nuevoEstado });
   };
 
   // Determinar la etiqueta correcta para el fondo negro del título según la profesión
@@ -295,6 +305,7 @@ export default function DocsRequirements({
       
       {/* Interruptor para aprobar documentos */}
         {isEditMode && (
+
         <div className="flex items-center justify-between p-2 bg-gray-50 rounded-xl border border-gray-300">
           <div>
             <h3 className="text-sm font-medium text-gray-800">Aprobar todos los documentos</h3>
@@ -325,6 +336,7 @@ export default function DocsRequirements({
           </button>
         </div>
       )}
+
       
 
     {/* Si estamos en modo edición, mostrar botones de guardar/cancelar */}

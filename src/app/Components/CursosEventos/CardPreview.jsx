@@ -1,6 +1,15 @@
 import { FiCalendar, FiClock, FiMapPin } from "react-icons/fi";
 
-export default function CardPreview({ title, date, hora_inicio, location, image, linkText, isPaid, showPriceTag, price, currency }) {
+export default function CardPreview({ 
+    title, date, hora_inicio, location, image, linkText, 
+    showPriceTag, price, precio, currency 
+}) {
+    // Calcular automáticamente si es de pago basado en el precio
+    const isPaid = (price && parseFloat(price) > 0) || (precio && parseFloat(precio) > 0);
+    
+    // Usar el precio que esté disponible
+    const finalPrice = price || precio;
+    
     // Determine if the image is a video URL
     const isVideo = image && (
         image.endsWith('.mp4') ||
@@ -22,8 +31,8 @@ export default function CardPreview({ title, date, hora_inicio, location, image,
     };
 
     // Format price with currency
-    const formattedPrice = isPaid && price ? 
-        `${getCurrencySymbol(currency)} ${parseFloat(price).toFixed(2)}` : '';
+    const formattedPrice = isPaid && finalPrice ? 
+        `${getCurrencySymbol(currency)} ${parseFloat(finalPrice).toFixed(2)}` : '';
 
     return (
         <div className="overflow-hidden rounded-xl shadow-lg bg-white border border-gray-100 flex flex-col w-full max-w-sm mx-auto relative">
@@ -42,6 +51,7 @@ export default function CardPreview({ title, date, hora_inicio, location, image,
                 </div>
             )}
 
+            {/* Resto del componente permanece igual */}
             <div className="relative h-48 overflow-hidden">
                 <div
                     className={`absolute inset-0 ${image ? "bg-white" : "bg-gradient-to-br from-[#C40180] to-[#590248]"} opacity-80`}
@@ -73,6 +83,8 @@ export default function CardPreview({ title, date, hora_inicio, location, image,
                     )}
                 </div>
             </div>
+            
+            {/* Resto del JSX permanece igual */}
             <div className="p-4 flex flex-col gap-2">
                 <div className="flex items-center text-sm text-gray-700">
                     <FiCalendar className="mr-2 text-[#C40180]" /> {date || "Fecha no definida"}

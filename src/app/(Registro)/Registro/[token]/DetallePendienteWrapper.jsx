@@ -1,12 +1,12 @@
 "use client";
-import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
+import { postDataUsuario } from "@/api/endpoints/colegiado";
+import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetalleInfo";
 import BackgroundAnimation from "@/Components/Home/BackgroundAnimation";
-import {BadgeCheck} from "lucide-react"
 import { motion } from "framer-motion";
+import { BadgeCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { postDataUsuario } from "@/api/endpoints/colegiado";
 
 export default function DetallePendienteWrapper({
   id,
