@@ -3,7 +3,8 @@
 import { FileText, Eye, RefreshCcw, AlertCircle, Upload, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useRef } from "react"
-import { TIPOS_SOLICITUD } from "@/store/SolicitudesStore"
+import DocumentVerificationSwitch from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentVerificationSwitch";
+import { useSolicitudesStore } from "@/store/SolicitudesStore";
 
 export default function DocumentosSection({ solicitud, onVerDocumento, updateDocumento }) {
     const [documentoParaSubir, setDocumentoParaSubir] = useState(null)
@@ -45,6 +46,33 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
         // Buscar la clave en el mapa
         const campoBackend = documentosMapping[docNombreNormalizado];
         
+        // Get validation status from solicitud data
+        let validateField = null;
+        let motivoRechazoField = null;
+        
+        if (campoBackend && solicitud.documentosAdjuntos) {
+            // Search for validation status in all sections (carnet, especializacion, etc.)
+            if (solicitud.detallesSolicitud?.carnet?.archivos) {
+                validateField = solicitud.detallesSolicitud.carnet.archivos[`${campoBackend}_validate`];
+                motivoRechazoField = solicitud.detallesSolicitud.carnet.archivos[`${campoBackend}_motivo_rechazo`];
+            }
+            if (solicitud.detallesSolicitud?.especializacion?.archivos) {
+                const especialArchivos = solicitud.detallesSolicitud.especializacion.archivos;
+                if (especialArchivos[`${campoBackend}_validate`] !== undefined) {
+                    validateField = especialArchivos[`${campoBackend}_validate`];
+                    motivoRechazoField = especialArchivos[`${campoBackend}_motivo_rechazo`];
+                }
+            }
+        }
+        
+        // Determine status based on validation field
+        let status = 'pending';
+        if (validateField === true) {
+            status = 'approved';
+        } else if (validateField === false) {
+            status = 'rejected';
+        }
+        
         return {
             id: campoBackend || `doc-${index}`,
             nombre: docNombre,
@@ -52,7 +80,10 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
             requerido: true,
             url: campoBackend && documentosAdjuntosLimpios[campoBackend] 
                 ? documentosAdjuntosLimpios[campoBackend] 
-                : null
+                : null,
+            status: status,
+            rejectionReason: motivoRechazoField || '',
+            isReadOnly: status === 'approved'
         };
     });
 
@@ -144,13 +175,29 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
     // Componente de tarjeta de documento reutilizable
     const DocumentCard = ({ documento }) => {
         const tieneArchivo = !documento.requerido || (documento.requerido && documento.url !== null)
-        
+        const isReadOnly = documento.status === 'approved' && documento.isReadOnly;
+        const updateDocumentoSolicitud = useSolicitudesStore(state => state.updateDocumentoSolicitud)
         // Función para ver el documento
         const handleVerDoc = () => {
             if (onVerDocumento && documento.url) {
                 onVerDocumento(documento.url)
             }
         }
+        const handleStatusChange = async (updatedDocument) => {
+            // if (onDocumentStatusChange) {
+            //     onDocumentStatusChange(updatedDocument);
+            // }
+            const Form = new FormData();
+           console.log({updatedDocument})
+           if(updatedDocument.status === 'rechazado'){
+            Form.append(`${documento.id}_validate`, "false")
+            Form.append(`${documento.id}_motivo_rechazo`, updatedDocument.rejectionReason)
+            await updateDocumentoSolicitud(solicitud.id, Form)
+            return
+           }
+           Form.append(`${documento.id}_validate`, "true")
+           await updateDocumentoSolicitud(solicitud.id, Form)
+        };
         
         return (
             <div
@@ -181,6 +228,15 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                                         Falta documento.{" "}
                                         {documento?.requerido && "Este documento es requerido para completar el registro."}
                                     </span>
+                                </div>
+                            )}
+                            {tieneArchivo && (
+                                <div className="mt-3">
+                                    <DocumentVerificationSwitch
+                                    documento={documento}
+                                    onChange={handleStatusChange}
+                                    readOnly={isReadOnly}
+                                    />
                                 </div>
                             )}
                         </div>

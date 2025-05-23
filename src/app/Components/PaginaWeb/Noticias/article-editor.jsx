@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { ArrowLeft, Maximize2, Minimize2, Save, Undo, X } from "lucide-react"
 import { useRef } from "react"
 import ArticlePreview from "./article-preview"
-import ContentTab from "./Editor/ContentTab"
+// import ContentTab from "./Editor/ContentTab"
 import GeneralInfoTab from "./Editor/GeneralInfoTab"
 import { useArticleEditorState } from "./Editor/useArticleEditorState"
 
@@ -184,20 +184,20 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
                 mediaSource={mediaSource}
                 setMediaSource={setMediaSource}
               />
-            ) : (
-              <ContentTab
-                contentElements={contentElements}
-                elementRows={elementRows}
-                activeElement={activeElement}
-                setActiveElement={setActiveElement}
-                prepareContentElement={prepareContentElement}
-                handleElementUpdate={handleElementUpdate}
-                removeContentElement={removeContentElement}
-                moveElement={moveElement}
-                moveElementInGrid={moveElementInGrid}
-                changeElementWidth={changeElementWidth}
-                moveElementToRow={moveElementToRow}
-              />
+            ) : (<></>
+              // <ContentTab
+              //   contentElements={contentElements}
+              //   elementRows={elementRows}
+              //   activeElement={activeElement}
+              //   setActiveElement={setActiveElement}
+              //   prepareContentElement={prepareContentElement}
+              //   handleElementUpdate={handleElementUpdate}
+              //   removeContentElement={removeContentElement}
+              //   moveElement={moveElement}
+              //   moveElementInGrid={moveElementInGrid}
+              //   changeElementWidth={changeElementWidth}
+              //   moveElementToRow={moveElementToRow}
+              // />
             )}
           </div>
         </div>
