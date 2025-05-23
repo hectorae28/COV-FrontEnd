@@ -6,7 +6,7 @@ import { useState, useRef } from "react"
 import DocumentVerificationSwitch from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentVerificationSwitch";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
 
-export default function DocumentosSection({ solicitud, onVerDocumento, updateDocumento }) {
+export default function DocumentosSection({ solicitud, onVerDocumento, updateDocumento, onDocumentStatusChange, isAdmin }) {
     const [documentoParaSubir, setDocumentoParaSubir] = useState(null)
     const [selectedFile, setSelectedFile] = useState(null)
     const [isUploading, setIsUploading] = useState(false)
@@ -183,21 +183,6 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                 onVerDocumento(documento.url)
             }
         }
-        const handleStatusChange = async (updatedDocument) => {
-            // if (onDocumentStatusChange) {
-            //     onDocumentStatusChange(updatedDocument);
-            // }
-            const Form = new FormData();
-           console.log({updatedDocument})
-           if(updatedDocument.status === 'rechazado'){
-            Form.append(`${documento.id}_validate`, "false")
-            Form.append(`${documento.id}_motivo_rechazo`, updatedDocument.rejectionReason)
-            await updateDocumentoSolicitud(solicitud.id, Form)
-            return
-           }
-           Form.append(`${documento.id}_validate`, "true")
-           await updateDocumentoSolicitud(solicitud.id, Form)
-        };
         
         return (
             <div
@@ -234,7 +219,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                                 <div className="mt-3">
                                     <DocumentVerificationSwitch
                                     documento={documento}
-                                    onChange={handleStatusChange}
+                                    onChange={onDocumentStatusChange}
                                     readOnly={isReadOnly}
                                     />
                                 </div>

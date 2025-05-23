@@ -26,6 +26,7 @@ import RechazoModal from "@/Components/Solicitudes/Solicitudes/RechazoModal";
 import ServiciosSection from "@/Components/Solicitudes/Solicitudes/ServiciosSection";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import transformBackendData from "@/utils/formatDataSolicitudes";
+import api from "@/api/api";
 
 export default function DetalleSolicitud({ props }) {
   const { id, isAdmin } = props;
@@ -275,36 +276,13 @@ export default function DetalleSolicitud({ props }) {
   // Handler for document status change (approve/reject)
   const handleDocumentStatusChange = async (updatedDocument) => {
     try {
-      // Call the API to update the document validation status
-      const response = await fetch(`/api/solicitudes/${solicitud.id}/validate-document/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          document_type: updatedDocument.documentType,
-          document_id: updatedDocument.documentId,
-          field_name: updatedDocument.fieldName,
-          is_valid: updatedDocument.status === 'approved',
-          rejection_reason: updatedDocument.rejectionReason || ''
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al actualizar el estado del documento');
+      console.log("updatedDocument", updatedDocument)
+      const requestBody = {
+        [`file_${updatedDocument.id}_validate`]: updatedDocument.status === 'approved',
+        [`file_${updatedDocument.id}_motivo_rechazo`]: updatedDocument.rejectionReason
       }
-      
-      // Reload solicitud data after successful update
-      await loadSolicitudById();
-      
-      setAlertaExito({
-        tipo: "exito",
-        mensaje: updatedDocument.status === 'approved' 
-          ? "Documento aprobado exitosamente" 
-          : "Documento rechazado exitosamente"
-      });
-      
+      const response = await api.patch(`/solicitudes/solicitud/${solicitud.id}/`, requestBody);
+        console.log('Documento validado:', response.data);
     } catch (error) {
       console.error("Error al actualizar el estado del documento:", error);
       setAlertaExito({
