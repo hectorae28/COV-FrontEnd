@@ -37,6 +37,7 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
     moveElementInGrid,
     changeElementWidth,
     moveElementToRow,
+    setContentElements,
     handleSave
   } = useArticleEditorState(article, onSave, handleInputChange)
   
@@ -197,6 +198,7 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
                 moveElementInGrid={moveElementInGrid}
                 changeElementWidth={changeElementWidth}
                 moveElementToRow={moveElementToRow}
+                setContentElements={setContentElements}
               />
             )}
           </div>
