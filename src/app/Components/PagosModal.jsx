@@ -6,7 +6,7 @@ import { ArrowLeft, Check, CreditCard, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function PagosColg({ props }) {
-  const { costo, allowMultiplePayments, handlePago } =
+  const { costo, allowMultiplePayments, handlePago, handlePaymentComplete } =
     props;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,6 +20,7 @@ export default function PagosColg({ props }) {
   const [metodoDePago, setMetodoDePago] = useState([]);
   const [montoEnBs, setMontoEnBs] = useState("0.00");
   const [showMethodSelection, setShowMethodSelection] = useState(false);
+  const [pagarLuego, setPagarLuego] = useState(false);
 
   // Verificar si hay más de 4 métodos de pago para cambiar el estilo de visualización
   const showAsList = metodoDePago.length > 4;
@@ -152,6 +153,21 @@ export default function PagosColg({ props }) {
     }
   };
 
+  const handlePagarLuegoChange = () => {
+    setPagarLuego(!pagarLuego);
+  };
+
+  const handlePayLater = () => {
+    handlePago({
+      paymentDate: "",
+      referenceNumber: "",
+      paymentFile: null,
+      totalAmount: costo,
+      metodo_de_pago: null,
+      tasa_bcv_del_dia: tasaBCV,
+    });
+  };
+
   return (
     <div id="pagos-modal" className="w-full">
       <div className="mb-8 text-center">
@@ -164,6 +180,7 @@ export default function PagosColg({ props }) {
         </p>
       </div>
 
+      {!pagarLuego && (
       <div className="bg-[#f8f9fa] p-6 rounded-xl mb-8">
         <div className="md:flex items-center justify-between mb-6 ">
           <div className="flex items-center mb-2 md:mb-0">
@@ -642,7 +659,7 @@ export default function PagosColg({ props }) {
         )}
 
         {/* Send button only shows if a payment method is selected */}
-        {paymentMethod && (
+        {paymentMethod && paymentMethod.nombre !== "paypal" && (
           <div className="pt-6 mt-6 border-t">
             <motion.button
               type="button"
@@ -683,6 +700,22 @@ export default function PagosColg({ props }) {
           </div>
         )}
       </div>
+      )}
+
+      {/* Botón para confirmar pago luego */}
+      {pagarLuego && (
+        <div className="pt-6 border-t">
+          <motion.button
+            type="button"
+            onClick={handlePayLater}
+            className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Confirmar Pago Pendiente
+          </motion.button>
+        </div>
+      )}
     </div>
   );
 }
