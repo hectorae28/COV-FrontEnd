@@ -120,12 +120,19 @@ export function ApprovalModal({
                   type="text"
                   id="libro"
                   name="libro"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={datosRegistro.libro}
-                  onChange={handleInputChange}
-                  className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.libro ? "border-red-300 bg-red-50" : "border-gray-300"
-                    }`}
-                  placeholder="Ej: A-001"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      handleInputChange(e);
+                    }
+                  }}
+                  className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.libro ? "border-red-300 bg-red-50" : "border-gray-300"}`}
+                  placeholder="Ej: 001"
                 />
+
                 {errores.libro && <p className="text-red-500 text-xs mt-1">{errores.libro}</p>}
               </div>
 
@@ -138,7 +145,12 @@ export function ApprovalModal({
                   id="pagina"
                   name="pagina"
                   value={datosRegistro.pagina}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      handleInputChange(e);
+                    }
+                  }}
                   className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.pagina ? "border-red-300 bg-red-50" : "border-gray-300"
                     }`}
                   placeholder="Ej: 25"
@@ -155,7 +167,12 @@ export function ApprovalModal({
                   id="num_cov"
                   name="num_cov"
                   value={datosRegistro.num_cov}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      handleInputChange(e);
+                    }
+                  }}
                   className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.num_cov ? "border-red-300 bg-red-50" : "border-gray-300"
                     }`}
                   placeholder="Ej: 12345"

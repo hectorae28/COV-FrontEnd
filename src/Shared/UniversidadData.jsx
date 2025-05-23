@@ -293,8 +293,7 @@ export const obtenerUniversidadesPorEstado = (estadoId) => {
 
 // Función para capitalizar cada palabra de un texto
 export const capitalizarPalabras = (texto) => {
-    return texto
-        .split(' ')
-        .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
-        .join(' ');
+  if (!texto) return "";
+  // Capitaliza solo la primera letra de la cadena y convierte el resto a minúsculas
+  return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
 };

@@ -175,7 +175,7 @@ export default function InfoContacto({
           </svg>
           <span className="text-xs">
             {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "Requiere verificación del nuevo correo"}
-            </span>
+          </span>
         </div>
       )
     }
@@ -196,7 +196,7 @@ export default function InfoContacto({
           className="text-xs text-[#D7008A] hover:underline"
         >
           {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "El correo debe ser verificado para continuar"}
-          
+
         </button>
       </div>
     )

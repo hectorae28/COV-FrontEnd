@@ -1,6 +1,6 @@
 "use client"
+import { patchDataUsuario } from "@/api/endpoints/colegiado"
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation"
-import {patchDataUsuario} from "@/api/endpoints/colegiado" 
 import confetti from "canvas-confetti"
 import { AnimatePresence, motion } from "framer-motion"
 import { Building, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User, X } from "lucide-react"
@@ -9,9 +9,10 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 // Import step components
 import api from "@/api/api"
+import { postDataUsuario } from "@/api/endpoints/colegiado"
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage"
-import { postDataUsuario } from "@/api/endpoints/colegiado";
 import Alert from "@/app/Components/Alert"
+import { Form } from "antd"
 import Head from "next/head"
 import PagosColg from "../../Components/PagosModal"
 import DocsRequirements from "../DocsRequirements"
@@ -20,7 +21,6 @@ import InfoColegiado from "../InfoColg"
 import InfoContacto from "../InfoCont"
 import InfoLaboralWithDireccionForm from "../InfoLabWithDireccionForm"
 import InfoPersonal from "../InfoPers"
-import { Form } from "antd"
 
 const steps = [
   {
@@ -45,7 +45,7 @@ const steps = [
     description: "Cómo podemos comunicarnos contigo",
     icon: Phone,
     component: InfoContacto,
-    requiredFields: ["email", "phoneNumber", "address", "state", "municipio"],
+    requiredFields: ["email", "phoneNumber", "address", "state", "city"],
   },
   {
     id: 3,

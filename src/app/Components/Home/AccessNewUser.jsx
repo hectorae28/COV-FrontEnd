@@ -22,7 +22,7 @@ export default function ClaimAccountForm({ onBackToLogin }) {
         .catch((err) => {
           console.error(err)
           setIsLoading(false);
-          setMessage({ text: "Error al enviar email", type: "error" });
+          setMessage({ text: "Usted no tiene un registro previo realizado. Por favor, vaya a la sección de registro para poder continuar con la solicitud.", type: "error" });
         });
     };
 

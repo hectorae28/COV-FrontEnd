@@ -32,7 +32,12 @@ export default function DocumentVerificationSwitch({
     // Verificar si el documento ya está aprobado
     const isApproved = status === 'approved';
 
-    const handleStatusChange = (newStatus) => {
+    const handleStatusChange = (newStatus, event) => {
+        // Prevenir propagación del evento
+        if (event) {
+            event.stopPropagation();
+        }
+
         // Si el documento ya está aprobado, no permitas cambios
         if (isApproved || readOnly) return;
 
@@ -92,14 +97,16 @@ export default function DocumentVerificationSwitch({
 
     return (
         <div className="relative">
-            <div className="flex items-center space-x-2">
+            {/* Contenedor específico para los botones de aprobar/rechazar */}
+            <div className="flex items-center space-x-2 approve-reject-buttons">
                 <button
-                    onClick={() => handleStatusChange('approved')}
+                    onClick={(e) => handleStatusChange('approved', e)}
                     disabled={isApproved || readOnly}
-                    className={`p-2 rounded-md transition-all ${isApproved
-                        ? 'bg-green-200 text-green-800 ring-2 ring-green-500 shadow-md'
-                        : 'bg-gray-100 text-gray-500 hover:bg-green-50'
-                        } ${(isApproved || readOnly) ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`p-2 rounded-md transition-all ${
+                        isApproved
+                            ? 'bg-green-200 text-green-800 ring-2 ring-green-500 shadow-md'
+                            : 'bg-gray-100 text-gray-500 hover:bg-green-50'
+                    } ${(isApproved || readOnly) ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
                     title={
                         isApproved
                             ? "Este documento ya ha sido aprobado"
@@ -112,12 +119,13 @@ export default function DocumentVerificationSwitch({
                 </button>
 
                 <button
-                    onClick={() => handleStatusChange('rechazado')}
+                    onClick={(e) => handleStatusChange('rechazado', e)}
                     disabled={isApproved || readOnly}
-                    className={`p-2 rounded-md transition-all ${status === 'rechazado'
-                        ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
-                        : 'bg-gray-100 text-gray-500 hover:bg-red-50'
-                        } ${(isApproved || readOnly) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`p-2 rounded-md transition-all ${
+                        status === 'rechazado'
+                            ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
+                            : 'bg-gray-100 text-gray-500 hover:bg-red-50'
+                    } ${(isApproved || readOnly) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     title={
                         isApproved
                             ? "No se puede rechazar un documento aprobado"
@@ -129,10 +137,14 @@ export default function DocumentVerificationSwitch({
                     <XCircle size={20} />
                 </button>
 
-                <span className={`text-sm font-medium ${status === 'approved' ? 'text-green-700' :
-                    status === 'rechazado' ? 'text-red-700' :
+                <span 
+                    className={`text-sm font-medium ${
+                        status === 'approved' ? 'text-green-700' :
+                        status === 'rechazado' ? 'text-red-700' :
                         'text-gray-600'
-                    }`}>
+                    }`}
+                    onClick={(e) => e.stopPropagation()} // También prevenir click en el texto
+                >
                     {status === 'approved' && (
                         <span className="flex items-center">
                             <Shield size={16} className="mr-1" />
@@ -146,7 +158,10 @@ export default function DocumentVerificationSwitch({
 
             {/* Si está aprobado, mostrar un mensaje destacado */}
             {isApproved && (
-                <div className="mt-2 text-xs text-green-600 bg-green-50 p-2 rounded-md border border-green-200">
+                <div 
+                    className="mt-2 text-xs text-green-600 bg-green-50 p-2 rounded-md border border-green-200"
+                    onClick={(e) => e.stopPropagation()} // Prevenir click en el mensaje
+                >
                     <p className="font-medium flex items-center">
                         <Shield size={14} className="mr-1" />
                         Documento verificado y aprobado
@@ -244,10 +259,11 @@ export default function DocumentVerificationSwitch({
                             <button
                                 onClick={submitRejection}
                                 disabled={useCustomReason ? !customReason.trim() : !rejectionPreset}
-                                className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${(useCustomReason ? !customReason.trim() : !rejectionPreset)
-                                    ? 'opacity-50 cursor-not-allowed'
-                                    : ''
-                                    }`}
+                                className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${
+                                    (useCustomReason ? !customReason.trim() : !rejectionPreset)
+                                        ? 'opacity-50 cursor-not-allowed'
+                                        : ''
+                                }`}
                             >
                                 Confirmar rechazo
                             </button>
@@ -258,7 +274,10 @@ export default function DocumentVerificationSwitch({
 
             {/* Mostrar motivo del rechazo si existe */}
             {status === 'rechazado' && documento.rejectionReason && (
-                <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-md border border-red-200">
+                <div 
+                    className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-md border border-red-200"
+                    onClick={(e) => e.stopPropagation()} // Prevenir click en el motivo de rechazo
+                >
                     <span className="font-medium">Motivo de rechazo:</span> {documento.rejectionReason}
                 </div>
             )}
