@@ -1,41 +1,51 @@
-"use client";
-import { useState } from "react";
+"use client"
+import { useState } from "react"
 
 export default function FormPreview({ fields, isPaid, price, currency, submitButtonText = "Enviar inscripción" }) {
-  const [formState, setFormState] = useState({});
-  const [showDropdown, setShowDropdown] = useState(null);
-  
+  const [formState, setFormState] = useState({})
+  const [showDropdown, setShowDropdown] = useState(null)
 
   const handleChange = (fieldId, value) => {
-    setFormState({ ...formState, [fieldId]: value });
-  };
+    setFormState({ ...formState, [fieldId]: value })
+  }
 
   const toggleDropdown = (index) => {
-    setShowDropdown(showDropdown === index ? null : index);
-  };
+    setShowDropdown(showDropdown === index ? null : index)
+  }
+
+  // Si no hay campos, mostrar un mensaje
+  if (!fields || fields.length === 0) {
+    return (
+      <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 text-center">
+        <h3 className="text-lg font-medium text-gray-800 mb-4">Vista Previa del Formulario</h3>
+        <p className="text-gray-500">
+          No hay campos en el formulario. Añade campos utilizando el panel de la izquierda.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-      <h3 className="text-lg font-medium text-gray-800 mb-6">
-        Formulario de Inscripción
-      </h3>
+      <h3 className="text-lg font-medium text-gray-800 mb-6">Formulario de Inscripción</h3>
 
       <div className="space-y-6">
         {fields.map((field, index) => {
           const isPriceField =
             field.nombre.toLowerCase().includes("monto") ||
             field.nombre.toLowerCase().includes("precio") ||
-            field.nombre.toLowerCase().includes("pago");
+            field.nombre.toLowerCase().includes("pago")
 
-          const fieldId = `field-${index}`;
+          const fieldId = `field-${index}`
 
           return (
-            <div key={index} className={`space-y-2 ${isPriceField ? "bg-gray-100 p-3 rounded-lg border border-[#590248]" : ""}`}>
+            <div
+              key={index}
+              className={`space-y-2 ${isPriceField ? "bg-gray-100 p-3 rounded-lg border border-[#590248]" : ""}`}
+            >
               <label className="block text-sm font-medium text-gray-700">
                 {field.nombre}
-                {field.requerido === "true" && (
-                  <span className="text-red-500 ml-1">*</span>
-                )}
+                {field.requerido === "true" && <span className="text-red-500 ml-1">*</span>}
               </label>
 
               {field.tipo === "seleccion" && (
@@ -57,8 +67,8 @@ export default function FormPreview({ fields, isPaid, price, currency, submitBut
                           key={i}
                           className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
                           onClick={() => {
-                            handleChange(fieldId, option);
-                            toggleDropdown(null);
+                            handleChange(fieldId, option)
+                            toggleDropdown(null)
                           }}
                         >
                           {option}
@@ -93,9 +103,7 @@ export default function FormPreview({ fields, isPaid, price, currency, submitBut
               {field.tipo === "archivo" && (
                 <div className="flex flex-col space-y-2">
                   <div className="flex items-center justify-center w-full">
-                    <label
-                      className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
-                    >
+                    <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <p className="mb-1 text-sm text-gray-500">
                           <span className="font-medium">Haga clic para subir</span> o arrastre y suelte
@@ -111,11 +119,15 @@ export default function FormPreview({ fields, isPaid, price, currency, submitBut
                           (máx. {field.tamano_maximo || "5MB"})
                         </p>
                       </div>
-                      <input type="file" className="hidden" onChange={(e) => {
-                        if (e.target.files[0]) {
-                          handleChange(fieldId, e.target.files[0].name);
-                        }
-                      }} />
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files[0]) {
+                            handleChange(fieldId, e.target.files[0].name)
+                          }
+                        }}
+                      />
                     </label>
                   </div>
                   {formState[fieldId] && (
@@ -138,13 +150,17 @@ export default function FormPreview({ fields, isPaid, price, currency, submitBut
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={formState[fieldId] !== undefined ? formState[fieldId] : field.valor_predeterminado === "true"}
+                      checked={
+                        formState[fieldId] !== undefined ? formState[fieldId] : field.valor_predeterminado === "true"
+                      }
                       onChange={(e) => handleChange(fieldId, e.target.checked)}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#C40180]"></div>
                     <span className="ml-3 text-sm font-medium text-gray-700">
-                      {(formState[fieldId] !== undefined ? formState[fieldId] : field.valor_predeterminado === "true") ? "Activado" : "Desactivado"}
+                      {(formState[fieldId] !== undefined ? formState[fieldId] : field.valor_predeterminado === "true")
+                        ? "Activado"
+                        : "Desactivado"}
                     </span>
                   </label>
                 </div>
@@ -154,16 +170,14 @@ export default function FormPreview({ fields, isPaid, price, currency, submitBut
                 <p className="text-xs text-gray-500">Este campo es obligatorio</p>
               )}
 
-              {isPriceField && (
-                <p className="text-xs text-[#590248]">Monto a pagar por la inscripción</p>
-              )}
+              {isPriceField && <p className="text-xs text-[#590248]">Monto a pagar por la inscripción</p>}
             </div>
-          );
+          )
         })}
 
         <div className="pt-4">
           <button
-            onClick={() => alert('Formulario enviado (simulación)')}
+            onClick={() => alert("Formulario enviado (simulación)")}
             className="w-full px-4 py-3 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-lg font-medium shadow-sm hover:shadow-md transition-shadow"
           >
             {submitButtonText}
@@ -171,5 +185,5 @@ export default function FormPreview({ fields, isPaid, price, currency, submitBut
         </div>
       </div>
     </div>
-  );
+  )
 }

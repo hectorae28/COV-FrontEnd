@@ -8,33 +8,17 @@ import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
 
 export default function InstitutionsSection({
+  pendiente,
   instituciones,
   setInstituciones,
-  updateColegiadoPendiente,
+  updateData,
   pendienteId,
   setCambiosPendientes,
-  readonly = false
+  readOnly = false
 }) {
-  // Nuevo estado para modal
+  // Estados para el modal
   const [showModal, setShowModal] = useState(false);
-
-  // Manejador para guardar cambios
-  const handleSaveChanges = (updates) => {
-    // Extraer instituciones actualizadas
-    const updatedInstituciones = updates.laboralRegistros || [];
-
-    // Actualizar estado local
-    setInstituciones(updatedInstituciones);
-
-    // Enviar datos al componente padre (sin enviar a API)
-    updateColegiadoPendiente(pendienteId, { instituciones: updatedInstituciones });
-
-    // Marcar como guardado
-    setCambiosPendientes(false);
-
-    // Cerrar modal
-    setShowModal(false);
-  };
+  const [localFormData, setLocalFormData] = useState(null);
 
   // Obtener nombre del tipo de institución
   const getInstitucionTypeName = (code) => {
@@ -59,11 +43,11 @@ export default function InstitutionsSection({
   // Formatear dirección completa
   const formatearDireccion = (institucion) => {
     if (!institucion) return "No especificada";
-    
-    const direccion = institucion.direccion || "";
+
+    const direccion = institucion.direccion || institucion.institutionAddress || "";
     const estado = institucion.selectedEstado || "";
     const ciudad = institucion.selectedCiudad || "";
-    
+
     if (estado && ciudad && direccion) {
       return `${ciudad}, ${estado} - ${direccion}`;
     } else if (direccion) {
@@ -73,12 +57,86 @@ export default function InstitutionsSection({
     }
   };
 
+  // Extraer los valores iniciales para el formulario de edición
+  const getInitialFormData = () => {
+    // Convertir instituciones al formato esperado por InfoLab
+    const workStatus = instituciones && instituciones.length > 0 ? "labora" : "noLabora";
+
+    // Si hay instituciones, adaptarlas al formato de laboralRegistros
+    const laboralRegistros = instituciones && instituciones.length > 0
+      ? instituciones.map((inst, index) => ({
+        id: index + 1,
+        institutionType: inst.tipo_institucion || inst.institutionType || "",
+        institutionName: inst.nombre || inst.institutionName || "",
+        institutionAddress: inst.direccion || inst.institutionAddress || "",
+        institutionPhone: inst.telefono || inst.institutionPhone || "",
+        cargo: inst.cargo || "",
+        selectedEstado: inst.selectedEstado || "",
+        selectedCiudad: inst.selectedCiudad || ""
+      }))
+      : [];
+
+    return {
+      workStatus,
+      laboralRegistros,
+      // Añadir campos individuales por compatibilidad (usando la primera institución si existe)
+      ...(laboralRegistros.length > 0 ? laboralRegistros[0] : {})
+    };
+  };
+
+  const handleOpenModal = () => {
+    setLocalFormData(getInitialFormData());
+    setShowModal(true);
+  };
+
+  const handleLocalInputChange = (updates) => {
+    setLocalFormData(prev => ({
+      ...prev,
+      ...updates
+    }));
+    setCambiosPendientes(true);
+  };
+
+  const handleSaveChanges = (updatedData = null) => {
+    const dataToUpdate = updatedData || localFormData;
+
+    // Si no está laborando, limpiar instituciones
+    if (dataToUpdate.workStatus === "noLabora") {
+      setInstituciones([]);
+      updateData(pendienteId, { instituciones: [] });
+    } else {
+      // Convertir de formato InfoLab a formato de instituciones
+      const updatedInstituciones = dataToUpdate.laboralRegistros.map(reg => ({
+        tipo_institucion: reg.institutionType,
+        nombre: reg.institutionName,
+        direccion: reg.institutionAddress,
+        telefono: reg.institutionPhone,
+        cargo: reg.cargo,
+        selectedEstado: reg.selectedEstado,
+        selectedCiudad: reg.selectedCiudad
+      }));
+
+      setInstituciones(updatedInstituciones);
+      updateData(pendienteId, { instituciones: updatedInstituciones });
+    }
+
+    setLocalFormData(null);
+    setShowModal(false);
+    setCambiosPendientes(false);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setLocalFormData(null);
+    setCambiosPendientes(false);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
-      className="bg-white rounded-lg shadow-md p-6 border border-gray-100"
+      className="bg-white rounded-lg shadow-md p-6 md:col-span-2 border border-gray-100 mb-6"
     >
       <div className="flex items-center justify-between mb-5 border-b pb-3">
         <div className="flex items-center">
@@ -88,9 +146,9 @@ export default function InstitutionsSection({
           </h2>
         </div>
 
-        {!readonly && (
+        {!readOnly && (
           <button
-            onClick={() => setShowModal(true)}
+            onClick={handleOpenModal}
             className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:opacity-90 transition-colors"
           >
             <Pencil size={16} className="mr-1" />
@@ -99,7 +157,7 @@ export default function InstitutionsSection({
         )}
       </div>
 
-      {/* Vista de instituciones - siguiendo estructura de InfoLab.jsx */}
+      {/* Vista de instituciones */}
       {instituciones && instituciones.length > 0 ? (
         <div className="space-y-6">
           {instituciones.map((institucion, index) => (
@@ -109,7 +167,7 @@ export default function InstitutionsSection({
             >
               <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200 flex items-center">
                 <Briefcase size={16} className="mr-2 text-[#C40180]" />
-                {institucion.nombre || "Institución sin nombre"}
+                {institucion.nombre || institucion.institutionName || "Institución sin nombre"}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -117,10 +175,10 @@ export default function InstitutionsSection({
                     Tipo de institución
                   </p>
                   <p className="font-medium text-gray-800">
-                    {getInstitucionTypeName(institucion.tipo_institucion) || "No especificado"}
+                    {getInstitucionTypeName(institucion.tipo_institucion || institucion.institutionType) || "No especificado"}
                   </p>
                 </div>
-                
+
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Cargo
@@ -129,7 +187,7 @@ export default function InstitutionsSection({
                     {institucion.cargo || "No especificado"}
                   </p>
                 </div>
-                
+
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Estado
@@ -138,7 +196,7 @@ export default function InstitutionsSection({
                     {institucion.selectedEstado || "No especificado"}
                   </p>
                 </div>
-                
+
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Ciudad/Municipio
@@ -155,11 +213,11 @@ export default function InstitutionsSection({
                   <div className="flex items-center">
                     <Phone size={16} className="mr-2 text-[#C40180]" />
                     <p className="font-medium text-gray-800">
-                      {institucion.telefono || "No especificado"}
+                      {institucion.telefono || institucion.institutionPhone || "No especificado"}
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="sm:col-span-2">
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Dirección
@@ -187,27 +245,19 @@ export default function InstitutionsSection({
       {/* Modal para edición */}
       <Modal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="Editar instituciones"
+        onClose={handleCloseModal}
+        title="Editar instituciones donde trabaja"
         maxWidth="max-w-4xl"
       >
-        <InfoLaboral
-          formData={{
-            workStatus: "labora",
-            laboralRegistros: instituciones
-          }}
-          onInputChange={(updates) => {
-            // Guardar cambios temporalmente sin cerrar el modal
-            console.log("Cambios temporales en instituciones:", updates);
-            // No llamar a handleSaveChanges directamente
-          }}
-          validationErrors={{}}
-          currentStep={4}
-          attemptedNext={false}
-          validateStep={() => true}
-          isEditMode={true}
-          onSave={handleSaveChanges}
-        />
+        {localFormData && (
+          <InfoLaboral
+            formData={localFormData}
+            onInputChange={handleLocalInputChange}
+            validationErrors={{}}
+            isEditMode={true}
+            onSave={handleSaveChanges}
+          />
+        )}
       </Modal>
     </motion.div>
   );
