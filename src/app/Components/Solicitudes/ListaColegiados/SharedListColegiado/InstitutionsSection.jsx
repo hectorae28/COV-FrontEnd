@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
+import InstitutionVerificationSwitch from "./InstitutionVerificationSwitch";
 
 export default function InstitutionsSection({
   pendiente,
@@ -14,7 +15,8 @@ export default function InstitutionsSection({
   updateData,
   pendienteId,
   setCambiosPendientes,
-  readOnly = false
+  readOnly = false,
+  isAdmin = false
 }) {
   // Estados para el modal
   const [showModal, setShowModal] = useState(false);
@@ -72,7 +74,9 @@ export default function InstitutionsSection({
         institutionPhone: inst.telefono || inst.institutionPhone || "",
         cargo: inst.cargo || "",
         selectedEstado: inst.selectedEstado || "",
-        selectedCiudad: inst.selectedCiudad || ""
+        selectedCiudad: inst.selectedCiudad || "",
+        verification_status: inst.verification_status || 'pending',
+        rejection_reason: inst.rejection_reason || ''
       }))
       : [];
 
@@ -113,7 +117,9 @@ export default function InstitutionsSection({
         telefono: reg.institutionPhone,
         cargo: reg.cargo,
         selectedEstado: reg.selectedEstado,
-        selectedCiudad: reg.selectedCiudad
+        selectedCiudad: reg.selectedCiudad,
+        verification_status: reg.verification_status || 'pending',
+        rejection_reason: reg.rejection_reason || ''
       }));
 
       setInstituciones(updatedInstituciones);
@@ -129,6 +135,29 @@ export default function InstitutionsSection({
     setShowModal(false);
     setLocalFormData(null);
     setCambiosPendientes(false);
+  };
+
+  // Manejar cambio de estado de verificación de instituciones
+  const handleInstitutionStatusChange = (updatedInstitution, index) => {
+    const updatedInstituciones = [...instituciones];
+    updatedInstituciones[index] = {
+      ...updatedInstituciones[index],
+      verification_status: updatedInstitution.verification_status,
+      rejection_reason: updatedInstitution.rejection_reason || ''
+    };
+
+    setInstituciones(updatedInstituciones);
+
+    // Actualizar en backend
+    const updateData_verification = {
+      [`instituciones[${index}].verification_status`]: updatedInstitution.verification_status,
+    };
+
+    if (updatedInstitution.rejection_reason) {
+      updateData_verification[`instituciones[${index}].rejection_reason`] = updatedInstitution.rejection_reason;
+    }
+
+    updateData(pendienteId, updateData_verification);
   };
 
   return (
@@ -169,7 +198,9 @@ export default function InstitutionsSection({
                 <Briefcase size={16} className="mr-2 text-[#C40180]" />
                 {institucion.nombre || institucion.institutionName || "Institución sin nombre"}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              {/* 1ra línea: Tipo de institución y Nombre de institución */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Tipo de institución
@@ -181,6 +212,18 @@ export default function InstitutionsSection({
 
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                    Nombre de institución
+                  </p>
+                  <p className="font-medium text-gray-800">
+                    {institucion.nombre || institucion.institutionName || "No especificado"}
+                  </p>
+                </div>
+              </div>
+
+              {/* 2da línea: Cargo y Teléfono */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Cargo
                   </p>
                   <p className="font-medium text-gray-800">
@@ -188,6 +231,21 @@ export default function InstitutionsSection({
                   </p>
                 </div>
 
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                    Teléfono de Institución
+                  </p>
+                  <div className="flex items-center">
+                    <Phone size={16} className="mr-2 text-[#C40180]" />
+                    <p className="font-medium text-gray-800">
+                      {institucion.telefono || institucion.institutionPhone || "No especificado"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3ra línea: Estado y Municipio/Parroquia */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                     Estado
@@ -199,37 +257,38 @@ export default function InstitutionsSection({
 
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                    Ciudad/Municipio
+                    Municipio/Parroquia
                   </p>
                   <p className="font-medium text-gray-800">
                     {institucion.selectedCiudad || "No especificado"}
                   </p>
                 </div>
+              </div>
 
-                <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                    Teléfono
+              {/* 4ta línea: Dirección */}
+              <div className="mb-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                  Dirección
+                </p>
+                <div className="flex items-start">
+                  <MapPin size={16} className="mr-2 mt-0.5 text-[#C40180]" />
+                  <p className="font-medium text-gray-800">
+                    {formatearDireccion(institucion)}
                   </p>
-                  <div className="flex items-center">
-                    <Phone size={16} className="mr-2 text-[#C40180]" />
-                    <p className="font-medium text-gray-800">
-                      {institucion.telefono || institucion.institutionPhone || "No especificado"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                    Dirección
-                  </p>
-                  <div className="flex items-start">
-                    <MapPin size={16} className="mr-2 mt-0.5 text-[#C40180]" />
-                    <p className="font-medium text-gray-800">
-                      {formatearDireccion(institucion)}
-                    </p>
-                  </div>
                 </div>
               </div>
+
+              {/* Switch de verificación para admin */}
+              {isAdmin && !readOnly && (
+                <div className="pt-4 border-t border-gray-200">
+                  <InstitutionVerificationSwitch
+                    institucion={institucion}
+                    onChange={handleInstitutionStatusChange}
+                    readOnly={readOnly}
+                    index={index}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

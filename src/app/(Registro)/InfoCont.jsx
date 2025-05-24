@@ -13,7 +13,7 @@ export default function InfoContacto({
   validationErrors,
   isProfileEdit,
   requestEmailVerification,
-  isAdmin=false,
+  isAdmin = false,
   isEditMode = false,
   onSave
 }) {
@@ -26,9 +26,9 @@ export default function InfoContacto({
   const [emailChanged, setEmailChanged] = useState(false)
   const [emailError, setEmailError] = useState("")
   const dropdownRef = useRef(null)
-  
+
   const [localFormData, setLocalFormData] = useState(formData);
-  
+
   useEffect(() => {
     setLocalFormData(formData);
   }, []);
@@ -56,17 +56,17 @@ export default function InfoContacto({
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    
+
     if (name === "email") {
       if (value && !validateEmail(value)) {
         setEmailError("Ingrese un correo electrónico válido");
       } else {
         setEmailError("");
       }
-      
+
       if (isEditMode) {
-        setLocalFormData(prev => ({ 
-          ...prev, 
+        setLocalFormData(prev => ({
+          ...prev,
           [name]: value,
           emailIsValid: validateEmail(value)
         }));
@@ -211,8 +211,8 @@ export default function InfoContacto({
     }
   };
   const fieldMapping = {
-    state: "state",           
-    municipio: "municipio",   
+    state: "state",
+    municipio: "municipio",
     address: "address",
   }
 
@@ -221,7 +221,7 @@ export default function InfoContacto({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full sm:w-11/12 md:w-10/12 lg:w-8/12 xl:w-6/12 mx-auto"
+      className="w-full mx-auto space-y-2"
     >
       {/* Email - SOLO ESTE CAMPO será no editable en modo perfil */}
       <div>
@@ -385,7 +385,7 @@ export default function InfoContacto({
         isEditMode={isEditMode}
         localFormData={localFormData}
         setLocalFormData={setLocalFormData}
-        fieldMapping={{...fieldMapping}}
+        fieldMapping={{ ...fieldMapping }}
       />
       {/* Botones de acción en modo edición */}
       {isEditMode && (

@@ -138,7 +138,7 @@ export default function PersonalInfoSection({
       </div>
 
       {/* Vista de información personal */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Primera fila - Tipo de documento e identificación */}
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">

@@ -45,7 +45,7 @@ const steps = [
     description: "Cómo podemos comunicarnos contigo",
     icon: Phone,
     component: InfoContacto,
-    requiredFields: ["email", "phoneNumber", "address", "state", "city"],
+    requiredFields: ["email", "phoneNumber", "address", "state", "municipio"],
   },
   {
     id: 3,

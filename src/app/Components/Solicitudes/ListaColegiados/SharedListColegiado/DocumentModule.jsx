@@ -2,13 +2,13 @@ import DocsRequirements from "@/app/(Registro)/DocsRequirements";
 import Modal from "@/app/Components/Solicitudes/ListaColegiados/Modal";
 import { motion } from "framer-motion";
 import {
-  AlertCircle,
-  Briefcase,
-  CheckCircle,
-  FileText,
-  Pencil,
-  RefreshCcw,
-  Upload, X
+    AlertCircle,
+    Briefcase,
+    CheckCircle,
+    FileText,
+    Pencil,
+    RefreshCcw,
+    Upload, X
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import DocumentVerificationSwitch from "./DocumentVerificationSwitch";

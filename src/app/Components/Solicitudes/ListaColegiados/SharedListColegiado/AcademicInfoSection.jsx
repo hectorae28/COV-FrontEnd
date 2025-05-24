@@ -66,7 +66,7 @@ export default function AcademicInfoSection({
 
   const handleSaveChanges = (updatedData = null) => {
     const dataToUpdate = updatedData || localFormData;
-    
+
     const updatedAcademicos = {
       ...datosAcademicos,
       instituto_bachillerato: dataToUpdate.graduateInstitute,
@@ -127,18 +127,16 @@ export default function AcademicInfoSection({
       </div>
 
       {/* Fila 1: Tipo de Profesión y Ocupación */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gray-50 p-3 rounded-md">
+      <div className="bg-gray-50 p-3 rounded-md mt-6">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Tipo de Profesión/Ocupación</p>
           <p className="font-medium text-gray-800">
             {pendiente?.tipo_profesion
-              ? (pendiente.tipo_profesion === "odontologo" ? "Odontólogo" : 
-                 pendiente.tipo_profesion === "higienista" ? "Higienista" : 
-                 pendiente.tipo_profesion === "tecnico" ? "Técnico Dental" : 
-                 pendiente.tipo_profesion)
+              ? (pendiente.tipo_profesion === "odontologo" ? "Odontólogo" :
+                pendiente.tipo_profesion === "higienista" ? "Higienista" :
+                  pendiente.tipo_profesion === "tecnico" ? "Técnico Dental" :
+                    pendiente.tipo_profesion)
               : "No especificado"}
           </p>
-        </div>
       </div>
 
       {/* Fila 2: Liceo/Colegio de Egreso (Bachillerato) */}

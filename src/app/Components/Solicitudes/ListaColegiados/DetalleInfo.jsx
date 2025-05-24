@@ -161,105 +161,105 @@ export default function DetalleInfo({
 
   // Función para cargar datos
   // Función para cargar datos
-const loadData = async () => {
-  try {
-    setIsLoading(true);
-    let entityData;
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      let entityData;
 
-    if (tipo === "pendiente") {
-      if (data) {
-        entityData = data;
-      } else if (!recaudos) {
-        entityData = await getColegiadoPendiente(entityId);
-      } else {
-        entityData = recaudos;
-      }
-    } else {
-      if (data) {
-        entityData = data;
-      } else {
-        entityData = await getColegiado(entityId);
-      }
-    }
-
-    if (entityData) {
-      console.log("Datos cargados:", entityData); // Debug
-      setEntityData(entityData);
-
-      // Inicializar estados según el tipo
       if (tipo === "pendiente") {
-        initializePendienteData(entityData);
-        // Cargar comprobante de pago DESPUÉS de inicializar
-        loadComprobanteData(entityData);
-      } else {
-        initializeColegiadoData(entityData);
-      }
-
-      // Cargar documentos
-      try {
-        let docs = [];
-        if (tipo === "pendiente") {
-          docs = await loadPendienteDocuments(entityData);
+        if (data) {
+          entityData = data;
+        } else if (!recaudos) {
+          entityData = await getColegiadoPendiente(entityId);
         } else {
-          docs = await getDocumentos(entityId);
+          entityData = recaudos;
         }
-        setDocumentos(docs || []);
-      } catch (docError) {
-        console.error("Error cargando documentos:", docError);
-        setDocumentos([]);
+      } else {
+        if (data) {
+          entityData = data;
+        } else {
+          entityData = await getColegiado(entityId);
+        }
       }
+
+      if (entityData) {
+        console.log("Datos cargados:", entityData); // Debug
+        setEntityData(entityData);
+
+        // Inicializar estados según el tipo
+        if (tipo === "pendiente") {
+          initializePendienteData(entityData);
+          // Cargar comprobante de pago DESPUÉS de inicializar
+          loadComprobanteData(entityData);
+        } else {
+          initializeColegiadoData(entityData);
+        }
+
+        // Cargar documentos
+        try {
+          let docs = [];
+          if (tipo === "pendiente") {
+            docs = await loadPendienteDocuments(entityData);
+          } else {
+            docs = await getDocumentos(entityId);
+          }
+          setDocumentos(docs || []);
+        } catch (docError) {
+          console.error("Error cargando documentos:", docError);
+          setDocumentos([]);
+        }
+      }
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error al cargar datos:", error);
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
-  } catch (error) {
-    console.error("Error al cargar datos:", error);
-    setIsLoading(false);
-  }
-};
+  };
 
   // Función para cargar datos del comprobante
   // Función para cargar datos del comprobante
-const loadComprobanteData = (pendienteData) => {
-  console.log("Cargando datos del comprobante:", pendienteData); // Debug
-  
-  // Verificar diferentes posibles ubicaciones del comprobante
-  const comprobanteUrl = pendienteData.comprobante_url || 
-                         pendienteData.comprobante || 
-                         pendienteData.pago?.comprobante_url ||
-                         pendienteData.pago?.comprobante;
-  
-  // También verificar si hay un archivo de comprobante en los campos de archivos
-  const tieneComprobante = comprobanteUrl || 
-                          pendienteData.comprobante_pago_url ||
-                          pendienteData.file_comprobante_url ||
-                          (pendienteData.pago && pendienteData.pago.comprobante);
+  const loadComprobanteData = (pendienteData) => {
+    console.log("Cargando datos del comprobante:", pendienteData); // Debug
 
-  if (tieneComprobante) {
-    const url = comprobanteUrl || 
-                pendienteData.comprobante_pago_url || 
-                pendienteData.file_comprobante_url ||
-                pendienteData.pago?.comprobante;
-    
-    setComprobanteData({
-      id: 'comprobante_pago',
-      nombre: 'Comprobante de pago',
-      archivo: typeof url === 'string' ? url.split('/').pop() : 'comprobante_pago.pdf',
-      url: url,
-      status: pendienteData.comprobante_validate === null ? 'pending' : 
-              pendienteData.comprobante_validate === true ? 'approved' : 
-              pendienteData.comprobante_validate === false ? 'rechazado' : 'pending',
-      rejectionReason: pendienteData.comprobante_motivo_rechazo || ''
-    });
-    
-    console.log("Comprobante cargado:", {
-      url: url,
-      status: pendienteData.comprobante_validate
-    }); // Debug
-  } else {
-    console.log("No se encontró comprobante"); // Debug
-    setComprobanteData(null);
-  }
-};
+    // Verificar diferentes posibles ubicaciones del comprobante
+    const comprobanteUrl = pendienteData.comprobante_url ||
+      pendienteData.comprobante ||
+      pendienteData.pago?.comprobante_url ||
+      pendienteData.pago?.comprobante;
+
+    // También verificar si hay un archivo de comprobante en los campos de archivos
+    const tieneComprobante = comprobanteUrl ||
+      pendienteData.comprobante_pago_url ||
+      pendienteData.file_comprobante_url ||
+      (pendienteData.pago && pendienteData.pago.comprobante);
+
+    if (tieneComprobante) {
+      const url = comprobanteUrl ||
+        pendienteData.comprobante_pago_url ||
+        pendienteData.file_comprobante_url ||
+        pendienteData.pago?.comprobante;
+
+      setComprobanteData({
+        id: 'comprobante_pago',
+        nombre: 'Comprobante de pago',
+        archivo: typeof url === 'string' ? url.split('/').pop() : 'comprobante_pago.pdf',
+        url: url,
+        status: pendienteData.comprobante_validate === null ? 'pending' :
+          pendienteData.comprobante_validate === true ? 'approved' :
+            pendienteData.comprobante_validate === false ? 'rechazado' : 'pending',
+        rejectionReason: pendienteData.comprobante_motivo_rechazo || ''
+      });
+
+      console.log("Comprobante cargado:", {
+        url: url,
+        status: pendienteData.comprobante_validate
+      }); // Debug
+    } else {
+      console.log("No se encontró comprobante"); // Debug
+      setComprobanteData(null);
+    }
+  };
 
   // Función para cargar documentos de pendientes
   const loadPendienteDocuments = (pendienteData) => {
@@ -465,11 +465,11 @@ const loadComprobanteData = (pendienteData) => {
   }, [entityId, tipo]);
 
   useEffect(() => {
-  if (tipo === "pendiente" && entityData) {
-    console.log("EntityData actualizado, recargando comprobante"); // Debug
-    loadComprobanteData(entityData);
-  }
-}, [entityData]);
+    if (tipo === "pendiente" && entityData) {
+      console.log("EntityData actualizado, recargando comprobante"); // Debug
+      loadComprobanteData(entityData);
+    }
+  }, [entityData]);
 
   // Función para ver documentos
   const handleVerDocumento = (documento) => {
@@ -519,30 +519,30 @@ const loadComprobanteData = (pendienteData) => {
 
   // Función para manejar el upload del comprobante
   // Función para manejar el upload del comprobante
-const handleUploadComprobante = async (formData) => {
-  try {
-    console.log("Subiendo comprobante..."); // Debug
-    
-    let response;
-    if (!recaudos) {
-      response = await updateColegiadoPendiente(entityId, formData, true);
-    } else {
-      response = await updateColegiadoPendienteWithToken(entityId, formData, true);
+  const handleUploadComprobante = async (formData) => {
+    try {
+      console.log("Subiendo comprobante..."); // Debug
+
+      let response;
+      if (!recaudos) {
+        response = await updateColegiadoPendiente(entityId, formData, true);
+      } else {
+        response = await updateColegiadoPendienteWithToken(entityId, formData, true);
+      }
+
+      console.log("Respuesta de upload:", response); // Debug
+
+      // Esperar un momento antes de recargar para dar tiempo al backend
+      setTimeout(async () => {
+        await loadData();
+      }, 500);
+
+      return response;
+    } catch (error) {
+      console.error("Error al subir comprobante:", error);
+      throw error;
     }
-    
-    console.log("Respuesta de upload:", response); // Debug
-    
-    // Esperar un momento antes de recargar para dar tiempo al backend
-    setTimeout(async () => {
-      await loadData();
-    }, 500);
-    
-    return response;
-  } catch (error) {
-    console.error("Error al subir comprobante:", error);
-    throw error;
-  }
-};
+  };
 
   // Función para manejar el estado del comprobante
   const handleComprobanteStatusChange = (updatedComprobante) => {
@@ -882,14 +882,15 @@ const handleUploadComprobante = async (formData) => {
           />
 
           <InstitutionsSection
-            pendiente={entityData}
-            instituciones={instituciones}
-            setInstituciones={setInstituciones}
-            updateData={updateData}
-            pendienteId={entityId}
-            setCambiosPendientes={setCambiosPendientes}
-            readonly={entityData?.status === "denegado"}
-          />
+  pendiente={entityData}
+  instituciones={instituciones}
+  setInstituciones={setInstituciones}
+  updateData={updateData}
+  pendienteId={entityId}
+  setCambiosPendientes={setCambiosPendientes}
+  readonly={entityData?.status === "denegado"}
+  isAdmin={isAdmin}  // ← AGREGAR ESTA LÍNEA
+/>
 
           <DocumentSection
             documentos={documentos}
@@ -1050,14 +1051,15 @@ const handleUploadComprobante = async (formData) => {
                 />
 
                 <InstitutionsSection
-                  pendiente={entityData}
-                  instituciones={instituciones}
-                  setInstituciones={setInstituciones}
-                  updateData={updateData}
-                  pendienteId={entityId}
-                  setCambiosPendientes={setCambiosPendientes}
-                  readonly={false}
-                />
+  pendiente={entityData}
+  instituciones={instituciones}
+  setInstituciones={setInstituciones}
+  updateData={updateData}
+  pendienteId={entityId}
+  setCambiosPendientes={setCambiosPendientes}
+  readonly={entityData?.status === "denegado"}
+  isAdmin={isAdmin}  // ← AGREGAR ESTA LÍNEA
+/>
               </>
             )}
 
