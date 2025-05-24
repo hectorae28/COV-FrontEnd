@@ -19,6 +19,7 @@ export default function ContactInfoSection({
   // Estados para el modal
   const [showModal, setShowModal] = useState(false);
   const [localFormData, setLocalFormData] = useState(null);
+  console.log("Datos de contacto:", datosContacto);
 
   // Función para formatear el número de teléfono al mostrarse
   const formatPhoneNumber = (phoneNumber, countryCode) => {

@@ -371,7 +371,7 @@ export default function DetalleInfo({
       countryCode: data.persona?.telefono_movil?.split(" ")[0] || "+58",
       homePhone: data.persona?.telefono_de_habitacion || "",
       address: data.persona?.direccion?.referencia || "",
-      city: data.persona?.direccion?.ciudad || "",
+      city: data.persona?.direccion?.municipio || "",
       state: data.persona?.direccion?.estado || ""
     });
 

@@ -7,6 +7,7 @@ import { useState } from "react";
 import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
 import InstitutionVerificationSwitch from "./InstitutionVerificationSwitch";
+import { id } from "date-fns/locale";
 
 export default function InstitutionsSection({
   pendiente,
@@ -21,7 +22,6 @@ export default function InstitutionsSection({
   // Estados para el modal
   const [showModal, setShowModal] = useState(false);
   const [localFormData, setLocalFormData] = useState(null);
-
   // Obtener nombre del tipo de institución
   const getInstitucionTypeName = (code) => {
     const institucionesList = [
@@ -46,9 +46,9 @@ export default function InstitutionsSection({
   const formatearDireccion = (institucion) => {
     if (!institucion) return "No especificada";
 
-    const direccion = institucion.direccion || institucion.institutionAddress || "";
-    const estado = institucion.selectedEstado || "";
-    const ciudad = institucion.selectedCiudad || "";
+    const direccion = institucion.direccion.referencia || "";
+    const estado = institucion.direccion.estado_nombre || "";
+    const ciudad = institucion.direccion.municipio_nombre || "";
 
     if (estado && ciudad && direccion) {
       return `${ciudad}, ${estado} - ${direccion}`;
@@ -70,12 +70,15 @@ export default function InstitutionsSection({
         id: index + 1,
         institutionType: inst.tipo_institucion || inst.institutionType || "",
         institutionName: inst.nombre || inst.institutionName || "",
-        institutionAddress: inst.direccion || inst.institutionAddress || "",
+        institutionAddress: inst.direccion.referencia || "",
         institutionPhone: inst.telefono || inst.institutionPhone || "",
         cargo: inst.cargo || "",
-        selectedEstado: inst.selectedEstado || "",
-        selectedCiudad: inst.selectedCiudad || "",
-        verification_status: inst.verification_status || 'pending',
+        id_direccion: inst.direccion.id || "",
+        selectedEstado: inst.direccion.estado || "",
+        NameEstado: inst.direccion.estado_nombre || "",
+        selectedCiudad: inst.direccion.municipio || "",
+        NameMunicipio: inst.direccion.municipio_nombre || "",
+        verification_status: inst.verification_status || false,
         rejection_reason: inst.rejection_reason || ''
       }))
       : [];
@@ -103,7 +106,7 @@ export default function InstitutionsSection({
 
   const handleSaveChanges = (updatedData = null) => {
     const dataToUpdate = updatedData || localFormData;
-
+    console.log(updatedData);
     // Si no está laborando, limpiar instituciones
     if (dataToUpdate.workStatus === "noLabora") {
       setInstituciones([]);
@@ -111,15 +114,21 @@ export default function InstitutionsSection({
     } else {
       // Convertir de formato InfoLab a formato de instituciones
       const updatedInstituciones = dataToUpdate.laboralRegistros.map(reg => ({
+        id: reg?.id,
         tipo_institucion: reg.institutionType,
         nombre: reg.institutionName,
-        direccion: reg.institutionAddress,
+        direccion: {
+          id: reg.id_direccion,
+          estado: reg.selectedEstado,
+          municipio: reg.selectedCiudad,
+          referencia: reg.institutionAddress,
+          estado_nombre: reg.NameEstado,
+          municipio_nombre: reg.NameMunicipio
+        },
         telefono: reg.institutionPhone,
         cargo: reg.cargo,
-        selectedEstado: reg.selectedEstado,
-        selectedCiudad: reg.selectedCiudad,
-        verification_status: reg.verification_status || 'pending',
-        rejection_reason: reg.rejection_reason || ''
+        verificado: reg.verification_status || false,
+        motivo_rechazo: reg.rejection_reason || ''
       }));
 
       setInstituciones(updatedInstituciones);
@@ -142,8 +151,8 @@ export default function InstitutionsSection({
     const updatedInstituciones = [...instituciones];
     updatedInstituciones[index] = {
       ...updatedInstituciones[index],
-      verification_status: updatedInstitution.verification_status,
-      rejection_reason: updatedInstitution.rejection_reason || ''
+      verificacion: updatedInstitution.verification_status,
+      motivo_rechazo: updatedInstitution.rejection_reason || ''
     };
 
     setInstituciones(updatedInstituciones);
@@ -251,7 +260,7 @@ export default function InstitutionsSection({
                     Estado
                   </p>
                   <p className="font-medium text-gray-800">
-                    {institucion.selectedEstado || "No especificado"}
+                    {institucion.direccion.estado_nombre || "No especificado"}
                   </p>
                 </div>
 
@@ -260,7 +269,7 @@ export default function InstitutionsSection({
                     Municipio/Parroquia
                   </p>
                   <p className="font-medium text-gray-800">
-                    {institucion.selectedCiudad || "No especificado"}
+                    {institucion.direccion.municipio_nombre || "No especificado"}
                   </p>
                 </div>
               </div>

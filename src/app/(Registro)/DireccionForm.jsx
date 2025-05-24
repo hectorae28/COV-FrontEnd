@@ -36,6 +36,9 @@ export default function DireccionForm({
       try {
         const data = await fetchEstados();
         setEstados(data);
+        if(state !== undefined && state !== "") {
+          loadMunicipios(state);
+        }
       } catch (error) {
         console.error("Error al cargar los estados:", error);
       }

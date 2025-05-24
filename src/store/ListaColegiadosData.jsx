@@ -12,6 +12,12 @@ const useDataListaColegiados = create((set, get) => ({
   colegiadosPendientes: [],
   colegiadosPendientesPagination: {},
 
+  pendientesRevisando: [],
+  pendientesRevisandoPagination: {},
+
+  pendientesPorPagar: [],
+  pendientesPorPagarPagination: {},
+
   recaudosAnulados: [],
   recaudosAnuladosPagination: {},
   
@@ -32,7 +38,8 @@ const useDataListaColegiados = create((set, get) => ({
         get().fetchPendientes(1, 10, "", { status: "revisando" }),
         get().fetchPendientes(1, 10, "", { status: "por_pagar" }),
         get().fetchPendientes(1, 10, "", { status: "anulado" }),
-        get().fetchPendientes(1, 10, "", { status: "rechazado" })
+        get().fetchPendientes(1, 10, "", { status: "rechazado" }),
+        get().fetchPendientes(1, 10, "", { status: "por_pagar,revisando" }),
       ]);
 
       set({ loading: false });
@@ -57,11 +64,17 @@ const useDataListaColegiados = create((set, get) => ({
       });
       const res = await fetchDataUsuario("register", null, params);
       console.log(otrosFiltros)
-      
-      if (otrosFiltros.status === "revisando" || otrosFiltros.status === "por_pagar" || otrosFiltros.status === "por_pagar,revisando") {
+
+      if (otrosFiltros.status === "revisando") {
         set({
-          colegiadosPendientes: res.data.results,
-          colegiadosPendientesPagination: res.data,
+          pendientesRevisando: res.data.results,
+          pendientesRevisandoPagination: res.data,
+          loading: false,
+        });
+      } else if (otrosFiltros.status === "por_pagar") {
+        set({
+          pendientesPorPagar: res.data.results,
+          pendientesPorPagarPagination: res.data,
           loading: false,
         });
       } else if (otrosFiltros.status === "anulado") {
@@ -74,6 +87,12 @@ const useDataListaColegiados = create((set, get) => ({
         set({
           recaudosRechazados: res.data.results,
           recaudosRechazadosPagination: res.data,
+          loading: false,
+        });
+      } else if (otrosFiltros.status === "por_pagar,revisando") {
+        set({
+          colegiadosPendientes: res.data.results,
+          colegiadosPendientesPagination: res.data,
           loading: false,
         });
       }

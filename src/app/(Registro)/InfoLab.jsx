@@ -47,13 +47,16 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       : [
         {
           id: 1,
+          id_direccion: formData.id_direccion,
           institutionType: formData.institutionType || "",
           institutionName: capitalizarPalabras(formData.institutionName || ""),
           institutionAddress: capitalizarPalabras(formData.institutionAddress || ""),
           institutionPhone: formData.institutionPhone || "",
           cargo: capitalizarPalabras(formData.cargo || ""),
           selectedEstado: formData.selectedEstado || "",
-          selectedMunicipio: formData.selectedMunicipio || ""
+          NameEstado: formData.NameEstado || "",
+          selectedMunicipio: formData.selectedMunicipio || "",
+          NameMunicipio: formData.NameMunicipio || "",
         }
       ]
   );
@@ -266,6 +269,7 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       }
 
       // Actualizar datos en el formulario principal
+      console.log(registros);
       const updatedData = {
         workStatus: workStatus,
         laboralRegistros: registros
