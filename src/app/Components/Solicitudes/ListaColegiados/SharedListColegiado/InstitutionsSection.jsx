@@ -50,9 +50,7 @@ export default function InstitutionsSection({
     const estado = institucion.direccion.estado_nombre || "";
     const ciudad = institucion.direccion.municipio_nombre || "";
 
-    if (estado && ciudad && direccion) {
-      return `${ciudad}, ${estado} - ${direccion}`;
-    } else if (direccion) {
+    if (direccion) {
       return direccion;
     } else {
       return "No especificada";
@@ -76,7 +74,7 @@ export default function InstitutionsSection({
         id_direccion: inst.direccion.id || "",
         selectedEstado: inst.direccion.estado || "",
         NameEstado: inst.direccion.estado_nombre || "",
-        selectedCiudad: inst.direccion.municipio || "",
+        selectedMunicipio: inst.direccion.municipio || "",
         NameMunicipio: inst.direccion.municipio_nombre || "",
         verification_status: inst.verification_status || false,
         rejection_reason: inst.rejection_reason || ''
@@ -120,7 +118,7 @@ export default function InstitutionsSection({
         direccion: {
           id: reg.id_direccion,
           estado: reg.selectedEstado,
-          municipio: reg.selectedCiudad,
+          municipio: reg.selectedMunicipio,
           referencia: reg.institutionAddress,
           estado_nombre: reg.NameEstado,
           municipio_nombre: reg.NameMunicipio

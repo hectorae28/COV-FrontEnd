@@ -73,7 +73,9 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
         institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
         cargo: capitalizarPalabras(registro.cargo || ""),
         selectedEstado: registro.selectedEstado || "",
-        selectedMunicipio: registro.selectedMunicipio || ""
+        NameEstado: registro.NameEstado || "",
+        selectedMunicipio: registro.selectedMunicipio || "",
+        NameMunicipio: registro.NameMunicipio || ""
       })));
     }
   }, [formData]);
@@ -158,25 +160,13 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
 
   const handleDireccionChange = (index, updates) => {
     const nuevosRegistros = [...registros];
-    const registro = nuevosRegistros[index];
-
-    Object.keys(updates).forEach(key => {
-      registro[key] = updates[key];
-    });
-
+    const registro = { ...nuevosRegistros[index], ...updates }; // Merge the updates
+    nuevosRegistros[index] = registro;
     setRegistros(nuevosRegistros);
 
     const updatedData = { laboralRegistros: nuevosRegistros };
-
-    if (index === 0) {
-      Object.assign(updatedData, updates);
-    }
-
     if (isEditMode) {
-      setLocalFormData(prev => ({
-        ...prev,
-        ...updatedData
-      }));
+      setLocalFormData(prev => ({ ...prev, ...updatedData }));
     } else {
       onInputChange(updatedData);
     }
