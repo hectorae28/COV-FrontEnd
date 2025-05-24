@@ -425,10 +425,10 @@ export default function PagosColg({ props }) {
                       </p>
                       <p className="text-sm mt-2">
                         Correo:{" "}
-                        <a
+                        
                           href="mailto:secretariafinanzas@elcov.org"
                           className="text-[#590248] hover:underline"
-                        >
+                        <a>
                           secretariafinanzas@elcov.org
                         </a>
                       </p>
@@ -595,10 +595,10 @@ export default function PagosColg({ props }) {
                     <p className="text-sm">
                       Si estás realizando el trámite en línea deberás reportarlo
                       adjuntando el pago a la página. En caso contrario deberás
-                      notificarlo al correo{" "}<a
+                      notificarlo al correo{" "}
                         href="mailto:secretariafinanzas@elcov.org"
                         className="text-[#118AB2] hover:underline"
-                      >
+                      <a>
                         secretariafinanzas@elcov.org
                       </a> indicando información necesaria.
                     </p>
@@ -631,10 +631,10 @@ export default function PagosColg({ props }) {
                       </div>
 
                       <p className="text-center text-sm mt-4">
-                        Correo:{" "}<a
+                        Correo:{" "}
                           href="mailto:paypalelcov@gmail.com"
                           className="text-[#118AB2] hover:underline"
-                        >
+                        <a>
                           paypalelcov@gmail.com
                         </a>
                       </p>
@@ -701,21 +701,6 @@ export default function PagosColg({ props }) {
           </div>
         )}
       </div>
-      )}
-
-      {/* Botón para confirmar pago luego */}
-      {pagarLuego && (
-        <div className="pt-6 border-t">
-          <motion.button
-            type="button"
-            onClick={handlePayLater}
-            className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Confirmar Pago Pendiente
-          </motion.button>
-        </div>
       )}
     </div>
   );

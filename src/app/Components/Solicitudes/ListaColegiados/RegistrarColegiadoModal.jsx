@@ -5,8 +5,8 @@ import React, { useEffect, useState } from "react";
 
 // Import components and data store
 import api from "@/api/api";
-import { fetchExistencePersona } from "@/api/endpoints/persona"
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import { fetchExistencePersona } from "@/api/endpoints/persona";
 import DocsRequirements from "@/app/(Registro)/DocsRequirements";
 import InfoColegiado from "@/app/(Registro)/InfoColg";
 import InfoContacto from "@/app/(Registro)/InfoCont";
@@ -125,8 +125,8 @@ export default function RegistroColegiados({
 
   // Función para avanzar al siguiente paso sin validaciones
   const avanzarPaso = async () => {
-    if(pasoActual==1){
-      /*Validar formulario y handleIdentityCardDuplicateVerification()*/ 
+    if (pasoActual == 1) {
+      /*Validar formulario y handleIdentityCardDuplicateVerification()*/
     }
     // Marcamos el paso actual como completado
     marcarPasoCompletado(pasoActual);
@@ -156,7 +156,7 @@ export default function RegistroColegiados({
   };
 
   // Función para validar Número de identificación Duplicado
-  const handleIdentityCardDuplicateVerification = async() => {
+  const handleIdentityCardDuplicateVerification = async () => {
     const queryParams = new URLSearchParams({
       "tipo_identificacion": formData.documentType,
       "inicial": formData.idType,
@@ -350,7 +350,7 @@ export default function RegistroColegiados({
             {!exonerarPagos && !pagarLuego && (
               <PagosColg
                 props={{
-                  handlePago:handlePaymentComplete,
+                  handlePago: handlePaymentComplete,
                   costo: costoInscripcion,
                   metodoPago,
                 }}

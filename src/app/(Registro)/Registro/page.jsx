@@ -19,7 +19,7 @@ import DocsRequirements from "../DocsRequirements"
 import EmailVerification from "../EmailVerification"
 import InfoColegiado from "../InfoColg"
 import InfoContacto from "../InfoCont"
-import InfoLaboralWithDireccionForm from "../InfoLabWithDireccionForm"
+import InfoLaboralWithDireccionForm from "../InfoLab"
 import InfoPersonal from "../InfoPers"
 
 const steps = [
@@ -294,18 +294,18 @@ export default function RegistrationForm(props) {
     return isValid
   }
 
-  const nextStep = async() => {
+  const nextStep = async () => {
     if (currentStep < steps.length) {
-      if(currentStep==1){
+      if (currentStep == 1) {
         const isStepValid = validateStep(currentStep);
         if (isStepValid) {
           const exists = await handleIdentityCardDuplicateVerification()
           const errors = {}
-          if(exists){
+          if (exists) {
             errors["identityCard-duplicate"] = true
             setValidationErrors(errors)
             return
-          }else{
+          } else {
             errors["identityCard-duplicate"] = false
             setValidationErrors(errors)
           }
@@ -383,7 +383,7 @@ export default function RegistrationForm(props) {
   }
 
   // Función para validar Número de identificación Duplicado
-  const handleIdentityCardDuplicateVerification = async() => {
+  const handleIdentityCardDuplicateVerification = async () => {
     const queryParams = new URLSearchParams({
       "tipo_identificacion": formData.documentType,
       "inicial": formData.idType,
@@ -435,7 +435,7 @@ export default function RegistrationForm(props) {
 
     // Activar la bandera para mostrar errores de validación SOLO cuando intentamos proceder a pagos
     setAttemptedNext(true);
-    console.log({formData})
+    console.log({ formData })
 
     // Validar el paso actual
     const isValid = validateStep(currentStep);
@@ -495,8 +495,8 @@ export default function RegistrationForm(props) {
               nombre: registro.institutionName,
               cargo: registro.cargo,
               direccion: {
-                estado: Number(registro.selectedEstado), 
-                municipio: Number(registro.selectedMunicipio), 
+                estado: Number(registro.selectedEstado),
+                municipio: Number(registro.selectedMunicipio),
                 referencia: registro.institutionAddress
               },
               telefono: registro.institutionPhone,
@@ -523,9 +523,9 @@ export default function RegistrationForm(props) {
           );
         }
         try {
-          if(!isCreated){
+          if (!isCreated) {
             setIsSubmitting(true);
-            console.log({Form})
+            console.log({ Form })
             const response = await api.post("usuario/register/", Form, {
               headers: {
                 "Content-Type": "multipart/form-data",
@@ -538,14 +538,14 @@ export default function RegistrationForm(props) {
               setIsSubmitting(false)
               setIsCreated(true)
             }
-          }else{
+          } else {
             const response = await api.patch(`usuario/register/${recaudoCreado.id}/`, Form, {
               headers: {
                 "Content-Type": "multipart/form-data",
               },
             });
             if (response.status === 200) {
-              setShowPaymentScreen(true); 
+              setShowPaymentScreen(true);
               setIsSubmitting(false)
             }
           }
@@ -862,34 +862,34 @@ export default function RegistrationForm(props) {
                         </div>
                         {!pagarLuego && (
                           <PagosColg props={{
-                            costo:costoInscripcion,
-                            allowMultiplePayments:false,
-                            handlePago:handlePago,
+                            costo: costoInscripcion,
+                            allowMultiplePayments: false,
+                            handlePago: handlePago,
                           }}
                           />
                         )}
-                        <div className="flex justify-center mt-12">
-                          <div className="w-full max-w-xs mx-auto mt-10">
-                            <div className="flex flex-col items-center gap-4 bg-[#41023B]/10 rounded-xl border border-[#41023B] p-4">
-                              <span className="text-[#41023B] font-bold text-lg">Pagar luego</span>
-                              <button
-                                type="button"
-                                onClick={() => setPagarLuego(!pagarLuego)}
-                                className={`w-full px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300 ${pagarLuego
-                                  ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
-                                  : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/10"
-                                  }`}
-                              >
-                                {pagarLuego ? "Activado" : "Activar"}
-                              </button>
-                              {pagarLuego && (
-                                <p className="text-sm text-[#41023B] text-center">
-                                  El usuario podrá completar el pago más adelante.
-                                </p>
-                              )}
-                            </div>
+                        {/* Sección de "Pagar luego" con el mismo estilo que RegistrarColegiadoModal */}
+                        <div className="w-full max-w-md mx-auto mt-6">
+                          <div className="flex justify-center gap-4">
+                            {/* Pagar Luego */}
+                            <button
+                              type="button"
+                              onClick={() => setPagarLuego(!pagarLuego)}
+                              className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-30 ${pagarLuego
+                                ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
+                                : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/10"
+                                }`}
+                            >
+                              Pagar luego
+                            </button>
                           </div>
 
+                          {/* Mensaje informativo */}
+                          {pagarLuego && (
+                            <div className="mt-4 text-center text-sm text-[#41023B] font-medium">
+                              El usuario podrá completar el pago más adelante.
+                            </div>
+                          )}
                         </div>
                         <div className="flex justify-center p-6 gap-6">
                           {pagarLuego && (
@@ -973,9 +973,7 @@ export default function RegistrationForm(props) {
                             <motion.button
                               type="button"
                               onClick={prevStep}
-                              className="cursor-pointer flex items-center px-5 py-2.5 bg-white text-[#41023B] border border-gray-700
-                  rounded-xl text-base font-medium shadow-sm hover:shadow-md hover:bg-[#41023B] hover:text-white
-                  transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
+                              className="cursor-pointer flex items-center px-5 py-2.5 bg-white text-[#41023B] border border-gray-700 rounded-xl text-base font-medium shadow-sm hover:shadow-md hover:bg-[#41023B] hover:text-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
@@ -1002,8 +1000,7 @@ export default function RegistrationForm(props) {
                               <motion.button
                                 type="submit"
                                 onClick={() => setIsIntentionalSubmit(true)}
-                                className="cursor-pointer flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
-    rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
+                                className="cursor-pointer flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                               >

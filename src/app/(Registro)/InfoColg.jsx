@@ -1,6 +1,6 @@
-import { UniversidadData, capitalizarPalabras, estados, obtenerUniversidadesPorEstado } from "@/Shared/UniversidadData";
+import { fetchEstados } from "@/api/endpoints/ubicacion";
+import { capitalizarPalabras, obtenerUniversidadesPorEstado } from "@/Shared/UniversidadData";
 import { motion } from "framer-motion";
-import { fetchEstados, fetchMunicipios } from "@/api/endpoints/ubicacion"
 
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -87,7 +87,7 @@ export default function InfoColegiado({
         console.error("Error al cargar los estados:", error);
       }
     };
-    
+
     loadEstados();
   }, []);
 
@@ -107,6 +107,20 @@ export default function InfoColegiado({
     } else {
       onInputChange({ [name]: value });
     }
+  };
+
+  const capitalizarMayusculas = (texto) => {
+    if (!texto) return "";
+    return texto
+      .split(' ')
+      .map(palabra => {
+        if (palabra.length === 0) return palabra;
+        // Solo capitalizar la primera letra si está en minúscula, mantener el resto como está
+        const primeraLetra = palabra.charAt(0).toUpperCase();
+        const resto = palabra.slice(1);
+        return primeraLetra + resto;
+      })
+      .join(' ');
   };
 
   // Actualizar las universidades disponibles cuando se selecciona un estado
@@ -135,7 +149,7 @@ export default function InfoColegiado({
   // Manejar el ingreso de instituto de graduación (liceo)
   const handleGraduateInstituteChange = (e) => {
     const rawValue = e.target.value;
-    const formattedValue = capitalizarPalabras(rawValue);
+    const formattedValue = capitalizarMayusculas(rawValue);
 
     // Actualizar el formData con el valor formateado
     if (isEditMode) {
@@ -269,7 +283,7 @@ export default function InfoColegiado({
     const { name, value } = e.target;
     // Filtrar para permitir solo dígitos
     const numericValue = value.replace(/\D/g, '');
-    
+
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
@@ -288,7 +302,7 @@ export default function InfoColegiado({
     // Si tenemos las tres partes, actualizar la fecha completa
     if (newDateParts.year && newDateParts.month && newDateParts.day) {
       const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
-      
+
       if (isEditMode) {
         setLocalFormData(prev => ({
           ...prev,
@@ -308,7 +322,7 @@ export default function InfoColegiado({
     // Si tenemos las tres partes, actualizar la fecha completa
     if (newDateParts.year && newDateParts.month && newDateParts.day) {
       const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
-      
+
       if (isEditMode) {
         setLocalFormData(prev => ({
           ...prev,
@@ -328,7 +342,7 @@ export default function InfoColegiado({
     // Si tenemos las tres partes, actualizar la fecha completa
     if (newDateParts.year && newDateParts.month && newDateParts.day) {
       const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
-      
+
       if (isEditMode) {
         setLocalFormData(prev => ({
           ...prev,
@@ -346,13 +360,13 @@ export default function InfoColegiado({
   };
 
   const handleSaveClick = () => {
-  // Simplemente guardamos sin validación estricta en modo edición
-  if (onSave) {
-    onSave(localFormData);
-  } else if (onInputChange) { // ← Agregar esta verificación
-    onInputChange(localFormData);
-  }
-};
+    // Simplemente guardamos sin validación estricta en modo edición
+    if (onSave) {
+      onSave(localFormData);
+    } else if (onInputChange) { // ← Agregar esta verificación
+      onInputChange(localFormData);
+    }
+  };
 
   return (
     <motion.div
@@ -454,7 +468,7 @@ export default function InfoColegiado({
                 disabled={isProfileEdit}
               >
                 <option value="" disabled>Seleccione un estado</option>
-                {estados.map((estado,index) => (
+                {estados.map((estado, index) => (
                   <option key={index} value={estado.id}>
                     {estado.nombre}
                   </option>
@@ -927,7 +941,7 @@ export default function InfoColegiado({
           </p>
         </div>
       )}
-    {isEditMode && (
+      {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           <button
             type="button"
