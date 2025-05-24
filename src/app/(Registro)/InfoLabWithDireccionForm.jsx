@@ -7,7 +7,9 @@ import { useEffect, useState } from "react";
 
 const capitalizarPalabras = (texto) => {
   if (!texto) return "";
-  return texto
+  // Convertir a string en caso de que sea un objeto o número
+  const textoStr = typeof texto === 'string' ? texto : String(texto);
+  return textoStr
     .split(' ')
     .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
     .join(' ');
@@ -37,27 +39,162 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
   
   const [registros, setRegistros] = useState(
     formData.laboralRegistros && formData.laboralRegistros.length > 0
-      ? formData.laboralRegistros.map(registro => ({
-        ...registro,
-        institutionName: capitalizarPalabras(registro.institutionName || ""),
-        institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
-        cargo: capitalizarPalabras(registro.cargo || ""),
-        selectedEstado: registro.selectedEstado || "",
-        selectedMunicipio: registro.selectedMunicipio || ""
-      }))
+      ? formData.laboralRegistros.map(registro => {
+        // Manejar diferentes estructuras de institutionAddress
+        const getAddressData = (address) => {
+          if (!address) return { referencia: "", estado: "", municipio: "" };
+          
+          // Si es un objeto con propiedades
+          if (typeof address === 'object' && address.referencia !== undefined) {
+            return {
+              referencia: address.referencia || "",
+              estado: address.estado || "",
+              municipio: address.municipio || ""
+            };
+          }
+          
+          // Si es una string
+          if (typeof address === 'string') {
+            return {
+              referencia: address,
+              estado: "",
+              municipio: ""
+            };
+          }
+          
+          return { referencia: "", estado: "", municipio: "" };
+        };
+
+        const addressData = getAddressData(registro.institutionAddress);
+        
+        return {
+          ...registro,
+          institutionName: capitalizarPalabras(registro.institutionName || ""),
+          institutionAddress: capitalizarPalabras(addressData.referencia || ""),
+          cargo: capitalizarPalabras(registro.cargo || ""),
+          selectedEstado: registro.selectedEstado || addressData.estado || "",
+          selectedMunicipio: registro.selectedMunicipio || addressData.municipio || ""
+        };
+      })
       : [
         {
           id: 1,
           institutionType: formData.institutionType || "",
           institutionName: capitalizarPalabras(formData.institutionName || ""),
-          institutionAddress: capitalizarPalabras(formData.institutionAddress || ""),
+          institutionAddress: (() => {
+            // Manejar institutionAddress del formData principal
+            if (!formData.institutionAddress) return "";
+            
+            if (typeof formData.institutionAddress === 'object' && formData.institutionAddress.referencia !== undefined) {
+              return capitalizarPalabras(formData.institutionAddress.referencia || "");
+            }
+            
+            if (typeof formData.institutionAddress === 'string') {
+              return capitalizarPalabras(formData.institutionAddress);
+            }
+            
+            return "";
+          })(),
           institutionPhone: formData.institutionPhone || "",
           cargo: capitalizarPalabras(formData.cargo || ""),
-          selectedEstado: formData.selectedEstado || "",
-          selectedMunicipio: formData.selectedMunicipio || ""
+          selectedEstado: (() => {
+            // Priorizar selectedEstado directo, luego institutionAddress.estado
+            if (formData.selectedEstado) return formData.selectedEstado;
+            if (formData.institutionAddress && typeof formData.institutionAddress === 'object') {
+              return formData.institutionAddress.estado || "";
+            }
+            return "";
+          })(),
+          selectedMunicipio: (() => {
+            // Priorizar selectedMunicipio directo, luego institutionAddress.municipio
+            if (formData.selectedMunicipio) return formData.selectedMunicipio;
+            if (formData.institutionAddress && typeof formData.institutionAddress === 'object') {
+              return formData.institutionAddress.municipio || "";
+            }
+            return "";
+          })()
         }
       ]
   );
+
+  // Estados para manejar municipios disponibles para cada registro
+  const [municipiosDisponibles, setMunicipiosDisponibles] = useState({});
+
+  // Actualizar el estado local cuando cambian las props
+  useEffect(() => {
+    setLocalFormData(formData);
+    
+    // Actualizar registros si cambian en las props
+    if (formData.laboralRegistros && formData.laboralRegistros.length > 0) {
+      setRegistros(formData.laboralRegistros.map(registro => {
+        // Manejar diferentes estructuras de institutionAddress
+        const getAddressData = (address) => {
+          if (!address) return { referencia: "", estado: "", municipio: "" };
+          
+          // Si es un objeto con propiedades
+          if (typeof address === 'object' && address.referencia !== undefined) {
+            return {
+              referencia: address.referencia || "",
+              estado: address.estado || "",
+              municipio: address.municipio || ""
+            };
+          }
+          
+          // Si es una string
+          if (typeof address === 'string') {
+            return {
+              referencia: address,
+              estado: "",
+              municipio: ""
+            };
+          }
+          
+          return { referencia: "", estado: "", municipio: "" };
+        };
+
+        const addressData = getAddressData(registro.institutionAddress);
+        
+        return {
+          ...registro,
+          institutionName: capitalizarPalabras(registro.institutionName || ""),
+          institutionAddress: capitalizarPalabras(addressData.referencia || ""),
+          cargo: capitalizarPalabras(registro.cargo || ""),
+          selectedEstado: registro.selectedEstado || addressData.estado || "",
+          selectedMunicipio: registro.selectedMunicipio || addressData.municipio || ""
+        };
+      }));
+    }
+  }, [formData]);
+
+  // Actualizar municipios disponibles cuando cambia el estado seleccionado
+  useEffect(() => {
+    const nuevosMunicipiosDisponibles = {};
+    registros.forEach(registro => {
+      if (registro.selectedEstado) {
+        // Convertir el estado seleccionado a minúsculas para buscar en el objeto EstadoData
+        // Asegurar que sea una string antes de usar toLowerCase
+        const estadoValue = typeof registro.selectedEstado === 'string' 
+          ? registro.selectedEstado 
+          : String(registro.selectedEstado);
+        const estadoKey = estadoValue.toLowerCase();
+        
+        if (EstadoData[estadoKey]) {
+          // Ordenar municipios alfabéticamente y capitalizar cada palabra
+          nuevosMunicipiosDisponibles[registro.id] = EstadoData[estadoKey]
+            .sort()
+            .map(municipio => capitalizarPalabras(municipio));
+        }
+      }
+    });
+    setMunicipiosDisponibles(nuevosMunicipiosDisponibles);
+  }, [registros]);
+
+  // Actualizar workStatus cuando cambie en formData
+  useEffect(() => {
+    if (formData.workStatus !== undefined) {
+      setWorkStatus(formData.workStatus);
+    }
+  }, [formData.workStatus]);
 
   const handleWorkStatusChange = (value) => {
     setWorkStatus(value);
@@ -80,6 +217,21 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       } else {
         onInputChange(updatedData);
       }
+    } else {
+      // Si cambia a "Laborando", restauramos los registros
+      const updatedData = {
+        workStatus: value,
+        laboralRegistros: registros
+      };
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          ...updatedData
+        }));
+      } else {
+        onInputChange(updatedData);
+      }
     }
   };
 
@@ -91,6 +243,9 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       value = capitalizarPalabras(value);
     } else if (field === "institutionPhone") {
       value = formatearTelefonoLocal(value);
+    } else if (field === "selectedEstado") {
+      // Al cambiar el estado, resetear el municipio
+      registro.selectedMunicipio = "";
     }
     
     registro[field] = value;
@@ -138,6 +293,70 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
     }
   };
 
+  // Agregar un nuevo registro laboral
+  const agregarRegistro = () => {
+    
+    const nuevoId = registros.length > 0 ? Math.max(...registros.map(r => r.id)) + 1 : 1;
+    const nuevosRegistros = [
+      ...registros,
+      {
+        id: nuevoId,
+        institutionType: "",
+        institutionName: "",
+        institutionAddress: "",
+        institutionPhone: "",
+        cargo: "",
+        selectedEstado: "",
+        selectedMunicipio: ""
+      }
+    ];
+    setRegistros(nuevosRegistros);
+    
+    const updatedData = { laboralRegistros: nuevosRegistros };
+    
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        ...updatedData
+      }));
+    } else {
+      onInputChange(updatedData);
+    }
+  };
+
+  // Eliminar un registro
+  const eliminarRegistro = (index) => {
+    if (registros.length > 1) {
+      const nuevosRegistros = [...registros];
+      nuevosRegistros.splice(index, 1);
+      setRegistros(nuevosRegistros);
+      
+      const updatedData = { laboralRegistros: nuevosRegistros };
+      
+      // Si se elimina el primer registro, actualizar los campos principales
+      if (index === 0 && nuevosRegistros.length > 0) {
+        Object.assign(updatedData, {
+          institutionType: nuevosRegistros[0].institutionType,
+          institutionName: nuevosRegistros[0].institutionName,
+          institutionAddress: nuevosRegistros[0].institutionAddress,
+          institutionPhone: nuevosRegistros[0].institutionPhone,
+          cargo: nuevosRegistros[0].cargo,
+          selectedEstado: nuevosRegistros[0].selectedEstado,
+          selectedMunicipio: nuevosRegistros[0].selectedMunicipio
+        });
+      }
+      
+      if (isEditMode) {
+        setLocalFormData(prev => ({
+          ...prev,
+          ...updatedData
+        }));
+      } else {
+        onInputChange(updatedData);
+      }
+    }
+  };
+
   const isFieldEmpty = (registro, fieldName) => {
     if (workStatus === "noLabora") {
       return false;
@@ -147,6 +366,44 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       return validationErrors[fieldName];
     }
     return false;
+  };
+
+  const handleSaveClick = () => {
+    // Validar que haya al menos una institución con datos válidos
+    if (workStatus === "labora" && registros.length > 0) {
+      const hasValidInstitution = registros.some(reg => 
+        reg.institutionName && reg.institutionType && reg.institutionAddress
+      );
+      
+      if (!hasValidInstitution) {
+        alert("Debe completar los datos de al menos una institución");
+        return;
+      }
+      
+      // Actualizar datos en el formulario principal
+      const updatedData = {
+        workStatus: workStatus,
+        laboralRegistros: registros
+      };
+      
+      if (onSave && isEditMode) {
+        onSave(updatedData);
+      } else if (onInputChange) {
+        onInputChange(updatedData);
+      }
+    } else if (workStatus === "noLabora") {
+      // Si no labora, enviar estado con valores por defecto
+      const updatedData = {
+        workStatus: "noLabora",
+        laboralRegistros: []
+      };
+      
+      if (onSave && isEditMode) {
+        onSave(updatedData);
+      } else if (onInputChange) {
+        onInputChange(updatedData);
+      }
+    }
   };
 
   return (
@@ -236,6 +493,15 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                         </option>
                       ))}
                     </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg
+                        className="fill-current h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                      </svg>
+                    </div>
                   </div>
                   {isFieldEmpty(registro, "institutionType") && (
                     <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
@@ -297,6 +563,9 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                   {isFieldEmpty(registro, "institutionPhone") && (
                     <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Ingrese código de área y número. Ej: 0212 123 4567
+                  </p>
                 </div>
               </div>
               
@@ -315,6 +584,27 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
               />
             </div>
           ))}
+
+          {/* Botón para agregar nuevo registro */}
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={agregarRegistro}
+              className="px-4 py-2 bg-white border border-[#D7008A] text-[#D7008A] rounded-lg flex items-center gap-1 hover:bg-[#D7008A] hover:text-white transition-colors duration-300"
+            >
+              <Plus size={18} />
+              Agregar otra institución
+            </button>
+          </div>
+
+          {/* Explicación */}
+          <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <h3 className="text-sm font-medium text-blue-800 mb-2">Información importante</h3>
+            <p className="text-xs text-blue-600">
+              Debe completar al menos la información de una institución donde presta servicio.
+              Puede agregar tantas instituciones como sea necesario haciendo clic en el botón "Agregar otra institución".
+            </p>
+          </div>
         </>
       )}
 
@@ -325,8 +615,27 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
           </div>
           <h3 className="text-center text-gray-700 font-medium mb-2">No laborando actualmente</h3>
           <p className="text-center text-gray-600 text-sm">
-            Ha indicado que no se encuentra laborando actualmente.
+            Ha indicado que no se encuentra laborando actualmente. Puede continuar con el siguiente paso.
+            Esta sección puede ser modificada o completada posteriormente si su situación laboral cambia.
           </p>
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-xs text-blue-700 text-center">
+              Si comienza a laborar en el futuro, puede volver a esta sección y actualizar su información laboral.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isEditMode && (
+        <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+              rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
+          >
+            Guardar cambios
+          </button>
         </div>
       )}
     </motion.div>

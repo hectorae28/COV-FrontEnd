@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 import { Briefcase, MapPin, Pencil, Phone } from "lucide-react";
 import { useState } from "react";
+import InfoLaboralWithDireccionForm from "@/app/(Registro)/InfoLabWithDireccionForm"
 
 import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
-import InfoLaboral from "@/app/(Registro)/InfoLab";
 
 export default function InstitutionsSection({
   pendiente,
@@ -39,19 +39,17 @@ export default function InstitutionsSection({
     const institucion = institucionesList.find(inst => inst.code === code);
     return institucion ? institucion.name : code;
   };
+  console.log({instituciones})
 
   // Formatear dirección completa
   const formatearDireccion = (institucion) => {
     if (!institucion) return "No especificada";
 
     const direccion = institucion.direccion || institucion.institutionAddress || "";
-    const estado = institucion.selectedEstado || "";
-    const ciudad = institucion.selectedCiudad || "";
 
-    if (estado && ciudad && direccion) {
-      return `${ciudad}, ${estado} - ${direccion}`;
-    } else if (direccion) {
-      return direccion;
+    if (direccion) {
+      return `${direccion.municipio_nombre}, ${direccion.estado_nombre} - ${direccion.referencia}`;
+
     } else {
       return "No especificada";
     }
@@ -59,7 +57,6 @@ export default function InstitutionsSection({
 
   // Extraer los valores iniciales para el formulario de edición
   const getInitialFormData = () => {
-    // Convertir instituciones al formato esperado por InfoLab
     const workStatus = instituciones && instituciones.length > 0 ? "labora" : "noLabora";
 
     // Si hay instituciones, adaptarlas al formato de laboralRegistros
@@ -72,7 +69,7 @@ export default function InstitutionsSection({
         institutionPhone: inst.telefono || inst.institutionPhone || "",
         cargo: inst.cargo || "",
         selectedEstado: inst.selectedEstado || "",
-        selectedCiudad: inst.selectedCiudad || ""
+        selectedMunicipio:  inst.selectedMunicipio || ""
       }))
       : [];
 
@@ -105,7 +102,6 @@ export default function InstitutionsSection({
       setInstituciones([]);
       updateData(pendienteId, { instituciones: [] });
     } else {
-      // Convertir de formato InfoLab a formato de instituciones
       const updatedInstituciones = dataToUpdate.laboralRegistros.map(reg => ({
         tipo_institucion: reg.institutionType,
         nombre: reg.institutionName,
@@ -113,7 +109,7 @@ export default function InstitutionsSection({
         telefono: reg.institutionPhone,
         cargo: reg.cargo,
         selectedEstado: reg.selectedEstado,
-        selectedCiudad: reg.selectedCiudad
+        selectedMunicipio: reg.selectedMunicipio
       }));
 
       setInstituciones(updatedInstituciones);
@@ -250,7 +246,7 @@ export default function InstitutionsSection({
         maxWidth="max-w-4xl"
       >
         {localFormData && (
-          <InfoLaboral
+          <InfoLaboralWithDireccionForm
             formData={localFormData}
             onInputChange={handleLocalInputChange}
             validationErrors={{}}
