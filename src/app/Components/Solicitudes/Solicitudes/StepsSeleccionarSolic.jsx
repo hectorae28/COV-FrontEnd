@@ -58,23 +58,97 @@ export default function SeleccionarSolicitudesStep({
   };
 
   // Función para cargar instituciones del colegiado
+  // Función para cargar instituciones del colegiado
   const cargarInstitucionesColegiado = async (colegiadoId) => {
     try {
-      // Aquí deberías hacer la llamada a tu API para obtener las instituciones
+      // Datos de prueba fijos - siempre cargar estas 3 instituciones
+      const institucionesPrueba = [
+        {
+          id: 1,
+          nombre: "Hospital Central de Valencia",
+          cargo: "Odontólogo General",
+          telefono: "+58 241-555-0101",
+          direccion: {
+            referencia: "Av. Bolívar Norte, Valencia, Carabobo"
+          },
+          verification_status: "rechazado",
+          rejection_reason: "Documentación incompleta - Falta carta de autorización institucional"
+        },
+        {
+          id: 2,
+          nombre: "Clínica Dental Sonrisas",
+          cargo: "Coordinador de Odontología",
+          telefono: "+58 212-555-0202",
+          direccion: {
+            referencia: "Centro Comercial Los Naranjos, Caracas"
+          },
+          verification_status: "approved"
+        },
+        {
+          id: 3,
+          nombre: "Instituto Odontológico Dr. Pérez",
+          cargo: "Director Médico",
+          telefono: "+58 261-555-0303",
+          direccion: {
+            referencia: "Zona Industrial Norte, Maracaibo, Zulia"
+          },
+          verification_status: "approved"
+        }
+      ];
+
+      console.log("Cargando instituciones de prueba:", institucionesPrueba);
+      setInstitucionesColegiado(institucionesPrueba);
+
+      // Comentar el código que busca en los datos reales por ahora
+      /*
       const colegiado = colegiados.find(c => c.id === colegiadoId);
       if (colegiado && colegiado.instituciones) {
         setInstitucionesColegiado(colegiado.instituciones);
       } else if (colegiado && colegiado.recaudos?.instituciones) {
         setInstitucionesColegiado(colegiado.recaudos.instituciones);
       } else {
-        // Si no hay instituciones en el colegiado, hacer una llamada a la API
-        // const instituciones = await fetchInstitucionesColegiado(colegiadoId);
-        // setInstitucionesColegiado(instituciones);
-        setInstitucionesColegiado([]);
+        // Si no hay datos reales, usar datos de prueba
+        setInstitucionesColegiado(institucionesPrueba);
       }
+      */
+
     } catch (error) {
       console.error("Error cargando instituciones:", error);
-      setInstitucionesColegiado([]);
+      // Si hay error, cargar datos de prueba como fallback
+      const institucionesPrueba = [
+        {
+          id: 1,
+          nombre: "Hospital Central de Valencia",
+          cargo: "Odontólogo General",
+          telefono: "+58 241-555-0101",
+          direccion: {
+            referencia: "Av. Bolívar Norte, Valencia, Carabobo"
+          },
+          verification_status: "rechazado",
+          rejection_reason: "Documentación incompleta - Falta carta de autorización institucional"
+        },
+        {
+          id: 2,
+          nombre: "Clínica Dental Sonrisas",
+          cargo: "Coordinador de Odontología",
+          telefono: "+58 212-555-0202",
+          direccion: {
+            referencia: "Centro Comercial Los Naranjos, Caracas"
+          },
+          verification_status: "approved"
+        },
+        {
+          id: 3,
+          nombre: "Instituto Odontológico Dr. Pérez",
+          cargo: "Director Médico",
+          telefono: "+58 261-555-0303",
+          direccion: {
+            referencia: "Zona Industrial Norte, Maracaibo, Zulia"
+          },
+          verification_status: "approved"
+        }
+      ];
+      setInstitucionesColegiado(institucionesPrueba);
     }
   };
 
@@ -89,11 +163,14 @@ export default function SeleccionarSolicitudesStep({
   }, [colegiadoPreseleccionado]);
 
   // Efecto para manejar el bloqueo por usuario
+  // Efecto para manejar el bloqueo por usuario
   useEffect(() => {
     if (colegiadoPreseleccionado || formData.colegiadoId) {
       setBloqueadoPorUsuario(false);
       // Cargar instituciones del colegiado
-      cargarInstitucionesColegiado(colegiadoPreseleccionado?.id || formData.colegiadoId);
+      const colegiadoId = colegiadoPreseleccionado?.id || formData.colegiadoId;
+      console.log("Cargando instituciones para colegiado:", colegiadoId);
+      cargarInstitucionesColegiado(colegiadoId);
     } else if (mostrarSeleccionColegiado) {
       setBloqueadoPorUsuario(true);
     } else {
@@ -337,16 +414,23 @@ export default function SeleccionarSolicitudesStep({
 
     // Verificar si requiere selección de instituciones
     if (CONSTANCIAS_CON_INSTITUCIONES.includes(subtipo.nombre.toLowerCase())) {
+      // NUEVO: Obtener instituciones ya seleccionadas para este subtipo
+      const institucionesYaSeleccionadas = itemsCarrito
+        .filter(item => item.tipo === "Constancia" && item.subtipo === subtipo.nombre)
+        .map(item => item.institucionId)
+        .filter(Boolean); // Filtrar valores undefined/null
+
       // Mostrar modal de instituciones
       setTipoConstanciaParaInstituciones({
         ...subtipo,
-        tipoCompleto: `Constancia: ${subtipo.nombre}`
+        tipoCompleto: `Constancia: ${subtipo.nombre}`,
+        institucionesYaSeleccionadas // NUEVO: Pasar las instituciones ya seleccionadas
       });
       setMostrarModalInstituciones(true);
       return;
     }
 
-    // Comportamiento normal para otras constancias
+    // Comportamiento normal para otras constancias...
     const yaSeleccionado = subtiposConstanciaSeleccionados.includes(subtipo.nombre)
     if (yaSeleccionado) {
       // Si ya está seleccionado, lo quitamos
@@ -378,34 +462,73 @@ export default function SeleccionarSolicitudesStep({
   }
 
   // Función para manejar la confirmación de instituciones
-  const handleConfirmarInstituciones = (institucionesSeleccionadas) => {
+  const handleConfirmarInstituciones = (resultado) => {
     if (!tipoConstanciaParaInstituciones) return;
 
-    // Agregar una constancia por cada institución seleccionada
-    const nuevosItems = institucionesSeleccionadas.map((instData, index) => ({
-      id: `${tipoConstanciaParaInstituciones.codigo}-${instData.institucionId}-${Date.now()}-${index}`,
-      tipo: "Constancia",
-      subtipo: tipoConstanciaParaInstituciones.nombre,
-      nombre: `Constancia: ${tipoConstanciaParaInstituciones.nombre} - ${instData.institucionNombre}`,
-      costo: tipoConstanciaParaInstituciones.costo || { monto: 0 },
-      exonerado: instData.exonerado,
-      codigo: tipoConstanciaParaInstituciones.codigo || "constancia",
-      documentosRequeridos: [],
-      // Información adicional de la institución
-      institucionId: instData.institucionId,
-      institucionNombre: instData.institucionNombre,
-      institucionDireccion: instData.institucionDireccion,
-      institucionVerificacion: instData.verificacionStatus
-    }));
+    const { nuevas: institucionesNuevas, eliminadas: institucionesEliminadas } = resultado;
 
-    // Actualizar el carrito
-    const itemsActualizados = [...itemsCarrito, ...nuevosItems];
+    // NUEVO: Primero eliminar las instituciones deseleccionadas del carrito
+    let itemsActualizados = [...itemsCarrito];
+
+    if (institucionesEliminadas && institucionesEliminadas.length > 0) {
+      itemsActualizados = itemsActualizados.filter(item => {
+        // Mantener el item si NO es una constancia del tipo actual con institución eliminada
+        if (item.tipo === "Constancia" &&
+          item.subtipo === tipoConstanciaParaInstituciones.nombre &&
+          item.institucionId &&
+          institucionesEliminadas.includes(item.institucionId)) {
+          return false; // Eliminar este item
+        }
+        return true; // Mantener este item
+      });
+    }
+
+    // Luego agregar las nuevas instituciones seleccionadas
+    if (institucionesNuevas && institucionesNuevas.length > 0) {
+      const nuevosItems = institucionesNuevas.map((instData, index) => ({
+        id: `${tipoConstanciaParaInstituciones.codigo}-${instData.institucionId}-${Date.now()}-${index}`,
+        tipo: "Constancia",
+        subtipo: tipoConstanciaParaInstituciones.nombre,
+        nombre: `Constancia: ${tipoConstanciaParaInstituciones.nombre} - ${instData.institucionNombre}`,
+        costo: tipoConstanciaParaInstituciones.costo || { monto: 0 },
+        exonerado: false,
+        codigo: tipoConstanciaParaInstituciones.codigo || "constancia",
+        documentosRequeridos: [],
+        // Información adicional de la institución
+        institucionId: instData.institucionId,
+        institucionNombre: instData.institucionNombre,
+        institucionDireccion: instData.institucionDireccion,
+        institucionVerificacion: instData.verificacionStatus
+      }));
+
+      itemsActualizados = [...itemsActualizados, ...nuevosItems];
+    }
+
+    // Actualizar el carrito con los cambios
     setItemsCarrito(itemsActualizados);
     actualizarTotal(itemsActualizados);
 
-    // Actualizar subtipos seleccionados
-    if (!subtiposConstanciaSeleccionados.includes(tipoConstanciaParaInstituciones.nombre)) {
-      setSubtiposConstanciaSeleccionados(prev => [...prev, tipoConstanciaParaInstituciones.nombre]);
+    // NUEVO: Verificar si aún quedan constancias de este subtipo
+    const quedanConstanciasDeEsteTipo = itemsActualizados.some(
+      item => item.tipo === "Constancia" && item.subtipo === tipoConstanciaParaInstituciones.nombre
+    );
+
+    // Si no quedan constancias de este tipo, quitar de subtipos seleccionados
+    if (!quedanConstanciasDeEsteTipo) {
+      setSubtiposConstanciaSeleccionados(prev =>
+        prev.filter(subtipo => subtipo !== tipoConstanciaParaInstituciones.nombre)
+      );
+
+      // También verificar si quedan otras constancias
+      const quedanOtrasConstancias = itemsActualizados.some(item => item.tipo === "Constancia");
+      if (!quedanOtrasConstancias) {
+        setTiposSeleccionados(prev => prev.filter(tipo => tipo !== "Constancia"));
+      }
+    } else {
+      // Si quedan constancias, asegurar que el subtipo esté en la lista
+      if (!subtiposConstanciaSeleccionados.includes(tipoConstanciaParaInstituciones.nombre)) {
+        setSubtiposConstanciaSeleccionados(prev => [...prev, tipoConstanciaParaInstituciones.nombre]);
+      }
     }
 
     // Cerrar modal
@@ -502,8 +625,7 @@ export default function SeleccionarSolicitudesStep({
     if (!validarFormulario()) return;
     setIsSubmitting(true);
     try {
-      // Usamos creadorInfo en lugar de session
-      // Crear lista de documentos requeridos única (sin duplicados)
+      // Crear lista de documentos requeridos
       const todosDocumentosRequeridos = [];
       itemsCarrito.forEach((item) => {
         if (!item || !item.documentosRequeridos) return;
@@ -991,6 +1113,7 @@ export default function SeleccionarSolicitudesStep({
           tipoConstancia={tipoConstanciaParaInstituciones?.tipoCompleto}
           costoBase={tipoConstanciaParaInstituciones?.costo?.monto || 0}
           onConfirm={handleConfirmarInstituciones}
+          institucionesYaSeleccionadas={tipoConstanciaParaInstituciones?.institucionesYaSeleccionadas || []}
         />
       )}
     </>
