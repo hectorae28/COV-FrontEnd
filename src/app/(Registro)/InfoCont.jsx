@@ -1,11 +1,10 @@
 "use client"
 import CountryFlag from "@/Shared/CountryFlag"
-import PhoneEstData from "@/Shared/EstadoData"
 import phoneCodes from "@/Shared/TelefonoData"
-import DireccionForm from "./DireccionForm"
 import { motion } from "framer-motion"
-import { ChevronDown, Mail, MapPin, Phone, Search, X } from "lucide-react"
+import { ChevronDown, Mail, Phone, Search, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import DireccionForm from "./DireccionForm"
 
 export default function InfoContacto({
   formData,
@@ -55,36 +54,54 @@ export default function InfoContacto({
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
+  const { name, value } = e.target
 
-    if (name === "email") {
-      if (value && !validateEmail(value)) {
-        setEmailError("Ingrese un correo electrónico válido");
-      } else {
-        setEmailError("");
-      }
-
-      if (isEditMode) {
-        setLocalFormData(prev => ({
-          ...prev,
-          [name]: value,
-          emailIsValid: validateEmail(value)
-        }));
-      } else {
-        // Notificar el cambio de email al componente padre
-        onInputChange({
-          [name]: value,
-          emailIsValid: validateEmail(value)
-        });
-      }
+  if (name === "email") {
+    if (value && !validateEmail(value)) {
+      setEmailError("Ingrese un correo electrónico válido");
     } else {
-      if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: value }));
-      } else {
-        onInputChange({ [name]: value });
-      }
+      setEmailError("");
+    }
+
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        [name]: value,
+        emailIsValid: validateEmail(value)
+      }));
+    } else {
+      onInputChange({
+        [name]: value,
+        emailIsValid: validateEmail(value)
+      });
+    }
+  } else if (name === "address") {
+    const formatted = value.replace(/\b\w+/g, (word) => {
+      return word.length > 1 ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : word.toUpperCase();
+    });
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, address: formatted }));
+    } else {
+      onInputChange({ address: formatted });
+    }
+  } else if (name === "homePhone") {
+    const digitsOnly = value.replace(/\D/g, "").slice(0, 11); // siempre 11 dígitos
+    const formatted = digitsOnly.replace(/(\d{0,4})(\d{0,3})(\d{0,4})/, (_, p1, p2, p3) => {
+      return [p1, p2, p3].filter(Boolean).join(" ");
+    });
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, homePhone: formatted }));
+    } else {
+      onInputChange({ homePhone: formatted });
+    }
+  } else {
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, [name]: value }));
+    } else {
+      onInputChange({ [name]: value });
     }
   }
+};
 
   // Manejador para seleccionar un código de país
   const handleSelectCountry = (code) => {
@@ -369,7 +386,7 @@ export default function InfoContacto({
                 const value = e.target.value.replace(/\D/g, "")
                 handleChange({ target: { name: "homePhone", value } })
               }}
-              maxLength="11"
+              maxLength="13"
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
               placeholder="0212 123 4567"
             />

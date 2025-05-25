@@ -4,6 +4,18 @@ import { Briefcase, BriefcaseBusiness, Phone, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react";
 import DireccionForm from "./DireccionForm";
 
+// CAMBIO: Función correcta que permite mayúsculas seguidas
+const capitalizeWords = (text) => {
+  if (!text) return "";
+  return text
+    .split(" ")
+    .map((word) => /^[A-ZÁÉÍÓÚÜÑ.]+$/.test(word) 
+      ? word 
+      : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
+
+// Función original para nombres y cargos (primera letra mayúscula)
 const capitalizarPalabras = (texto) => {
   if (!texto) return "";
   return texto
@@ -39,7 +51,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       ? formData.laboralRegistros.map(registro => ({
         ...registro,
         institutionName: capitalizarPalabras(registro.institutionName || ""),
-        institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
+        // CAMBIO: Usar capitalizeWords para direcciones (permite mayúsculas seguidas)
+        institutionAddress: capitalizeWords(registro.institutionAddress || ""),
         cargo: capitalizarPalabras(registro.cargo || ""),
         selectedEstado: registro.selectedEstado || "",
         selectedMunicipio: registro.selectedMunicipio || ""
@@ -50,7 +63,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
           id_direccion: formData.id_direccion,
           institutionType: formData.institutionType || "",
           institutionName: capitalizarPalabras(formData.institutionName || ""),
-          institutionAddress: capitalizarPalabras(formData.institutionAddress || ""),
+          // CAMBIO: Usar capitalizeWords para direcciones
+          institutionAddress: capitalizeWords(formData.institutionAddress || ""),
           institutionPhone: formData.institutionPhone || "",
           cargo: capitalizarPalabras(formData.cargo || ""),
           selectedEstado: formData.selectedEstado || "",
@@ -70,7 +84,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       setRegistros(formData.laboralRegistros.map(registro => ({
         ...registro,
         institutionName: capitalizarPalabras(registro.institutionName || ""),
-        institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
+        // CAMBIO: Usar capitalizeWords para direcciones
+        institutionAddress: capitalizeWords(registro.institutionAddress || ""),
         cargo: capitalizarPalabras(registro.cargo || ""),
         selectedEstado: registro.selectedEstado || "",
         NameEstado: registro.NameEstado || "",
@@ -159,18 +174,36 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
   };
 
   const handleDireccionChange = (index, updates) => {
-    const nuevosRegistros = [...registros];
-    const registro = { ...nuevosRegistros[index], ...updates }; // Merge the updates
-    nuevosRegistros[index] = registro;
-    setRegistros(nuevosRegistros);
-
-    const updatedData = { laboralRegistros: nuevosRegistros };
-    if (isEditMode) {
-      setLocalFormData(prev => ({ ...prev, ...updatedData }));
+  const nuevosRegistros = [...registros];
+  const registro = { ...nuevosRegistros[index] }; 
+  
+  // Aplicar las actualizaciones
+  Object.keys(updates).forEach(key => {
+    if (key === "institutionAddress") {
+      registro[key] = capitalizeWords(updates[key]);
     } else {
-      onInputChange(updatedData);
+      registro[key] = updates[key];
     }
-  };
+  });
+  
+  nuevosRegistros[index] = registro;
+  setRegistros(nuevosRegistros);
+
+  const updatedData = { laboralRegistros: nuevosRegistros };
+  
+  // Si es el primer registro, también actualizar los campos principales
+  if (index === 0) {
+    Object.keys(updates).forEach(key => {
+      updatedData[key] = registro[key];
+    });
+  }
+  
+  if (isEditMode) {
+    setLocalFormData(prev => ({ ...prev, ...updatedData }));
+  } else {
+    onInputChange(updatedData);
+  }
+};
 
   // Agregar un nuevo registro laboral
   const agregarRegistro = () => {
@@ -235,55 +268,75 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
     }
   };
 
+  // ARREGLAR: Validación mejorada para múltiples registros
   const isFieldEmpty = (registro, fieldName) => {
-    if (workStatus === "noLabora") {
-      return false;
-    }
-    if (!validationErrors) return false;
-    if (registro.id === 1) {
-      return validationErrors[fieldName];
-    }
+  if (workStatus === "noLabora") {
     return false;
-  };
+  }
+  if (!validationErrors) return false;
+
+  // Para campos de dirección, validar específicamente
+  if (fieldName === "institutionAddress" || fieldName === "selectedEstado" || fieldName === "selectedMunicipio") {
+    const registroIndex = registros.findIndex(r => r.id === registro.id);
+    
+    if (registroIndex === 0) {
+      // Para el primer registro, usar validationErrors del formulario principal
+      return validationErrors[fieldName];
+    } else {
+      // Para registros adicionales, validar contenido directamente
+      return !registro[fieldName] || registro[fieldName].toString().trim() === "";
+    }
+  }
+
+  // Para otros campos
+  if (registro.id === 1) {
+    return validationErrors[fieldName];
+  }
+  
+  return false;
+};
 
   const handleSaveClick = () => {
-    // Validar que haya al menos una institución con datos válidos
-    if (workStatus === "labora" && registros.length > 0) {
-      const hasValidInstitution = registros.some(reg =>
-        reg.institutionName && reg.institutionType && reg.institutionAddress
-      );
+  if (workStatus === "labora" && registros.length > 0) {
+    const hasValidInstitution = registros.some(reg =>
+      reg.institutionName && 
+      reg.institutionType && 
+      reg.institutionAddress &&
+      reg.selectedEstado &&
+      reg.selectedMunicipio &&
+      reg.cargo &&
+      reg.institutionPhone
+    );
 
-      if (!hasValidInstitution) {
-        alert("Debe completar los datos de al menos una institución");
-        return;
-      }
-
-      // Actualizar datos en el formulario principal
-      console.log(registros);
-      const updatedData = {
-        workStatus: workStatus,
-        laboralRegistros: registros
-      };
-
-      if (onSave && isEditMode) {
-        onSave(updatedData);
-      } else if (onInputChange) {
-        onInputChange(updatedData);
-      }
-    } else if (workStatus === "noLabora") {
-      // Si no labora, enviar estado con valores por defecto
-      const updatedData = {
-        workStatus: "noLabora",
-        laboralRegistros: []
-      };
-
-      if (onSave && isEditMode) {
-        onSave(updatedData);
-      } else if (onInputChange) {
-        onInputChange(updatedData);
-      }
+    if (!hasValidInstitution) {
+      // En lugar de alert, usar console.error o mostrar en UI
+      console.error("Debe completar todos los campos requeridos");
+      return;
     }
-  };
+
+    const updatedData = {
+      workStatus: workStatus,
+      laboralRegistros: registros
+    };
+
+    if (onSave && isEditMode) {
+      onSave(updatedData);
+    } else if (onInputChange) {
+      onInputChange(updatedData);
+    }
+  } else if (workStatus === "noLabora") {
+    const updatedData = {
+      workStatus: "noLabora",
+      laboralRegistros: []
+    };
+
+    if (onSave && isEditMode) {
+      onSave(updatedData);
+    } else if (onInputChange) {
+      onInputChange(updatedData);
+    }
+  }
+};
 
   return (
     <motion.div
