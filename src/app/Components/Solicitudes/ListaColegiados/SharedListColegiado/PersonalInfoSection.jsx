@@ -30,8 +30,8 @@ export default function PersonalInfoSection({
   const getInitialFormData = () => {
     return {
       documentType: datosPersonales?.nacionalidad === "extranjera" ? "pasaporte" : "cedula",
-      identityCard: datosPersonales?.identificacion?.split('-')[1] || "",
-      idType: datosPersonales?.identificacion?.split('-')[0] || "V",
+      identityCard: datosPersonales?.identificacion?.substring(0, 1) || "",
+      idType: datosPersonales?.identificacion?.substring(1) || "V",
       firstName: datosPersonales?.nombre || "",
       secondName: datosPersonales?.segundo_nombre || "",
       firstLastName: datosPersonales?.primer_apellido || "",

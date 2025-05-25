@@ -4,7 +4,8 @@ import { useState } from "react";
 export default function DocumentVerificationSwitch({
     documento,
     onChange,
-    readOnly = false
+    readOnly = false,
+    isColegiado = false,
 }) {
     const [isRejectionOpen, setIsRejectionOpen] = useState(false);
     const [isApprovalOpen, setIsApprovalOpen] = useState(false);
@@ -99,6 +100,8 @@ export default function DocumentVerificationSwitch({
         <div className="relative">
             {/* Contenedor específico para los botones de aprobar/rechazar */}
             <div className="flex items-center space-x-2 approve-reject-buttons">
+            {!isColegiado && (
+                <>
                 <button
                     onClick={(e) => handleStatusChange('approved', e)}
                     disabled={isApproved || readOnly}
@@ -136,6 +139,9 @@ export default function DocumentVerificationSwitch({
                 >
                     <XCircle size={20} />
                 </button>
+                </>
+            )}
+
 
                 <span 
                     className={`text-sm font-medium ${

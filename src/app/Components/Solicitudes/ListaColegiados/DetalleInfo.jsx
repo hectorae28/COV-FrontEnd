@@ -44,7 +44,8 @@ export default function DetalleInfo({
   tipo = "pendiente", // "pendiente" | "colegiado"
   data = null,
   isAdmin = false,
-  recaudos = null
+  recaudos = null,
+  isColegiado=false,
 }) {
   const entityId = params?.id || "1";
 
@@ -647,7 +648,7 @@ export default function DetalleInfo({
       }
 
       const nuevosDatos = {
-        status: "denegado",
+        status: "anulado",
         motivo_rechazo: motivoRechazo
       };
 
@@ -755,7 +756,7 @@ export default function DetalleInfo({
   return (
     <div className={`w-full px-4 md:px-10 py-10 md:py-28 ${isAdmin ? "bg-gray-50" : ""}`}>
       {/* Breadcrumbs */}
-      {onVolver && (
+      {!isColegiado && onVolver && (
         <div className="mb-6">
           <button
             onClick={() => onVolver()}
@@ -856,7 +857,7 @@ export default function DetalleInfo({
               pendienteId: entityId,
               setCambiosPendientes,
               isAdmin,
-              readOnly: entityData?.status === "denegado"
+              readOnly: entityData?.status === "anulado"
             }}
           />
 
@@ -868,7 +869,7 @@ export default function DetalleInfo({
             pendienteId={entityId}
             setCambiosPendientes={setCambiosPendientes}
             isAdmin={isAdmin}
-            readOnly={entityData?.status === "denegado"}
+            readOnly={entityData?.status === "anulado"}
           />
 
           <AcademicInfoSection
@@ -878,7 +879,7 @@ export default function DetalleInfo({
             updateData={updateData}
             pendienteId={entityId}
             setCambiosPendientes={setCambiosPendientes}
-            readonly={entityData?.status === "denegado"}
+            readOnly={entityData?.status === "anulado"}
           />
 
           <InstitutionsSection
@@ -888,7 +889,7 @@ export default function DetalleInfo({
   updateData={updateData}
   pendienteId={entityId}
   setCambiosPendientes={setCambiosPendientes}
-  readonly={entityData?.status === "denegado"}
+  readOnly={entityData?.status === "anulado"}
   isAdmin={isAdmin}  // ← AGREGAR ESTA LÍNEA
 />
 
@@ -899,7 +900,8 @@ export default function DetalleInfo({
             onDocumentStatusChange={handleDocumentStatusChange}
             title="Documentos requeridos"
             subtitle="Documentación obligatoria del solicitante"
-            readonly={entityData?.status === "denegado"}
+            readonly={entityData?.status === "anulado"}
+            isColegiado={isColegiado}
           />
 
           {/* Nueva sección de comprobante de pago */}
@@ -909,7 +911,7 @@ export default function DetalleInfo({
               onUploadComprobante={handleUploadComprobante}
               onViewComprobante={handleVerDocumento}
               onStatusChange={handleComprobanteStatusChange}
-              readOnly={entityData?.status === "denegado"}
+              readOnly={entityData?.status === "anulado"}
               isAdmin={isAdmin}
             />
           )}
@@ -1026,7 +1028,7 @@ export default function DetalleInfo({
                     pendienteId: entityId,
                     setCambiosPendientes,
                     isAdmin: true,
-                    readOnly: false
+                    readOnly: entityData?.status === "anulado"
                   }}
                 />
 
@@ -1037,7 +1039,7 @@ export default function DetalleInfo({
                   updateData={updateData}
                   pendienteId={entityId}
                   setCambiosPendientes={setCambiosPendientes}
-                  readOnly={false}
+                  readOnly={entityData?.status === "anulado"}
                 />
 
                 <AcademicInfoSection
@@ -1047,7 +1049,7 @@ export default function DetalleInfo({
                   updateData={updateData}
                   pendienteId={entityId}
                   setCambiosPendientes={setCambiosPendientes}
-                  readonly={false}
+                  readonly={entityData?.status === "anulado"}
                 />
 
                 <InstitutionsSection
@@ -1057,7 +1059,7 @@ export default function DetalleInfo({
   updateData={updateData}
   pendienteId={entityId}
   setCambiosPendientes={setCambiosPendientes}
-  readonly={entityData?.status === "denegado"}
+  readonly={entityData?.status === "anulado"}
   isAdmin={isAdmin}  // ← AGREGAR ESTA LÍNEA
 />
               </>
@@ -1093,6 +1095,7 @@ export default function DetalleInfo({
                 onDocumentStatusChange={handleDocumentStatusChange}
                 title="Documentos"
                 subtitle="Documentación del colegiado"
+                isColegiado={isColegiado}
               />
             )}
 

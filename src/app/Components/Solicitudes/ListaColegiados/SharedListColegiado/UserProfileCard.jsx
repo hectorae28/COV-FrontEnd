@@ -48,7 +48,7 @@ export default function UserProfileCard({
 
   // Estados y flags
   const isRechazada = variant === "pending" && data.status === "rechazado";
-  const isDenegada = variant === "pending" && data.status === "denegado";
+  const isDenegada = variant === "pending" && data.status === "anulado";
   const isRevisando = variant === "pending" && data.status === "revisando";
   const pagosPendientes = variant === "pending"
     ? (data.pago === null && !data.pago_exonerado)
@@ -117,13 +117,8 @@ export default function UserProfileCard({
       const nacionalidad = persona.nacionalidad || "V";
       const identificacion = persona.identificacion || "";
 
-      // Si ya tiene formato "V-12345678", devolverlo tal como está
-      if (identificacion.includes('-')) {
-        return identificacion;
-      }
-
       // Si no tiene formato, construirlo
-      return `${nacionalidad}-${identificacion}`;
+      return `${nacionalidad}${identificacion}`;
     }
   };
 

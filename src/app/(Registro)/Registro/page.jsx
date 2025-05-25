@@ -94,8 +94,8 @@ export default function RegistrationForm(props) {
 
     // Persona data
     documentType: props?.persona?.documentType || "", // Nuevo campo para tipo de documento (vacío por defecto)
-    identityCard: props?.persona?.identificacion?.split("-")[1] || "",
-    idType: props?.persona?.identificacion?.split("-")[0] || "V",
+    identityCard: props?.persona?.identificacion?.substring(0, 1) || "",
+    idType: props?.persona?.identificacion?.substring(1) || "V",
     firstName: props?.persona?.nombre || "",
     secondName: props?.persona?.segundo_nombre || "",
     firstLastName: props?.persona?.primer_apellido || "",
@@ -464,7 +464,7 @@ export default function RegistrationForm(props) {
               formData.documentType === "cedula" ? "venezolana" : "extranjera",
             identificacion:
               formData.documentType === "cedula"
-                ? `${formData.idType}-${formData.identityCard}`
+                ? `${formData.idType}${formData.identityCard}`
                 : formData.identityCard,
             correo: formData.email,
             telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,

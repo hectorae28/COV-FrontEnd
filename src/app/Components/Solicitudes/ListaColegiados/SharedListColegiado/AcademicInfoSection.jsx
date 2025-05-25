@@ -14,7 +14,7 @@ export default function AcademicInfoSection({
   updateData,
   pendienteId,
   setCambiosPendientes,
-  readOnly = false
+  readOnly
 }) {
   // Estados para el modal
   const [showModal, setShowModal] = useState(false);
@@ -36,7 +36,7 @@ export default function AcademicInfoSection({
       tipo_profesion: pendiente?.tipo_profesion || "",
       graduateInstitute: datosAcademicos?.instituto_bachillerato || "",
       universityState: datosAcademicos?.estado_universidad || "",
-      universityTitle: datosAcademicos?.nombre_universidad || "",
+      universityTitle: datosAcademicos?.universidad.titulo || "",
       mppsRegistrationNumber: datosAcademicos?.num_mpps || "",
       mppsRegistrationDate: datosAcademicos?.fecha_mpps || "",
       titleIssuanceDate: datosAcademicos?.fecha_emision_titulo || "",
@@ -152,8 +152,8 @@ export default function AcademicInfoSection({
           <p className="font-medium text-gray-800">{datosAcademicos?.estado_universidad || "No especificado"}</p>
         </div>
         <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Municipio de la Universidad</p>
-          <p className="font-medium text-gray-800">{datosAcademicos?.municipio_universidad || "No especificado"}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</p>
+          <p className="font-medium text-gray-800">{datosAcademicos?.universidad.titulo || "No especificado"}</p>
         </div>
       </div>
 

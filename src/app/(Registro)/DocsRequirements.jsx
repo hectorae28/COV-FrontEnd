@@ -9,6 +9,7 @@ export default function DocsRequirements({
   isEditMode = false
 }) {
   // Inicializar fileNames basado en archivos existentes en formData
+  console.log("formData", formData);
   const [fileNames, setFileNames] = useState({
     ci: formData.ci ? (formData.ci.name || "Archivo seleccionado") : "",
     rif: formData.rif ? (formData.rif.name || "Archivo seleccionado") : "",

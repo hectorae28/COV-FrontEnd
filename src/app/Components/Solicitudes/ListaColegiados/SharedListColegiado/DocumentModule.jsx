@@ -21,6 +21,7 @@ export function DocumentSection({
   onDocumentStatusChange,
   readonly = false,
   filter = doc => !doc.id?.includes('comprobante_pago'),
+  isColegiado=false,
 }) {
   // Asegúrate de que documentos sea siempre un array antes de filtrar
   const docs = Array.isArray(documentos) ? documentos : [];
@@ -325,6 +326,7 @@ export function DocumentSection({
               onView={() => onViewDocument(documento)}
               onReplace={() => handleReemplazarDocumento(documento)}
               onStatusChange={onDocumentStatusChange}
+              isColegiado={isColegiado}
             />
           ))
         ) : (
@@ -456,7 +458,7 @@ export function DocumentSection({
 }
 
 // Componente de tarjeta individual de documento
-function DocumentCard({ documento, onView, onReplace, onStatusChange }) {
+function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiado=false }) {
   const tieneArchivo = documento.url !== null;
   const isExonerado = documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isReadOnly = documento.status === 'approved' && documento.isReadOnly;
@@ -542,6 +544,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange }) {
                   documento={documento}
                   onChange={handleStatusChange}
                   readOnly={isReadOnly}
+                  isColegiado={isColegiado}
                 />
               </div>
             )}
@@ -549,10 +552,6 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange }) {
 
           {/* Botones de acción */}
           <div className="flex items-center space-x-2 action-button text-[10px] text-gray-400">
-            {/* Texto de acción si el documento es visible */}
-            {(tieneArchivo || isExonerado) && (
-              <span className="whitespace-nowrap opacity-70">Vista Previa </span>
-            )}
 
             {/* Botón de reemplazo/subida */}
             {(!isReadOnly && !isExonerado && documento.status !== 'approved') && (
