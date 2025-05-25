@@ -16,6 +16,7 @@ export default function ContactInfoSection({
   setCambiosPendientes,
   readOnly = false
 }) {
+  console.log({datosContacto})
   // Estados para el modal
   const [showModal, setShowModal] = useState(false);
   const [localFormData, setLocalFormData] = useState(null);

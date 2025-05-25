@@ -310,15 +310,14 @@ export default function DetalleInfo({
   // Inicializar datos para pendientes
   const initializePendienteData = (data) => {
     setDatosPersonales(JSON.parse(JSON.stringify(data.persona || {})));
-
     setDatosContacto({
       email: data.persona?.correo || "",
       phoneNumber: data.persona?.telefono_movil?.split(" ")[1] || "",
       countryCode: data.persona?.telefono_movil?.split(" ")[0] || "+58",
       homePhone: data.persona?.telefono_de_habitacion || "",
       address: data.persona?.direccion?.referencia || "",
-      city: data.persona?.direccion?.ciudad || "",
-      state: data.persona?.direccion?.estado || ""
+      city: data.persona?.direccion?.municipio_nombre || "",
+      state: data.persona?.direccion?.estado_nombre || ""
     });
 
     setDatosAcademicos({
@@ -351,8 +350,8 @@ export default function DetalleInfo({
       countryCode: persona.telefono_movil?.split(" ")[0] || "+58",
       homePhone: persona.telefono_de_habitacion || "",
       address: persona.direccion?.referencia || "",
-      city: persona.direccion?.ciudad || "",
-      state: persona.direccion?.estado || ""
+      city: persona.direccion?.municipio_nombre || "",
+      state: persona.direccion?.estado_nombre || ""
     });
 
     setDatosAcademicos({
