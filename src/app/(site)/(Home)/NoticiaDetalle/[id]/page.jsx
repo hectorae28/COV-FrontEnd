@@ -1,5 +1,5 @@
 "use client";
-import newsItems from "@/app/Models/Home/NoticiasData";
+import newsItems from "@/app/Models/PanelControl/PaginaWeb/Inicio/NoticiasData";
 import { motion } from "framer-motion";
 import {
     ArrowLeft,
@@ -9,7 +9,6 @@ import {
     Clock,
     Copy,
     Eye,
-    Send,
     Sparkles,
     Tag,
     User

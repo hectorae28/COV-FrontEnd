@@ -1,17 +1,43 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Upload, X, Info, AlertTriangle } from "lucide-react";
+import { AlertTriangle, CreditCard, DollarSign, Info, Landmark, MoreHorizontal, Smartphone, Upload, X } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import BancoPayment from "./BancoPayment";
+import EfectivoPayment from "./EfectivoPayment";
+import OtrosPayment from "./OtrosPayment";
+import PaypalPayment from "./PaypalPayment";
+import PuntoVentaPayment from "./PuntoVentaPayment";
 
 const tiposMetodosPago = [
-  { 
-    id: "banco", 
-    nombre: "Banco / Transferencia", 
-    descripcion: "Transferencia o depósito bancario",
+  {
+    id: "banco",
+    nombre: "Banco / Transferencia",
+    descripcion: "Transferencias y depósitos bancarios",
+    icon: Landmark,
   },
-  { 
-    id: "paypal", 
-    nombre: "Otros", 
-    descripcion: "Diferentes Metodos de pago",
+  {
+    id: "punto_venta",
+    nombre: "Punto de Venta",
+    descripcion: "Pagos con tarjetas de débito/crédito",
+    icon: CreditCard,
+  },
+  {
+    id: "efectivo",
+    nombre: "Efectivo",
+    descripcion: "Pagos en efectivo en oficinas físicas",
+    icon: DollarSign,
+  },
+  {
+    id: "paypal",
+    nombre: "PayPal",
+    descripcion: "Pagos internacionales con PayPal",
+    icon: Smartphone,
+  },
+  {
+    id: "otros",
+    nombre: "Otros",
+    descripcion: "Zelle, Zinli y otros métodos",
+    icon: MoreHorizontal,
   }
 ];
 
@@ -22,10 +48,16 @@ const tiposAlertas = [
   { id: "success", nombre: "Éxito", color: "green" },
 ];
 
-export default function FormularioMetodoPago({ 
-  metodo = null, 
+const monedas = [
+  { id: "USD", nombre: "Dólar (USD)", simbolo: "$" },
+  { id: "VES", nombre: "Bolívar (VES)", simbolo: "Bs." },
+  { id: "EUR", nombre: "Euro (EUR)", simbolo: "€" },
+];
+
+export default function FormularioMetodoPago({
+  metodo = null,
   onSubmit,
-  onCancel 
+  onCancel
 }) {
   const [formData, setFormData] = useState({
     nombre: "",
@@ -35,17 +67,15 @@ export default function FormularioMetodoPago({
     moneda: "USD",
     activo: true,
     tipo_metodo: "banco",
+    subtipo_metodo: "",
     datos_adicionales: {
       api: false,
       slug: "",
       alerta: "",
       tipo_alerta: "info",
       datos_cuenta: "",
-      rif: "",
-      titular: "",
-      numero_cuenta: "",
       correo: "",
-      url_pago: "",
+      telefono: "",
     }
   });
 
@@ -53,9 +83,11 @@ export default function FormularioMetodoPago({
   useEffect(() => {
     if (metodo) {
       const tipo = getTipoFromSlug(metodo?.datos_adicionales?.slug);
+      const subtipo = getSubtipoFromSlug(metodo?.datos_adicionales?.slug);
       setFormData({
         ...metodo,
         tipo_metodo: tipo,
+        subtipo_metodo: subtipo,
         logo_file: null,
       });
     }
@@ -64,16 +96,26 @@ export default function FormularioMetodoPago({
   // Determinar el tipo de método por su slug
   const getTipoFromSlug = (slug) => {
     if (!slug) return "banco";
-    if (slug === "bdv" || slug.includes("banco")) return "banco";
-    if (slug === "paypal") return "paypal";
+    if (slug.includes("banco") || slug === "bdv") return "banco";
+    if (slug.includes("punto_venta") || slug.includes("pos")) return "punto_venta";
+    if (slug.includes("efectivo") || slug.includes("cash")) return "efectivo";
+    if (slug.includes("paypal")) return "paypal";
+    if (slug.includes("zelle") || slug.includes("zinli")) return "otros";
     return "banco";
+  };
+
+  // Determinar el subtipo para métodos "otros"
+  const getSubtipoFromSlug = (slug) => {
+    if (!slug) return "";
+    if (slug.includes("zelle")) return "zelle";
+    if (slug.includes("zinli")) return "zinli";
+    return "";
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-    
+
     if (name.includes('.')) {
-      // Para campos anidados como datos_adicionales.slug
       const [parent, child] = name.split('.');
       setFormData({
         ...formData,
@@ -83,7 +125,6 @@ export default function FormularioMetodoPago({
         }
       });
     } else if (type === 'file') {
-      // Para manejo de archivos (logo)
       if (files && files[0]) {
         const fileUrl = URL.createObjectURL(files[0]);
         setFormData({
@@ -98,14 +139,15 @@ export default function FormularioMetodoPago({
         [name]: type === 'checkbox' ? checked : value
       });
     }
-    
-    // Actualizar slug al cambiar nombre o tipo
-    if (name === "nombre" || name === "tipo_metodo") {
+
+    // Actualizar slug al cambiar nombre, tipo o subtipo
+    if (name === "nombre" || name === "tipo_metodo" || name === "subtipo_metodo") {
       const nuevoSlug = generarSlug(
         name === "nombre" ? value : formData.nombre,
-        name === "tipo_metodo" ? value : formData.tipo_metodo
+        name === "tipo_metodo" ? value : formData.tipo_metodo,
+        name === "subtipo_metodo" ? value : formData.subtipo_metodo
       );
-      
+
       setFormData(prev => ({
         ...prev,
         datos_adicionales: {
@@ -114,50 +156,74 @@ export default function FormularioMetodoPago({
         }
       }));
     }
-    
-    // Actualizar API flag para PayPal
-    if (name === "tipo_metodo" && value === "paypal") {
+
+    // Resetear subtipo cuando se cambia el tipo principal
+    if (name === "tipo_metodo" && value !== "otros") {
       setFormData(prev => ({
         ...prev,
-        datos_adicionales: {
-          ...prev.datos_adicionales,
-          api: true
-        }
+        subtipo_metodo: ""
       }));
-    } else if (name === "tipo_metodo" && value !== "paypal") {
+    }
+
+    // Configuraciones específicas por tipo
+    if (name === "tipo_metodo") {
+      let apiEnabled = false;
+      let monedaPorDefecto = "USD";
+
+      switch (value) {
+        case "punto_venta":
+        case "paypal":
+          apiEnabled = true;
+          break;
+        case "banco":
+          if (formData.nombre?.toLowerCase().includes("venezuela")) {
+            monedaPorDefecto = "VES";
+          }
+          break;
+        default:
+          break;
+      }
+
       setFormData(prev => ({
         ...prev,
+        moneda: monedaPorDefecto,
         datos_adicionales: {
           ...prev.datos_adicionales,
-          api: false
+          api: apiEnabled
         }
       }));
     }
   };
-  
-  // Generar un slug basado en el nombre y tipo de método
-  const generarSlug = (nombre, tipo) => {
+
+  // Generar un slug basado en el nombre, tipo y subtipo
+  const generarSlug = (nombre, tipo, subtipo = "") => {
     if (!nombre) return tipo;
-    
-    if (tipo === "banco") {
-      // Para bancos, verificamos si es Banco de Venezuela
-      if (nombre.toLowerCase().includes("venezuela")) {
-        return "bdv";
-      }
-      // Para otros bancos
-      const nombreSimplificado = nombre
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]/g, "_")
-        .replace(/_+/g, "_")
-        .replace(/^_|_$/g, "");
-        
-      return `banco_${nombreSimplificado}`;
+
+    const nombreSimplificado = nombre
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "");
+
+    if (tipo === "otros" && subtipo) {
+      return `${subtipo}_${nombreSimplificado}`;
     }
-    
-    // Para otros tipos, usamos el tipo como base
-    return tipo;
+
+    switch (tipo) {
+      case "banco":
+        if (nombre.toLowerCase().includes("venezuela")) return "bdv";
+        return `banco_${nombreSimplificado}`;
+      case "punto_venta":
+        return `pos_${nombreSimplificado}`;
+      case "efectivo":
+        return `efectivo_${nombreSimplificado}`;
+      case "paypal":
+        return `paypal_${nombreSimplificado}`;
+      default:
+        return `${tipo}_${nombreSimplificado}`;
+    }
   };
 
   const handleSubmit = (e) => {
@@ -165,32 +231,80 @@ export default function FormularioMetodoPago({
     onSubmit(formData);
   };
 
+  const renderMetodoEspecifico = () => {
+    switch (formData.tipo_metodo) {
+      case "banco":
+        return (
+          <BancoPayment
+            formData={formData}
+            onChange={handleChange}
+          />
+        );
+      case "punto_venta":
+        return (
+          <PuntoVentaPayment
+            formData={formData}
+            onChange={handleChange}
+          />
+        );
+      case "efectivo":
+        return (
+          <EfectivoPayment
+            formData={formData}
+            onChange={handleChange}
+          />
+        );
+      case "paypal":
+        return (
+          <PaypalPayment
+            formData={formData}
+            onChange={handleChange}
+          />
+        );
+      case "otros":
+        return (
+          <OtrosPayment
+            formData={formData}
+            onChange={handleChange}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Tipo de método de pago */}
-      <div className="select-none cursor-defaul mb-6">
+      <div className="select-none cursor-default mb-6">
         <h3 className="text-lg font-medium text-[#41023B] mb-3">Tipo de método de pago</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {tiposMetodosPago.map((tipo) => (
-            <div 
-              key={tipo.id}
-              className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                formData.tipo_metodo === tipo.id 
-                  ? "border-[#D7008A] bg-[#D7008A]/5" 
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {tiposMetodosPago.map((tipo) => {
+            const IconComponent = tipo.icon;
+            return (
+              <div
+                key={tipo.id}
+                className={`border rounded-lg p-3 cursor-pointer transition-all ${formData.tipo_metodo === tipo.id
+                  ? "border-[#D7008A] bg-[#D7008A]/5"
                   : "border-gray-200 hover:border-gray-300"
-              }`}
-              onClick={() => handleChange({
-                target: { name: "tipo_metodo", value: tipo.id }
-              })}
-            >
-              <div className="font-medium mb-1">{tipo.nombre}</div>
-              <div className="text-xs text-gray-500">{tipo.descripcion}</div>
-            </div>
-          ))}
+                  }`}
+                onClick={() => handleChange({
+                  target: { name: "tipo_metodo", value: tipo.id }
+                })}
+              >
+                <div className="flex items-center justify-center mb-2">
+                  <IconComponent className={`w-5 h-5 ${formData.tipo_metodo === tipo.id ? "text-[#D7008A]" : "text-gray-400"
+                    }`} />
+                </div>
+                <div className="font-medium text-center text-xs mb-1">{tipo.nombre}</div>
+                <div className="text-xs text-gray-500 text-center leading-tight">{tipo.descripcion}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
-      
-      {/* Vista previa del método de pago (movida arriba) */}
+
+      {/* Vista previa del método de pago */}
       <div className="pt-2">
         <h3 className="text-lg font-medium text-[#41023B] mb-3">
           Vista previa del método de pago
@@ -199,8 +313,8 @@ export default function FormularioMetodoPago({
           <div className="flex items-center space-x-2">
             <div className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
               {formData.logo_url ? (
-                <img 
-                  src={formData.logo_url} 
+                <img
+                  src={formData.logo_url}
                   alt={formData.nombre}
                   className="max-w-full max-h-full object-contain"
                 />
@@ -213,56 +327,52 @@ export default function FormularioMetodoPago({
             <div>
               <div className="font-medium">{formData.nombre || "Nombre del método"}</div>
               <div className="text-xs text-gray-500">{formData.descripcion || "Descripción breve"}</div>
-              
-              {/* Estado activo/inactivo */}
-              {formData.activo ? (
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full mt-1 inline-block">
-                  Activo
+
+              <div className="flex items-center gap-2 mt-1">
+                {formData.activo ? (
+                  <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                    Activo
+                  </span>
+                ) : (
+                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
+                    Inactivo
+                  </span>
+                )}
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                  {tiposMetodosPago.find(t => t.id === formData.tipo_metodo)?.nombre}
+                  {formData.subtipo_metodo && ` - ${formData.subtipo_metodo.charAt(0).toUpperCase() + formData.subtipo_metodo.slice(1)}`}
                 </span>
-              ) : (
-                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full mt-1 inline-block">
-                  Inactivo
+                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                  {formData.moneda}
                 </span>
-              )}
+              </div>
             </div>
           </div>
-          
+
           {formData.datos_adicionales.alerta && (
-            <div className={`mt-4 p-3 rounded-lg bg-${
-              formData.datos_adicionales.tipo_alerta === "info" ? "blue" :
+            <div className={`mt-4 p-3 rounded-lg bg-${formData.datos_adicionales.tipo_alerta === "info" ? "blue" :
               formData.datos_adicionales.tipo_alerta === "warning" ? "amber" :
-              formData.datos_adicionales.tipo_alerta === "danger" ? "red" : "green"
-            }-50 border border-${
-              formData.datos_adicionales.tipo_alerta === "info" ? "blue" :
-              formData.datos_adicionales.tipo_alerta === "warning" ? "amber" :
-              formData.datos_adicionales.tipo_alerta === "danger" ? "red" : "green"
-            }-200`}>
+                formData.datos_adicionales.tipo_alerta === "danger" ? "red" : "green"
+              }-50 border border-${formData.datos_adicionales.tipo_alerta === "info" ? "blue" :
+                formData.datos_adicionales.tipo_alerta === "warning" ? "amber" :
+                  formData.datos_adicionales.tipo_alerta === "danger" ? "red" : "green"
+              }-200`}>
               <div className="flex items-start">
                 {formData.datos_adicionales.tipo_alerta === "info" && <Info size={16} className="text-blue-600 mt-0.5 mr-2" />}
-                {formData.datos_adicionales.tipo_alerta === "warning" && <AlertTriangle size={16} className="text-amber-600 mt-0.5 mr-2" />}
-                {formData.datos_adicionales.tipo_alerta === "danger" && <AlertTriangle size={16} className="text-red-600 mt-0.5 mr-2" />}
-                <p className={`text-xs text-${
-                  formData.datos_adicionales.tipo_alerta === "info" ? "blue" :
+                {(formData.datos_adicionales.tipo_alerta === "warning" || formData.datos_adicionales.tipo_alerta === "danger") && <AlertTriangle size={16} className={`${formData.datos_adicionales.tipo_alerta === "warning" ? "text-amber-600" : "text-red-600"} mt-0.5 mr-2`} />}
+                <p className={`text-xs text-${formData.datos_adicionales.tipo_alerta === "info" ? "blue" :
                   formData.datos_adicionales.tipo_alerta === "warning" ? "amber" :
-                  formData.datos_adicionales.tipo_alerta === "danger" ? "red" : "green"
-                }-700`}>
+                    formData.datos_adicionales.tipo_alerta === "danger" ? "red" : "green"
+                  }-700`}>
                   {formData.datos_adicionales.alerta}
                 </p>
               </div>
             </div>
           )}
-          
-          {formData.datos_adicionales.datos_cuenta && (
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-700 whitespace-pre-line">
-                {formData.datos_adicionales.datos_cuenta}
-              </p>
-            </div>
-          )}
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Información básica */}
         <div>
           <h3 className="text-lg font-medium text-[#41023B] mb-3">Información básica</h3>
@@ -278,15 +388,16 @@ export default function FormularioMetodoPago({
                 value={formData.nombre}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
-                placeholder={`Ej: ${
-                  formData.tipo_metodo === "banco" 
-                    ? "Banco de Venezuela" 
-                    : "PayPal"
-                }`}
+                placeholder={`Ej: ${formData.tipo_metodo === "banco" ? "Banco de Venezuela" :
+                  formData.tipo_metodo === "punto_venta" ? "POS Principal" :
+                    formData.tipo_metodo === "efectivo" ? "Caja Principal" :
+                      formData.tipo_metodo === "paypal" ? "PayPal Oficial" :
+                        "Método Digital"
+                  }`}
                 required
               />
             </div>
-            
+
             {/* Slug */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -304,7 +415,7 @@ export default function FormularioMetodoPago({
                 Generado automáticamente para identificar este método de pago
               </p>
             </div>
-            
+
             {/* Moneda */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -316,12 +427,14 @@ export default function FormularioMetodoPago({
                 onChange={handleChange}
                 className="cursor-pointer w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
               >
-                <option value="USD">Dólar (USD)</option>
-                <option value="VES">Bolívar (VES)</option>
-                <option value="EUR">Euro (EUR)</option>
+                {monedas.map(moneda => (
+                  <option key={moneda.id} value={moneda.id}>
+                    {moneda.nombre}
+                  </option>
+                ))}
               </select>
             </div>
-            
+
             {/* Descripción */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -334,9 +447,9 @@ export default function FormularioMetodoPago({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
                 placeholder="Breve descripción del método de pago"
                 rows="2"
-              ></textarea>
+              />
             </div>
-            
+
             {/* Logo */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
@@ -358,7 +471,7 @@ export default function FormularioMetodoPago({
                     Subir logo
                   </label>
                 </div>
-                
+
                 {formData.logo_url && (
                   <div className="ml-4 relative w-16 h-16 border rounded-lg overflow-hidden bg-white flex items-center justify-center">
                     <img
@@ -368,7 +481,7 @@ export default function FormularioMetodoPago({
                     />
                     <button
                       type="button"
-                      onClick={() => setFormData({...formData, logo_url: null, logo_file: null})}
+                      onClick={() => setFormData({ ...formData, logo_url: null, logo_file: null })}
                       className="cursor-pointer absolute top-0 right-0 bg-red-600 text-white rounded-bl-lg p-0.5"
                     >
                       <X size={12} />
@@ -378,8 +491,8 @@ export default function FormularioMetodoPago({
               </div>
               <p className="mt-1 text-xs text-gray-500">Tamaño recomendado: 512x512px</p>
             </div>
-            
-            {/* Activo - Resaltado */}
+
+            {/* Activo */}
             <div className="flex items-center bg-green-50 p-3 rounded-lg border border-green-200">
               <input
                 type="checkbox"
@@ -398,12 +511,15 @@ export default function FormularioMetodoPago({
             </div>
           </div>
         </div>
-        
+
         {/* Detalles específicos según tipo */}
         <div>
-          <h3 className="text-lg font-medium text-[#41023B] mb-3">Detalles del método de pago</h3>
+          <h3 className="text-lg font-medium text-[#41023B] mb-3">
+            Detalles del {tiposMetodosPago.find(t => t.id === formData.tipo_metodo)?.nombre}
+            {formData.subtipo_metodo && ` - ${formData.subtipo_metodo.charAt(0).toUpperCase() + formData.subtipo_metodo.slice(1)}`}
+          </h3>
           <div className="space-y-4 bg-white p-4 rounded-lg border border-gray-200">
-            {/* Campos comunes para todos los métodos */}
+            {/* Campos comunes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Correo electrónico de contacto
@@ -417,7 +533,24 @@ export default function FormularioMetodoPago({
                 placeholder="Ej: pagos@ejemplo.com"
               />
             </div>
-            
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Teléfono de contacto
+              </label>
+              <input
+                type="tel"
+                name="datos_adicionales.telefono"
+                value={formData.datos_adicionales.telefono || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
+                placeholder="Ej: +58 212 1234567"
+              />
+            </div>
+
+            {/* Componente específico del método */}
+            {renderMetodoEspecifico()}
+
             {/* Tipo de alerta */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -427,11 +560,10 @@ export default function FormularioMetodoPago({
                 {tiposAlertas.map((alerta) => (
                   <div
                     key={alerta.id}
-                    className={`border rounded-lg p-2 text-center cursor-pointer text-sm transition-all ${
-                      formData.datos_adicionales.tipo_alerta === alerta.id
-                        ? `border-${alerta.color}-500 bg-${alerta.color}-50 text-${alerta.color}-700`
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`border rounded-lg p-2 text-center cursor-pointer text-sm transition-all ${formData.datos_adicionales.tipo_alerta === alerta.id
+                      ? `border-${alerta.color}-500 bg-${alerta.color}-50 text-${alerta.color}-700`
+                      : "border-gray-200 hover:border-gray-300"
+                      }`}
                     onClick={() => handleChange({
                       target: { name: "datos_adicionales.tipo_alerta", value: alerta.id }
                     })}
@@ -441,7 +573,7 @@ export default function FormularioMetodoPago({
                 ))}
               </div>
             </div>
-            
+
             {/* Mensaje de alerta */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -454,111 +586,12 @@ export default function FormularioMetodoPago({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
                 placeholder="Mensaje importante que se mostrará al usuario"
                 rows="2"
-              ></textarea>
+              />
             </div>
-            
-            {/* Campos específicos para bancos */}
-            {formData.tipo_metodo === "banco" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Número de cuenta
-                  </label>
-                  <input
-                    type="text"
-                    name="datos_adicionales.numero_cuenta"
-                    value={formData.datos_adicionales.numero_cuenta || ""}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
-                    placeholder="Ej: 0102-0127-63-0000007511"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Titular de la cuenta
-                  </label>
-                  <input
-                    type="text"
-                    name="datos_adicionales.titular"
-                    value={formData.datos_adicionales.titular || ""}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
-                    placeholder="Ej: Colegio de Odontólogos de Venezuela"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    RIF / Identificación fiscal
-                  </label>
-                  <input
-                    type="text"
-                    name="datos_adicionales.rif"
-                    value={formData.datos_adicionales.rif || ""}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
-                    placeholder="Ej: J-00041277-4"
-                  />
-                </div>
-              </>
-            )}
-            
-            {/* Campos específicos para PayPal */}
-            {formData.tipo_metodo === "paypal" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL de pago (opcional)
-                </label>
-                <input
-                  type="url"
-                  name="datos_adicionales.url_pago"
-                  value={formData.datos_adicionales.url_pago || ""}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
-                  placeholder="Ej: https://www.paypal.com/paypalme/..."
-                />
-              </div>
-            )}
-            
-            {/* Información adicional visible al usuario */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Información adicional
-              </label>
-              <textarea
-                name="datos_adicionales.datos_cuenta"
-                value={formData.datos_adicionales.datos_cuenta || ""}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
-                placeholder="Información detallada que se mostrará al usuario sobre este método de pago"
-                rows="5"
-              ></textarea>
-              <p className="mt-1 text-xs text-gray-500">
-                Esta información se mostrará en la pantalla de pago. Puede incluir instrucciones específicas.
-              </p>
-            </div>
-            
-            {/* Comprobación de API para PayPal */}
-            {formData.tipo_metodo === "paypal" && (
-              <div className="flex items-center pt-2">
-                <input
-                  type="checkbox"
-                  id="api-enabled"
-                  name="datos_adicionales.api"
-                  checked={formData.datos_adicionales.api}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-[#D7008A] focus:ring-[#D7008A]"
-                />
-                <label htmlFor="api-enabled" className="ml-2 text-sm text-gray-700">
-                  Usar cálculo de comisión de PayPal
-                </label>
-              </div>
-            )}
           </div>
         </div>
       </div>
-      
+
       {/* Botones de acción */}
       <div className="pt-4 flex justify-end space-x-4">
         <button

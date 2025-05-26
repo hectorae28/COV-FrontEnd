@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Filter, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import EventCard from "./EventCard";
+import EventCard from "@/app/(Site)/(CursosEventos)/CursosEventos/EventCard";
 
 export default function Eventos() {
   const [visibleEvents, setVisibleEvents] = useState([]);

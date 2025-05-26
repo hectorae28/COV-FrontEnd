@@ -1,20 +1,18 @@
 "use client";
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  CreditCard,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  X,
   AlertTriangle,
   CheckCircle,
+  CreditCard,
+  Edit,
+  Plus,
+  Trash2,
+  X,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
-// Importar componentes personalizados
+// Importar componente del formulario
 import FormularioMetodoPago from "@/Components/Configuracion/MetodoPago/FormMP";
-import PanelPagosPreview from "@/Components/Configuracion/MetodoPago/PanelPreviewMP";
 
 export default function MetodosPagoConfig() {
   // Estados principales
@@ -26,27 +24,20 @@ export default function MetodosPagoConfig() {
     message: "",
     type: "success",
   });
-  
+
   // Estados para la modalidad del formulario
   const [modoFormulario, setModoFormulario] = useState(null); // 'crear', 'editar' o null
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
-  
-  // Estado para la vista previa
-  const [mostrarVistaPrevia, setMostrarVistaPrevia] = useState(false);
-  
-  // Estados para datos adicionales
-  const [tazaBcv, setTazaBcv] = useState(36.75);
-  const [costoInscripcion, setCostoInscripcion] = useState(50);
 
   // Cargar datos iniciales
   useEffect(() => {
     const cargarDatos = async () => {
       try {
         setLoading(true);
-        
+
         // Simulación para desarrollo
         setTimeout(() => {
-          // Datos simulados
+          // Datos simulados con todos los tipos
           const metodosSimulados = [
             {
               id: 1,
@@ -55,6 +46,7 @@ export default function MetodosPagoConfig() {
               moneda: "VES",
               logo_url: "/assets/icons/BDV.png",
               activo: true,
+              tipo_metodo: "banco",
               datos_adicionales: {
                 api: false,
                 slug: "bdv",
@@ -64,45 +56,127 @@ export default function MetodosPagoConfig() {
                 rif: "J-00041277-4",
                 titular: "Colegio de Odontólogos de Venezuela",
                 numero_cuenta: "0102-0127-63-0000007511",
-                correo: "secretariafinanzas@elcov.org"
+                correo: "secretariafinanzas@elcov.org",
+                telefono: "+58 212 5551234"
               }
             },
             {
               id: 2,
-              nombre: "PayPal",
-              descripcion: "Pago a través de plataforma PayPal",
+              nombre: "POS Principal",
+              descripcion: "Pago con tarjetas de débito y crédito",
               moneda: "USD",
-              logo_url: "/assets/icons/Paypal.png",
+              logo_url: "/assets/icons/POS.png",
               activo: true,
+              tipo_metodo: "punto_venta",
               datos_adicionales: {
                 api: true,
-                slug: "paypal",
-                alerta: "Recomendamos no colocar dirección de envío y liberar el pago. Hasta que este disponible el pago puede ser aceptado su trámite.",
+                slug: "pos_principal",
+                alerta: "Disponible tarjetas Visa, Mastercard y American Express. Comisión incluida en el monto mostrado.",
                 tipo_alerta: "info",
-                datos_cuenta: "Para realizar los pagos desde PayPal deberás calcular la comisión en el siguiente formulario. Una vez conozca el monto a depositar deberás colocarlo en el formulario y sabrás el monto a depositar por PayPal. Tienes el botón de acceso directo para pagar en PayPal o el correo. \nSi estás realizando el trámite en línea deberás reportarlo adjuntando el pago a la página. En caso contrario deberás notificarlo al correo secretariafinanzas@elcov.org indicando información necesaria.",
-                correo: "paypalelcov@gmail.com",
-                url_pago: "https://www.paypal.com/paypalme/elcov"
+                datos_cuenta: "Terminal disponible en la sede principal del colegio durante horarios de oficina.",
+                terminal_id: "T001234567",
+                comercio: "Colegio Odontólogos Venezuela",
+                comision_porcentaje: "3.5",
+                monto_minimo: "10.00",
+                monto_maximo: "5000.00",
+                correo: "pos@elcov.org",
+                telefono: "+58 212 5551235"
               }
             },
             {
               id: 3,
-              nombre: "Zelle",
-              descripcion: "Transferencia en dólares vía Zelle",
+              nombre: "PayPal Oficial",
+              descripcion: "Pago internacional con PayPal",
+              moneda: "USD",
+              logo_url: "/assets/icons/Paypal.png",
+              activo: true,
+              tipo_metodo: "paypal",
+              datos_adicionales: {
+                api: true,
+                slug: "paypal_oficial",
+                alerta: "Recomendamos no colocar dirección de envío y liberar el pago. Hasta que este disponible el pago puede ser aceptado su trámite.",
+                tipo_alerta: "info",
+                datos_cuenta: "Para realizar los pagos desde PayPal deberás calcular la comisión en el siguiente formulario. Una vez conozca el monto a depositar deberás colocarlo en el formulario y sabrás el monto a depositar por PayPal.",
+                email_pago: "paypalelcov@gmail.com",
+                url_pago: "https://www.paypal.com/paypalme/elcov",
+                comision_fija: "0.30",
+                comision_porcentaje: "5.4",
+                incluye_comision: true,
+                correo: "paypal@elcov.org",
+                telefono: "+1 555 123 4567"
+              }
+            },
+            {
+              id: 4,
+              nombre: "Zelle Principal",
+              descripcion: "Transferencias rápidas con Zelle",
               moneda: "USD",
               logo_url: "/assets/icons/Zelle.png",
               activo: false,
+              tipo_metodo: "zelle",
               datos_adicionales: {
                 api: false,
-                slug: "paypal",
+                slug: "zelle_principal",
                 alerta: "Por el momento, este método de pago no está disponible.",
                 tipo_alerta: "warning",
-                datos_cuenta: "Información de Zelle no disponible actualmente.",
-                correo: "pagos@elcov.org",
-                url_pago: ""
+                datos_cuenta: "Transferencias instantáneas entre bancos de Estados Unidos. Disponible 24/7.",
+                email_pago: "zelle@elcov.org",
+                telefono_pago: "+1 555 987 6543",
+                nombre_beneficiario: "John Doe",
+                monto_minimo: "1.00",
+                monto_maximo: "2500.00",
+                correo: "zelle@elcov.org",
+                telefono: "+1 555 987 6543"
+              }
+            },
+            {
+              id: 5,
+              nombre: "Zinli Digital",
+              descripcion: "Pagos digitales con Zinli",
+              moneda: "USD",
+              logo_url: "/assets/icons/Zinli.png",
+              activo: true,
+              tipo_metodo: "zinli",
+              datos_adicionales: {
+                api: false,
+                slug: "zinli_digital",
+                alerta: "Transferencias disponibles desde Venezuela hacia Estados Unidos.",
+                tipo_alerta: "success",
+                datos_cuenta: "Pagos digitales rápidos y seguros con Zinli. Comisión del 2.5% incluida.",
+                email_pago: "zinli@elcov.org",
+                telefono_pago: "+58 412 123 4567",
+                nombre_beneficiario: "María González",
+                monto_minimo: "5.00",
+                monto_maximo: "1000.00",
+                comision_porcentaje: "2.5",
+                correo: "zinli@elcov.org",
+                telefono: "+58 412 123 4567"
+              }
+            },
+            {
+              id: 6,
+              nombre: "Caja Principal",
+              descripcion: "Pago en efectivo en nuestras oficinas",
+              moneda: "USD",
+              logo_url: "/assets/icons/Cash.png",
+              activo: true,
+              tipo_metodo: "efectivo",
+              datos_adicionales: {
+                api: false,
+                slug: "efectivo_principal",
+                alerta: "Traer monto exacto. Se emitirá recibo oficial numerado.",
+                tipo_alerta: "warning",
+                datos_cuenta: "Pagos en efectivo únicamente en la sede principal. Solicitar recibo oficial numerado.",
+                direccion: "Av. Principal, Torre Plaza, Piso 5, Oficina 501, Los Leones, Caracas",
+                horarios: "Lunes a Viernes: 8:00 AM - 4:00 PM\nSábados: 8:00 AM - 12:00 PM",
+                contacto_responsable: "María González - Tesorería",
+                referencias_ubicacion: "Frente al Metro Los Leones, al lado del Banco Provincial",
+                correo: "tesoreria@elcov.org",
+                telefono: "+58 212 5551236"
               }
             }
           ];
-          
+
           setMetodosPago(metodosSimulados);
           setLoading(false);
         }, 1000);
@@ -112,7 +186,7 @@ export default function MetodosPagoConfig() {
         setLoading(false);
       }
     };
-    
+
     cargarDatos();
   }, []);
 
@@ -120,23 +194,23 @@ export default function MetodosPagoConfig() {
   const handleCrearMetodo = (nuevoMetodo) => {
     try {
       setLoading(true);
-      
+
       // Simulación para desarrollo
       setTimeout(() => {
         const nuevoMetodoConId = {
           ...nuevoMetodo,
           id: Date.now()
         };
-        
+
         // Eliminar el archivo de logo para simular que ya fue procesado
         if (nuevoMetodoConId.logo_file) {
           delete nuevoMetodoConId.logo_file;
         }
-        
+
         setMetodosPago(prev => [...prev, nuevoMetodoConId]);
         setModoFormulario(null);
         mostrarNotificacion("Método de pago agregado correctamente", "success");
-        
+
         setLoading(false);
       }, 1000);
     } catch (err) {
@@ -150,7 +224,7 @@ export default function MetodosPagoConfig() {
   const handleEditarMetodo = (metodoEditado) => {
     try {
       setLoading(true);
-      
+
       // Simulación para desarrollo
       setTimeout(() => {
         // Eliminar el archivo de logo para simular que ya fue procesado
@@ -158,12 +232,12 @@ export default function MetodosPagoConfig() {
         if (metodoActualizado.logo_file) {
           delete metodoActualizado.logo_file;
         }
-        
+
         setMetodosPago(prev => prev.map(m => m.id === metodoActualizado.id ? metodoActualizado : m));
         setModoFormulario(null);
         setMetodoSeleccionado(null);
         mostrarNotificacion("Método de pago actualizado correctamente", "success");
-        
+
         setLoading(false);
       }, 1000);
     } catch (err) {
@@ -178,7 +252,7 @@ export default function MetodosPagoConfig() {
     if (window.confirm("¿Está seguro de que desea eliminar este método de pago?")) {
       try {
         setLoading(true);
-        
+
         // Simulación para desarrollo
         setTimeout(() => {
           setMetodosPago(prev => prev.filter(m => m.id !== id));
@@ -200,16 +274,24 @@ export default function MetodosPagoConfig() {
       message: mensaje,
       type: tipo
     });
-    
+
     // Auto-ocultar notificación
     setTimeout(() => {
       setNotification({ show: false, message: "", type: "success" });
     }, 5000);
   };
 
-  // Obtener métodos de pago activos para la vista previa
-  const getMetodosPagoActivos = () => {
-    return metodosPago.filter(metodo => metodo.activo);
+  // Obtener el nombre del tipo de método
+  const getTipoNombre = (tipoMetodo) => {
+    const tipos = {
+      banco: "Banco/Transferencia",
+      punto_venta: "Punto de Venta",
+      efectivo: "Efectivo",
+      paypal: "PayPal",
+      zelle: "Zelle",
+      zinli: "Zinli"
+    };
+    return tipos[tipoMetodo] || tipoMetodo;
   };
 
   // Renderizar contenido según el estado de carga
@@ -222,7 +304,7 @@ export default function MetodosPagoConfig() {
   }
 
   return (
-    <div className="select-none cursor-defaul container mx-auto px-4 md:px-20 py-28">
+    <div className="select-none cursor-default container mx-auto px-4 md:px-20 py-28">
       {/* Cabecera */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
         <div>
@@ -233,18 +315,8 @@ export default function MetodosPagoConfig() {
             Administre los métodos de pago disponibles para los usuarios
           </p>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
-          <motion.button
-            onClick={() => setMostrarVistaPrevia(true)}
-            className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Eye size={18} />
-            <span>Vista previa</span>
-          </motion.button>
-          
+
+        <div className="mt-4 md:mt-0">
           <motion.button
             onClick={() => {
               setModoFormulario("crear");
@@ -259,18 +331,17 @@ export default function MetodosPagoConfig() {
           </motion.button>
         </div>
       </div>
-      
+
       {/* Notificación */}
       {notification.show && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className={`mb-6 p-4 rounded-lg ${
-            notification.type === "success" ? "bg-green-50 border border-green-200" :
-            notification.type === "error" ? "bg-red-50 border border-red-200" :
-            "bg-blue-50 border border-blue-200"
-          }`}
+          className={`mb-6 p-4 rounded-lg ${notification.type === "success" ? "bg-green-50 border border-green-200" :
+              notification.type === "error" ? "bg-red-50 border border-red-200" :
+                "bg-blue-50 border border-blue-200"
+            }`}
         >
           <div className="flex items-center">
             {notification.type === "success" ? (
@@ -278,9 +349,8 @@ export default function MetodosPagoConfig() {
             ) : (
               <AlertTriangle className="text-red-500 mr-3 flex-shrink-0" size={20} />
             )}
-            <p className={`text-sm ${
-              notification.type === "success" ? "text-green-700" : "text-red-700"
-            }`}>
+            <p className={`text-sm ${notification.type === "success" ? "text-green-700" : "text-red-700"
+              }`}>
               {notification.message}
             </p>
             <button
@@ -292,7 +362,7 @@ export default function MetodosPagoConfig() {
           </div>
         </motion.div>
       )}
-      
+
       {/* Error de carga */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -302,7 +372,7 @@ export default function MetodosPagoConfig() {
           </div>
         </div>
       )}
-      
+
       {/* Formulario para crear o editar */}
       {modoFormulario && (
         <div className="mb-8 bg-white rounded-xl shadow-md overflow-hidden">
@@ -320,7 +390,7 @@ export default function MetodosPagoConfig() {
               <X size={20} />
             </button>
           </div>
-          
+
           <div className="p-6">
             <FormularioMetodoPago
               metodo={metodoSeleccionado}
@@ -333,15 +403,15 @@ export default function MetodosPagoConfig() {
           </div>
         </div>
       )}
-      
+
       {/* Listado de métodos de pago */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         <div className="p-4 bg-[#f8f9fa] border-b border-gray-200">
           <h2 className="text-lg font-semibold text-[#41023B]">
-            Métodos de Pago Existentes
+            Métodos de Pago Existentes ({metodosPago.length})
           </h2>
         </div>
-        
+
         {metodosPago.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -381,11 +451,10 @@ export default function MetodosPagoConfig() {
                     <div>
                       <div className="flex items-center">
                         <h3 className="font-medium text-gray-900 mr-2">{metodo.nombre}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          metodo.activo
+                        <span className={`text-xs px-2 py-1 rounded-full ${metodo.activo
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"
-                        }`}>
+                          }`}>
                           {metodo.activo ? "Activo" : "Inactivo"}
                         </span>
                       </div>
@@ -394,26 +463,17 @@ export default function MetodosPagoConfig() {
                         <span className="px-2 py-0.5 bg-gray-100 rounded-full">
                           {metodo.moneda || "USD"}
                         </span>
-                        <span className="px-2 py-0.5 bg-gray-100 rounded-full">
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">
+                          {getTipoNombre(metodo.tipo_metodo)}
+                        </span>
+                        <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded-full">
                           {metodo.datos_adicionales.slug}
                         </span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        setMetodoSeleccionado(metodo);
-                        setMostrarVistaPrevia(true);
-                      }}
-                      className="cursor-pointer p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                      title="Vista previa"
-                    >
-                      <Eye size={18} />
-                    </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -442,24 +502,7 @@ export default function MetodosPagoConfig() {
           </div>
         )}
       </div>
-      
-      {/* Vista previa del panel completo */}
-      {mostrarVistaPrevia && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <PanelPagosPreview
-            metodosPago={metodoSeleccionado ? 
-              (metodoSeleccionado.activo ? [metodoSeleccionado] : []) : 
-              getMetodosPagoActivos()}
-            tazaBcv={tazaBcv}
-            costoInscripcion={costoInscripcion}
-            onClose={() => {
-              setMostrarVistaPrevia(false);
-              setMetodoSeleccionado(null);
-            }}
-          />
-        </div>
-      )}
-      
+
       {/* Overlay de carga */}
       {loading && metodosPago.length > 0 && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
