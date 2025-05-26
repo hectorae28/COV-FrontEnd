@@ -419,32 +419,102 @@ export default function DetalleInfo({
   };
 
   // Función para manejar el estado de documentos
+  // En DetalleInfo.jsx, actualiza la función handleDocumentStatusChange
+
   const handleDocumentStatusChange = (updatedDocument) => {
-    const docsCopy = [...documentos];
-    const index = docsCopy.findIndex((doc) => doc.id === updatedDocument.id);
-    if (index !== -1) {
-      docsCopy[index] = {
-        ...docsCopy[index],
-        status: updatedDocument.status,
-        rejectionReason: updatedDocument.rejectionReason || "",
+    // Para pendientes, actualizar entityData directamente ya que DocumentModule
+    // maneja los documentos internamente desde pendienteData
+    if (tipo === "pendiente") {
+      // Actualizar entityData localmente para reflejar el cambio inmediatamente
+      setEntityData(prevData => {
+        const updatedData = { ...prevData };
+
+        // Actualizar los campos de validación correspondientes
+        const docId = updatedDocument.id;
+        const validateField = `${docId}_validate`;
+        const motivoField = `${docId}_motivo_rechazo`;
+
+        updatedData[validateField] =
+          updatedDocument.status === "pending" ? null :
+            updatedDocument.status === "approved" ? true : false;
+
+        if (updatedDocument.rejectionReason) {
+          updatedData[motivoField] = updatedDocument.rejectionReason;
+        } else {
+          delete updatedData[motivoField];
+        }
+
+        return updatedData;
+      });
+
+      // Preparar datos para el backend
+      const updateData = {
+        [`${updatedDocument.id}_validate`]:
+          updatedDocument.status === "pending" ? null :
+            updatedDocument.status === "approved" ? true : false,
       };
-      setDocumentos(docsCopy);
-    }
 
-    const updateData = {
-      [`${updatedDocument.id}_validate`]:
-        updatedDocument.status === "pending"
-          ? null
-          : updatedDocument.status === "approved"
-            ? true
-            : false,
-    };
-    if (updatedDocument.rejectionReason) {
-      updateData[`${updatedDocument.id}_motivo_rechazo`] =
-        updatedDocument.rejectionReason;
-    }
+      if (updatedDocument.rejectionReason) {
+        updateData[`${updatedDocument.id}_motivo_rechazo`] = updatedDocument.rejectionReason;
+      }
 
-    updateColegiadoPendiente(entityId, updateData);
+      // Actualizar en el backend
+      if (!recaudos) {
+        updateColegiadoPendiente(entityId, updateData)
+          .then((response) => {
+            if (response && response.data) {
+              // Sincronizar con la respuesta del servidor
+              setEntityData(prevData => ({
+                ...prevData,
+                ...response.data
+              }));
+            }
+          })
+          .catch((error) => {
+            console.error("Error al actualizar estado del documento:", error);
+            // Revertir el cambio local si falla
+            loadData();
+          });
+      } else {
+        updateColegiadoPendienteWithToken(entityId, updateData)
+          .then((response) => {
+            if (response && response.data) {
+              setEntityData(prevData => ({
+                ...prevData,
+                ...response.data
+              }));
+            }
+          })
+          .catch((error) => {
+            console.error("Error al actualizar estado del documento:", error);
+            loadData();
+          });
+      }
+    } else {
+      // Para colegiados registrados, mantener la lógica original
+      const docsCopy = [...documentos];
+      const index = docsCopy.findIndex((doc) => doc.id === updatedDocument.id);
+      if (index !== -1) {
+        docsCopy[index] = {
+          ...docsCopy[index],
+          status: updatedDocument.status,
+          rejectionReason: updatedDocument.rejectionReason || "",
+        };
+        setDocumentos(docsCopy);
+      }
+
+      const updateData = {
+        [`${updatedDocument.id}_validate`]:
+          updatedDocument.status === "pending" ? null :
+            updatedDocument.status === "approved" ? true : false,
+      };
+
+      if (updatedDocument.rejectionReason) {
+        updateData[`${updatedDocument.id}_motivo_rechazo`] = updatedDocument.rejectionReason;
+      }
+
+      updateColegiado(entityId, updateData);
+    }
   };
 
   // Función para manejar el upload del comprobante
@@ -547,9 +617,17 @@ export default function DetalleInfo({
   };
 
   // Validación actualizada para incluir comprobante
+  // Validación actualizada para incluir comprobante
   const allDocumentsApproved = () => {
+    // Usar entityData actualizado en lugar de documentos state
+    const currentData = entityData;
+    if (!currentData) return false;
+
     // Obtener el tipo de profesión
-    const tipoProfesion = entityData?.tipo_profesion || "odontologo";
+    const tipoProfesion = currentData.tipo_profesion || "odontologo";
+
+    console.log("Validando documentos - Tipo profesión:", tipoProfesion);
+    console.log("Datos actuales:", currentData);
 
     // Para odontólogos: verificar solo 4 documentos base
     const documentosRequeridosBase = [
@@ -558,6 +636,7 @@ export default function DetalleInfo({
       "file_fondo_negro",
       "file_mpps",
     ];
+
     const documentosAdicionales = [
       "fondo_negro_credencial",
       "notas_curso",
@@ -574,23 +653,28 @@ export default function DetalleInfo({
       ];
     }
 
-    // Verificar directamente en entityData en lugar de usar documentos state
+    // Verificar documentos requeridos
     const docsApproved = documentosRequeridos.every((docId) => {
       const validateField = `${docId}_validate`;
       const urlField = `${docId}_url`;
 
-      return entityData?.[urlField] && entityData?.[validateField] === true;
+      const hasFile = currentData[urlField];
+      const isApproved = currentData[validateField] === true;
+
+      console.log(`Documento ${docId}: archivo=${!!hasFile}, aprobado=${isApproved}`);
+
+      return hasFile && isApproved;
     });
 
     console.log("Documentos aprobados:", docsApproved);
-    console.log("Tipo profesión:", tipoProfesion);
-    console.log("Documentos requeridos:", documentosRequeridos);
 
     // Verificar comprobante de pago si no está exonerado
-    if (!entityData?.pago_exonerado) {
+    if (!currentData.pago_exonerado) {
       const comprobanteApproved =
         comprobanteData?.status === "approved" && comprobanteData?.url;
+
       console.log("Comprobante aprobado:", comprobanteApproved);
+      console.log("Comprobante data:", comprobanteData);
 
       return docsApproved && comprobanteApproved;
     }
@@ -853,8 +937,8 @@ export default function DetalleInfo({
               <p className="text-sm text-gray-500 mb-2">Estado de solvencia</p>
               <p
                 className={`font-bold text-xl ${entityData.solvencia_status
-                    ? "text-green-600"
-                    : "text-red-600"
+                  ? "text-green-600"
+                  : "text-red-600"
                   } flex items-center justify-center`}
               >
                 {entityData.solvencia_status ? (
@@ -924,15 +1008,13 @@ export default function DetalleInfo({
           />
 
           <DocumentSection
-            documentos={[]} // Array vacío ya que ahora DocumentModule maneja la carga
+            documentos={[]}
             onViewDocument={handleVerDocumento}
             updateDocumento={updateDocumento}
             onDocumentStatusChange={handleDocumentStatusChange}
-            title="Documentos requeridos"
-            subtitle="Documentación obligatoria del solicitante"
             readonly={entityData?.status === "anulado"}
             isColegiado={isColegiado}
-            pendienteData={entityData} // NUEVO: Pasar los datos del pendiente
+            pendienteData={entityData}
           />
 
           {/* Nueva sección de comprobante de pago */}
@@ -973,8 +1055,8 @@ export default function DetalleInfo({
             <nav className="flex overflow-x-auto justify-center">
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "informacion"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
                   } transition-colors`}
                 onClick={() => setTabActivo("informacion")}
               >
@@ -982,8 +1064,8 @@ export default function DetalleInfo({
               </button>
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "pagos"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
                   } transition-colors`}
                 onClick={() => setTabActivo("pagos")}
               >
@@ -991,8 +1073,8 @@ export default function DetalleInfo({
               </button>
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "inscripciones"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
                   } transition-colors`}
                 onClick={() => setTabActivo("inscripciones")}
               >
@@ -1000,8 +1082,8 @@ export default function DetalleInfo({
               </button>
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "solicitudes"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
                   } transition-colors`}
                 onClick={() => setTabActivo("solicitudes")}
               >
@@ -1009,8 +1091,8 @@ export default function DetalleInfo({
               </button>
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "carnet"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
                   } transition-colors`}
                 onClick={() => setTabActivo("carnet")}
               >
@@ -1018,8 +1100,8 @@ export default function DetalleInfo({
               </button>
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "documentos"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
                   } transition-colors`}
                 onClick={() => setTabActivo("documentos")}
               >
@@ -1027,8 +1109,8 @@ export default function DetalleInfo({
               </button>
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "chats"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
                   } transition-colors`}
                 onClick={() => setTabActivo("chats")}
               >
@@ -1036,8 +1118,8 @@ export default function DetalleInfo({
               </button>
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "estadisticas"
-                    ? "border-b-2 border-[#C40180] text-[#C40180]"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
                   } transition-colors`}
                 onClick={() => setTabActivo("estadisticas")}
               >

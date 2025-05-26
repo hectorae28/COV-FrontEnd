@@ -1,17 +1,14 @@
 "use client";
 
+import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import PagosColg from "@/app/Components/PagosModal";
 import { motion } from "framer-motion";
 import {
-    AlertCircle,
-    CheckCircle,
-    CreditCard,
-    Eye,
-    Upload,
-    X,
-    XCircle
+    AlertCircle, Calendar, CheckCircle, CreditCard, DollarSign, RefreshCcw, XCircle, Hash
 } from "lucide-react";
-import { useRef, useState } from "react";
-import DocumentVerificationSwitch from "./DocumentVerificationSwitch";
+import { useEffect, useState } from "react";
+import VerificationSwitch from "../VerificationSwitch";
+import { DocumentViewer } from "./DocumentModule"; // Tu visor avanzado
 
 export default function PaymentReceiptSection({
     comprobanteData,
@@ -21,348 +18,329 @@ export default function PaymentReceiptSection({
     readOnly = false,
     isAdmin = false
 }) {
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [error, setError] = useState("");
-    const [showUploadModal, setShowUploadModal] = useState(false);
-    const fileInputRef = useRef(null);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [costoInscripcion, setCostoInscripcion] = useState(50);
+    const [metodoPago, setMetodoPago] = useState([]);
+    const [tasaBCV, setTasaBCV] = useState(0);
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    // Verificar si hay comprobante
-    const hasComprobante = comprobanteData?.url || comprobanteData?.archivo;
-    const isApproved = comprobanteData?.status === 'approved';
-    const isRejected = comprobanteData?.status === 'rechazado';
-    const isPending = comprobanteData?.status === 'pending' || (!isApproved && !isRejected);
+    const [localComprobanteData, setLocalComprobanteData] = useState(comprobanteData);
 
-    // Manejar selección de archivo
-    const handleFileChange = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    // Visor avanzado
+    const [showComprobanteViewer, setShowComprobanteViewer] = useState(false);
+    const [comprobanteParaVer, setComprobanteParaVer] = useState(null);
 
-        // Validar archivo
-        const validTypes = ["application/pdf", "image/jpeg", "image/png"];
-        const maxSize = 5 * 1024 * 1024; // 5MB
+    useEffect(() => {
+        setLocalComprobanteData(comprobanteData);
+    }, [comprobanteData]);
 
-        if (!validTypes.includes(file.type)) {
-            setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
-            setSelectedFile(null);
-            return;
-        }
+    const currentComprobanteData = localComprobanteData || comprobanteData;
+    const hasComprobante = !!(currentComprobanteData?.url || currentComprobanteData?.archivo);
+    const isApproved = currentComprobanteData?.status === 'approved';
+    const isRejected = currentComprobanteData?.status === 'rechazado';
 
-        if (file.size > maxSize) {
-            setError("El archivo es demasiado grande. El tamaño máximo es 5MB.");
-            setSelectedFile(null);
-            return;
-        }
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                const tasa = await fetchDataSolicitudes("tasa-bcv");
+                setTasaBCV(tasa.data.rate);
 
-        setSelectedFile(file);
-        setError("");
-    };
+                const metodos = await fetchDataSolicitudes("metodo-de-pago");
+                const metodosActivos = metodos.data.filter(metodo => metodo.activo === true);
+                setMetodoPago(metodosActivos);
 
-    // Manejar drag & drop
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            const file = e.dataTransfer.files[0];
-
-            // Validar archivo
-            const validTypes = ["application/pdf", "image/jpeg", "image/png"];
-            const maxSize = 5 * 1024 * 1024; // 5MB
-
-            if (!validTypes.includes(file.type)) {
-                setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
-                return;
+                const costo = await fetchDataSolicitudes(
+                    "costo",
+                    `?search=Inscripcion+Odontologo&es_vigente=true`
+                );
+                if (costo.data && costo.data.length > 0) {
+                    setCostoInscripcion(Number(costo.data[0].monto_usd));
+                }
+            } catch (error) {
+                console.error("Error cargando datos:", error);
             }
+        };
+        loadInitialData();
+    }, []);
 
-            if (file.size > maxSize) {
-                setError("El archivo es demasiado grande. El tamaño máximo es 5MB.");
-                return;
-            }
-
-            setSelectedFile(file);
-            setError("");
-        }
-    };
-
-    // Manejar subida de archivo
-    const handleUpload = async () => {
-        if (!selectedFile) {
-            setError("Por favor seleccione un archivo para subir.");
-            return;
-        }
-
-        setIsUploading(true);
-        setError("");
-
+    // Subida de comprobante desde PagosColg
+    const handlePaymentComplete = async (paymentData) => {
         try {
-            // Llamar a la función de upload
-            if (onUploadComprobante) {
-                const formData = new FormData();
-                formData.append('comprobante', selectedFile);
-                await onUploadComprobante(formData);
+            setIsProcessing(true);
+            const formData = new FormData();
+            if (paymentData.paymentFile) formData.append('comprobante', paymentData.paymentFile);
+            if (paymentData.paymentDate) formData.append('fecha_pago', paymentData.paymentDate);
+            if (paymentData.referenceNumber) formData.append('numero_referencia', paymentData.referenceNumber);
+            if (paymentData.totalAmount) formData.append('monto', paymentData.totalAmount);
+            if (paymentData.metodo_de_pago) {
+                formData.append('metodo_pago_id', paymentData.metodo_de_pago.id);
+                formData.append('metodo_pago_slug', paymentData.metodo_de_pago.datos_adicionales.slug);
             }
+            if (paymentData.tasa_bcv_del_dia) formData.append('tasa_bcv', paymentData.tasa_bcv_del_dia);
 
-            // Cerrar modal y limpiar
-            setShowUploadModal(false);
-            setSelectedFile(null);
+            const response = await onUploadComprobante(formData);
+
+            const nuevoComprobante = {
+                id: "comprobante_pago",
+                nombre: "Comprobante de pago",
+                archivo: paymentData.paymentFile?.name || "comprobante_pago.pdf",
+                url: response?.data?.comprobante_url || URL.createObjectURL(paymentData.paymentFile),
+                status: 'pending',
+                rejectionReason: '',
+                paymentDetails: {
+                    fecha_pago: paymentData.paymentDate,
+                    numero_referencia: paymentData.referenceNumber,
+                    monto: paymentData.totalAmount,
+                    metodo_pago: paymentData.metodo_de_pago?.nombre,
+                    metodo_pago_slug: paymentData.metodo_de_pago?.datos_adicionales?.slug,
+                    tasa_bcv: paymentData.tasa_bcv_del_dia
+                }
+            };
+
+            setLocalComprobanteData(nuevoComprobante);
+            setShowPaymentModal(false);
+
         } catch (error) {
-            console.error("Error al subir comprobante:", error);
-            setError("Ocurrió un error al subir el comprobante. Por favor intente nuevamente.");
+            console.error("Error al procesar el pago:", error);
+            alert("Error al registrar el pago. Por favor intente nuevamente.");
         } finally {
-            setIsUploading(false);
+            setIsProcessing(false);
         }
     };
 
-    // Manejar cambio de estado del comprobante
-    const handleStatusChange = (updatedData) => {
-        if (onStatusChange) {
-            onStatusChange({
-                ...updatedData,
-                id: 'comprobante_pago'
-            });
-        }
+    // Visor avanzado
+    const handleViewComprobante = (comprobante) => {
+        setComprobanteParaVer({
+            ...comprobante,
+            nombre: comprobante.nombre || "Comprobante de pago"
+        });
+        setShowComprobanteViewer(true);
+        if (typeof onViewComprobante === "function") onViewComprobante(comprobante);
     };
+
+    function getCardClasses() {
+        let base = "border rounded-lg transition-all duration-200";
+        if (isApproved) {
+            base += " border-green-200 bg-green-50";
+        } else if (isRejected) {
+            base += " border-red-200 bg-red-50";
+        } else if (hasComprobante) {
+            base += " border-gray-200 hover:border-[#C40180] hover:shadow-md cursor-pointer bg-white";
+        } else {
+            base += " border-red-200 bg-red-50";
+        }
+        return base;
+    }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
-        >
-            <div className="flex items-center justify-between mb-5 border-b pb-3">
-                <div className="flex items-center">
-                    <CreditCard size={20} className="text-[#C40180] mr-2" />
-                    <h2 className="text-lg font-semibold text-gray-900">
-                        Comprobante de Pago
-                    </h2>
+        <>
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
+            >
+                <div className="flex items-center justify-between mb-5 border-b pb-3">
+                    <div className="flex items-center">
+                        <CreditCard size={20} className="text-[#C40180] mr-2" />
+                        <h2 className="text-lg font-semibold text-gray-900">Comprobante de Pago</h2>
+                    </div>
                 </div>
-            </div>
 
-            {/* Estado del comprobante */}
-            <div className="bg-gray-50 rounded-lg p-6">
-                {hasComprobante ? (
-                    <div className="space-y-4">
-                        {/* Información del comprobante */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className={`p-2 rounded-md ${isApproved ? 'bg-green-100' :
-                                        isRejected ? 'bg-red-100' :
-                                            'bg-yellow-100'
-                                    }`}>
-                                    {isApproved ? (
-                                        <CheckCircle size={20} className="text-green-600" />
-                                    ) : isRejected ? (
-                                        <XCircle size={20} className="text-red-600" />
-                                    ) : (
-                                        <AlertCircle size={20} className="text-yellow-600" />
+                <div>
+                    {hasComprobante ? (
+                        <div className={getCardClasses()}>
+                            <div className="p-4 flex justify-between items-start">
+                                <div
+                                    className="flex items-center flex-1 min-w-0"
+                                    style={{ cursor: hasComprobante ? "pointer" : "default" }}
+                                    onClick={() => {
+                                        if (hasComprobante) handleViewComprobante(currentComprobanteData);
+                                    }}
+                                >
+                                    <div className={`${isApproved
+                                        ? "bg-green-100"
+                                        : isRejected
+                                            ? "bg-red-100"
+                                            : hasComprobante
+                                                ? "bg-[#F9E6F3]"
+                                                : "bg-red-100"
+                                        } p-2 rounded-md mr-3`}>
+                                        {isApproved ? (
+                                            <CheckCircle className="text-green-500" size={20} />
+                                        ) : isRejected ? (
+                                            <XCircle className="text-red-500" size={20} />
+                                        ) : (
+                                            <AlertCircle className="text-[#C40180]" size={20} />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium text-gray-900 flex items-center">
+                                            {currentComprobanteData?.nombre || "Comprobante de pago"}
+                                        </h3>
+                                        <p className="text-xs text-gray-500">
+                                            {currentComprobanteData?.archivo || "comprobante_pago.pdf"}
+                                        </p>
+                                        <div className="flex items-center mt-1">
+                                            <span className={`text-xs px-2 py-1 rounded-full ${isApproved ? 'bg-green-100 text-green-800' :
+                                                isRejected ? 'bg-red-100 text-red-800' :
+                                                    'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                {isApproved ? 'Aprobado' : isRejected ? 'Rechazado' : 'Pendiente de revisión'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Franja de botones: NO abre visor */}
+                                <div className="flex flex-col items-end space-y-2 ml-4">
+                                    {!readOnly && !isApproved && (
+                                        <button
+                                            onClick={e => { e.stopPropagation(); setShowPaymentModal(true); }}
+                                            className="text-orange-600 hover:bg-orange-50 p-2 rounded-full transition-colors"
+                                            title="Actualizar comprobante"
+                                        >
+                                            <RefreshCcw size={18} />
+                                        </button>
                                     )}
                                 </div>
-                                <div>
-                                    <h4 className="font-medium text-gray-900">
-                                        Comprobante de pago
-                                    </h4>
-                                    <p className="text-sm text-gray-500">
-                                        {comprobanteData?.archivo || 'comprobante_pago.pdf'}
-                                    </p>
+                            </div>
+
+                            {isRejected && currentComprobanteData?.rejectionReason && (
+                                <div className="bg-red-50 p-3 rounded-md border border-red-200 mt-2">
+                                    <span className="text-red-700 text-sm font-medium">
+                                        <strong>Motivo de rechazo:</strong>{" "}
+                                        {currentComprobanteData.rejectionReason}
+                                    </span>
                                 </div>
-                            </div>
-
-                            {/* Botones de acción */}
-                            <div className="flex items-center space-x-2">
+                            )}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-4 bg-red-50 border border-red-200 rounded-lg p-6">
+                            <span className="text-sm text-gray-500">No hay comprobante cargado.</span>
+                            {!readOnly && (
                                 <button
-                                    onClick={() => onViewComprobante(comprobanteData)}
-                                    className="cursor-pointer p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                                    title="Ver comprobante"
+                                    onClick={() => setShowPaymentModal(true)}
+                                    className="px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md"
                                 >
-                                    <Eye size={18} />
+                                    Subir comprobante de pago
                                 </button>
+                            )}
+                        </div>
+                    )}
 
-                                {!readOnly && !isApproved && (
-                                    <button
-                                        onClick={() => setShowUploadModal(true)}
-                                        className="cursor-pointer p-2 text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
-                                        title="Reemplazar comprobante"
-                                    >
-                                        <Upload size={18} />
-                                    </button>
+                    {hasComprobante && currentComprobanteData?.paymentDetails && (
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 mt-4">
+                            <h5 className="font-medium text-gray-900 mb-3">Detalles del Pago</h5>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {currentComprobanteData.paymentDetails.fecha_pago && (
+                                    <div className="flex items-center space-x-2">
+                                        <Calendar size={16} className="text-blue-600" />
+                                        <div>
+                                            <p className="text-xs text-gray-500">Fecha</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {new Date(currentComprobanteData.paymentDetails.fecha_pago).toLocaleDateString('es-ES')}
+                                            </p>
+                                        </div>
+                                    </div>
                                 )}
-                            </div>
-                        </div>
-
-                        {/* Switch de verificación para admin */}
-                        {isAdmin && !readOnly && (
-                            <div className="pt-4 border-t">
-                                <DocumentVerificationSwitch
-                                    documento={{
-                                        ...comprobanteData,
-                                        id: 'comprobante_pago',
-                                        nombre: 'Comprobante de pago'
-                                    }}
-                                    onChange={handleStatusChange}
-                                    readOnly={readOnly || isApproved}
-                                />
-                            </div>
-                        )}
-
-                        {/* Mensaje de estado */}
-                        {isApproved && (
-                            <div className="mt-4 bg-green-50 p-3 rounded-md border border-green-200">
-                                <p className="text-sm text-green-700 flex items-center">
-                                    <CheckCircle size={16} className="mr-2" />
-                                    El comprobante de pago ha sido verificado y aprobado
-                                </p>
-                            </div>
-                        )}
-
-                        {isRejected && comprobanteData?.rejectionReason && (
-                            <div className="mt-4 bg-red-50 p-3 rounded-md border border-red-200">
-                                <p className="text-sm text-red-700">
-                                    <span className="font-medium">Motivo de rechazo:</span>{' '}
-                                    {comprobanteData.rejectionReason}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="text-center py-8">
-                        <div className="mx-auto w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                            <CreditCard size={24} className="text-gray-400" />
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            No se ha subido comprobante de pago
-                        </h3>
-                        <p className="text-sm text-gray-500 mb-6">
-                            Es necesario subir el comprobante de pago para completar el registro
-                        </p>
-                        {!readOnly && (
-                            <button
-                                onClick={() => setShowUploadModal(true)}
-                                className="cursor-pointer inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors"
-                            >
-                                <Upload size={16} className="mr-2" />
-                                Subir comprobante
-                            </button>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Modal para subir comprobante */}
-            {showUploadModal && (
-                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-lg shadow-xl w-full max-w-md"
-                    >
-                        <div className="flex justify-between items-center p-4 border-b">
-                            <div className="flex items-center">
-                                <CreditCard className="text-[#C40180] mr-2" size={20} />
-                                <h3 className="text-lg font-medium text-gray-900">
-                                    {hasComprobante ? "Actualizar comprobante de pago" : "Subir comprobante de pago"}
-                                </h3>
-                            </div>
-                            <button
-                                onClick={() => {
-                                    setShowUploadModal(false);
-                                    setSelectedFile(null);
-                                    setError("");
-                                }}
-                                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
-                            >
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        <div className="p-6">
-                            <div className="mb-4">
-                                <p className="text-sm text-gray-600">
-                                    Por favor suba el comprobante de pago de la inscripción.
-                                    Formatos aceptados: PDF, JPG o PNG (máx. 5MB)
-                                </p>
-                            </div>
-
-                            <div
-                                className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 ${error ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-[#C40180] bg-gray-50"
-                                    }`}
-                                onDragOver={handleDragOver}
-                                onDrop={handleDrop}
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    className="hidden"
-                                    accept=".pdf,.jpg,.jpeg,.png"
-                                />
-
-                                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-
-                                <p className="mt-2 text-sm font-medium text-gray-700">
-                                    {selectedFile ? selectedFile.name : "Haga clic o arrastre un archivo aquí"}
-                                </p>
-
-                                <p className="mt-1 text-xs text-gray-500">
-                                    PDF, JPG o PNG (máx. 5MB)
-                                </p>
-
-                                {selectedFile && (
-                                    <div className="mt-2 text-sm text-green-600 font-medium">
-                                        Archivo seleccionado: {selectedFile.name}
+                                {currentComprobanteData.paymentDetails.numero_referencia && (
+                                    <div className="flex items-center space-x-2">
+                                        <Hash size={16} className="text-purple-600" />
+                                        <div>
+                                            <p className="text-xs text-gray-500">Referencia</p>
+                                            <p className="text-sm font-medium text-gray-900 font-mono">
+                                                {currentComprobanteData.paymentDetails.numero_referencia}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                {currentComprobanteData.paymentDetails.monto && (
+                                    <div className="flex items-center space-x-2">
+                                        <DollarSign size={16} className="text-green-600" />
+                                        <div>
+                                            <p className="text-xs text-gray-500">Monto</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {currentComprobanteData.paymentDetails.metodo_pago_slug === 'bdv' ? 'Bs ' : '$ '}
+                                                {parseFloat(currentComprobanteData.paymentDetails.monto).toLocaleString('es-ES', {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                {currentComprobanteData.paymentDetails.metodo_pago && (
+                                    <div className="flex items-center space-x-2">
+                                        <CreditCard size={16} className="text-indigo-600" />
+                                        <div>
+                                            <p className="text-xs text-gray-500">Método</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {currentComprobanteData.paymentDetails.metodo_pago}
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
-
-                            {error && (
-                                <div className="mb-4 flex items-start bg-red-100 p-3 rounded text-sm text-red-600">
-                                    <AlertCircle size={16} className="mr-2 flex-shrink-0 mt-0.5" />
-                                    <span>{error}</span>
-                                </div>
-                            )}
-
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button
-                                    onClick={() => {
-                                        setShowUploadModal(false);
-                                        setSelectedFile(null);
-                                        setError("");
-                                    }}
-                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
-                                    disabled={isUploading}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={handleUpload}
-                                    disabled={!selectedFile || isUploading}
-                                    className={`px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${!selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
-                                        }`}
-                                >
-                                    {isUploading ? (
-                                        <>
-                                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                            <span>Subiendo...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Upload size={16} />
-                                            <span>{hasComprobante ? "Actualizar comprobante" : "Subir comprobante"}</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
                         </div>
-                    </motion.div>
+                    )}
+
+                    {isAdmin && hasComprobante && (
+                        <div className="pt-4 border-t border-gray-200">
+                            <VerificationSwitch
+                                item={currentComprobanteData}
+                                onChange={(updatedComprobante) => {
+                                    setLocalComprobanteData(updatedComprobante);
+                                    onStatusChange(updatedComprobante);
+                                }}
+                                readOnly={readOnly || isApproved}
+                                type="comprobante"
+                                labels={{
+                                    aprobado: "Comprobante aprobado",
+                                    pendiente: "Pendiente de revisión",
+                                    rechazado: "Rechazado"
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+
+            {/* Modal de PagosColg EXACTAMENTE como tú lo tenías */}
+            {showPaymentModal && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center p-6 border-b">
+                            <h3 className="text-xl font-semibold text-[#41023B]">
+                                {hasComprobante ? "Actualizar" : "Registrar"} Comprobante de Pago
+                            </h3>
+                            <button
+                                onClick={() => setShowPaymentModal(false)}
+                                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
+                                disabled={isProcessing}
+                            >
+                                <XCircle size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <PagosColg
+                                props={{
+                                    costo: costoInscripcion,
+                                    allowMultiplePayments: false,
+                                    handlePago: handlePaymentComplete
+                                }}
+                            />
+                        </div>
+                    </div>
                 </div>
             )}
-        </motion.div>
+
+            {/* Modal visor avanzado del comprobante */}
+            {showComprobanteViewer && comprobanteParaVer && (
+                <DocumentViewer
+                    documento={comprobanteParaVer}
+                    onClose={() => setShowComprobanteViewer(false)}
+                />
+            )}
+        </>
     );
 }
