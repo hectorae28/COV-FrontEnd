@@ -28,10 +28,10 @@ export default function InstitutionVerificationSwitch({
     ];
 
     // El estado actual de la institución (approved, rechazado, pending)
-    const status = institucion.verification_status || 'pending';
+    const status = institucion.verificado || null;
 
     // Verificar si la institución ya está aprobada
-    const isApproved = status === 'approved';
+    const isApproved = status === true;
 
     const handleStatusChange = (newStatus, event) => {
         // Prevenir propagación del evento
@@ -43,11 +43,11 @@ export default function InstitutionVerificationSwitch({
         if (isApproved || readOnly) return;
 
         // Si se intenta aprobar, mostrar el modal de confirmación
-        if (newStatus === 'approved') {
+        if (newStatus === true) {
             setIsApprovalOpen(true);
         }
         // Si se intenta rechazar, mostrar el modal de rechazo
-        else if (newStatus === 'rechazado') {
+        else if (newStatus === false) {
             setIsRejectionOpen(true);
         }
     };
@@ -56,8 +56,8 @@ export default function InstitutionVerificationSwitch({
     const confirmApproval = () => {
         onChange({
             ...institucion,
-            verification_status: 'approved',
-            rejection_reason: ''
+            verificado: true,
+            motivo_rechazo: ''
         }, index);
         setIsApprovalOpen(false);
     };
@@ -76,8 +76,8 @@ export default function InstitutionVerificationSwitch({
         // Actualizar institución con estado rechazado y motivo
         onChange({
             ...institucion,
-            verification_status: 'rechazado',
-            rejection_reason: finalReason
+            verificado: false,
+            motivo_rechazo: finalReason
         }, index);
 
         setIsRejectionOpen(false);
@@ -101,7 +101,7 @@ export default function InstitutionVerificationSwitch({
             {/* Contenedor específico para los botones de aprobar/rechazar */}
             <div className="flex items-center space-x-2 institution-verification-buttons">
                 <button
-                    onClick={(e) => handleStatusChange('approved', e)}
+                    onClick={(e) => handleStatusChange(true, e)}
                     disabled={isApproved || readOnly}
                     className={`p-2 rounded-md transition-all ${
                         isApproved
@@ -120,10 +120,10 @@ export default function InstitutionVerificationSwitch({
                 </button>
 
                 <button
-                    onClick={(e) => handleStatusChange('rechazado', e)}
+                    onClick={(e) => handleStatusChange(false, e)}
                     disabled={isApproved || readOnly}
                     className={`p-2 rounded-md transition-all ${
-                        status === 'rechazado'
+                        status === false
                             ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
                             : 'bg-gray-100 text-gray-500 hover:bg-red-50'
                     } ${(isApproved || readOnly) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -140,20 +140,20 @@ export default function InstitutionVerificationSwitch({
 
                 <span 
                     className={`text-sm font-medium ${
-                        status === 'approved' ? 'text-green-700' :
-                        status === 'rechazado' ? 'text-red-700' :
+                        status === true ? 'text-green-700' :
+                        status === false ? 'text-red-700' :
                         'text-gray-600'
                     }`}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {status === 'approved' && (
+                    {status === true && (
                         <span className="flex items-center">
                             <Shield size={16} className="mr-1" />
                             Aprobada
                         </span>
                     )}
-                    {status === 'rechazado' && 'Rechazada'}
-                    {status === 'pending' && 'Pendiente'}
+                    {status === false && 'Rechazada'}
+                    {status === null && 'Pendiente'}
                 </span>
             </div>
 
@@ -274,12 +274,12 @@ export default function InstitutionVerificationSwitch({
             )}
 
             {/* Mostrar motivo del rechazo si existe */}
-            {status === 'rechazado' && institucion.rejection_reason && (
+            {status === false && institucion.motivo_rechazo && (
                 <div 
                     className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-md border border-red-200"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <span className="font-medium">Motivo de rechazo:</span> {institucion.rejection_reason}
+                    <span className="font-medium">Motivo de rechazo:</span> {institucion.motivo_rechazo}
                 </div>
             )}
         </div>

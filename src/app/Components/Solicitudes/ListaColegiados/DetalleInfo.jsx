@@ -373,7 +373,9 @@ export default function DetalleInfo({
       homePhone: data.persona?.telefono_de_habitacion || "",
       address: data.persona?.direccion?.referencia || "",
       city: data.persona?.direccion?.municipio || "",
-      state: data.persona?.direccion?.estado || ""
+      city_name: data.persona?.direccion?.municipio_nombre || "",
+      state: data.persona?.direccion?.estado || "",
+      state_name: data.persona?.direccion?.estado_nombre || ""
     });
 
     setDatosAcademicos({

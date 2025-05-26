@@ -146,23 +146,20 @@ export default function InstitutionsSection({
 
   // Manejar cambio de estado de verificación de instituciones
   const handleInstitutionStatusChange = (updatedInstitution, index) => {
+    console.log(updatedInstitution);
+    console.log(index);
     const updatedInstituciones = [...instituciones];
     updatedInstituciones[index] = {
       ...updatedInstituciones[index],
-      verificacion: updatedInstitution.verification_status,
-      motivo_rechazo: updatedInstitution.rejection_reason || ''
+      verificado: updatedInstitution.verificado,
+      motivo_rechazo: updatedInstitution.motivo_rechazo || ''
     };
 
     setInstituciones(updatedInstituciones);
-
     // Actualizar en backend
     const updateData_verification = {
-      [`instituciones[${index}].verification_status`]: updatedInstitution.verification_status,
+      instituciones: updatedInstituciones,
     };
-
-    if (updatedInstitution.rejection_reason) {
-      updateData_verification[`instituciones[${index}].rejection_reason`] = updatedInstitution.rejection_reason;
-    }
 
     updateData(pendienteId, updateData_verification);
   };

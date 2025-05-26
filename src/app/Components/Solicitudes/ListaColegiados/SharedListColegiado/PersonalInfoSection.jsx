@@ -166,23 +166,23 @@ export default function PersonalInfoSection({
         {/* Segunda fila - Nombres */}
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer nombre</p>
-          <p className="font-medium text-gray-800">{tempFormData?.firstName || datosPersonales?.nombre || "No especificado"}</p>
+          <p className="font-medium text-gray-800">{tempFormData?.firstName || datosPersonales?.nombre || ""}</p>
         </div>
 
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo nombre</p>
-          <p className="font-medium text-gray-800">{tempFormData?.secondName || datosPersonales?.segundo_nombre || "No especificado"}</p>
+          <p className="font-medium text-gray-800">{tempFormData?.secondName || datosPersonales?.segundo_nombre || ""}</p>
         </div>
 
         {/* Tercera fila - Apellidos */}
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer apellido</p>
-          <p className="font-medium text-gray-800">{tempFormData?.firstLastName || datosPersonales?.primer_apellido || "No especificado"}</p>
+          <p className="font-medium text-gray-800">{tempFormData?.firstLastName || datosPersonales?.primer_apellido || ""}</p>
         </div>
 
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo apellido</p>
-          <p className="font-medium text-gray-800">{tempFormData?.secondLastName || datosPersonales?.segundo_apellido || "No especificado"}</p>
+          <p className="font-medium text-gray-800">{tempFormData?.secondLastName || datosPersonales?.segundo_apellido || ""}</p>
         </div>
       </div>
 
