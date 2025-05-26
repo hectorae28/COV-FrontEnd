@@ -8,10 +8,10 @@ import {
   X,
   FileCheck,
   Eye,
+  FileText,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-// import { DocumentViewer } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 
 // Componentes importados
 import PagosColg from "@/Components/PagosModal"
@@ -27,6 +27,7 @@ import ServiciosSection from "@/Components/Solicitudes/Solicitudes/ServiciosSect
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import transformBackendData from "@/utils/formatDataSolicitudes";
 import api from "@/api/api";
+import { generateConstanciaPDF, downloadPDF, openPDF } from "@/utils/PDF/constanciasPDFService";
 
 export default function DetalleSolicitud({ props }) {
   const { id, isAdmin } = props;
@@ -52,6 +53,7 @@ export default function DetalleSolicitud({ props }) {
   const [mostrarModalPagos, setMostrarModalPagos] = useState(false);
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null);
   const [documentosSistema, setDocumentosSistema] = useState([]);
+  const [loadingDocumentos, setLoadingDocumentos] = useState(false);
 
   // Estados para formularios
   const [motivoRechazo, setMotivoRechazo] = useState("");
@@ -72,6 +74,16 @@ export default function DetalleSolicitud({ props }) {
   useEffect(() => {
     loadSolicitudById();
   }, [id,]);
+
+  // Verificar si hay solicitudes hijas aprobadas al cargar o actualizar la solicitud
+  useEffect(() => {
+    console.log("useEffect - solicitud:", solicitud);
+    if (solicitud && solicitud.itemsSolicitud) {
+      console.log("useEffect - itemsSolicitud:", solicitud.itemsSolicitud);
+      // Cargar documentos si hay constancias en la solicitud
+      cargarDocumentosSistema();
+    }
+  }, [solicitud]);
 
   // Calcular totales
   const calcularTotales = (solicitudData) => {
@@ -229,25 +241,88 @@ export default function DetalleSolicitud({ props }) {
 
   // Función para cargar documentos generados por el sistema
   const cargarDocumentosSistema = async () => {
-    // Verificar si todas las solicitudes hijas están aprobadas
-    if (solicitud && solicitud.itemsSolicitud && 
-        solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada')) {
-      // Aquí se implementaría la lógica para cargar documentos generados por el sistema
-      setDocumentosSistema([
-        { id: 1, nombre: "Constancia de inscripción", url: "/docs/constancia.pdf" },
-        { id: 2, nombre: "Comprobante de pago", url: "/docs/comprobante.pdf" },
-        { id: 3, nombre: "Certificado", url: "/docs/certificado.pdf" },
-      ]);
+    console.log("cargarDocumentosSistema - solicitud:", solicitud);
+    if (!solicitud || !solicitud.itemsSolicitud) {
+      console.log("No hay solicitud o itemsSolicitud");
+      return;
+    }
+    
+    setLoadingDocumentos(true);
+    try {
+      console.log("itemsSolicitud:", solicitud.itemsSolicitud);
+      
+      // Simplemente filtrar las constancias de la solicitud
+      const constancias = solicitud.itemsSolicitud.filter(
+        item => item.tipo === 'Constancia'
+      );
+
+      console.log("constancias encontradas:", constancias);
+
+      const documentosGenerados = constancias.map(constancia => ({
+        id: constancia.id,
+        nombre: constancia.nombre,
+        tipo: constancia.tipoConstancia, // fallback
+        solicitudId: solicitud.id
+      }));
+
+      console.log("documentosGenerados:", documentosGenerados);
+      setDocumentosSistema(documentosGenerados);
+    } catch (error) {
+      console.error("Error al cargar documentos del sistema:", error);
+      mostrarAlerta("alerta", "Error al cargar los documentos del sistema");
+    } finally {
+      setLoadingDocumentos(false);
     }
   };
 
-  // Verificar si hay solicitudes hijas aprobadas al cargar o actualizar la solicitud
-  useEffect(() => {
-    if (solicitud && solicitud.itemsSolicitud && 
-        solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada')) {
-      cargarDocumentosSistema();
+  // Función para visualizar PDF de constancia
+  const handleVisualizarConstancia = async (documento) => {
+    try {
+      console.log("Generando PDF para:", documento);
+      
+      // Ir directamente al endpoint de datos usando el ID
+      const datosResponse = await api.get(`/solicitudes/constancia/${documento.solicitudId}/datos/`);
+      const datosCompletos = datosResponse.data;
+      
+      // Limpiar el tipo de constancia para el PDF
+      let tipoConstanciaLimpio = documento.tipo;
+      if (tipoConstanciaLimpio && tipoConstanciaLimpio.startsWith('constancia_')) {
+        tipoConstanciaLimpio = tipoConstanciaLimpio.replace('constancia_', '');
+      }
+      console.log("tipoConstanciaLimpio:", tipoConstanciaLimpio);
+      
+      const { docDefinition } = generateConstanciaPDF(datosCompletos, tipoConstanciaLimpio);
+      const pdfUrl = await openPDF(docDefinition);
+      setDocumentoSeleccionado({ url: pdfUrl, nombre: documento.nombre, isAPDF: true });
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      mostrarAlerta("alerta", "Error al generar el documento PDF");
     }
-  }, [solicitud]);
+  };
+
+  // Función para descargar PDF de constancia
+  const handleDescargarConstancia = async (documento) => {
+    try {
+      console.log("Descargando PDF para:", documento);
+      
+      // Ir directamente al endpoint de datos usando el ID
+      const datosResponse = await api.get(`/solicitudes/constancia/${documento.solicitudId}/datos/`);
+      const datosCompletos = datosResponse.data;
+      
+      // Limpiar el tipo de constancia para el PDF
+      let tipoConstanciaLimpio = documento.tipo;
+      if (tipoConstanciaLimpio && tipoConstanciaLimpio.startsWith('constancia_')) {
+        tipoConstanciaLimpio = tipoConstanciaLimpio.replace('constancia_', '');
+      }
+      
+      const { docDefinition, fileName } = generateConstanciaPDF(datosCompletos, tipoConstanciaLimpio);
+      await downloadPDF(docDefinition, fileName);
+      mostrarAlerta("exito", "Documento descargado correctamente");
+    } catch (error) {
+      console.error("Error al descargar PDF:", error);
+      mostrarAlerta("alerta", "Error al descargar el documento PDF");
+    }
+  };
 
   // Función para mostrar alertas temporales
   const mostrarAlerta = (tipo, mensaje) => {
@@ -276,7 +351,6 @@ export default function DetalleSolicitud({ props }) {
   // Handler for document status change (approve/reject)
   const handleDocumentStatusChange = async (updatedDocument) => {
     try {
-      console.log("updatedDocument", updatedDocument)
       const requestBody = {
         [`file_${updatedDocument.id}_validate`]: updatedDocument.status === 'approved',
         [`file_${updatedDocument.id}_motivo_rechazo`]: updatedDocument.rejectionReason
@@ -394,39 +468,67 @@ export default function DetalleSolicitud({ props }) {
         recaudosId={pendienteId}
       /> */}
 
-      {/* Documentos generados por el sistema - Solo visible cuando los pagos están aprobados */}
+      {/* Documentos generados por el sistema - Visible cuando hay constancias aprobadas */}
       {solicitud.estado === "Aprobada" && (
         <div className="bg-white rounded-lg shadow-md p-4 mb-5">
           <h2 className="text-base font-medium text-gray-900 mb-3 flex items-center">
             <FileCheck size={18} className="mr-2 text-blue-600" />
             Documentos generados por el sistema
+            <button 
+              onClick={() => {
+                console.log("Debug - solicitud completa:", solicitud);
+                console.log("Debug - itemsSolicitud:", solicitud.itemsSolicitud);
+                console.log("Debug - documentosSistema:", documentosSistema);
+                cargarDocumentosSistema();
+              }}
+              className="ml-2 text-xs bg-gray-200 px-2 py-1 rounded"
+            >
+              Debug
+            </button>
           </h2>
-          <div className="space-y-3">
-            {documentosSistema.map((documento) => (
-              <div key={documento.id} className="border rounded-lg p-3 flex justify-between items-center bg-gray-50">
-                <div className="flex items-center">
-                  <FileCheck size={18} className="text-blue-500 mr-2" />
-                  <div>
-                    <p className="font-medium">{documento.nombre}</p>
+          
+          {loadingDocumentos ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C40180]"></div>
+              <span className="ml-2 text-gray-600">Cargando documentos...</span>
+            </div>
+          ) : documentosSistema.length > 0 ? (
+            <div className="space-y-3">
+              {documentosSistema.map((documento) => (
+                <div key={documento.id} className="border rounded-lg p-3 flex justify-between items-center bg-gray-50">
+                  <div className="flex items-center">
+                    <FileText size={18} className="text-blue-500 mr-2" />
+                    <div>
+                      <p className="font-medium">{documento.nombre}</p>
+                      <p className="text-sm text-gray-500">Documento disponible para generar</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleVisualizarConstancia(documento)}
+                      className="text-blue-600 hover:text-blue-800 p-2 rounded-md hover:bg-blue-50 transition-colors"
+                      title="Visualizar documento"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDescargarConstancia(documento)}
+                      className="text-green-600 hover:text-green-800 p-2 rounded-md hover:bg-green-50 transition-colors"
+                      title="Descargar documento"
+                    >
+                      <Download size={16} />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleVerDocumento(documento.url)}
-                    className="text-blue-600 hover:text-blue-800 p-1"
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button 
-                    onClick={() => window.open(documento.url, '_blank')}
-                    className="text-blue-600 hover:text-blue-800 p-1"
-                  >
-                    <Download size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <FileText size={48} className="mx-auto mb-2 text-gray-300" />
+              <p>No hay documentos disponibles</p>
+              <p className="text-sm">Los documentos se generarán automáticamente cuando las constancias sean aprobadas</p>
+            </div>
+          )}
         </div>
       )}
 

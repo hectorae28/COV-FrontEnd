@@ -63,13 +63,14 @@ export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
   let especializacion = 0;
 
   solicitudJson.itemsSolicitud.forEach(item => {
+    console.log({item})
     if (item.tipo === "Carnet") {
       costo_solicitud_carnet = item.costo.id;
     } else if (item.tipo === "Especializacion") {
       costo_solicitud_especializacion = item.costo.id;
       especializacion = 1;
     } else if (item.tipo === "Constancia") {
-      constancias.push(item.codigo);
+      constancias.push({code:item.codigo,institucion:item?.institucionId});
     }
   });
 
@@ -229,7 +230,7 @@ export const useSolicitudesStore = create((set, get) => ({
     set({ loading: true });
     try {
       const formData = convertJsonToFormData(solicitudJson, opcionales);
-      
+      console.log({formData})
       const response = await postDataSolicitud('solicitud', formData);
       const solicitud = await get().getSolicitudById(response.data.id);
       

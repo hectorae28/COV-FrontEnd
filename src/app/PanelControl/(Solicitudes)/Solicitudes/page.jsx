@@ -22,7 +22,7 @@ import transformBackendData from "@/utils/formatDataSolicitudes";
 import {useRouter} from "next/navigation"
 export default function ListaSolicitudes({props}) {
   // Force isAdmin to be true for PanelControl
-  const isAdmin = false;
+  const isAdmin = props ? props.isAdmin : true;
   
   // Estados para manejar los datos
   //const [solicitudes, setSolicitudes] = useState([])
@@ -39,7 +39,7 @@ export default function ListaSolicitudes({props}) {
   const loading = useSolicitudesStore((state)=>state.loading)
   const [searchTerm, setSearchTerm] = useState("")
   const [showModal, setShowModal] = useState(false)
-  const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(null)
+  const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(props?.colegiadoId)
   //const [colegiados, setColegiados] = useState([])
   const user = useColegiadoUserStore((state) => state.colegiadoUser);
   const addSolicitud = useSolicitudesStore((state) => state.addSolicitud);
@@ -57,7 +57,6 @@ export default function ListaSolicitudes({props}) {
   const loadTiposSolicitud = async () => {
     try {
       await initStore();
-      console.log(tipos_solicitud)
     } catch (error) {
       console.error("Error al cargar tipos de solicitud:", error);
     }
@@ -69,12 +68,12 @@ export default function ListaSolicitudes({props}) {
   const TypeSolicitudes = {
     todas: solicitudes,
     abierta: solicitudesAbiertas,
-    cerrada: solicitudesCerradas
+    cerradas: solicitudesCerradas
   }
   const PaginationSolicitudes = {
     todas: solicitudesPagination,
     abierta: solicitudesAbiertasPagination,
-    cerrada: solicitudesCerradasPagination
+    cerradas: solicitudesCerradasPagination
   }
   // Filtrar solicitudes basado en búsqueda, tab actual y filtro de costo
   const solicitudesFiltradas = useMemo(() => {
@@ -95,6 +94,7 @@ export default function ListaSolicitudes({props}) {
 
   // Función para manejar la creación exitosa de una nueva solicitud
   const handleSolicitudCreada = async (nuevaSolicitud) => {
+    console.log("nuevaSolicitud", nuevaSolicitud)
     const solCreada= await addSolicitud({...nuevaSolicitud, creador:{id:user.id}})
     setSolicitudCreada(solCreada)
   }
@@ -319,17 +319,22 @@ export default function ListaSolicitudes({props}) {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {solicitudesFiltradas?.map((solicitudNoFormat, index) => {
-                    console.log({solicitudNoFormat,text:'solicitudNoFormat'});
                     const solicitud = transformBackendData(solicitudNoFormat);
                     return (
                       <tr
                         key={index}
                         className="hover:bg-gray-50 cursor-pointer"
-                        onClick={() =>
-                          router.push(
-                            `/PanelControl/Solicitudes/${solicitud.id}`
-                          )
-                        }
+                        onClick={() => {
+                          if(!isAdmin){
+                            router.push(
+                              `/Colegiado/Solicitudes/${solicitud.id}`
+                            )
+                          }else{
+                            router.push(
+                              `/PanelControl/Solicitudes/${solicitud.id}`
+                            )
+                          }
+                        }}
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="font-medium text-gray-900">
@@ -443,25 +448,27 @@ export default function ListaSolicitudes({props}) {
       {/* Modal para crear nueva solicitud */}
       {showModal && (
         <CrearSolicitudModal
-          onClose={() => {
-            setShowModal(false);
-            setColegiadoSeleccionado(null);
-            setSolicitudCreada(null);
-          }}
-          onSolicitudCreada={handleSolicitudCreada}
-          //colegiados={colegiados}
-          colegiadoPreseleccionado={colegiadoSeleccionado}
-          onVerDetalle={verDetalleSolicitud}
-          session={{
-            user: {
-              name: "Administrador",
-              email: "admin@ejemplo.com",
-              role: "admin",
-              isAdmin: isAdmin,
+          props={{
+            onClose: () => {
+              setShowModal(false);
+              setColegiadoSeleccionado(null);
+              setSolicitudCreada(null);
             },
+            onSolicitudCreada: handleSolicitudCreada,
+            colegiadoPreseleccionado: props?.colegiadoId,
+            onVerDetalle: verDetalleSolicitud,
+            session: {
+              user: {
+                name: "Administrador",
+                email: "admin@ejemplo.com",
+                role: "admin",
+                isAdmin: isAdmin,
+              },
+            },
+            solicitudCreada: solicitudCreada,
+            isAdmin: isAdmin,
+            tipoSolicitud: null,
           }}
-          solicitudCreada={solicitudCreada}
-          isAdmin={isAdmin}
         />
       )}
     </div>

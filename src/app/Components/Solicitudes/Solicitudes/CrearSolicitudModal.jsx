@@ -5,17 +5,18 @@ import { useState } from "react"
 import SeleccionarSolicitudesStep from "./StepsSeleccionarSolic"
 import Link from "next/link"
 
-export default function CrearSolicitudModal({
-  onClose,
-  onSolicitudCreada,
-  colegiados = [],
-  colegiadoPreseleccionado = null,
-  onVerDetalle,
-  session,
-  tipoSolicitud = null,
-  solicitudCreada,
-  isAdmin=false
-}) {
+export default function CrearSolicitudModal({props}) {
+  const {
+    onClose,
+    onSolicitudCreada,
+    colegiados = [],
+    colegiadoPreseleccionado,
+    onVerDetalle,
+    session,
+    tipoSolicitud = null,
+    solicitudCreada,
+    isAdmin=false
+  } = props
   // Función para manejar la creación de solicitud
   const handleSolicitudCreada = (nuevaSolicitud) => {
     onSolicitudCreada(nuevaSolicitud)

@@ -58,11 +58,14 @@ function transformItem(item, type) {
       ? `Constancia: ${item.tipo_constancia.split("_").slice(1).map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ")}`
       : type,
     costo: parseFloat(item.monto.toFixed(2)),
+    institucion: item.institucion,
     exonerado: false,
     codigo: type === "Especialización" ? "ESPEC" : type === "Carnet" ? "CARNET" : "CONST",
     documentosRequeridos: type === "Especialización"
       ? Object.keys(item.archivos || {})
-      : []
+      : [],
+    estado: mapStatusToEstado(item.status),
+    tipoConstancia: type === "Constancia" ? item.tipo_constancia : null
   };
 }
 
@@ -136,4 +139,16 @@ function getConstanciaSubtype(id) {
 function getConstanciaNombre(id) {
   const subtype = getConstanciaSubtype(id);
   return subtype ? `Constancia: ${subtype}` : "Constancia";
+}
+
+function mapStatusToEstado(status) {
+  // Mapear el status del backend al estado del frontend
+  switch (status) {
+    case "aprobado":
+      return "Aprobada";
+    case "rechazado":
+      return "Rechazada";
+    default:
+      return "Pendiente";
+  }
 }
