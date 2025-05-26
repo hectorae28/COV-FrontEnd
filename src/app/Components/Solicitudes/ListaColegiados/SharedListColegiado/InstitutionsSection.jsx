@@ -6,8 +6,7 @@ import { useState } from "react";
 
 import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
-import InstitutionVerificationSwitch from "./InstitutionVerificationSwitch";
-import { id } from "date-fns/locale";
+import VerificationSwitch from "../VerificationSwitch";
 
 export default function InstitutionsSection({
   pendiente,
@@ -285,10 +284,10 @@ export default function InstitutionsSection({
               {/* Switch de verificación para admin */}
               {isAdmin && !readOnly && (
                 <div className="pt-4 border-t border-gray-200">
-                  <InstitutionVerificationSwitch
-                    institucion={institucion}
+                  <VerificationSwitch
+                    item={institucion}
+                    type="institucion"
                     onChange={handleInstitutionStatusChange}
-                    readOnly={readOnly}
                     index={index}
                   />
                 </div>
