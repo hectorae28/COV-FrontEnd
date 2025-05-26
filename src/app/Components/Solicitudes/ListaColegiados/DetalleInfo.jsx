@@ -417,7 +417,79 @@ export default function DetalleInfo({
   };
 
   // Función para manejar el estado de documentos
-  const handleDocumentStatusChange = (updatedDocument) => {
+  // En DetalleInfo.jsx, actualiza la función handleDocumentStatusChange
+
+const handleDocumentStatusChange = (updatedDocument) => {
+  // Para pendientes, actualizar entityData directamente ya que DocumentModule
+  // maneja los documentos internamente desde pendienteData
+  if (tipo === "pendiente") {
+    // Actualizar entityData localmente para reflejar el cambio inmediatamente
+    setEntityData(prevData => {
+      const updatedData = { ...prevData };
+      
+      // Actualizar los campos de validación correspondientes
+      const docId = updatedDocument.id;
+      const validateField = `${docId}_validate`;
+      const motivoField = `${docId}_motivo_rechazo`;
+      
+      updatedData[validateField] = 
+        updatedDocument.status === "pending" ? null :
+        updatedDocument.status === "approved" ? true : false;
+      
+      if (updatedDocument.rejectionReason) {
+        updatedData[motivoField] = updatedDocument.rejectionReason;
+      } else {
+        delete updatedData[motivoField];
+      }
+      
+      return updatedData;
+    });
+
+    // Preparar datos para el backend
+    const updateData = {
+      [`${updatedDocument.id}_validate`]:
+        updatedDocument.status === "pending" ? null :
+        updatedDocument.status === "approved" ? true : false,
+    };
+    
+    if (updatedDocument.rejectionReason) {
+      updateData[`${updatedDocument.id}_motivo_rechazo`] = updatedDocument.rejectionReason;
+    }
+
+    // Actualizar en el backend
+    if (!recaudos) {
+      updateColegiadoPendiente(entityId, updateData)
+        .then((response) => {
+          if (response && response.data) {
+            // Sincronizar con la respuesta del servidor
+            setEntityData(prevData => ({
+              ...prevData,
+              ...response.data
+            }));
+          }
+        })
+        .catch((error) => {
+          console.error("Error al actualizar estado del documento:", error);
+          // Revertir el cambio local si falla
+          loadData();
+        });
+    } else {
+      updateColegiadoPendienteWithToken(entityId, updateData)
+        .then((response) => {
+          if (response && response.data) {
+            setEntityData(prevData => ({
+              ...prevData,
+              ...response.data
+            }));
+          }
+        })
+        .catch((error) => {
+          console.error("Error al actualizar estado del documento:", error);
+          loadData();
+        });
+    }
+  } else {
+    // Para colegiados registrados, mantener la lógica original
     const docsCopy = [...documentos];
     const index = docsCopy.findIndex((doc) => doc.id === updatedDocument.id);
     if (index !== -1) {
@@ -431,19 +503,17 @@ export default function DetalleInfo({
 
     const updateData = {
       [`${updatedDocument.id}_validate`]:
-        updatedDocument.status === "pending"
-          ? null
-          : updatedDocument.status === "approved"
-            ? true
-            : false,
+        updatedDocument.status === "pending" ? null :
+        updatedDocument.status === "approved" ? true : false,
     };
+    
     if (updatedDocument.rejectionReason) {
-      updateData[`${updatedDocument.id}_motivo_rechazo`] =
-        updatedDocument.rejectionReason;
+      updateData[`${updatedDocument.id}_motivo_rechazo`] = updatedDocument.rejectionReason;
     }
 
-    updateColegiadoPendiente(entityId, updateData);
-  };
+    updateColegiado(entityId, updateData);
+  }
+};
 
   // Función para manejar el upload del comprobante
   const handleUploadComprobante = async (formData) => {
@@ -545,56 +615,70 @@ export default function DetalleInfo({
   };
 
   // Validación actualizada para incluir comprobante
-  const allDocumentsApproved = () => {
-    // Obtener el tipo de profesión
-    const tipoProfesion = entityData?.tipo_profesion || "odontologo";
+  // Validación actualizada para incluir comprobante
+const allDocumentsApproved = () => {
+  // Usar entityData actualizado en lugar de documentos state
+  const currentData = entityData;
+  if (!currentData) return false;
 
-    // Para odontólogos: verificar solo 4 documentos base
-    const documentosRequeridosBase = [
-      "file_ci",
-      "file_rif",
-      "file_fondo_negro",
-      "file_mpps",
+  // Obtener el tipo de profesión
+  const tipoProfesion = currentData.tipo_profesion || "odontologo";
+  
+  console.log("Validando documentos - Tipo profesión:", tipoProfesion);
+  console.log("Datos actuales:", currentData);
+
+  // Para odontólogos: verificar solo 4 documentos base
+  const documentosRequeridosBase = [
+    "file_ci",
+    "file_rif", 
+    "file_fondo_negro",
+    "file_mpps",
+  ];
+  
+  const documentosAdicionales = [
+    "fondo_negro_credencial",
+    "notas_curso", 
+    "fondo_negro_titulo_bachiller",
+  ];
+
+  let documentosRequeridos;
+  if (tipoProfesion === "odontologo") {
+    documentosRequeridos = documentosRequeridosBase;
+  } else {
+    documentosRequeridos = [
+      ...documentosRequeridosBase,
+      ...documentosAdicionales,
     ];
-    const documentosAdicionales = [
-      "fondo_negro_credencial",
-      "notas_curso",
-      "fondo_negro_titulo_bachiller",
-    ];
+  }
 
-    let documentosRequeridos;
-    if (tipoProfesion === "odontologo") {
-      documentosRequeridos = documentosRequeridosBase;
-    } else {
-      documentosRequeridos = [
-        ...documentosRequeridosBase,
-        ...documentosAdicionales,
-      ];
-    }
+  // Verificar documentos requeridos
+  const docsApproved = documentosRequeridos.every((docId) => {
+    const validateField = `${docId}_validate`;
+    const urlField = `${docId}_url`;
+    
+    const hasFile = currentData[urlField];
+    const isApproved = currentData[validateField] === true;
+    
+    console.log(`Documento ${docId}: archivo=${!!hasFile}, aprobado=${isApproved}`);
+    
+    return hasFile && isApproved;
+  });
 
-    // Verificar directamente en entityData en lugar de usar documentos state
-    const docsApproved = documentosRequeridos.every((docId) => {
-      const validateField = `${docId}_validate`;
-      const urlField = `${docId}_url`;
+  console.log("Documentos aprobados:", docsApproved);
 
-      return entityData?.[urlField] && entityData?.[validateField] === true;
-    });
+  // Verificar comprobante de pago si no está exonerado
+  if (!currentData.pago_exonerado) {
+    const comprobanteApproved = 
+      comprobanteData?.status === "approved" && comprobanteData?.url;
+    
+    console.log("Comprobante aprobado:", comprobanteApproved);
+    console.log("Comprobante data:", comprobanteData);
 
-    console.log("Documentos aprobados:", docsApproved);
-    console.log("Tipo profesión:", tipoProfesion);
-    console.log("Documentos requeridos:", documentosRequeridos);
+    return docsApproved && comprobanteApproved;
+  }
 
-    // Verificar comprobante de pago si no está exonerado
-    if (!entityData?.pago_exonerado) {
-      const comprobanteApproved =
-        comprobanteData?.status === "approved" && comprobanteData?.url;
-      console.log("Comprobante aprobado:", comprobanteApproved);
-
-      return docsApproved && comprobanteApproved;
-    }
-
-    return docsApproved;
-  };
+  return docsApproved;
+};
 
   // Funciones para modales de pendientes
   const handleAprobarSolicitud = async () => {
@@ -922,16 +1006,14 @@ export default function DetalleInfo({
           />
 
           <DocumentSection
-            documentos={[]} // Array vacío ya que ahora DocumentModule maneja la carga
-            onViewDocument={handleVerDocumento}
-            updateDocumento={updateDocumento}
-            onDocumentStatusChange={handleDocumentStatusChange}
-            title="Documentos requeridos"
-            subtitle="Documentación obligatoria del solicitante"
-            readonly={entityData?.status === "anulado"}
-            isColegiado={isColegiado}
-            pendienteData={entityData} // NUEVO: Pasar los datos del pendiente
-          />
+  documentos={[]} // Vacío porque DocumentModule usa pendienteData
+  onViewDocument={handleVerDocumento}
+  updateDocumento={updateDocumento}
+  onDocumentStatusChange={handleDocumentStatusChange}
+  readonly={entityData?.status === "anulado"}
+  isColegiado={isColegiado}
+  pendienteData={entityData} // Datos actualizados del pendiente
+/>
 
           {/* Nueva sección de comprobante de pago */}
           {isAdmin && !entityData.pago_exonerado && (
