@@ -672,6 +672,12 @@ export default function RegistrationForm(props) {
 
   const CurrentIcon = steps[currentStep - 1]?.icon
 
+  const [documentosRequeridos, setDocumentosRequeridos] = useState({
+  required: [],
+  uploaded: [],
+  approved: []
+});
+
   return (
     <>
       <Head>

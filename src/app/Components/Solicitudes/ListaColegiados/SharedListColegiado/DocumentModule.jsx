@@ -8,12 +8,12 @@ import {
   FileText,
   Pencil,
   RefreshCcw,
-  Upload, X
+  Upload, 
+  X
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import VerificationSwitch from "../VerificationSwitch";
 
-// Componente principal de gestión de documentos
 export function DocumentSection({
   documentos = [],
   onViewDocument,
@@ -24,29 +24,68 @@ export function DocumentSection({
   isColegiado = false,
   pendienteData = null
 }) {
-  // Estados para el modal de edición de documentos
+  // Estados para el modal de edición y subida
   const [showModal, setShowModal] = useState(false);
   const [localFormData, setLocalFormData] = useState(null);
   const [documentoParaSubir, setDocumentoParaSubir] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
-  const fileInputRef = useRef(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedDocumentName, setUploadedDocumentName] = useState("");
+  
+  // Estados para manejo optimista
+  const [localPendienteData, setLocalPendienteData] = useState(pendienteData);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  const fileInputRef = useRef(null);
 
-  // Función para cargar documentos de pendientes DENTRO de DocumentModule
-  const loadPendienteDocuments = useCallback((pendienteData) => {
-    if (!pendienteData) return [];
+  // Sincronizar datos cuando cambien los props
+  useEffect(() => {
+    setLocalPendienteData(pendienteData);
+    setRefreshTrigger(prev => prev + 1);
+  }, [pendienteData]);
+
+  // Función para cargar documentos de pendientes
+  const loadPendienteDocuments = useCallback((data) => {
+    if (!data) return [];
 
     const documentosMetadata = {
-      file_ci: { nombre: "Cédula de identidad", descripcion: "Copia escaneada por ambos lados", requerido: true },
-      file_rif: { nombre: "RIF", descripcion: "Registro de Información Fiscal", requerido: true },
-      file_fondo_negro: { nombre: "Título universitario fondo negro", descripcion: "Título de Odontólogo con fondo negro", requerido: true },
-      file_mpps: { nombre: "Registro MPPS", descripcion: "Registro del Ministerio del Poder Popular para la Salud", requerido: true },
-      fondo_negro_credencial: { nombre: "Credencial fondo negro", descripcion: "Credencial profesional con fondo negro", requerido: (tipo) => tipo !== "odontologo" },
-      notas_curso: { nombre: "Notas del curso", descripcion: "Certificado de notas académicas", requerido: (tipo) => tipo !== "odontologo" },
-      fondo_negro_titulo_bachiller: { nombre: "Título bachiller fondo negro", descripcion: "Título de bachiller con fondo negro", requerido: (tipo) => tipo !== "odontologo" }
+      file_ci: { 
+        nombre: "Cédula de identidad", 
+        descripcion: "Copia escaneada por ambos lados", 
+        requerido: true 
+      },
+      file_rif: { 
+        nombre: "RIF", 
+        descripcion: "Registro de Información Fiscal", 
+        requerido: true 
+      },
+      file_fondo_negro: { 
+        nombre: "Título universitario fondo negro", 
+        descripcion: "Título de Odontólogo con fondo negro", 
+        requerido: true 
+      },
+      file_mpps: { 
+        nombre: "Registro MPPS", 
+        descripcion: "Registro del Ministerio del Poder Popular para la Salud", 
+        requerido: true 
+      },
+      fondo_negro_credencial: { 
+        nombre: "Credencial fondo negro", 
+        descripcion: "Credencial profesional con fondo negro", 
+        requerido: (tipo) => tipo !== "odontologo" 
+      },
+      notas_curso: { 
+        nombre: "Notas del curso", 
+        descripcion: "Certificado de notas académicas", 
+        requerido: (tipo) => tipo !== "odontologo" 
+      },
+      fondo_negro_titulo_bachiller: { 
+        nombre: "Título bachiller fondo negro", 
+        descripcion: "Título de bachiller con fondo negro", 
+        requerido: (tipo) => tipo !== "odontologo" 
+      }
     };
 
     const obtenerNombreArchivo = (url) => {
@@ -55,113 +94,102 @@ export function DocumentSection({
       return partes[partes.length - 1];
     };
 
-    // Obtener el tipo de profesión
-    const tipoProfesion = pendienteData.tipo_profesion || 'odontologo';
-    console.log("Tipo de profesión detectado:", tipoProfesion);
-
-    // Definir qué documentos mostrar según el tipo de profesión
+    const tipoProfesion = data.tipo_profesion || 'odontologo';
     const documentosParaMostrar = tipoProfesion === 'odontologo'
       ? ['file_ci', 'file_rif', 'file_fondo_negro', 'file_mpps']
       : ['file_ci', 'file_rif', 'file_fondo_negro', 'file_mpps', 'fondo_negro_credencial', 'notas_curso', 'fondo_negro_titulo_bachiller'];
-
-    console.log("Documentos para mostrar:", documentosParaMostrar);
 
     const todosLosDocumentos = [
       {
         id: "file_ci",
         nombre: documentosMetadata.file_ci.nombre,
         descripcion: documentosMetadata.file_ci.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.file_ci_url),
+        archivo: obtenerNombreArchivo(data.file_ci_url),
         requerido: documentosMetadata.file_ci.requerido,
-        url: pendienteData.file_ci_url,
-        status: pendienteData.file_ci_validate === null ? 'pending' : pendienteData.file_ci_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.file_ci_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.file_ci_motivo_rechazo || ''
+        url: data.file_ci_url,
+        status: data.file_ci_validate === null ? 'pending' : data.file_ci_validate ? 'approved' : 'rechazado',
+        isReadOnly: data.file_ci_status === 'approved' && data.status === 'rechazado',
+        rejectionReason: data.file_ci_motivo_rechazo || ''
       },
       {
         id: "file_rif",
         nombre: documentosMetadata.file_rif.nombre,
         descripcion: documentosMetadata.file_rif.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.file_rif_url),
+        archivo: obtenerNombreArchivo(data.file_rif_url),
         requerido: documentosMetadata.file_rif.requerido,
-        url: pendienteData.file_rif_url,
-        status: pendienteData.file_rif_validate === null ? 'pending' : pendienteData.file_rif_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.file_rif_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.file_rif_motivo_rechazo || ''
+        url: data.file_rif_url,
+        status: data.file_rif_validate === null ? 'pending' : data.file_rif_validate ? 'approved' : 'rechazado',
+        isReadOnly: data.file_rif_status === 'approved' && data.status === 'rechazado',
+        rejectionReason: data.file_rif_motivo_rechazo || ''
       },
       {
         id: "file_fondo_negro",
         nombre: documentosMetadata.file_fondo_negro.nombre,
         descripcion: documentosMetadata.file_fondo_negro.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.file_fondo_negro_url),
+        archivo: obtenerNombreArchivo(data.file_fondo_negro_url),
         requerido: documentosMetadata.file_fondo_negro.requerido,
-        url: pendienteData.file_fondo_negro_url,
-        status: pendienteData.file_fondo_negro_validate === null ? 'pending' : pendienteData.file_fondo_negro_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.file_fondo_negro_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.file_fondo_negro_motivo_rechazo || ''
+        url: data.file_fondo_negro_url,
+        status: data.file_fondo_negro_validate === null ? 'pending' : data.file_fondo_negro_validate ? 'approved' : 'rechazado',
+        isReadOnly: data.file_fondo_negro_status === 'approved' && data.status === 'rechazado',
+        rejectionReason: data.file_fondo_negro_motivo_rechazo || ''
       },
       {
         id: "file_mpps",
         nombre: documentosMetadata.file_mpps.nombre,
         descripcion: documentosMetadata.file_mpps.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.file_mpps_url),
+        archivo: obtenerNombreArchivo(data.file_mpps_url),
         requerido: documentosMetadata.file_mpps.requerido,
-        url: pendienteData.file_mpps_url,
-        status: pendienteData.file_mpps_validate === null ? 'pending' : pendienteData.file_mpps_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.file_mpps_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.file_mpps_motivo_rechazo || ''
+        url: data.file_mpps_url,
+        status: data.file_mpps_validate === null ? 'pending' : data.file_mpps_validate ? 'approved' : 'rechazado',
+        isReadOnly: data.file_mpps_status === 'approved' && data.status === 'rechazado',
+        rejectionReason: data.file_mpps_motivo_rechazo || ''
       },
-      // Documentos adicionales para técnicos e higienistas
       {
         id: "fondo_negro_credencial",
         nombre: documentosMetadata.fondo_negro_credencial.nombre,
         descripcion: documentosMetadata.fondo_negro_credencial.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.fondo_negro_credencial_url),
+        archivo: obtenerNombreArchivo(data.fondo_negro_credencial_url),
         requerido: documentosMetadata.fondo_negro_credencial.requerido(tipoProfesion),
-        url: pendienteData.fondo_negro_credencial_url,
-        status: pendienteData.fondo_negro_credencial_validate === null ? 'pending' : pendienteData.fondo_negro_credencial_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.fondo_negro_credencial_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.fondo_negro_credencial_motivo_rechazo || ''
+        url: data.fondo_negro_credencial_url,
+        status: data.fondo_negro_credencial_validate === null ? 'pending' : data.fondo_negro_credencial_validate ? 'approved' : 'rechazado',
+        isReadOnly: data.fondo_negro_credencial_status === 'approved' && data.status === 'rechazado',
+        rejectionReason: data.fondo_negro_credencial_motivo_rechazo || ''
       },
       {
         id: "notas_curso",
         nombre: documentosMetadata.notas_curso.nombre,
         descripcion: documentosMetadata.notas_curso.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.notas_curso_url),
+        archivo: obtenerNombreArchivo(data.notas_curso_url),
         requerido: documentosMetadata.notas_curso.requerido(tipoProfesion),
-        url: pendienteData.notas_curso_url,
-        status: pendienteData.notas_curso_validate === null ? 'pending' : pendienteData.notas_curso_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.notas_curso_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.notas_curso_motivo_rechazo || ''
+        url: data.notas_curso_url,
+        status: data.notas_curso_validate === null ? 'pending' : data.notas_curso_validate ? 'approved' : 'rechazado',
+        isReadOnly: data.notas_curso_status === 'approved' && data.status === 'rechazado',
+        rejectionReason: data.notas_curso_motivo_rechazo || ''
       },
       {
         id: "fondo_negro_titulo_bachiller",
         nombre: documentosMetadata.fondo_negro_titulo_bachiller.nombre,
         descripcion: documentosMetadata.fondo_negro_titulo_bachiller.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.fondo_negro_titulo_bachiller_url),
+        archivo: obtenerNombreArchivo(data.fondo_negro_titulo_bachiller_url),
         requerido: documentosMetadata.fondo_negro_titulo_bachiller.requerido(tipoProfesion),
-        url: pendienteData.fondo_negro_titulo_bachiller_url,
-        status: pendienteData.fondo_negro_titulo_bachiller_validate === null ? 'pending' : pendienteData.fondo_negro_titulo_bachiller_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.fondo_negro_titulo_bachiller_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.fondo_negro_titulo_bachiller_motivo_rechazo || ''
+        url: data.fondo_negro_titulo_bachiller_url,
+        status: data.fondo_negro_titulo_bachiller_validate === null ? 'pending' : data.fondo_negro_titulo_bachiller_validate ? 'approved' : 'rechazado',
+        isReadOnly: data.fondo_negro_titulo_bachiller_status === 'approved' && data.status === 'rechazado',
+        rejectionReason: data.fondo_negro_titulo_bachiller_motivo_rechazo || ''
       }
     ];
 
-    // Filtrar solo los documentos que deben mostrarse para este tipo de profesión
-    const documentosFiltrados = todosLosDocumentos.filter(doc =>
+    return todosLosDocumentos.filter(doc =>
       documentosParaMostrar.includes(doc.id) && (doc.url || doc.requerido)
     );
-
-    console.log("Documentos filtrados:", documentosFiltrados);
-    return documentosFiltrados;
   }, []);
 
-  // Determinar qué documentos usar
-  const documentosToUse = pendienteData
-    ? loadPendienteDocuments(pendienteData).filter(filter)
+  // Determinar documentos a mostrar
+  const documentosToUse = localPendienteData
+    ? loadPendienteDocuments(localPendienteData).filter(filter)
     : (Array.isArray(documentos) ? documentos : []).filter(filter);
 
-  // Normalizar documentos para garantizar una estructura consistente
+  // Normalizar estructura de documentos
   const normalizedDocs = documentosToUse.map(doc => ({
     id: doc.id || doc.nombre?.toLowerCase().replace(/\s+/g, '_') || `doc-${Math.random()}`,
     nombre: doc.nombre || "Documento",
@@ -175,20 +203,172 @@ export function DocumentSection({
     rejectionReason: doc.rejectionReason || ''
   }));
 
-  // Manejadores de eventos
+  // Manejadores de eventos para subida de archivos
   const handleReemplazarDocumento = useCallback((documento) => {
     setDocumentoParaSubir(documento);
     setSelectedFile(null);
     setError("");
   }, []);
 
-  // Función para adaptar documentos al formato que espera DocsRequirements
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["application/pdf", "image/jpeg", "image/png"];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (!validTypes.includes(file.type)) {
+      setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
+      setSelectedFile(null);
+      return;
+    }
+
+    if (file.size > maxSize) {
+      setError("El archivo es demasiado grande. El tamaño máximo es 5MB.");
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(file);
+    setError("");
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      const validTypes = ["application/pdf", "image/jpeg", "image/png"];
+      const maxSize = 5 * 1024 * 1024;
+
+      if (!validTypes.includes(file.type)) {
+        setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
+        return;
+      }
+
+      if (file.size > maxSize) {
+        setError("El archivo es demasiado grande. El tamaño máximo es 5MB.");
+        return;
+      }
+
+      setSelectedFile(file);
+      setError("");
+    }
+  };
+
+  // Función optimizada de subida con actualización inmediata
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      setError("Por favor seleccione un archivo para subir.");
+      return;
+    }
+
+    setIsUploading(true);
+    setError("");
+
+    // Crear URL temporal para mostrar inmediatamente
+    const tempUrl = URL.createObjectURL(selectedFile);
+    
+    // Actualizar estado local inmediatamente (optimistic update)
+    const optimisticUpdate = {
+      ...localPendienteData,
+      [`${documentoParaSubir.id}_url`]: tempUrl,
+      [`${documentoParaSubir.id}_status`]: 'uploading'
+    };
+    
+    setLocalPendienteData(optimisticUpdate);
+    
+    // Notificar cambio optimista al componente padre
+    if (onDocumentStatusChange) {
+      onDocumentStatusChange({
+        ...documentoParaSubir,
+        url: tempUrl,
+        archivo: selectedFile.name,
+        status: 'uploading',
+        isOptimistic: true,
+        tempUrl: tempUrl
+      });
+    }
+
+    // Cerrar modal inmediatamente para mejor UX
+    setDocumentoParaSubir(null);
+    setSelectedFile(null);
+
+    try {
+      if (updateDocumento) {
+        const formData = new FormData();
+        formData.append(`${documentoParaSubir.id}`, selectedFile);
+
+        const response = await updateDocumento(formData);
+
+        if (response?.data) {
+          const realUrl = response.data[`${documentoParaSubir.id}_url`];
+          
+          // Actualizar con datos reales del servidor
+          setLocalPendienteData(prevData => ({
+            ...prevData,
+            ...response.data
+          }));
+          
+          // Notificar actualización real al padre
+          if (onDocumentStatusChange) {
+            onDocumentStatusChange({
+              ...documentoParaSubir,
+              url: realUrl,
+              archivo: selectedFile.name,
+              status: 'pending',
+              isOptimistic: false,
+              fullData: response.data,
+              tempUrl: tempUrl
+            });
+          }
+
+          // Mostrar mensaje de éxito
+          setUploadSuccess(true);
+          setUploadedDocumentName(documentoParaSubir.nombre);
+          setTimeout(() => setUploadSuccess(false), 5000);
+        }
+      }
+    } catch (error) {
+      // Revertir cambios optimistas en caso de error
+      setLocalPendienteData(prevData => {
+        const revertedData = { ...prevData };
+        delete revertedData[`${documentoParaSubir.id}_url`];
+        delete revertedData[`${documentoParaSubir.id}_status`];
+        return revertedData;
+      });
+
+      // Limpiar URL temporal
+      URL.revokeObjectURL(tempUrl);
+      
+      // Notificar error al padre
+      if (onDocumentStatusChange) {
+        onDocumentStatusChange({
+          ...documentoParaSubir,
+          status: 'error',
+          error: error.message,
+          isOptimistic: false
+        });
+      }
+
+      setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Adaptadores para modal de edición
   const mapDocumentosToDocsRequirements = useCallback(() => {
     const mappedFiles = {};
 
     normalizedDocs.forEach(doc => {
       let fileKey;
-
       switch (doc.id) {
         case 'cedula':
         case 'ci':
@@ -235,104 +415,16 @@ export function DocumentSection({
 
     return {
       ...mappedFiles,
-      tipo_profesion: pendienteData?.tipo_profesion || "odontologo",
+      tipo_profesion: localPendienteData?.tipo_profesion || "odontologo",
       documentos_aprobados: false
     };
-  }, [normalizedDocs, pendienteData]);
+  }, [normalizedDocs, localPendienteData]);
 
   const handleOpenModal = () => {
     const docsData = mapDocumentosToDocsRequirements();
     setLocalFormData(docsData);
     setShowModal(true);
   };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const validTypes = ["application/pdf", "image/jpeg", "image/png"];
-    const maxSize = 5 * 1024 * 1024;
-
-    if (!validTypes.includes(file.type)) {
-      setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
-      setSelectedFile(null);
-      return;
-    }
-
-    if (file.size > maxSize) {
-      setError("El archivo es demasiado grande. El tamaño máximo es 5MB.");
-      setSelectedFile(null);
-      return;
-    }
-
-    setSelectedFile(file);
-    setError("");
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-
-      const validTypes = ["application/pdf", "image/jpeg", "image/png"];
-      const maxSize = 5 * 1024 * 1024; // 5MB
-
-      if (!validTypes.includes(file.type)) {
-        setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
-        return;
-      }
-
-      if (file.size > maxSize) {
-        setError("El archivo es demasiado grande. El tamaño máximo es 5MB.");
-        return;
-      }
-
-      setSelectedFile(file);
-      setError("");
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      setError("Por favor seleccione un archivo para subir.")
-      return
-    }
-
-    setIsUploading(true)
-    setError("")
-
-    try {
-      if (updateDocumento) {
-        const Form = new FormData();
-        Form.append(`${documentoParaSubir.id}`, selectedFile)
-
-        updateDocumento(Form)
-      }
-
-      setDocumentoParaSubir(null)
-      setSelectedFile(null)
-
-      setUploadSuccess(true);
-      setUploadedDocumentName(documentoParaSubir.nombre);
-
-      setTimeout(() => {
-        setUploadSuccess(false);
-      }, 5000);
-
-    } catch (error) {
-      console.error("Error al subir documento:", error)
-      setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.")
-    } finally {
-      setIsUploading(false)
-    }
-  }
 
   const handleSaveChanges = (updates) => {
     if (!updates) return;
@@ -344,11 +436,11 @@ export function DocumentSection({
       if (file && (file instanceof File || (typeof file === 'object' && file.name && !file.isExisting))) {
         const docId = key;
         if (docId) {
-          const Form = new FormData();
-          Form.append(docId, file);
+          const formData = new FormData();
+          formData.append(docId, file);
 
           if (updateDocumento) {
-            updateDocumento(Form);
+            updateDocumento(formData);
           }
         }
       }
@@ -369,18 +461,17 @@ export function DocumentSection({
 
   return (
     <motion.div
+      key={refreshTrigger}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
       className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
     >
-
+      {/* Header */}
       <div className="flex items-center justify-between mb-5 border-b pb-3">
         <div className="flex items-center">
           <Briefcase size={20} className="text-[#C40180] mr-2" />
-          <h2 className="text-lg font-semibold text-gray-900">
-            Documentos
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900">Documentos</h2>
         </div>
 
         {!readonly && (
@@ -396,7 +487,11 @@ export function DocumentSection({
 
       {/* Notificación de éxito */}
       {uploadSuccess && (
-        <div className="mb-4 bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-md flex items-start justify-between">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-md flex items-start justify-between"
+        >
           <div className="flex items-start">
             <CheckCircle className="mr-2 h-5 w-5 text-green-500 mt-0.5" />
             <div>
@@ -410,14 +505,15 @@ export function DocumentSection({
           >
             <X size={18} />
           </button>
-        </div>
+        </motion.div>
       )}
 
+      {/* Grid de documentos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {normalizedDocs.length > 0 ? (
           normalizedDocs.map((documento) => (
             <DocumentCard
-              key={documento.id}
+              key={`${documento.id}-${refreshTrigger}`}
               documento={documento}
               onView={() => onViewDocument(documento)}
               onReplace={() => handleReemplazarDocumento(documento)}
@@ -433,7 +529,7 @@ export function DocumentSection({
         )}
       </div>
 
-      {/* Modal para subir documentos individuales */}
+      {/* Modal para subir documento individual */}
       {documentoParaSubir && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <motion.div
@@ -463,8 +559,9 @@ export function DocumentSection({
               </div>
 
               <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 ${error ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-[#C40180] bg-gray-50"
-                  }`}
+                className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 cursor-pointer ${
+                  error ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-[#C40180] bg-gray-50"
+                }`}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
@@ -472,17 +569,15 @@ export function DocumentSection({
                 <input
                   type="file"
                   ref={fileInputRef}
-                  onChange={(e) => handleFileChange(e)}
+                  onChange={handleFileChange}
                   className="hidden"
                   accept=".pdf,.jpg,.jpeg,.png"
                 />
 
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
-
                 <p className="mt-2 text-sm font-medium text-gray-700">
                   {selectedFile ? selectedFile.name : "Haga clic o arrastre un archivo aquí"}
                 </p>
-
                 <p className="mt-1 text-xs text-gray-500">PDF, JPG o PNG (máx. 5MB)</p>
 
                 {selectedFile && (
@@ -510,8 +605,9 @@ export function DocumentSection({
                 <button
                   onClick={handleUpload}
                   disabled={!selectedFile || isUploading}
-                  className={`px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${!selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
+                  className={`px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${
+                    !selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
                 >
                   {isUploading ? (
                     <>
@@ -531,7 +627,7 @@ export function DocumentSection({
         </div>
       )}
 
-      {/* Modal para gestionar documentos usando DocsRequirements */}
+      {/* Modal para gestión masiva de documentos */}
       <Modal
         isOpen={showModal}
         onClose={handleCloseModal}
@@ -553,55 +649,54 @@ export function DocumentSection({
   );
 }
 
-// Componente de tarjeta individual
+// Componente de tarjeta individual optimizado
 function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiado = false }) {
   const tieneArchivo = documento.url !== null;
   const isExonerado = documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isReadOnly = documento.status === 'approved' && documento.isReadOnly;
-
-  const handleStatusChange = (updatedDocument) => {
-    if (onStatusChange) {
-      onStatusChange(updatedDocument);
-    }
-  };
+  const isUploading = documento.status === 'uploading';
 
   const handleCardClick = (e) => {
     const isActionButton = e.target.closest('.action-button') ||
       e.target.closest('.document-verification-switch');
 
-    if (!isActionButton && (tieneArchivo || isExonerado)) {
+    if (!isActionButton && (tieneArchivo || isExonerado) && !isUploading) {
       onView();
     }
   };
 
+  const getCardStyles = () => {
+    if (isUploading) return "border-blue-200 bg-blue-50 animate-pulse";
+    if (isExonerado) return "border-green-200 bg-green-50";
+    if (tieneArchivo) return "border-gray-200 hover:border-[#C40180] hover:shadow-md cursor-pointer";
+    return "border-red-200 bg-red-50";
+  };
+
+  const getIconStyles = () => {
+    if (isUploading) return "bg-blue-100";
+    if (isExonerado) return "bg-green-100";
+    if (tieneArchivo) return "bg-[#F9E6F3]";
+    return "bg-red-100";
+  };
+
+  const renderIcon = () => {
+    if (isUploading) {
+      return <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>;
+    }
+    if (isExonerado) {
+      return <CheckCircle className="text-green-500" size={20} />;
+    }
+    return <FileText className={tieneArchivo ? "text-[#C40180]" : "text-red-500"} size={20} />;
+  };
+
   return (
-    <div
-      className={`border rounded-lg transition-all duration-200 ${isExonerado
-        ? "border-green-200 bg-green-50"
-        : tieneArchivo
-          ? "border-gray-200 hover:border-[#C40180] hover:shadow-md cursor-pointer"
-          : "border-red-200 bg-red-50"
-        }`}
-      onClick={handleCardClick}
-    >
+    <div className={`border rounded-lg transition-all duration-200 ${getCardStyles()}`} onClick={handleCardClick}>
       <div className="p-4">
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center mb-2">
-              <div className={`${isExonerado
-                ? "bg-green-100"
-                : tieneArchivo
-                  ? "bg-[#F9E6F3]"
-                  : "bg-red-100"
-                } p-2 rounded-md mr-3`}>
-                {isExonerado ? (
-                  <CheckCircle className="text-green-500" size={20} />
-                ) : (
-                  <FileText
-                    className={tieneArchivo ? "text-[#C40180]" : "text-red-500"}
-                    size={20}
-                  />
-                )}
+              <div className={`${getIconStyles()} p-2 rounded-md mr-3`}>
+                {renderIcon()}
               </div>
               <div>
                 <h3 className="font-medium text-gray-900 flex items-center">
@@ -609,10 +704,14 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
                   {documento.requerido && <span className="text-red-500 ml-1">*</span>}
                 </h3>
                 <p className="text-xs text-gray-500">{documento.descripcion}</p>
+                
+                {isUploading && (
+                  <p className="text-xs text-blue-600 mt-1 font-medium">Subiendo documento...</p>
+                )}
               </div>
             </div>
 
-            {!tieneArchivo && !isExonerado && (
+            {!tieneArchivo && !isExonerado && !isUploading && (
               <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
                 <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
                 <span>
@@ -629,7 +728,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
               </div>
             )}
 
-            {tieneArchivo && (
+            {tieneArchivo && !isUploading && (
               <div className="document-verification-switch">
                 <VerificationSwitch
                   item={documento}
@@ -642,16 +741,15 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
           </div>
 
           <div className="flex items-center space-x-2 action-button text-[10px] text-gray-400">
-            {(!isReadOnly && !isExonerado && documento.status !== 'approved') && (
+            {(!isReadOnly && !isExonerado && documento.status !== 'approved' && !isUploading) && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onReplace();
                 }}
-                className={`${tieneArchivo
-                  ? "text-orange-600 hover:bg-orange-50"
-                  : "text-green-600 hover:bg-green-50"
-                  } p-2 rounded-full transition-colors`}
+                className={`${
+                  tieneArchivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"
+                } p-2 rounded-full transition-colors`}
                 title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
               >
                 {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
@@ -664,7 +762,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
   );
 }
 
-// funciones helper
+// Funciones auxiliares
 export function mapDocumentsForSection(documentos = []) {
   if (!Array.isArray(documentos)) return [];
 
@@ -714,15 +812,9 @@ export function DocumentViewer({ documento, onClose }) {
     return () => clearTimeout(timer);
   }, [documento, isExonerado]);
 
-  // Funciones de zoom
-  const handleZoomIn = () => {
-    setScale(prev => Math.min(prev * 1.25, 5));
-  };
-
-  const handleZoomOut = () => {
-    setScale(prev => Math.max(prev / 1.25, 0.25));
-  };
-
+  // Funciones de zoom y navegación
+  const handleZoomIn = () => setScale(prev => Math.min(prev * 1.25, 5));
+  const handleZoomOut = () => setScale(prev => Math.max(prev / 1.25, 0.25));
   const handleResetZoom = () => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
@@ -732,22 +824,18 @@ export function DocumentViewer({ documento, onClose }) {
     if (containerRef.current && imageRef.current) {
       const container = containerRef.current;
       const image = imageRef.current;
-
-      const containerWidth = container.clientWidth - 40; // padding
+      const containerWidth = container.clientWidth - 40;
       const containerHeight = container.clientHeight - 40;
       const imageWidth = image.naturalWidth;
       const imageHeight = image.naturalHeight;
-
       const scaleX = containerWidth / imageWidth;
       const scaleY = containerHeight / imageHeight;
       const newScale = Math.min(scaleX, scaleY, 1);
-
       setScale(newScale);
       setPosition({ x: 0, y: 0 });
     }
   };
 
-  // Funciones de arrastre
   const handleMouseDown = (e) => {
     if (scale > 1) {
       setIsDragging(true);
@@ -767,18 +855,14 @@ export function DocumentViewer({ documento, onClose }) {
     }
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
-  // Zoom con rueda del mouse
   const handleWheel = (e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     setScale(prev => Math.max(0.25, Math.min(5, prev * delta)));
   };
 
-  // Fullscreen
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen();
@@ -789,7 +873,7 @@ export function DocumentViewer({ documento, onClose }) {
     }
   };
 
-  // Efectos de eventos globales
+  // Event listeners
   useEffect(() => {
     const handleKeyDown = (e) => {
       switch (e.key) {
@@ -832,7 +916,6 @@ export function DocumentViewer({ documento, onClose }) {
     };
   }, [isDragging, dragStart, position, isFullscreen]);
 
-  // Listener para cambios de fullscreen
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -847,10 +930,9 @@ export function DocumentViewer({ documento, onClose }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`bg-white rounded-lg shadow-xl flex flex-col ${isFullscreen
-          ? 'w-full h-full rounded-none'
-          : 'w-[95vw] h-[90vh] max-w-6xl'
-          }`}
+        className={`bg-white rounded-lg shadow-xl flex flex-col ${
+          isFullscreen ? 'w-full h-full rounded-none' : 'w-[95vw] h-[90vh] max-w-6xl'
+        }`}
         ref={containerRef}
       >
         {/* Header con controles */}
@@ -868,7 +950,8 @@ export function DocumentViewer({ documento, onClose }) {
               <button
                 onClick={handleZoomOut}
                 className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                title="Alejar (-)">
+                title="Alejar (-)"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="8" />
                   <path d="M21 21l-4.35-4.35" />
@@ -883,7 +966,8 @@ export function DocumentViewer({ documento, onClose }) {
               <button
                 onClick={handleZoomIn}
                 className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                title="Acercar (+)">
+                title="Acercar (+)"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="8" />
                   <path d="M21 21l-4.35-4.35" />
@@ -895,7 +979,8 @@ export function DocumentViewer({ documento, onClose }) {
               <button
                 onClick={handleResetZoom}
                 className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                title="Restablecer (0)">
+                title="Restablecer (0)"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 3l18 18" />
                   <circle cx="11" cy="11" r="8" />
@@ -906,7 +991,8 @@ export function DocumentViewer({ documento, onClose }) {
               <button
                 onClick={handleFitToScreen}
                 className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                title="Ajustar a pantalla (F)">
+                title="Ajustar a pantalla (F)"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
@@ -915,11 +1001,11 @@ export function DocumentViewer({ documento, onClose }) {
           )}
 
           <div className="flex items-center gap-2">
-            {/* Botón fullscreen */}
             <button
               onClick={toggleFullscreen}
               className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-              title="Pantalla completa">
+              title="Pantalla completa"
+            >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 {isFullscreen ? (
                   <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
@@ -939,10 +1025,7 @@ export function DocumentViewer({ documento, onClose }) {
         </div>
 
         {/* Contenido del documento */}
-        <div
-          className="flex-1 overflow-hidden bg-gray-100 flex items-center justify-center relative"
-          onWheel={handleWheel}
-        >
+        <div className="flex-1 overflow-hidden bg-gray-100 flex items-center justify-center relative" onWheel={handleWheel}>
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C40180]"></div>
@@ -961,21 +1044,19 @@ export function DocumentViewer({ documento, onClose }) {
               </p>
             </div>
           ) : isPDF ? (
-            // Para PDFs, usar iframe
             <iframe
               src={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
               className="w-full h-full border-0"
               title={documento.nombre}
             />
           ) : isImage ? (
-            // Para imágenes, implementar zoom y pan
             <div
               className="w-full h-full flex items-center justify-center overflow-hidden cursor-move"
               style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
             >
               <img
                 ref={imageRef}
-                src={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
+                src={documento.tempUrl || `${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
                 alt={documento.nombre}
                 className="max-w-none transition-transform duration-200 ease-out select-none"
                 style={{
@@ -985,20 +1066,17 @@ export function DocumentViewer({ documento, onClose }) {
                 onMouseDown={handleMouseDown}
                 onError={() => setError("No se pudo cargar el documento")}
                 onLoad={() => {
-                  // Auto-fit en la carga inicial
                   setTimeout(handleFitToScreen, 100);
                 }}
                 draggable={false}
               />
             </div>
           ) : documento.url ? (
-            // Para otros tipos de archivo
             <div className="text-center">
               <FileText size={64} className="text-gray-400 mx-auto mb-4" />
               <p className="text-lg mb-2">Vista previa no disponible</p>
-
-
-              <a href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
+              <a 
+                href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A0016A] transition-colors"
