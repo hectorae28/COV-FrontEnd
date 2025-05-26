@@ -1029,7 +1029,7 @@ export default function RegistrationForm(props) {
                                     Procesando...
                                   </>
                                 ) : (
-                                  "Pagar"
+                                  "Continuar"
                                 )}
                               </motion.button>
                             ))}
