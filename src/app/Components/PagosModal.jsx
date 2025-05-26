@@ -611,17 +611,18 @@ export default function PagosColg({ props }) {
                         Fecha de pago
                       </label>
                       <div className="grid grid-cols-3 gap-2">
-                        {/* Selector de día */}
+
+                        {/* Selector de año */}
                         <div className="relative">
                           <select
-                            value={paymentDate.day}
-                            onChange={(e) => handleDateChange('day', e.target.value)}
+                            value={paymentDate.year}
+                            onChange={(e) => handleDateChange('year', e.target.value)}
                             className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] appearance-none text-gray-700"
                           >
-                            <option value="">Día</option>
-                            {getDaysInMonth(paymentDate.year, paymentDate.month).map(day => (
-                              <option key={`day-${day.value}`} value={day.value}>
-                                {day.label}
+                            <option value="">Año</option>
+                            {years.map(year => (
+                              <option key={`year-${year.value}`} value={year.value}>
+                                {year.label}
                               </option>
                             ))}
                           </select>
@@ -653,17 +654,17 @@ export default function PagosColg({ props }) {
                           </div>
                         </div>
 
-                        {/* Selector de año */}
+                        {/* Selector de día */}
                         <div className="relative">
                           <select
-                            value={paymentDate.year}
-                            onChange={(e) => handleDateChange('year', e.target.value)}
+                            value={paymentDate.day}
+                            onChange={(e) => handleDateChange('day', e.target.value)}
                             className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] appearance-none text-gray-700"
                           >
-                            <option value="">Año</option>
-                            {years.map(year => (
-                              <option key={`year-${year.value}`} value={year.value}>
-                                {year.label}
+                            <option value="">Día</option>
+                            {getDaysInMonth(paymentDate.year, paymentDate.month).map(day => (
+                              <option key={`day-${day.value}`} value={day.value}>
+                                {day.label}
                               </option>
                             ))}
                           </select>
