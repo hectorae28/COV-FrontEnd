@@ -41,6 +41,10 @@ export default function ListaColegiadosPage() {
   const recaudosAnuladosPagination = useDataListaColegiados((state) => state.recaudosAnuladosPagination);
   const recaudosRechazados = useDataListaColegiados((state) => state.recaudosRechazados);
   const recaudosRechazadosPagination = useDataListaColegiados((state) => state.recaudosRechazadosPagination);
+  const pendientesRevisando = useDataListaColegiados((state) => state.pendientesRevisando);
+  const pendientesRevisandoPagination = useDataListaColegiados((state) => state.pendientesRevisandoPagination);
+  const pendientesPorPagar = useDataListaColegiados((state) => state.pendientesPorPagar);
+  const pendientesPorPagarPagination = useDataListaColegiados((state) => state.pendientesPorPagarPagination);
 
   // Estado local de UI
   const [searchTerm, setSearchTerm] = useState("");
@@ -153,13 +157,12 @@ export default function ListaColegiadosPage() {
       try {
         await initStore();
         setIsInitialized(true);
-        await fetchPendientes(1, 10, "", { status: "por_pagar,revisando" });
       } catch (error) {
         console.error("Error initializing store:", error);
       }
     };
     initializeData();
-  }, []);
+  }, [initStore]);
 
   // Inicialización
   useEffect(() => {
@@ -189,6 +192,9 @@ export default function ListaColegiadosPage() {
 
   // Fetch de datos basado en filtros
   useEffect(() => {
+    if (!isInitialized) {
+      return;
+    }
     const filtros = {};
 
     activeFilters.forEach(filter => {
@@ -272,16 +278,19 @@ export default function ListaColegiadosPage() {
 
     filtros.ordering = ordenFecha === "desc" ? "-created_at" : "created_at";
 
+    let shouldFetch = true;
     if (tabActivo === "pendientes") {
       filtros.status = "por_pagar,revisando";
     } else if (tabActivo === "rechazados") {
       filtros.status = "rechazado";
     } else if (tabActivo === "anulados") {
       filtros.status = "anulado";
-    }
-    if (tabActivo === "registrados") {
+    } else if (tabActivo === "registrados") {
       fetchColegiados(currentPage, recordsPerPage, searchTerm, filtros);
-    } else {
+      shouldFetch = false; // Don't fetch pendientes when on the 'registrados' tab
+    }
+
+    if (tabActivo !== "registrados" && shouldFetch) {
       fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros);
     }
   }, [
@@ -296,6 +305,8 @@ export default function ListaColegiadosPage() {
     edadMin,
     edadMax,
     tabActivo,
+    fetchColegiados,
+    fetchPendientes,
   ]);
 
   // Funciones de navegación actualizadas
@@ -356,13 +367,13 @@ export default function ListaColegiadosPage() {
   };
 
   const TypoPendiente = {
-    pendientes: colegiadosPendientes,
+    pendientes: tabActivo === "revisando" ? pendientesRevisando : (tabActivo === "por_pagar" ? pendientesPorPagar : colegiadosPendientes),
     rechazados: recaudosRechazados,
     anulados: recaudosAnulados
   };
 
   const PaginationType = {
-    pendientes: colegiadosPendientesPagination,
+    pendientes: tabActivo === "revisando" ? pendientesRevisandoPagination : (tabActivo === "por_pagar" ? pendientesPorPagarPagination : colegiadosPendientesPagination),
     rechazados: recaudosRechazadosPagination,
     anulados: recaudosAnuladosPagination,
     registrados: colegiadosPagination

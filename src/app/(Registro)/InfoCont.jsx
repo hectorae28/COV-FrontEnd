@@ -1,11 +1,10 @@
 "use client"
 import CountryFlag from "@/Shared/CountryFlag"
-import PhoneEstData from "@/Shared/EstadoData"
 import phoneCodes from "@/Shared/TelefonoData"
-import DireccionForm from "./DireccionForm"
 import { motion } from "framer-motion"
-import { ChevronDown, Mail, MapPin, Phone, Search, X } from "lucide-react"
+import { ChevronDown, Mail, Phone, Search, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import DireccionForm from "./DireccionForm"
 
 export default function InfoContacto({
   formData,
@@ -13,7 +12,7 @@ export default function InfoContacto({
   validationErrors,
   isProfileEdit,
   requestEmailVerification,
-  isAdmin=false,
+  isAdmin = false,
   isEditMode = false,
   onSave
 }) {
@@ -26,9 +25,9 @@ export default function InfoContacto({
   const [emailChanged, setEmailChanged] = useState(false)
   const [emailError, setEmailError] = useState("")
   const dropdownRef = useRef(null)
-  
+
   const [localFormData, setLocalFormData] = useState(formData);
-  
+
   useEffect(() => {
     setLocalFormData(formData);
   }, []);
@@ -55,36 +54,54 @@ export default function InfoContacto({
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    
-    if (name === "email") {
-      if (value && !validateEmail(value)) {
-        setEmailError("Ingrese un correo electrónico válido");
-      } else {
-        setEmailError("");
-      }
-      
-      if (isEditMode) {
-        setLocalFormData(prev => ({ 
-          ...prev, 
-          [name]: value,
-          emailIsValid: validateEmail(value)
-        }));
-      } else {
-        // Notificar el cambio de email al componente padre
-        onInputChange({
-          [name]: value,
-          emailIsValid: validateEmail(value)
-        });
-      }
+  const { name, value } = e.target
+
+  if (name === "email") {
+    if (value && !validateEmail(value)) {
+      setEmailError("Ingrese un correo electrónico válido");
     } else {
-      if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: value }));
-      } else {
-        onInputChange({ [name]: value });
-      }
+      setEmailError("");
+    }
+
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        [name]: value,
+        emailIsValid: validateEmail(value)
+      }));
+    } else {
+      onInputChange({
+        [name]: value,
+        emailIsValid: validateEmail(value)
+      });
+    }
+  } else if (name === "address") {
+    const formatted = value.replace(/\b\w+/g, (word) => {
+      return word.length > 1 ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : word.toUpperCase();
+    });
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, address: formatted }));
+    } else {
+      onInputChange({ address: formatted });
+    }
+  } else if (name === "homePhone") {
+    const digitsOnly = value.replace(/\D/g, "").slice(0, 11); // siempre 11 dígitos
+    const formatted = digitsOnly.replace(/(\d{0,4})(\d{0,3})(\d{0,4})/, (_, p1, p2, p3) => {
+      return [p1, p2, p3].filter(Boolean).join(" ");
+    });
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, homePhone: formatted }));
+    } else {
+      onInputChange({ homePhone: formatted });
+    }
+  } else {
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, [name]: value }));
+    } else {
+      onInputChange({ [name]: value });
     }
   }
+};
 
   // Manejador para seleccionar un código de país
   const handleSelectCountry = (code) => {
@@ -175,7 +192,7 @@ export default function InfoContacto({
           </svg>
           <span className="text-xs">
             {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "Requiere verificación del nuevo correo"}
-            </span>
+          </span>
         </div>
       )
     }
@@ -196,7 +213,7 @@ export default function InfoContacto({
           className="text-xs text-[#D7008A] hover:underline"
         >
           {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "El correo debe ser verificado para continuar"}
-          
+
         </button>
       </div>
     )
@@ -211,8 +228,8 @@ export default function InfoContacto({
     }
   };
   const fieldMapping = {
-    state: "state",           
-    municipio: "municipio",   
+    state: "state",
+    municipio: "municipio",
     address: "address",
   }
 
@@ -221,7 +238,7 @@ export default function InfoContacto({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full sm:w-11/12 md:w-10/12 lg:w-8/12 xl:w-6/12 mx-auto"
+      className="w-full mx-auto space-y-2"
     >
       {/* Email - SOLO ESTE CAMPO será no editable en modo perfil */}
       <div>
@@ -369,7 +386,7 @@ export default function InfoContacto({
                 const value = e.target.value.replace(/\D/g, "")
                 handleChange({ target: { name: "homePhone", value } })
               }}
-              maxLength="11"
+              maxLength="13"
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
               placeholder="0212 123 4567"
             />
@@ -385,7 +402,7 @@ export default function InfoContacto({
         isEditMode={isEditMode}
         localFormData={localFormData}
         setLocalFormData={setLocalFormData}
-        fieldMapping={{...fieldMapping}}
+        fieldMapping={{ ...fieldMapping }}
       />
       {/* Botones de acción en modo edición */}
       {isEditMode && (

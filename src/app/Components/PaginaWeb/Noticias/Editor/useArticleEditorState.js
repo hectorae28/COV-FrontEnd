@@ -1,4 +1,3 @@
-// useArticleEditorState.js - Versión corregida
 "use client"
 
 import { useEffect, useState } from "react"
@@ -140,37 +139,57 @@ export const useArticleEditorState = (article, onSave, handleInputChangeFromProp
     }
 
     // Preparar nuevo elemento de contenido
-    const prepareContentElement = (type) => {
-        const newElement = {
-            id: `element-${Date.now()}`,
-            type,
-            content: "",
-            style: {
-                textAlign: "left",
-                width: "100%",
-                color: type.includes("heading") ? "#1f2937" : "#4b5563",
-            },
-            rowData: {
-                row: elementRows.length > 0 ? elementRows.length : 0,
-                gridPosition: 0,
-            },
+    const prepareContentElement = (typeOrElement) => {
+        let newElement;
+
+        // Si se pasa un elemento completo, usarlo
+        if (typeof typeOrElement === 'object' && typeOrElement.type) {
+            newElement = {
+                ...typeOrElement,
+                id: typeOrElement.id || `element-${Date.now()}`,
+                rowData: typeOrElement.rowData || {
+                    row: elementRows.length > 0 ? elementRows.length : 0,
+                    gridPosition: 0,
+                }
+            }
+        }
+        // Si se pasa solo el tipo, crear el elemento desde cero
+        else {
+            const type = typeOrElement;
+            newElement = {
+                id: `element-${Date.now()}`,
+                type,
+                content: "",
+                style: {
+                    textAlign: "left",
+                    width: "100%",
+                    color: type.includes("heading") ? "#1f2937" : "#4b5563",
+                },
+                rowData: {
+                    row: elementRows.length > 0 ? elementRows.length : 0,
+                    gridPosition: 0,
+                },
+            }
+
+            // Configuraciones específicas por tipo
+            switch (type) {
+                case "image":
+                    newElement.sourceType = "local"
+                    break
+                case "quote":
+                    newElement.author = ""
+                    break
+                case "list":
+                case "orderedList":
+                    newElement.content = ["", ""]
+                    break
+            }
         }
 
-        // Configuraciones específicas por tipo
-        switch (type) {
-            case "image":
-                newElement.sourceType = "local"
-                break
-            case "quote":
-                newElement.author = ""
-                break
-            case "list":
-            case "orderedList":
-                newElement.content = ["", ""]
-                break
-        }
+        // Añadir el elemento a la lista
+        setContentElements(prev => [...prev, newElement])
+        setActiveElement(newElement.id)
 
-        setElementInPreparation(newElement)
         return newElement
     }
 

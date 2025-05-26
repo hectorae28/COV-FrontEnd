@@ -2,7 +2,6 @@
 import { postDataUsuario } from "@/api/endpoints/colegiado";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MailCheck, RefreshCw } from "lucide-react";
-import { type } from "os";
 import { useEffect, useRef, useState } from "react";
 
 export default function EmailVerification({
@@ -12,6 +11,7 @@ export default function EmailVerification({
     isResending = false,
     onResendCode
 }) {
+    const hasSentEmail = useRef(false);
     const [verificationCode, setVerificationCode] = useState(Array(6).fill(""));
     const [isVerifying, setIsVerifying] = useState(false);
     const [error, setError] = useState("");
@@ -20,7 +20,7 @@ export default function EmailVerification({
 
     const inputRefs = useRef([]);
     const handleSendEmailCode = async () => {
-        try{
+        try {
             const res = await postDataUsuario(`send-verification-email`, {
                 "email": email
             })
@@ -28,16 +28,19 @@ export default function EmailVerification({
                 setCanResend(false);
                 setTimeLeft(60);
             }
-        }catch(err){
-            if (err.status === 409){
+        } catch (err) {
+            if (err.status === 409) {
                 setError("El correo electrónica ya se encuentra registrado")
-            }else{
+            } else {
                 setError("Error al enviar el código. Por favor, intente nuevamente.")
             }
         }
     }
     useEffect(() => {
-        handleSendEmailCode()
+        if (!hasSentEmail.current) {
+            handleSendEmailCode();
+            hasSentEmail.current = true; // Mark as sent
+        }
     }, [])
 
     // Timer para resentir código
@@ -126,14 +129,14 @@ export default function EmailVerification({
             const rest = await postDataUsuario(`verify-email`, {
                 "email": email,
                 "code": code
-               })
-            if(rest.status === 200){
+            })
+            if (rest.status === 200) {
                 onVerificationSuccess()
-            }else{
+            } else {
                 setError("Error al verificar el código. Por favor, intente nuevamente.")
             }
         } catch (err) {
-            if(err.status === 409){
+            if (err.status === 409) {
                 setError("El correo electrónica ya se encuentra registrado")
             }
             setError("Error al verificar el código. Por favor, intente nuevamente.");

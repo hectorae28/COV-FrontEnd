@@ -12,6 +12,7 @@ export default function DetallePendienteWrapper({
   id,
   isAdmin,
   recaudos,
+  isColegiado,
   error,
 }) {
   const [isSubmited, setIsSubmited] = useState(false);
@@ -81,6 +82,7 @@ export default function DetallePendienteWrapper({
                 isAdmin={isAdmin}
                 recaudos={recaudos}
                 handleForward={handleForward}
+                isColegiado={isColegiado}
               />
             ) : (
               <>

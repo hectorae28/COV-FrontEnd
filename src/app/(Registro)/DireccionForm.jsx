@@ -4,12 +4,14 @@ import { MapPin } from "lucide-react"
 import { useEffect, useState } from "react"
 
 const capitalizeWords = (text) => {
-  if (!text) return ""
+  if (!text) return "";
   return text
     .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ")
-}
+    .map((word) => /^[A-ZÁÉÍÓÚÜÑ.]+$/.test(word) 
+      ? word 
+      : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
 
 export default function DireccionForm({
   formData,
@@ -32,17 +34,23 @@ export default function DireccionForm({
   const [isLoadingMunicipios, setIsLoadingMunicipios] = useState(false)
 
   useEffect(() => {
-    const loadEstados = async () => {
-      try {
-        const data = await fetchEstados();
-        setEstados(data);
-      } catch (error) {
-        console.error("Error al cargar los estados:", error);
+  const loadEstados = async () => {
+    try {
+      const data = await fetchEstados();
+      setEstados(data);
+      
+      // CORRECCIÓN: Usar currentFormData en lugar de 'state' indefinido
+      const stateValue = currentFormData[fieldMapping.state];
+      if (stateValue !== undefined && stateValue !== "" && stateValue !== null) {
+        loadMunicipios(stateValue);
       }
-    };
-    
-    loadEstados();
-  }, []);
+    } catch (error) {
+      console.error("Error al cargar los estados:", error);
+    }
+  };
+  
+  loadEstados();
+}, []); 
 
   const loadMunicipios = async (estadoId) => {
     try {
@@ -61,6 +69,7 @@ export default function DireccionForm({
     const { name, value } = e.target
     
     if (name === fieldMapping.address) {
+      // CAMBIO: Aplicar capitalización que permite mayúsculas seguidas
       const processedValue = capitalizeWords(value);
       
       if (isEditMode && setLocalFormData) {
@@ -182,4 +191,4 @@ export default function DireccionForm({
       </div>
     </div>
   );
-} 
+}

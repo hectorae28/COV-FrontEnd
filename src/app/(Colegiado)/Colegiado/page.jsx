@@ -1,9 +1,9 @@
 "use client";
 import { fetchMe } from "@/api/endpoints/colegiado";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal";
 import SolvencyStatus from "@/Components/Solvencia/EstatusSolv";
 import SolvenciaPago from "@/Components/Solvencia/PagoSolv";
-import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal"
 import useColegiadoUserStore from "@/store/colegiadoUserStore";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -30,7 +30,7 @@ export default function Home() {
 
   const checkSolvencyStatus = () => {
     if (!colegiadoUser) return;
-    
+
     const today = new Date();
     const [year, month, day] = colegiadoUser?.solvente.split("-").map(Number);
     const solvencyDate = new Date(year, month - 1, day);
@@ -42,61 +42,61 @@ export default function Home() {
   };
 
   async function fetchCostos() {
-  try {
-    const response = await fetchDataSolicitudes("costo", "?es_vigente=true");
-    const costosData = response.data;
-    const costo = Number(
-      costosData.filter(
+    try {
+      const response = await fetchDataSolicitudes("costo", "?es_vigente=true");
+      const costosData = response.data;
+      const costo = Number(
+        costosData.filter(
+          (item) => item.tipo_costo_nombre === "Solvencia"
+        )[0].monto_usd
+      );
+      setCostos(costosData);
+      return costo; // Return the Solvencia cost for potential use elsewhere
+    } catch (error) {
+      console.error("Error fetching costos:", error);
+    }
+  }
+
+  // Separate method for fetching tasa BCV
+  async function fetchTasaBcv() {
+    try {
+      const response = await fetchDataSolicitudes("tasa-bcv");
+      const tasaBcvData = Number(response.data.rate);
+      setTasaBcv(tasaBcvData);
+    } catch (error) {
+      console.error("Error fetching tasa BCV:", error);
+    }
+  }
+
+  // Separate method for fetching user data and solvency info
+  async function fetchUserAndSolvency() {
+    try {
+      if (!session) return;
+
+      const userResponse = await fetchMe(session);
+      const userData = userResponse.data;
+
+      setUserInfo(userData);
+      setColegiadoUser(userData);
+      setIsSolvent(userData.solvencia_status);
+
+      // Get costos from the store to calculate solvency amount
+      const costos = useColegiadoUserStore.getState().costos;
+      const costo = costos?.find(
         (item) => item.tipo_costo_nombre === "Solvencia"
-      )[0].monto_usd
-    );
-    setCostos(costosData);
-    return costo; // Return the Solvencia cost for potential use elsewhere
-  } catch (error) {
-    console.error("Error fetching costos:", error);
-  }
-}
+      )?.monto_usd;
 
-// Separate method for fetching tasa BCV
-async function fetchTasaBcv() {
-  try {
-    const response = await fetchDataSolicitudes("tasa-bcv");
-    const tasaBcvData = Number(response.data.rate);
-    setTasaBcv(tasaBcvData);
-  } catch (error) {
-    console.error("Error fetching tasa BCV:", error);
-  }
-}
+      setSolvencyInfo({
+        date: userData.solvente,
+        amount: Number(costo),
+        status: userData.solvencia_status,
+      });
 
-// Separate method for fetching user data and solvency info
-async function fetchUserAndSolvency() {
-  try {
-    if (!session) return;
-    
-    const userResponse = await fetchMe(session);
-    const userData = userResponse.data;
-    
-    setUserInfo(userData);
-    setColegiadoUser(userData);
-    setIsSolvent(userData.solvencia_status);
-    
-    // Get costos from the store to calculate solvency amount
-    const costos = useColegiadoUserStore.getState().costos;
-    const costo = costos?.find(
-      (item) => item.tipo_costo_nombre === "Solvencia"
-    )?.monto_usd;
-    
-    setSolvencyInfo({
-      date: userData.solvente,
-      amount: Number(costo),
-      status: userData.solvencia_status,
-    });
-
-    checkSolvencyStatus();
-  } catch (error) {
-    console.error("Error fetching user data:", error);
+      checkSolvencyStatus();
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
   }
-}
 
   // Estado para controlar el modal a nivel de página
   const [showModal, setShowModal] = useState(false)
@@ -216,37 +216,35 @@ async function fetchUserAndSolvency() {
       ) : (
         <>
           {/* Pestañas de navegación cuando se necesitan mostrar */}
-          
+
           <div className="flex border-b border-gray-200">
-            {(!isSolvent || showSolvencyWarning) && 
+            {(!isSolvent || showSolvencyWarning) &&
               <button
                 onClick={() => {
                   setActiveTab("solicitudes");
                   setShowSolicitudForm(false);
                 }}
-                className={`px-4 py-2 font-medium text-sm ${
-                  activeTab === "solicitudes"
+                className={`px-4 py-2 font-medium text-sm ${activeTab === "solicitudes"
                     ? "text-[#D7008A] border-b-2 border-[#D7008A]"
                     : "text-gray-500 hover:text-[#41023B]"
-                }`}
+                  }`}
               >
                 Panel Principal
               </button>
             }
-            
 
-            {(!isSolvent || showSolvencyWarning) && 
+
+            {(!isSolvent || showSolvencyWarning) &&
               <button
                 onClick={() => setActiveTab("solvencia")}
-                className={`px-4 py-2 font-medium text-sm ${
-                  activeTab === "solvencia"
+                className={`px-4 py-2 font-medium text-sm ${activeTab === "solvencia"
                     ? "text-[#D7008A] border-b-2 border-[#D7008A]"
                     : "text-gray-500 hover:text-[#41023B]"
-                }`}
+                  }`}
               >
                 Pago de Solvencia
               </button>
-            }            
+            }
           </div>
 
           {/* Contenido según la pestaña activa */}
@@ -317,6 +315,6 @@ async function fetchUserAndSolvency() {
 
       <Chat />
       {/* </DashboardLayout> */}
-      </>
+    </>
   )
 }

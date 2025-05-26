@@ -9,6 +9,7 @@ export default function DocsRequirements({
   isEditMode = false
 }) {
   // Inicializar fileNames basado en archivos existentes en formData
+  console.log("formData", formData);
   const [fileNames, setFileNames] = useState({
     ci: formData.ci ? (formData.ci.name || "Archivo seleccionado") : "",
     rif: formData.rif ? (formData.rif.name || "Archivo seleccionado") : "",
@@ -297,8 +298,7 @@ export default function DocsRequirements({
       <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
         <h3 className="text-sm font-medium text-blue-800 mb-2">Información importante</h3>
         <p className="text-xs text-blue-600">
-          Todos los documentos deben estar en formato PDF, JPG o PNG y ser claramente legibles.
-          El tamaño máximo por archivo es de 5MB. Asegúrese de que los documentos estén completos
+          Todos los documentos deben estar en formato PDF, JPG o PNG y ser claramente legibles. Asegúrese de que los documentos estén completos
           y vigentes para evitar retrasos en su proceso de colegiación.
         </p>
       </div>

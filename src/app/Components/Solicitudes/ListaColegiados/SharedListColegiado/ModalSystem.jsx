@@ -19,6 +19,7 @@ export function ApprovalModal({
   pendiente,
 }) {
   const [errores, setErrores] = useState({});
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Verificar si puede continuar al paso 2
   const puedeAvanzar = () => {
@@ -58,6 +59,17 @@ export function ApprovalModal({
         delete nuevosErrores[name];
         return nuevosErrores;
       });
+    }
+  };
+
+  // Manejar aprobación con estado de carga
+  const handleAprobar = async () => {
+    setIsProcessing(true);
+    try {
+      await handleAprobarSolicitud();
+    } catch (error) {
+      console.error("Error al aprobar:", error);
+      setIsProcessing(false);
     }
   };
 
@@ -120,12 +132,19 @@ export function ApprovalModal({
                   type="text"
                   id="libro"
                   name="libro"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={datosRegistro.libro}
-                  onChange={handleInputChange}
-                  className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.libro ? "border-red-300 bg-red-50" : "border-gray-300"
-                    }`}
-                  placeholder="Ej: A-001"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      handleInputChange(e);
+                    }
+                  }}
+                  className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.libro ? "border-red-300 bg-red-50" : "border-gray-300"}`}
+                  placeholder="Ej: 001"
                 />
+
                 {errores.libro && <p className="text-red-500 text-xs mt-1">{errores.libro}</p>}
               </div>
 
@@ -138,7 +157,12 @@ export function ApprovalModal({
                   id="pagina"
                   name="pagina"
                   value={datosRegistro.pagina}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      handleInputChange(e);
+                    }
+                  }}
                   className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.pagina ? "border-red-300 bg-red-50" : "border-gray-300"
                     }`}
                   placeholder="Ej: 25"
@@ -155,7 +179,12 @@ export function ApprovalModal({
                   id="num_cov"
                   name="num_cov"
                   value={datosRegistro.num_cov}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      handleInputChange(e);
+                    }
+                  }}
                   className={`w-full p-2.5 border rounded-md focus:ring-2 focus:ring-green-200 focus:border-green-500 transition-all ${errores.num_cov ? "border-red-300 bg-red-50" : "border-gray-300"
                     }`}
                   placeholder="Ej: 12345"
@@ -219,16 +248,27 @@ export function ApprovalModal({
               <button
                 onClick={retrocederPaso}
                 className="cursor-pointer px-4 py-2 flex items-center border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                disabled={isProcessing}
               >
                 <ChevronLeft size={16} className="mr-1" />
                 Volver
               </button>
               <button
-                onClick={handleAprobarSolicitud}
+                onClick={handleAprobar}
+                disabled={isProcessing}
                 className="cursor-pointer px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
               >
-                <CheckCircle size={16} />
-                Aprobar solicitud
+                {isProcessing ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>Aprobando...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={16} />
+                    <span>Aprobar solicitud</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -249,6 +289,9 @@ export function RejectModal({
   isRechazada,
   documentosRechazados = []
 }) {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [actionType, setActionType] = useState(null);
+
   // Lista de motivos predefinidos para rechazos o denegaciones
   const motivosPredefinidos = [
     "Administración",
@@ -281,6 +324,30 @@ export function RejectModal({
     }
   };
 
+  // Manejar rechazo con estado de carga
+  const handleRechazar = async () => {
+    setIsProcessing(true);
+    setActionType('rechazar');
+    try {
+      await handleRechazarSolicitud();
+    } catch (error) {
+      console.error("Error al rechazar:", error);
+      setIsProcessing(false);
+    }
+  };
+
+  // Manejar denegación con estado de carga
+  const handleDenegar = async () => {
+    setIsProcessing(true);
+    setActionType('denegar');
+    try {
+      await handleDenegarSolicitud();
+    } catch (error) {
+      console.error("Error al denegar:", error);
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <motion.div
@@ -292,23 +359,27 @@ export function RejectModal({
           <div className="flex items-center justify-center mb-2 text-red-600">
             <XCircle size={40} />
           </div>
-          <h3 className="text-xl font-semibold text-center text-gray-900">Rechazar solicitud</h3>
+          <h3 className="text-xl font-semibold text-center text-gray-900">
+            {isRechazada ? "Anular solicitud" : "Rechazar solicitud"}
+          </h3>
         </div>
         <div className="p-6">
           <p className="text-center text-gray-600 mb-4">
-            Está a punto de rechazar la solicitud de <span className="font-medium text-gray-900">{nombreCompleto}</span>
-            .
+            Está a punto de {isRechazada ? "anular" : "rechazar"} la solicitud de{" "}
+            <span className="font-medium text-gray-900">{nombreCompleto}</span>.
           </p>
 
-          <div className="bg-yellow-50 p-3 rounded-md border border-yellow-100 mb-4">
-            <h4 className="text-sm font-medium text-yellow-800 mb-1 flex items-center">
-              <AlertOctagon size={16} className="mr-1" /> Diferencia entre rechazar y Anular
-            </h4>
-            <p className="text-xs text-yellow-700">
-              • <strong>Rechazar:</strong> Permite correcciones futuras. El solicitante puede volver a intentarlo.
-              <br />• <strong>Anular:</strong> Rechazo definitivo. No se permitirán más acciones sobre esta solicitud.
-            </p>
-          </div>
+          {!isRechazada && (
+            <div className="bg-yellow-50 p-3 rounded-md border border-yellow-100 mb-4">
+              <h4 className="text-sm font-medium text-yellow-800 mb-1 flex items-center">
+                <AlertOctagon size={16} className="mr-1" /> Diferencia entre rechazar y Anular
+              </h4>
+              <p className="text-xs text-yellow-700">
+                • <strong>Rechazar:</strong> Permite correcciones futuras. El solicitante puede volver a intentarlo.
+                <br />• <strong>Anular:</strong> Rechazo definitivo. No se permitirán más acciones sobre esta solicitud.
+              </p>
+            </div>
+          )}
 
           {/* Resumen de documentos rechazados */}
           {documentosRechazados.length > 0 && (
@@ -318,12 +389,9 @@ export function RejectModal({
                 {documentosRechazados.map((doc, index) => (
                   <div key={index} className="mb-2 pb-2 border-b border-red-100 last:border-0">
                     <p className="font-medium text-red-800 text-sm">{doc.nombre}</p>
-                    <p className="text-xs text-red-700">{doc.motivo}</p>
+                    <p className="text-xs text-red-700">{doc.rejectionReason || doc.motivo}</p>
                   </div>
                 ))}
-                {documentosRechazados.length === 0 && (
-                  <p className="text-sm text-gray-500 italic">No hay documentos rechazados</p>
-                )}
               </div>
             </div>
           )}
@@ -336,7 +404,7 @@ export function RejectModal({
               value={motivoSeleccionado}
               onChange={(e) => actualizarMotivoFinal("predefinido", e.target.value)}
               className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-200 focus:border-red-500 transition-all"
-              disabled={usarMotivoPersonalizado}
+              disabled={usarMotivoPersonalizado || isProcessing}
             >
               <option value="">Seleccione un motivo...</option>
               {motivosPredefinidos.map((motivo, index) => (
@@ -352,6 +420,7 @@ export function RejectModal({
               checked={usarMotivoPersonalizado}
               onChange={() => setUsarMotivoPersonalizado(!usarMotivoPersonalizado)}
               className="h-4 w-4 text-purple-600 rounded border-gray-300"
+              disabled={isProcessing}
             />
             <label htmlFor="motivoPersonalizado" className="ml-2 text-sm text-gray-700">
               Agregar Detalles
@@ -369,6 +438,7 @@ export function RejectModal({
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-200 focus:border-red-500 transition-all"
                 placeholder="Ingrese el motivo específico del rechazo o denegación"
                 rows="3"
+                disabled={isProcessing}
               ></textarea>
             </div>
           )}
@@ -384,24 +454,39 @@ export function RejectModal({
             <button
               onClick={onClose}
               className="cursor-pointer px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              disabled={isProcessing}
             >
               Cancelar
             </button>
             {!isRechazada && (
               <button
-                onClick={handleRechazarSolicitud}
-                disabled={!motivoRechazo.trim()}
-                className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:from-[#C40180] hover:to-[#C40180] transition-all shadow-sm font-medium ${!motivoRechazo.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={handleRechazar}
+                disabled={!motivoRechazo.trim() || isProcessing}
+                className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:from-[#C40180] hover:to-[#C40180] transition-all shadow-sm font-medium ${!motivoRechazo.trim() || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Rechazar solicitud
+                {isProcessing && actionType === 'rechazar' ? (
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                    Rechazando...
+                  </span>
+                ) : (
+                  'Rechazar solicitud'
+                )}
               </button>
             )}
             <button
-              onClick={handleDenegarSolicitud}
-              disabled={!motivoRechazo.trim()}
-              className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-600 hover:to-red-600 transition-all shadow-sm font-medium ${!motivoRechazo.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={handleDenegar}
+              disabled={!motivoRechazo.trim() || isProcessing}
+              className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-600 hover:to-red-600 transition-all shadow-sm font-medium ${!motivoRechazo.trim() || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Anular solicitud
+              {isProcessing && actionType === 'denegar' ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Anulando...
+                </span>
+              ) : (
+                'Anular solicitud'
+              )}
             </button>
           </div>
         </div>
@@ -418,6 +503,8 @@ export function ExonerationModal({
   handleExonerarPagos,
   onClose,
 }) {
+  const [isProcessing, setIsProcessing] = useState(false);
+
   // Lista de motivos predefinidos para exoneración
   const motivosExoneracion = [
     "Administración",
@@ -450,6 +537,17 @@ export function ExonerationModal({
     }
   };
 
+  // Manejar exoneración con estado de carga
+  const handleExonerar = async () => {
+    setIsProcessing(true);
+    try {
+      await handleExonerarPagos();
+    } catch (error) {
+      console.error("Error al exonerar:", error);
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <motion.div
@@ -462,6 +560,7 @@ export function ExonerationModal({
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
+            disabled={isProcessing}
           >
             <X size={24} />
           </button>
@@ -490,7 +589,7 @@ export function ExonerationModal({
               value={motivoSeleccionado}
               onChange={(e) => actualizarMotivoFinal("predefinido", e.target.value)}
               className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#D7008A] focus:border-[#D7008A] transition-all"
-              disabled={usarMotivoPersonalizado}
+              disabled={usarMotivoPersonalizado || isProcessing}
             >
               <option value="">Seleccione un motivo...</option>
               {motivosExoneracion.map((motivo, index) => (
@@ -506,6 +605,7 @@ export function ExonerationModal({
               checked={usarMotivoPersonalizado}
               onChange={() => setUsarMotivoPersonalizado(!usarMotivoPersonalizado)}
               className="h-4 w-4 text-purple-600 rounded border-gray-300"
+              disabled={isProcessing}
             />
             <label htmlFor="exoneracionPersonalizada" className="ml-2 text-sm text-gray-700">
               Agregar Detalles
@@ -523,6 +623,7 @@ export function ExonerationModal({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:border-[#D7008A]"
                 rows={4}
                 placeholder="Ingrese el motivo específico por el cual se exoneran los pagos..."
+                disabled={isProcessing}
               ></textarea>
             </div>
           )}
@@ -531,16 +632,24 @@ export function ExonerationModal({
             <button
               onClick={onClose}
               className="cursor-pointer px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+              disabled={isProcessing}
             >
               Cancelar
             </button>
             <button
-              onClick={handleExonerarPagos}
-              disabled={!motivoExoneracion.trim()}
-              className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-md hover:opacity-90 transition-colors ${!motivoExoneracion.trim() ? "opacity-70 cursor-not-allowed" : ""
+              onClick={handleExonerar}
+              disabled={!motivoExoneracion.trim() || isProcessing}
+              className={`cursor-pointer px-4 py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-md hover:opacity-90 transition-colors ${!motivoExoneracion.trim() || isProcessing ? "opacity-70 cursor-not-allowed" : ""
                 }`}
             >
-              Confirmar exoneración
+              {isProcessing ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Exonerando...
+                </span>
+              ) : (
+                'Confirmar exoneración'
+              )}
             </button>
           </div>
         </div>
@@ -555,6 +664,18 @@ export function TitleConfirmationModal({
   onConfirm,
   onClose
 }) {
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsProcessing(true);
+    try {
+      await onConfirm();
+    } catch (error) {
+      console.error("Error al confirmar:", error);
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <motion.div
@@ -584,14 +705,23 @@ export function TitleConfirmationModal({
             <button
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              disabled={isProcessing}
             >
               Cancelar
             </button>
             <button
-              onClick={onConfirm}
+              onClick={handleConfirm}
+              disabled={isProcessing}
               className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
-              Confirmar entrega
+              {isProcessing ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Confirmando...
+                </span>
+              ) : (
+                'Confirmar entrega'
+              )}
             </button>
           </div>
         </div>
@@ -605,6 +735,7 @@ export function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo
   const [reportType, setReportType] = useState("");
   const [description, setDescription] = useState("");
   const [evidence, setEvidence] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const reportTypes = [
     { id: "fake_credentials", label: "Credenciales falsificadas" },
@@ -614,15 +745,22 @@ export function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo
     { id: "other", label: "Otro tipo de irregularidad" }
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({
-      reportType,
-      description,
-      evidence,
-      colegiado: colegiadoInfo,
-      date: new Date().toISOString()
-    });
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        reportType,
+        description,
+        evidence,
+        colegiado: colegiadoInfo,
+        date: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error al enviar reporte:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -665,6 +803,7 @@ export function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo
                 onChange={(e) => setReportType(e.target.value)}
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 required
+                disabled={isSubmitting}
               >
                 <option value="">Seleccione el tipo de irregularidad</option>
                 {reportTypes.map(type => (
@@ -684,6 +823,7 @@ export function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 placeholder="Describa en detalle la situación, incluyendo fechas, lugares y personas involucradas..."
                 required
+                disabled={isSubmitting}
               ></textarea>
             </div>
 
@@ -693,7 +833,7 @@ export function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo
               </label>
               <div
                 className="w-full p-4 border border-gray-300 rounded-md hover:border-[#C40180] focus-within:ring-2 focus-within:ring-[#C40180] focus-within:border-[#C40180] transition-colors cursor-pointer bg-gray-50"
-                onClick={() => document.getElementById('evidence-file-input').click()}
+                onClick={() => !isSubmitting && document.getElementById('evidence-file-input').click()}
               >
                 <div className="flex flex-col items-center">
                   <Upload size={24} className="text-gray-400 mb-2" />
@@ -711,10 +851,11 @@ export function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo
                   type="file"
                   onChange={(e) => setEvidence(e.target.files[0])}
                   className="hidden"
+                  disabled={isSubmitting}
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Puede adjuntar documentos, imágenes u otros archivos que sirvan como evidencia (máx. 10MB)
+                Puede adjuntar documentos o imágenes que sirvan como evidencia
               </p>
             </div>
           </div>
@@ -724,16 +865,24 @@ export function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo
               type="button"
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              disabled={isSubmitting}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              disabled={!reportType || !description}
-              className={`px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${!reportType || !description ? 'opacity-50 cursor-not-allowed' : ''
+              disabled={!reportType || !description || isSubmitting}
+              className={`px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${!reportType || !description || isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
             >
-              Enviar reporte
+              {isSubmitting ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Enviando...
+                </span>
+              ) : (
+                'Enviar reporte'
+              )}
             </button>
           </div>
         </form>
