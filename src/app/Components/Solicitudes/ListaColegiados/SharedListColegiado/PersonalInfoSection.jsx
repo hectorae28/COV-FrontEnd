@@ -30,8 +30,8 @@ export default function PersonalInfoSection({
   const getInitialFormData = () => {
     return {
       documentType: datosPersonales?.nacionalidad === "extranjera" ? "pasaporte" : "cedula",
-      identityCard: datosPersonales?.identificacion?.substring(0, 1) || "",
-      idType: datosPersonales?.identificacion?.substring(1) || "V",
+      identityCard: datosPersonales?.identificacion?.substring(1) || "",
+      idType: datosPersonales?.identificacion?.substring(0, 1) || "V",
       firstName: datosPersonales?.nombre || "",
       secondName: datosPersonales?.segundo_nombre || "",
       firstLastName: datosPersonales?.primer_apellido || "",
@@ -67,7 +67,7 @@ export default function PersonalInfoSection({
       nacionalidad: dataToUpdate.documentType === "pasaporte" ? "extranjera" : "venezolana",
       identificacion: dataToUpdate.documentType === "pasaporte"
         ? dataToUpdate.identityCard
-        : `${dataToUpdate.idType}-${dataToUpdate.identityCard}`,
+        : `${dataToUpdate.idType}${dataToUpdate.identityCard}`,
       fecha_de_nacimiento: dataToUpdate.birthDate,
       genero: dataToUpdate.gender,
       estado_civil: dataToUpdate.maritalStatus
