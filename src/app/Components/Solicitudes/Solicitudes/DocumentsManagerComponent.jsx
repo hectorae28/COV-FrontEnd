@@ -1,6 +1,6 @@
 "use client"
 
-import DocumentVerificationSwitch from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentVerificationSwitch";
+import VerificationSwitch from "@/app/Components/Solicitudes/ListaColegiados/VerificationSwitch";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import { motion } from "framer-motion";
 import { AlertCircle, Eye, FileText, RefreshCcw, Upload, X } from "lucide-react";
@@ -16,7 +16,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
     // Función para limpiar los documentosAdjuntos quitando las keys numéricas
     const limpiarDocumentosAdjuntos = (documentosAdjuntos) => {
         if (!documentosAdjuntos) return {};
-        
+
         return Object.fromEntries(
             Object.entries(documentosAdjuntos).filter(([key]) => isNaN(key) || key.includes('_'))
         );
@@ -42,14 +42,14 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
     // Mapear los documentos requeridos al formato esperado por el componente
     const documentosFormateados = solicitud.documentosRequeridos.map((docNombre, index) => {
         const docNombreNormalizado = docNombre.toLowerCase();
-        
+
         // Buscar la clave en el mapa
         const campoBackend = documentosMapping[docNombreNormalizado];
-        
+
         // Get validation status from solicitud data
         let validateField = null;
         let motivoRechazoField = null;
-        
+
         if (campoBackend && solicitud.documentosAdjuntos) {
             // Search for validation status in all sections (carnet, especializacion, etc.)
             if (solicitud.detallesSolicitud?.carnet?.archivos) {
@@ -64,7 +64,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                 }
             }
         }
-        
+
         // Determine status based on validation field
         let status = 'pending';
         if (validateField === true) {
@@ -72,14 +72,14 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
         } else if (validateField === false) {
             status = 'rejected';
         }
-        
+
         return {
             id: campoBackend || `doc-${index}`,
             nombre: docNombre,
             descripcion: "Documento requerido para la solicitud",
             requerido: true,
-            url: campoBackend && documentosAdjuntosLimpios[campoBackend] 
-                ? documentosAdjuntosLimpios[campoBackend] 
+            url: campoBackend && documentosAdjuntosLimpios[campoBackend]
+                ? documentosAdjuntosLimpios[campoBackend]
                 : null,
             status: status,
             rejectionReason: motivoRechazoField || '',
@@ -183,7 +183,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                 onVerDocumento(documento.url)
             }
         }
-        
+
         return (
             <div
                 className={`border rounded-lg ${tieneArchivo ? "border-gray-200 hover:border-[#C40180]" : "border-red-200 bg-red-50"
@@ -217,10 +217,10 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                             )}
                             {tieneArchivo && (
                                 <div className="mt-3">
-                                    <DocumentVerificationSwitch
-                                    documento={documento}
-                                    onChange={onDocumentStatusChange}
-                                    readOnly={isReadOnly}
+                                    <VerificationSwitch
+                                        item={documento}
+                                        onChange={onDocumentStatusChange}
+                                        readOnly={isReadOnly}
                                     />
                                 </div>
                             )}

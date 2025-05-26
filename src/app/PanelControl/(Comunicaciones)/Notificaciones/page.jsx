@@ -3,12 +3,13 @@
 import { NotificacionesProvider, useNotificaciones } from "@/app/Models/PanelControl/Comunicaciones/Notificaciones/NotificacionesData"
 import { CheckCircle, Filter, Search, Trash2, X } from "lucide-react"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { NotificacionDetail } from "../../../Components/Comunicaciones/Notificaciones/NotificacionDetail"
 import { NotificacionesList } from "../../../Components/Comunicaciones/Notificaciones/NotificacionesList"
 import { NotificacionesTabs } from "../../../Components/Comunicaciones/Notificaciones/NotificacionesTabs"
 
-function NotificacionesPage() {
+// Componente separado que maneja los search params
+function NotificacionesContent() {
   const searchParams = useSearchParams()
   const notificationId = searchParams.get("id")
   const [isMobile, setIsMobile] = useState(false)
@@ -272,6 +273,44 @@ function NotificacionesPage() {
         />
       </div>
     </div>
+  )
+}
+
+// Componente de loading para Suspense
+function NotificacionesLoading() {
+  return (
+    <div className="flex flex-col h-screen overflow-hidden pt-20">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-3 bg-white border-b shadow-sm z-20 flex-shrink-0">
+        <div className="w-full animate-pulse">
+          <div className="bg-gray-200 h-10 rounded-lg"></div>
+        </div>
+      </div>
+      <div className="flex flex-1 overflow-hidden relative">
+        <div className="w-full md:w-3/5 bg-white border-r">
+          <div className="p-4 animate-pulse">
+            <div className="bg-gray-200 h-6 rounded mb-4"></div>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-gray-100 h-20 rounded mb-2"></div>
+            ))}
+          </div>
+        </div>
+        <div className="hidden md:flex w-3/5 bg-gray-50 items-center justify-center">
+          <div className="animate-pulse">
+            <div className="bg-gray-200 h-16 w-16 rounded-full mb-4"></div>
+            <div className="bg-gray-200 h-4 w-48 rounded"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Componente principal que usa Suspense
+function NotificacionesPage() {
+  return (
+    <Suspense fallback={<NotificacionesLoading />}>
+      <NotificacionesContent />
+    </Suspense>
   )
 }
 
