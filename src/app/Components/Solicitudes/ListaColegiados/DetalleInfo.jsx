@@ -297,7 +297,9 @@ export default function DetalleInfo({
       homePhone: data.persona?.telefono_de_habitacion || "",
       address: data.persona?.direccion?.referencia || "",
       city: data.persona?.direccion?.municipio || "",
+      city_name: data.persona?.direccion?.municipio_nombre || "",
       state: data.persona?.direccion?.estado || "",
+      state_name: data.persona?.direccion?.estado_nombre || "",
     });
 
     setDatosAcademicos({
@@ -918,7 +920,7 @@ export default function DetalleInfo({
             pendienteId={entityId}
             setCambiosPendientes={setCambiosPendientes}
             readOnly={entityData?.status === "anulado"}
-            isAdmin={isAdmin} // ← AGREGAR ESTA LÍNEA
+            isAdmin={isAdmin}
           />
 
           <DocumentSection
@@ -1089,7 +1091,7 @@ export default function DetalleInfo({
                   pendienteId={entityId}
                   setCambiosPendientes={setCambiosPendientes}
                   readonly={entityData?.status === "anulado"}
-                  isAdmin={isAdmin} // ← AGREGAR ESTA LÍNEA
+                  isAdmin={isAdmin}
                 />
               </>
             )}
