@@ -1,6 +1,6 @@
 "use client";
 import { fetchEventosCursos } from "@/api/endpoints/landingPage";
-import EventCard from "@/app/(Site)/(CursosEventos)/CursosEventos/EventCard";
+import EventCard from "@/app/(site)/(CursosEventos)/CursosEventos/EventCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Filter, Search } from "lucide-react";
 import Link from "next/link";
