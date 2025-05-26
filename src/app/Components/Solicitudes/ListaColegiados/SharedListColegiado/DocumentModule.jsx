@@ -11,7 +11,7 @@ import {
   Upload, X
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import DocumentVerificationSwitch from "./DocumentVerificationSwitch";
+import VerificationSwitch from "../VerificationSwitch";
 
 // Componente principal de gestión de documentos
 export function DocumentSection({
@@ -22,7 +22,7 @@ export function DocumentSection({
   readonly = false,
   filter = doc => !doc.id?.includes('comprobante_pago'),
   isColegiado = false,
-  pendienteData = null // Nuevo prop para recibir datos del pendiente
+  pendienteData = null
 }) {
   // Estados para el modal de edición de documentos
   const [showModal, setShowModal] = useState(false);
@@ -251,7 +251,7 @@ export function DocumentSection({
     if (!file) return;
 
     const validTypes = ["application/pdf", "image/jpeg", "image/png"];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
 
     if (!validTypes.includes(file.type)) {
       setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
@@ -553,7 +553,7 @@ export function DocumentSection({
   );
 }
 
-// Componente de tarjeta individual de documento (sin cambios)
+// Componente de tarjeta individual
 function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiado = false }) {
   const tieneArchivo = documento.url !== null;
   const isExonerado = documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
@@ -631,11 +631,11 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
 
             {tieneArchivo && (
               <div className="document-verification-switch">
-                <DocumentVerificationSwitch
-                  documento={documento}
-                  onChange={handleStatusChange}
-                  readOnly={isReadOnly}
-                  isColegiado={isColegiado}
+                <VerificationSwitch
+                  item={documento}
+                  onChange={onStatusChange}
+                  type="documento"
+                  readOnly={documento.isReadOnly}
                 />
               </div>
             )}
@@ -664,7 +664,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
   );
 }
 
-// Resto de las funciones helper sin cambios...
+// funciones helper
 export function mapDocumentsForSection(documentos = []) {
   if (!Array.isArray(documentos)) return [];
 
@@ -682,7 +682,7 @@ export function mapDocumentsForSection(documentos = []) {
   }));
 }
 
-// Modal para visualizar documentos (sin cambios)
+// Modal para visualizar documentos
 export function DocumentViewer({ documento, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
