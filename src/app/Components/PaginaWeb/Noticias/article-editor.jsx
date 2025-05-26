@@ -37,6 +37,7 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
     moveElementInGrid,
     changeElementWidth,
     moveElementToRow,
+    setContentElements,
     handleSave
   } = useArticleEditorState(article, onSave, handleInputChange)
   
@@ -184,20 +185,21 @@ const ArticleEditor = ({ article, onSave, onCancel, fullPreview, toggleFullPrevi
                 mediaSource={mediaSource}
                 setMediaSource={setMediaSource}
               />
-            ) : (<></>
-              // <ContentTab
-              //   contentElements={contentElements}
-              //   elementRows={elementRows}
-              //   activeElement={activeElement}
-              //   setActiveElement={setActiveElement}
-              //   prepareContentElement={prepareContentElement}
-              //   handleElementUpdate={handleElementUpdate}
-              //   removeContentElement={removeContentElement}
-              //   moveElement={moveElement}
-              //   moveElementInGrid={moveElementInGrid}
-              //   changeElementWidth={changeElementWidth}
-              //   moveElementToRow={moveElementToRow}
-              // />
+            ) : (
+              <ContentTab
+                contentElements={contentElements}
+                elementRows={elementRows}
+                activeElement={activeElement}
+                setActiveElement={setActiveElement}
+                prepareContentElement={prepareContentElement}
+                handleElementUpdate={handleElementUpdate}
+                removeContentElement={removeContentElement}
+                moveElement={moveElement}
+                moveElementInGrid={moveElementInGrid}
+                changeElementWidth={changeElementWidth}
+                moveElementToRow={moveElementToRow}
+                setContentElements={setContentElements}
+              />
             )}
           </div>
         </div>

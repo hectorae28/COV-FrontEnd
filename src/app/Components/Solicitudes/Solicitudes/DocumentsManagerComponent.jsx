@@ -1,10 +1,10 @@
 "use client"
 
-import { FileText, Eye, RefreshCcw, AlertCircle, Upload, X } from "lucide-react"
-import { motion } from "framer-motion"
-import { useState, useRef } from "react"
-import DocumentVerificationSwitch from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentVerificationSwitch";
+import DocumentVerificationSwitch from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentVerificationSwitch";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
+import { motion } from "framer-motion";
+import { AlertCircle, Eye, FileText, RefreshCcw, Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
 
 export default function DocumentosSection({ solicitud, onVerDocumento, updateDocumento, onDocumentStatusChange, isAdmin }) {
     const [documentoParaSubir, setDocumentoParaSubir] = useState(null)

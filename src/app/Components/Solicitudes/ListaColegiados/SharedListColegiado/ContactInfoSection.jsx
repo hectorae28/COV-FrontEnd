@@ -55,8 +55,11 @@ export default function ContactInfoSection({
       countryCode: datosContacto?.countryCode || "+58",
       homePhone: datosContacto?.homePhone || "",
       state: datosContacto?.state || "",
+      state_name: datosContacto?.state_name || "",
       city: datosContacto?.city || "",
+      city_name: datosContacto?.city_name || "",
       municipio: datosContacto?.city || "", // Añadir para compatibilidad
+      municipio_name: datosContacto?.city_name || "", // Añadir para compatibilidad
       address: datosContacto?.address || "",
       emailVerified: datosContacto?.emailVerified || false,
       emailIsValid: true // Para validación interna
@@ -185,7 +188,7 @@ export default function ContactInfoSection({
               Estado
             </p>
             <p className="font-medium text-gray-800">
-              {datosContacto?.state || "No especificado"}
+              {datosContacto?.state_name || "No especificado"}
             </p>
           </div>
 
@@ -195,7 +198,7 @@ export default function ContactInfoSection({
               Municipio / Parroquia
             </p>
             <p className="font-medium text-gray-800">
-              {datosContacto?.city || "No especificado"}
+              {datosContacto?.city_name || "No especificado"}
             </p>
           </div>
         </div>

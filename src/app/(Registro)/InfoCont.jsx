@@ -1,20 +1,10 @@
 "use client"
 import CountryFlag from "@/Shared/CountryFlag"
-import PhoneEstData from "@/Shared/EstadoData"
 import phoneCodes from "@/Shared/TelefonoData"
-import { fetchEstados, fetchMunicipios } from "@/api/endpoints/ubicacion"
 import { motion } from "framer-motion"
-import { ChevronDown, Mail, MapPin, Phone, Search, X } from "lucide-react"
+import { ChevronDown, Mail, Phone, Search, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
-
-// Función para capitalizar la primera letra de cada palabra
-const capitalizeWords = (text) => {
-  if (!text) return ""
-  return text
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ")
-}
+import DireccionForm from "./DireccionForm"
 
 export default function InfoContacto({
   formData,
@@ -22,12 +12,11 @@ export default function InfoContacto({
   validationErrors,
   isProfileEdit,
   requestEmailVerification,
-  isAdmin=false,
+  isAdmin = false,
   isEditMode = false,
   onSave
 }) {
   const [cities, setCities] = useState([])
-  const [municipios, setMunicipios] = useState([])
   const [isFormValid, setIsFormValid] = useState(false)
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -36,30 +25,11 @@ export default function InfoContacto({
   const [emailChanged, setEmailChanged] = useState(false)
   const [emailError, setEmailError] = useState("")
   const dropdownRef = useRef(null)
-  const [estados, setEstados] = useState([])
-  const [isLoadingMunicipios, setIsLoadingMunicipios] = useState(false)
-  
-  // Estado local para el formulario en modo edición
+
   const [localFormData, setLocalFormData] = useState(formData);
-  
-  // Actualizar el estado local cuando cambian las props
+
   useEffect(() => {
     setLocalFormData(formData);
-  }, [formData]);
-
-  // Cargar estados al montar el componente
-  useEffect(() => {
-    const loadEstados = async () => {
-      try {
-        const data = await fetchEstados();
-        console.log("Estados cargados:", data);
-        setEstados(data);
-      } catch (error) {
-        console.error("Error al cargar los estados:", error);
-      }
-    };
-    
-    loadEstados();
   }, []);
 
   // Ordenamos los códigos telefónicos alfabéticamente por nombre de país
@@ -84,104 +54,54 @@ export default function InfoContacto({
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    console.log("Cambio en campo:", name, "Valor:", value);
-    
-    if (name === "address") {
-      // Capitalizamos la primera letra de cada palabra en la dirección
-      const processedValue = capitalizeWords(value);
-      
-      if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: processedValue }));
-      } else {
-        onInputChange({ [name]: processedValue });
-      }
-    } else if (name === "state") {
-      // Encontrar el estado seleccionado para obtener su nombre
-      const estadoSeleccionado = estados.find(e => e.id === value);
-      const nombreEstado = estadoSeleccionado ? estadoSeleccionado.nombre : "";
-      
-      if (isEditMode) {
-        setLocalFormData(prev => ({ 
-          ...prev, 
-          [name]: value,
-        }));
-      } else {
-        onInputChange({ 
-          [name]: value,
-        });
-      }
-      
-      // Cargar municipios según el estado seleccionado
-      if (value) {
-        loadMunicipios(value);
-      } else {
-        setMunicipios([]);
-      }
-    } else if (name === "municipio") {
-      // Encontrar el nombre del municipio seleccionado
-      const municipioSeleccionado = municipios.find(m => m.id === value);
-      const nombreMunicipio = municipioSeleccionado ? municipioSeleccionado.nombre : "";
-      
-      console.log("Municipio seleccionado:", municipioSeleccionado);
-      console.log("Nombre del municipio:", nombreMunicipio);
-      
-      if (isEditMode) {
-        setLocalFormData(prev => ({ 
-          ...prev, 
-          [name]: value,
-          city: nombreMunicipio 
-        }));
-      } else {
-        onInputChange({ 
-          [name]: value,
-          city: nombreMunicipio 
-        });
-      }
-    } else if (name === "email") {
-      // Validar formato de correo electrónico
-      if (value && !validateEmail(value)) {
-        setEmailError("Ingrese un correo electrónico válido");
-      } else {
-        setEmailError("");
-      }
-      
-      if (isEditMode) {
-        setLocalFormData(prev => ({ 
-          ...prev, 
-          [name]: value,
-          emailIsValid: validateEmail(value)
-        }));
-      } else {
-        // Notificar el cambio de email al componente padre
-        onInputChange({
-          [name]: value,
-          emailIsValid: validateEmail(value)
-        });
-      }
+  const { name, value } = e.target
+
+  if (name === "email") {
+    if (value && !validateEmail(value)) {
+      setEmailError("Ingrese un correo electrónico válido");
     } else {
-      if (isEditMode) {
-        setLocalFormData(prev => ({ ...prev, [name]: value }));
-      } else {
-        onInputChange({ [name]: value });
-      }
+      setEmailError("");
+    }
+
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        [name]: value,
+        emailIsValid: validateEmail(value)
+      }));
+    } else {
+      onInputChange({
+        [name]: value,
+        emailIsValid: validateEmail(value)
+      });
+    }
+  } else if (name === "address") {
+    const formatted = value.replace(/\b\w+/g, (word) => {
+      return word.length > 1 ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : word.toUpperCase();
+    });
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, address: formatted }));
+    } else {
+      onInputChange({ address: formatted });
+    }
+  } else if (name === "homePhone") {
+    const digitsOnly = value.replace(/\D/g, "").slice(0, 11); // siempre 11 dígitos
+    const formatted = digitsOnly.replace(/(\d{0,4})(\d{0,3})(\d{0,4})/, (_, p1, p2, p3) => {
+      return [p1, p2, p3].filter(Boolean).join(" ");
+    });
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, homePhone: formatted }));
+    } else {
+      onInputChange({ homePhone: formatted });
+    }
+  } else {
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, [name]: value }));
+    } else {
+      onInputChange({ [name]: value });
     }
   }
-
-  // Función para cargar los municipios según el estado seleccionado
-  const loadMunicipios = async (estadoId) => {
-    try {
-      setIsLoadingMunicipios(true);
-      const data = await fetchMunicipios(estadoId);
-      console.log("Municipios cargados:", data);
-      setMunicipios(data);
-    } catch (error) {
-      console.error("Error al cargar los municipios:", error);
-      setMunicipios([]);
-    } finally {
-      setIsLoadingMunicipios(false);
-    }
-  };
+};
 
   // Manejador para seleccionar un código de país
   const handleSelectCountry = (code) => {
@@ -207,16 +127,6 @@ export default function InfoContacto({
     }
   }, [])
 
-  // Actualizar las ciudades cuando cambia el estado
-  useEffect(() => {
-    const currentState = isEditMode ? localFormData.state : formData.state;
-    if (currentState && typeof currentState === 'string') {
-      const normalizedState = currentState.toLowerCase();
-      setCities(PhoneEstData[normalizedState] || []);
-    } else {
-      setCities([]);
-    }
-  }, [formData.state, localFormData.state, isEditMode]);
 
   // Actualizar estados locales cuando cambia formData
   useEffect(() => {
@@ -248,7 +158,6 @@ export default function InfoContacto({
     setIsFormValid(isValid);
   }, [formData]);
 
-  const venezuelanStates = Object.keys(PhoneEstData).map((state) => state.charAt(0).toUpperCase() + state.slice(1))
 
   // Checks if a field has validation errors to display the required message
   const isFieldEmpty = (fieldName) => {
@@ -283,7 +192,7 @@ export default function InfoContacto({
           </svg>
           <span className="text-xs">
             {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "Requiere verificación del nuevo correo"}
-            </span>
+          </span>
         </div>
       )
     }
@@ -304,16 +213,11 @@ export default function InfoContacto({
           className="text-xs text-[#D7008A] hover:underline"
         >
           {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "El correo debe ser verificado para continuar"}
-          
+
         </button>
       </div>
     )
   }
-
-  // Determinar si mostrar "Parroquias" en lugar de "Municipio"
-  const state = isEditMode ? localFormData.state : formData.state;
-  const isDistritoCapital = typeof state === 'string' && state.toLowerCase() === "distrito capital";
-  const municipioLabel = isDistritoCapital ? "Parroquia" : "Municipio";
 
   const handleSaveClick = () => {
     // Simplemente guardamos sin validación estricta en modo edición
@@ -323,13 +227,18 @@ export default function InfoContacto({
       onInputChange(localFormData);
     }
   };
+  const fieldMapping = {
+    state: "state",
+    municipio: "municipio",
+    address: "address",
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full sm:w-11/12 md:w-10/12 lg:w-8/12 xl:w-6/12 mx-auto"
+      className="w-full mx-auto space-y-2"
     >
       {/* Email - SOLO ESTE CAMPO será no editable en modo perfil */}
       <div>
@@ -477,7 +386,7 @@ export default function InfoContacto({
                 const value = e.target.value.replace(/\D/g, "")
                 handleChange({ target: { name: "homePhone", value } })
               }}
-              maxLength="11"
+              maxLength="13"
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]"
               placeholder="0212 123 4567"
             />
@@ -486,81 +395,15 @@ export default function InfoContacto({
         </div>
       </div>
       {/* Sección de Dirección de habitación */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-        <h3 className="text-lg font-medium text-[#41023B] mb-4">Dirección de habitación</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {/* Estado */}
-          <div>
-            <label className="block mb-2 text-sm font-medium text-[#41023B]">
-              Estado <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="state"
-              name="state"
-              value={isEditMode ? localFormData.state : formData.state}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("state") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none`}
-              required
-            >
-              <option value="">Selecciona un estado</option>
-              {estados.map((estado) => (
-                <option key={estado.id} value={estado.id}>
-                  {estado.nombre}
-                </option>
-              ))}
-            </select>
-            {isFieldEmpty("state") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
-          </div>
-          {/* Municipio o Parroquia según el estado seleccionado */}
-          <div>
-            <label className="block mb-2 text-sm font-medium text-[#41023B]">
-              {municipioLabel} <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="municipio"
-              name="municipio"
-              value={isEditMode ? localFormData.municipio : formData.municipio}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("municipio") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${!formData.state ? "bg-white" : ""}`}
-              disabled={isLoadingMunicipios || !formData.state}
-            >
-              <option value="">
-                {isLoadingMunicipios 
-                  ? "Cargando municipios..." 
-                  : !formData.state 
-                    ? "Selecciona un estado primero" 
-                    : "Selecciona un municipio"}
-              </option>
-              {municipios.map((municipio) => (
-                <option key={municipio.id} value={municipio.id}>
-                  {municipio.nombre}
-                </option>
-              ))}
-            </select>
-            {isFieldEmpty("municipio") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
-            <p className="mt-1 text-xs text-gray-500">
-              {formData.city ? `Ciudad seleccionada: ${formData.city}` : ""}
-            </p>
-          </div>
-        </div>
-        {/* Dirección específica */}
-        <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B]">
-            Dirección <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <textarea
-              name="address"
-              value={formData.address || ""}
-              onChange={handleChange}
-              className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("address") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] min-h-[100px]`}
-              placeholder="Ingrese su dirección completa"
-            />
-            <MapPin className="absolute left-3 top-4 text-gray-400" />
-          </div>
-          {isFieldEmpty("address") && <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>}
-        </div>
-      </div>
+      <DireccionForm
+        formData={formData}
+        onInputChange={onInputChange}
+        isFieldEmpty={isFieldEmpty}
+        isEditMode={isEditMode}
+        localFormData={localFormData}
+        setLocalFormData={setLocalFormData}
+        fieldMapping={{ ...fieldMapping }}
+      />
       {/* Botones de acción en modo edición */}
       {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">

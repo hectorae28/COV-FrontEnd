@@ -1,11 +1,11 @@
 import { AlertCircle, CheckCircle, Shield, XCircle } from "lucide-react";
 import { useState } from "react";
 
-export default function DocumentVerificationSwitch({
-    documento,
+export default function InstitutionVerificationSwitch({
+    institucion,
     onChange,
     readOnly = false,
-    isColegiado = false,
+    index = 0
 }) {
     const [isRejectionOpen, setIsRejectionOpen] = useState(false);
     const [isApprovalOpen, setIsApprovalOpen] = useState(false);
@@ -13,25 +13,25 @@ export default function DocumentVerificationSwitch({
     const [customReason, setCustomReason] = useState('');
     const [useCustomReason, setUseCustomReason] = useState(false);
 
-    // Motivos predefinidos de rechazo
+    // Motivos predefinidos de rechazo para instituciones
     const motivosRechazo = [
-        "Documento ilegible",
-        "Documento incompleto",
-        "Documento caducado",
-        "Documento no válido",
-        "Formato incorrecto",
-        "Faltan firmas o sellos",
+        "Institución no válida",
+        "Datos de contacto incorrectos",
+        "Dirección inexistente",
+        "Teléfono no corresponde",
+        "Cargo no verificable",
+        "Institución inexistente",
         "Información inconsistente",
-        "No corresponde con el solicitante",
-        "Documento alterado",
-        "Documento dañado"
+        "Documentación insuficiente",
+        "No autorizado para trabajar",
+        "Datos fraudulentos"
     ];
 
-    // El estado actual del documento (approved, rechazado, pending)
-    const status = documento.status || 'pending';
+    // El estado actual de la institución
+    const status = institucion.verificado;
 
-    // Verificar si el documento ya está aprobado
-    const isApproved = status === 'approved';
+    // Verificar si la institución ya está aprobada
+    const isApproved = status === true;
 
     const handleStatusChange = (newStatus, event) => {
         // Prevenir propagación del evento
@@ -39,15 +39,15 @@ export default function DocumentVerificationSwitch({
             event.stopPropagation();
         }
 
-        // Si el documento ya está aprobado, no permitas cambios
+        // Si la institución ya está aprobada, no permitas cambios
         if (isApproved || readOnly) return;
 
         // Si se intenta aprobar, mostrar el modal de confirmación
-        if (newStatus === 'approved') {
+        if (newStatus === true) {
             setIsApprovalOpen(true);
         }
         // Si se intenta rechazar, mostrar el modal de rechazo
-        else if (newStatus === 'rechazado') {
+        else if (newStatus === false) {
             setIsRejectionOpen(true);
         }
     };
@@ -55,10 +55,10 @@ export default function DocumentVerificationSwitch({
     // Función para confirmar la aprobación
     const confirmApproval = () => {
         onChange({
-            ...documento,
-            status: 'approved',
-            rejectionReason: ''
-        });
+            ...institucion,
+            verificado: true,
+            motivo_rechazo: ''
+        }, index);
         setIsApprovalOpen(false);
     };
 
@@ -73,14 +73,18 @@ export default function DocumentVerificationSwitch({
             return;
         }
 
-        // Actualizar documento con estado rechazado y motivo
+        // Actualizar institución con estado rechazado y motivo
         onChange({
-            ...documento,
-            status: 'rechazado',
-            rejectionReason: finalReason
-        });
+            ...institucion,
+            verificado: false,
+            motivo_rechazo: finalReason
+        }, index);
 
         setIsRejectionOpen(false);
+        // Limpiar campos después del rechazo
+        setRejectionPreset('');
+        setCustomReason('');
+        setUseCustomReason(false);
     };
 
     // Actualizar la razón al cambiar la selección
@@ -99,80 +103,72 @@ export default function DocumentVerificationSwitch({
     return (
         <div className="relative">
             {/* Contenedor específico para los botones de aprobar/rechazar */}
-            <div className="flex items-center space-x-2 approve-reject-buttons">
-            {!isColegiado && (
-                <>
+            <div className="flex items-center space-x-2 institution-verification-buttons">
                 <button
-                    onClick={(e) => handleStatusChange('approved', e)}
+                    onClick={(e) => handleStatusChange(true, e)}
                     disabled={isApproved || readOnly}
-                    className={`p-2 rounded-md transition-all ${
-                        isApproved
+                    className={`p-2 rounded-md transition-all ${isApproved
                             ? 'bg-green-200 text-green-800 ring-2 ring-green-500 shadow-md'
                             : 'bg-gray-100 text-gray-500 hover:bg-green-50'
-                    } ${(isApproved || readOnly) ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
+                        } ${(isApproved || readOnly) ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
                     title={
                         isApproved
-                            ? "Este documento ya ha sido aprobado"
+                            ? "Esta institución ya ha sido aprobada"
                             : readOnly
-                                ? "No se puede modificar este documento"
-                                : "Aprobar documento"
+                                ? "No se puede modificar esta institución"
+                                : "Aprobar institución"
                     }
                 >
                     <CheckCircle size={20} />
                 </button>
 
                 <button
-                    onClick={(e) => handleStatusChange('rechazado', e)}
+                    onClick={(e) => handleStatusChange(false, e)}
                     disabled={isApproved || readOnly}
-                    className={`p-2 rounded-md transition-all ${
-                        status === 'rechazado'
+                    className={`p-2 rounded-md transition-all ${status === false
                             ? 'bg-red-100 text-red-700 ring-2 ring-red-500'
                             : 'bg-gray-100 text-gray-500 hover:bg-red-50'
-                    } ${(isApproved || readOnly) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        } ${(isApproved || readOnly) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     title={
                         isApproved
-                            ? "No se puede rechazar un documento aprobado"
+                            ? "No se puede rechazar una institución aprobada"
                             : readOnly
-                                ? "No se puede modificar este documento"
-                                : "Rechazar documento"
+                                ? "No se puede modificar esta institución"
+                                : "Rechazar institución"
                     }
                 >
                     <XCircle size={20} />
                 </button>
-                </>
-            )}
 
-
-                <span 
-                    className={`text-sm font-medium ${
-                        status === 'approved' ? 'text-green-700' :
-                        status === 'rechazado' ? 'text-red-700' :
-                        'text-gray-600'
-                    }`}
-                    onClick={(e) => e.stopPropagation()} // También prevenir click en el texto
+                <span
+                    className={`text-sm font-medium ${status === true ? 'text-green-700' :
+                            status === false ? 'text-red-700' :
+                                'text-gray-600'
+                        }`}
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    {status === 'approved' && (
+                    {status === true && (
                         <span className="flex items-center">
                             <Shield size={16} className="mr-1" />
-                            Aprobado
+                            Aprobada
                         </span>
                     )}
-                    {status === 'rechazado' && 'Rechazado'}
-                    {status === 'pending' && 'Pendiente'}
+                    {status === false && 'Rechazada'}
+                    {(status === null || status === undefined) && 'Pendiente'}
                 </span>
             </div>
 
-            {/* Si está aprobado, mostrar un mensaje destacado */}
+            {/* Si está aprobada, mostrar un mensaje destacado */}
             {isApproved && (
-                <div 
+                <div
                     className="mt-2 text-xs text-green-600 bg-green-50 p-2 rounded-md border border-green-200"
-                    onClick={(e) => e.stopPropagation()} // Prevenir click en el mensaje
+                    onClick={(e) => e.stopPropagation()}
                 >
                     <p className="font-medium flex items-center">
                         <Shield size={14} className="mr-1" />
-                        Documento verificado y aprobado
+                        Institución verificada y aprobada
                     </p>
-                    <p className="mt-1">Este documento ha sido verificado y no puede ser modificado.</p>
+                    <p className="mt-1">Esta institución ha sido verificada y no puede ser modificada.</p>
                 </div>
             )}
 
@@ -187,12 +183,12 @@ export default function DocumentVerificationSwitch({
 
                         <div className="mb-4">
                             <p className="text-gray-700">
-                                ¿Está seguro de que desea aprobar este documento? Esta acción es <strong>irreversible</strong> y una vez aprobado:
+                                ¿Está seguro de que desea aprobar esta institución? Esta acción es <strong>irreversible</strong> y una vez aprobada:
                             </p>
                             <ul className="mt-2 ml-6 list-disc text-sm text-gray-600 space-y-1">
                                 <li>No podrá cambiar el estado a rechazado</li>
-                                <li>No se podrá reemplazar el archivo</li>
-                                <li>Solo se permitirá visualizar el documento</li>
+                                <li>No se podrá modificar la información</li>
+                                <li>Solo se permitirá visualizar los datos</li>
                             </ul>
                         </div>
 
@@ -249,7 +245,7 @@ export default function DocumentVerificationSwitch({
                                     value={customReason}
                                     onChange={(e) => setCustomReason(e.target.value)}
                                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-400 focus:border-red-400"
-                                    placeholder="Explique por qué rechaza este documento..."
+                                    placeholder="Explique por qué rechaza esta institución..."
                                     rows={3}
                                 ></textarea>
                             </div>
@@ -257,7 +253,12 @@ export default function DocumentVerificationSwitch({
 
                         <div className="flex justify-end gap-3 mt-4">
                             <button
-                                onClick={() => setIsRejectionOpen(false)}
+                                onClick={() => {
+                                    setIsRejectionOpen(false);
+                                    setRejectionPreset('');
+                                    setCustomReason('');
+                                    setUseCustomReason(false);
+                                }}
                                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
                             >
                                 Cancelar
@@ -265,11 +266,10 @@ export default function DocumentVerificationSwitch({
                             <button
                                 onClick={submitRejection}
                                 disabled={useCustomReason ? !customReason.trim() : !rejectionPreset}
-                                className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${
-                                    (useCustomReason ? !customReason.trim() : !rejectionPreset)
+                                className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${(useCustomReason ? !customReason.trim() : !rejectionPreset)
                                         ? 'opacity-50 cursor-not-allowed'
                                         : ''
-                                }`}
+                                    }`}
                             >
                                 Confirmar rechazo
                             </button>
@@ -279,12 +279,12 @@ export default function DocumentVerificationSwitch({
             )}
 
             {/* Mostrar motivo del rechazo si existe */}
-            {status === 'rechazado' && documento.rejectionReason && (
-                <div 
+            {status === false && institucion.motivo_rechazo && (
+                <div
                     className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-md border border-red-200"
-                    onClick={(e) => e.stopPropagation()} // Prevenir click en el motivo de rechazo
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    <span className="font-medium">Motivo de rechazo:</span> {documento.rejectionReason}
+                    <span className="font-medium">Motivo de rechazo:</span> {institucion.motivo_rechazo}
                 </div>
             )}
         </div>
