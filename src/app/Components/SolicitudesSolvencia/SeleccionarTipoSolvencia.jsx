@@ -1,6 +1,7 @@
 "use client"
 import { Check, Search, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { fetchDataUsuario } from "@/api/endpoints/colegiado";
 
 export default function SeleccionarTipoSolvencia({
   onFinalizarSolvencia,
@@ -10,24 +11,6 @@ export default function SeleccionarTipoSolvencia({
   colegiadoPreseleccionado = null,
   creadorInfo,
 }) {
-  // Definición de solvencias (MODIFICADO - ya no son tipos sino opciones de solvencia)
-  const OPCIONES_SOLVENCIA = {
-    solvencia: {
-      id: "solvencia",
-      nombre: "Solvencia",
-      costo: 75.00,
-      descripcion: "Certifica que el colegiado está habilitado para ejercer la profesión",
-      documentosRequeridos: []
-    },
-    // NUEVO - Opción de solvencia personalizada
-    personalizada: {
-      id: "personalizada",
-      nombre: "Solvencia Personalizada",
-      costo: 0.00, // Se establecerá mediante el formulario
-      descripcion: "Cree una solvencia con montos y duración personalizados",
-      documentosRequeridos: []
-    }
-  };
 
   // Lista de motivos para solvencia personalizada
   const MOTIVOS_PERSONALIZACION = [
@@ -62,7 +45,6 @@ export default function SeleccionarTipoSolvencia({
   // Estado inicial del formulario (MODIFICADO)
   const [formData, setFormData] = useState({
     colegiadoId: colegiadoPreseleccionado ? colegiadoPreseleccionado.id : "",
-    tipoSolvencia: "",
     documentosAdjuntos: {},
     // NUEVO - Campos para solvencia personalizada
     montoPersonalizado: "",
@@ -184,57 +166,11 @@ export default function SeleccionarTipoSolvencia({
     if (!validarFormulario()) return;
     setIsSubmitting(true);
     try {
-      // Obtener datos de la solvencia seleccionada
-      const opcionSolvenciaSeleccionada = OPCIONES_SOLVENCIA[formData.tipoSolvencia];
-
-      // Determinar el costo basado en el tipo de solvencia
-      let costoFinal = opcionSolvenciaSeleccionada.costo;
-      let descripcionFinal = opcionSolvenciaSeleccionada.descripcion;
-
-      // Para solvencia personalizada, usar los valores personalizados
-      if (formData.tipoSolvencia === "personalizada") {
-        costoFinal = parseFloat(formData.montoPersonalizado);
-        descripcionFinal = `Solvencia personalizada - Motivo: ${formData.motivoPersonalizacion}`;
-        if (formData.observacionesPersonalizacion) {
-          descripcionFinal += ` - ${formData.observacionesPersonalizacion}`;
-        }
-      }
-
-      // Formatear fecha de vencimiento en formato YYYY-MM-DD
-      const fechaVencimiento = formData.tipoSolvencia === "personalizada"
-        ? `${formData.anioVencimiento}-${formData.mesVencimiento.toString().padStart(2, '0')}-${formData.diaVencimiento.toString().padStart(2, '0')}`
-        : null;
-
       // Crear objeto de nueva solvencia
       const nuevaSolvencia = {
-        id: `solv-${Date.now()}`,
-        tipo: formData.tipoSolvencia === "personalizada" ? "Solvencia Personalizada" : "Solvencia",
         colegiadoId: formData.colegiadoId,
-        colegiadoNombre: colegiadoSeleccionado?.nombre || "Colegiado",
         fecha: new Date().toLocaleDateString(),
-        estado: "Revisión",
-        descripcion: descripcionFinal,
-        referencia: `SOLV-${Date.now().toString().slice(-6)}`,
-        costo: formData.tipoSolvencia === "personalizada" ? costoFinal : null, // Costo predefinido o personalizado
         exonerado: false, // Ya no hay exoneración en este paso
-        documentosRequeridos: opcionSolvenciaSeleccionada.documentosRequeridos || [],
-        documentosAdjuntos: formData.documentosAdjuntos || {},
-        estadoPago: "Pendiente",
-        tipoId: formData.tipoSolvencia,
-        // Si es solvencia personalizada, añadir la fecha de vencimiento directamente
-        ...(formData.tipoSolvencia === "personalizada" && { fechaVencimiento }),
-        // Información adicional para solvencia personalizada
-        ...(formData.tipoSolvencia === "personalizada" && {
-          motivoPersonalizacion: formData.motivoPersonalizacion,
-          observacionesPersonalizacion: formData.observacionesPersonalizacion
-        }),
-        // Agregando información del creador
-        creador: {
-          nombre: creadorInfo?.name || "Usuario",
-          email: creadorInfo?.email || "usuario@sistema.com",
-          esAdmin: creadorInfo?.isAdmin || creadorInfo?.role === "admin" || false,
-          fecha: new Date().toISOString()
-        }
       };
 
       // Pasar la solvencia creada al componente padre

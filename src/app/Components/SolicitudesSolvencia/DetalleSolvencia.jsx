@@ -21,8 +21,9 @@ import { useEffect, useState } from "react";
 import ConfirmacionModal from "./ConfirmacionModal";
 import RechazoModal from "./RechazoModal";
 import ExoneracionModal from "./ExoneracionModal";
-import {patchDataSolicitud} from "@/api/endpoints/solicitud"
+import {patchDataSolicitud, postDataSolicitud} from "@/api/endpoints/solicitud"
 import { useSolicitudesStore } from "@/store/SolicitudesStore"
+import { colegiado } from "@/app/Models/PanelControl/Solicitudes/SolicitudesColegiadosData";
 
 export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, actualizarSolvencia }) {
   // Estados principales
@@ -63,11 +64,35 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
 
   const fetchSolicitudesDeSolvencia = useSolicitudesStore((state) => state.fetchSolicitudesDeSolvencia);
 
+  function getTrimester() {
+    const today = new Date();
+    const month = today.getMonth();
+    return Math.floor(month / 3) + 1;
+  }
+
+  // Function to get the end date of a specific trimester
+  function getEndOfTrimester(trimester) {
+    const year = new Date().getFullYear();
+    let nextMonth;
+
+    switch (trimester) {
+      case 1: nextMonth = 3; break; // April (0-based)
+      case 2: nextMonth = 6; break; // July
+      case 3: nextMonth = 9; break; // October
+      case 4: nextMonth = 12; break; // January (next year)
+      default: throw new Error('Invalid trimester (must be 1-4)');
+    }
+
+    // Create a date for the first day of the next month, then subtract one day
+    const endDate = new Date(year, nextMonth, 1);
+    endDate.setDate(0); // Set to the last day of the previous month
+    return endDate;
+  }
+
   // Obtener datos de la solvencia
   useEffect(() => {
     if (solvencias && solvenciaId) {
       const solvenciaEncontrada = solvencias.find(s => s.idSolicitudSolvencia === solvenciaId);
-      console.log('EPA SOLVENCIA ENCONTRADA', solvenciaEncontrada);
       if (solvenciaEncontrada) {
         setSolvencia(solvenciaEncontrada);
 
@@ -75,15 +100,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         if (solvenciaEncontrada.fechaExpSolvencia) {
           try {
             // Intentar parsear la fecha (podría estar en formato ISO o en formato DD/MM/YYYY)
-            let fechaObj;
-            if (solvenciaEncontrada.fechaExpSolvencia.includes('-')) {
-              // Formato ISO YYYY-MM-DD
-              fechaObj = new Date(solvenciaEncontrada.fechaExpSolvencia);
-            } else if (solvenciaEncontrada.fechaExpSolvencia.includes('/')) {
-              // Formato DD/MM/YYYY
-              const [year, month, day] = solvenciaEncontrada.fechaExpSolvencia.split('/');
-              fechaObj = new Date(year, month - 1, day);
-            }
+            let fechaObj = getEndOfTrimester(getTrimester());
 
             if (fechaObj && !isNaN(fechaObj.getTime())) {
               setDiaVencimiento(fechaObj.getDate());
@@ -95,11 +112,10 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
           }
         } else {
           // Por defecto, establecer fecha de vencimiento a 1 año desde la fecha actual
-          const hoy = new Date();
-          const unAnioDelante = new Date(hoy.setFullYear(hoy.getFullYear() + 1));
-          setDiaVencimiento(unAnioDelante.getDate());
-          setMesVencimiento(unAnioDelante.getMonth() + 1);
-          setAnioVencimiento(unAnioDelante.getFullYear());
+          const fechaExp = getEndOfTrimester(getTrimester());
+          setDiaVencimiento(fechaExp.getDate());
+          setMesVencimiento(fechaExp.getMonth() + 1);
+          setAnioVencimiento(fechaExp.getFullYear());
         }
       }
 
@@ -160,15 +176,14 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   const handleExonerarPago = (motivo) => {
     try {
       const solvenciaActualizada = {
-        ...solvencia,
-        costo: 0,
-        exonerado: true,
-        motivoExoneracion: motivo
+        solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
+        motivo_exoneracion: motivo,
+        colegiado_id: solvencia.idColegiado
       };
 
-      actualizarSolvencia(solvenciaActualizada);
-      setSolvencia(solvenciaActualizada);
+      postDataSolicitud('exonerar_solicitud_solvencia', solvenciaActualizada);
       setMostrarExoneracion(false);
+      fetchSolicitudesDeSolvencia();
       mostrarAlerta("exito", "La solvencia ha sido exonerada de pago");
     } catch (error) {
       console.error("Error al exonerar pago:", error);
@@ -184,25 +199,17 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         return;
       }
 
-      // Obtener fecha de vencimiento formateada
-      const fechaVencimientoFormateada = obtenerFechaVencimientoFormateada();
-
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 800));
 
       const fechaActual = new Date().toLocaleDateString();
       const solvenciaActualizada = {
-        ...solvencia,
-        estado: "Aprobada",
-        fechaAprobacion: fechaActual,
-        fechaVencimiento: fechaVencimientoFormateada,
-        aprobadoPor: "Admin",
-        certificadoUrl: `/solvencias/certificado-${solvencia.id}.pdf`
+        solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
+        colegiado_id: solvencia.idColegiado,
+        costo: solvencia.costoRegularSolicitud,
       };
 
-      actualizarSolvencia(solvenciaActualizada);
-      setSolvencia(solvenciaActualizada);
+      postDataSolicitud('aprobar_solicitud_solvencia', solvenciaActualizada);
       setMostrarConfirmacion(false);
+      fetchSolicitudesDeSolvencia();
       mostrarAlerta("exito", "La solvencia ha sido aprobada correctamente");
     } catch (error) {
       console.error("Error al aprobar solvencia:", error);
@@ -217,20 +224,15 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         return;
       }
 
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 800));
-
       const solvenciaActualizada = {
-        ...solvencia,
-        estado: "Rechazada",
-        fechaRechazo: new Date().toLocaleDateString(),
-        rechazadoPor: "Admin",
-        motivoRechazo: motivo,
+        solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
+        motivo_rechazo: motivo,
+        colegiado_id: solvencia.idColegiado
       };
 
-      actualizarSolvencia(solvenciaActualizada);
-      setSolvencia(solvenciaActualizada);
+      patchDataSolicitud('rechazar_solicitud_solvencia', solvenciaActualizada);
       setMostrarRechazo(false);
+      fetchSolicitudesDeSolvencia();
       mostrarAlerta("alerta", "La solvencia ha sido rechazada");
     } catch (error) {
       console.error("Error al rechazar solvencia:", error);

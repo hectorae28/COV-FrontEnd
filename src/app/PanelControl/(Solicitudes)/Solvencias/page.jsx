@@ -55,7 +55,6 @@ export default function ListaSolvencias() {
         setTabActual("aprobadas");
       }
     }
-    console.log('EPA VIENDO LAS SOLICITUDES', solicitudesDeSolvencia);
   },[solicitudesDeSolvencia]);
 
   // Conteo de solvencias por estado para los tabs
@@ -348,7 +347,7 @@ const conteoSolvencias = useMemo(() => ({
             <span>Filtrar por fecha</span>
           </button>
           
-          <button
+          {/*<button
             onClick={() => {
               setColegiadoSeleccionado(null);
               setShowModal(true);
@@ -358,7 +357,7 @@ const conteoSolvencias = useMemo(() => ({
           >
             <PlusCircle size={20} />
             <span>Nueva solvencia</span>
-          </button>
+          </button>*/}
         </div>
       </div>
 
@@ -589,12 +588,12 @@ const conteoSolvencias = useMemo(() => ({
                               </div>
                             )}
                           </div>
-                          <button
+                          {/*<button
                             className="text-xs text-[#C40180] hover:underline"
                             onClick={(e) => abrirModalParaColegiado(e, solvencia.idColegiado)}
                           >
                             + Nueva solvencia
-                          </button>
+                          </button>*/}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
