@@ -3,7 +3,6 @@
 import CrearSolvenciaModal from "@/Components/SolicitudesSolvencia/CrearSolvenciaModal"
 import DateRangePicker from "@/Components/SolicitudesSolvencia/DateRangePicker"
 import DetalleSolvencia from "@/Components/SolicitudesSolvencia/DetalleSolvencia"
-import { colegiados as colegiadosIniciales, solvencias as solvenciasIniciales } from "@/app/Models/PanelControl/Solicitudes/SolvenciaData"
 import { motion } from "framer-motion"
 import {
   Calendar,
@@ -17,205 +16,220 @@ import {
   XCircle
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import { useSolicitudesStore } from "@/store/SolicitudesStore"
 
 export default function ListaSolvencias() {
   // Estados para manejar los datos
-  const [solvencias, setSolvencias] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showModal, setShowModal] = useState(false)
-  const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(null)
-  const [colegiados, setColegiados] = useState([])
-  const [showDateFilter, setShowDateFilter] = useState(false)
-  const [filtroEstado, setFiltroEstado] = useState("todos") // todos, revision, aprobadas, rechazadas
-  const [filtroCreador, setFiltroCreador] = useState("todos") // todos, admin, colegiado
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(null);
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [filtroCreador, setFiltroCreador] = useState("todos");
   
   // Estados para la navegación interna
-  const [vistaActual, setVistaActual] = useState("lista") // lista, detalleSolvencia
-  const [solvenciaSeleccionadaId, setSolvenciaSeleccionadaId] = useState(null)
-  const [tabActual, setTabActual] = useState("revision") // todas, revision, aprobadas, rechazadas, admin, colegiado
-  const [filtroCosto, setFiltroCosto] = useState("todas") // todas, conCosto, sinCosto
+  const [vistaActual, setVistaActual] = useState("lista");
+  const [solvenciaSeleccionadaId, setSolvenciaSeleccionadaId] = useState(null);
+  const [tabActual, setTabActual] = useState("revision");
+  const [filtroCosto, setFiltroCosto] = useState("todas");
   
   // Estados para filtros de fecha
-  const [fechaInicio, setFechaInicio] = useState("")
-  const [fechaFin, setFechaFin] = useState("")
-  const [ordenFecha, setOrdenFecha] = useState("desc") // asc, desc
-
-  const getSolicitudesDeSolvencia = async () => {
-        try {
-            const response = await fetchDataSolicitudes('list_solicitud_solvencias');
-            console.log(response.data);
-        } catch (error) {
-            console.error("Error fetching solicitudes:", error);
-        }
-    }
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [ordenFecha, setOrdenFecha] = useState("desc");
+  const fetchSolicitudesDeSolvencia = useSolicitudesStore((state) => state.fetchSolicitudesDeSolvencia);
+  const solicitudesDeSolvencia = useSolicitudesStore((state) => state.solicitudesDeSolvencia);
 
   // Cargar datos iniciales
   useEffect(() =>  {
-    // Simulando carga de datos con un pequeño retraso
-    getSolicitudesDeSolvencia();
-    setTimeout(() => {
-      setColegiados(colegiadosIniciales);
-      setSolvencias(solvenciasIniciales);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+    fetchSolicitudesDeSolvencia();
+    setIsLoading(false);    
+  }, [fetchSolicitudesDeSolvencia]);
 
   // Determinar si mostrar por defecto aprobadas cuando no hay en revisión
   useEffect(() => {
     if (!isLoading) {
-      const existenRevision = solvencias.some(s => s.estado === "Revisión");
+      const existenRevision = solicitudesDeSolvencia.some(s => s.statusSolicitud === "revisando");
       if (tabActual === "revision" && !existenRevision) {
         setTabActual("aprobadas");
       }
     }
-  }, [solvencias, isLoading, tabActual]);
+  },[solicitudesDeSolvencia]);
 
   // Conteo de solvencias por estado para los tabs
 
 const conteoSolvencias = useMemo(() => ({
   // En "todas" solo contar las que no están aprobadas ni rechazadas
-  todas: solvencias.filter(s => s.estado !== "Aprobada" && s.estado !== "Rechazada").length,
+  todas: solicitudesDeSolvencia.filter(s => s.statusSolicitud !== "aprobado"
+                                        && s.statusSolicitud !== "rechazado").length,
   // En "revision" solo contar las en estado de Revisión
-  revision: solvencias.filter(s => s.estado === "Revisión").length,
+  revision: solicitudesDeSolvencia.filter(s => s.statusSolicitud === "revisando").length,
   // En "aprobadas" solo contar las aprobadas
-  aprobadas: solvencias.filter(s => s.estado === "Aprobada").length,
+  aprobadas: solicitudesDeSolvencia.filter(s => s.statusSolicitud === "aprobado").length,
   // En "rechazadas" solo contar las rechazadas
-  rechazadas: solvencias.filter(s => s.estado === "Rechazada").length,
+  rechazadas: solicitudesDeSolvencia.filter(s => s.statusSolicitud === "rechazado").length,
   // En "admin" solo contar las creadas por admin que no estén aprobadas ni rechazadas
-  admin: solvencias.filter(s => 
-    s.creador?.esAdmin && 
-    s.estado !== "Aprobada" && 
-    s.estado !== "Rechazada"
+  admin: solicitudesDeSolvencia.filter(s => s.creador.isAdmin &&
+    s.statusSolicitud !== "aprobado" && 
+    s.statusSolicitud !== "rechazado"
   ).length,
   
   // En "colegiado" solo contar las creadas por colegiado que no estén aprobadas ni rechazadas
-  colegiado: solvencias.filter(s => 
-    !s.creador?.esAdmin && 
-    s.estado !== "Aprobada" && 
-    s.estado !== "Rechazada"
+  colegiado: solicitudesDeSolvencia.filter(s => 
+    !s.creador.isAdmin &&
+    s.statusSolicitud !== "aprobado" && 
+    s.statusSolicitud !== "rechazado"
   ).length,
   
-  // En "solicitud_costo" contar todas las que tienen costo null
-  solicitudCosto: solvencias.filter(s => s.costo === null).length,
+  // En "costo_especial" contar todas las que tienen costo null
+  solicitudCosto: solicitudesDeSolvencia.filter(s => s.statusSolicitud === "costo_especial").length,
   
   // Conteos adicionales que puedan ser útiles
-  conCosto: solvencias.filter(s => s.costo > 0).length,
-  sinCosto: solvencias.filter(s => s.costo === 0 || s.exonerado).length
-}), [solvencias]);
+  conCosto: solicitudesDeSolvencia.filter(s => s.costoRegularSolicitud >= 0).length,
+  sinCosto: solicitudesDeSolvencia.filter(s => s.costoRegularSolicitud < 0).length
+}), [solicitudesDeSolvencia]);
 
   // Convertir string de fecha (formato DD/MM/YYYY) a objeto Date
   const parseStringToDate = (dateString) => {
     if (!dateString) return null;
-    const [dia, mes, anio] = dateString.split('/');
-    return new Date(anio, mes - 1, dia);
+    const [year, month, day] = dateString.split('-');
+    return new Date(year, month - 1, day);
   }
 
   // Filtrar solvencias basado en búsqueda, tab actual y rango de fechas
   const solvenciasFiltradas = useMemo(() => {
-  return solvencias
-    .filter(solvencia => {
-      // Filtro de búsqueda
-      const matchesSearch =
-        searchTerm === "" ||
-        solvencia.colegiadoNombre.toLowerCase().includes(searchTerm.toLowerCase())
+    return solicitudesDeSolvencia
+      .filter(solvencia => {
+        // Filtro de búsqueda
+        const matchesSearch =
+          searchTerm === "" ||
+          solvencia.nombreColegiado.toLowerCase().includes(searchTerm.toLowerCase())
 
-      // Filtro por tab/estado principal (SIMPLIFICADO - ya no incluye "todas")
-      let matchesTab = true;
-      
-      // Lógica para cada pestaña
-      if (tabActual === "admin") {
-        // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
-        matchesTab = solvencia.creador?.esAdmin === true && 
-                    solvencia.estado !== "Aprobada" && 
-                    solvencia.estado !== "Rechazada";
-        
-        // Si hay filtro específico de estado, aplicarlo
-        if (filtroEstado !== "todos") {
-          matchesTab = solvencia.creador?.esAdmin === true && solvencia.estado === (
-            filtroEstado === "revision" ? "Revisión" : 
-            filtroEstado === "aprobadas" ? "Aprobada" : 
-            "Rechazada"
-          );
-        }
-      } else if (tabActual === "colegiado") {
-        // En "colegiado" mostrar solo las que no estén aprobadas ni rechazadas y no sean creadas por admin
-        matchesTab = solvencia.creador?.esAdmin === false && 
-                    solvencia.estado !== "Aprobada" && 
-                    solvencia.estado !== "Rechazada";
-        
-        // Si hay filtro específico de estado, aplicarlo
-        if (filtroEstado !== "todos") {
-          matchesTab = solvencia.creador?.esAdmin === false && solvencia.estado === (
-            filtroEstado === "revision" ? "Revisión" : 
-            filtroEstado === "aprobadas" ? "Aprobada" : 
-            "Rechazada"
-          );
-        }
-      } else if (tabActual === "solicitud_costo") {
-        // En "solicitud_costo" mostrar solo las que tengan costo null
-        matchesTab = solvencia.costo === null;
-      } else if (tabActual === "revision") {
-        // En "revisión" mostrar solo las que estén en revisión
-        matchesTab = solvencia.estado === "Revisión";
-        
-        // Aplicar filtro de creador si está activo
-        if (filtroCreador !== "todos") {
-          matchesTab = matchesTab && (
-            filtroCreador === "admin" ? solvencia.creador?.esAdmin === true :
-            solvencia.creador?.esAdmin === false
-          );
-        }
-      } else if (tabActual === "aprobadas") {
-        // En "aprobadas" mostrar solo las que estén aprobadas
-        matchesTab = solvencia.estado === "Aprobada";
-        
-        // Aplicar filtro de creador si está activo
-        if (filtroCreador !== "todos") {
-          matchesTab = matchesTab && (
-            filtroCreador === "admin" ? solvencia.creador?.esAdmin === true :
-            solvencia.creador?.esAdmin === false
-          );
-        }
-      } else if (tabActual === "rechazadas") {
-        // En "rechazadas" mostrar solo las que estén rechazadas
-        matchesTab = solvencia.estado === "Rechazada";
-        
-        // Aplicar filtro de creador si está activo
-        if (filtroCreador !== "todos") {
-          matchesTab = matchesTab && (
-            filtroCreador === "admin" ? solvencia.creador?.esAdmin === true :
-            solvencia.creador?.esAdmin === false
-          );
-        }
-      }
+        // Filtro por tab/estado principal (SIMPLIFICADO - ya no incluye "todas")
+        let matchesTab = true;
 
-      // Filtro por rango de fechas
-      let matchesFechas = true;
-      if (fechaInicio && fechaFin) {
-        const fechaSolvencia = parseStringToDate(solvencia.fecha);
-        const inicio = parseStringToDate(fechaInicio);
-        const fin = parseStringToDate(fechaFin);
-        
-        if (fechaSolvencia && inicio && fin) {
-          fin.setHours(23, 59, 59, 999);
-          matchesFechas = fechaSolvencia >= inicio && fechaSolvencia <= fin;
+        // Lógica para cada pestaña
+        /*if (tabActual === "admin") {
+          // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
+          matchesTab = solvencia.creadoPor &&
+                      solvencia.statusSolicitud !== "aprobado" &&
+                      solvencia.statusSolicitud !== "rechazado";
+
+          // Si hay filtro específico de estado, aplicarlo
+          if (filtroEstado !== "todos") {
+            matchesTab = solvencia.creadoPor && solvencia.statusSolicitud === (
+              filtroEstado === "revisando" ? "Revisión" :
+              filtroEstado === "aprobadas" ? "Aprobada" :
+              "Rechazada"
+            );
+          }
+        } else if (tabActual === "colegiado") {
+          // En "colegiado" mostrar solo las que no estén aprobadas ni rechazadas y no sean creadas por admin
+          matchesTab = solvencia.creadoPor === null &&
+                      solvencia.statusSolicitud !== "aprobado" &&
+                      solvencia.statusSolicitud !== "rechazado";
+
+          // Si hay filtro específico de estado, aplicarlo
+          if (filtroEstado !== "todos") {
+            matchesTab = solvencia.creadoPor !== null && solvencia.statusSolicitud === (
+              filtroEstado === "revisando" ? "Revisión" :
+              filtroEstado === "aprobado" ? "Aprobada" :
+              "Rechazada"
+            );
+          }*/
+        if (tabActual === "admin") {
+          // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
+          matchesTab = solvencia.creador.isAdmin &&
+              solvencia.statusSolicitud !== "aprobado" &&
+              solvencia.statusSolicitud !== "rechazado";
+
+          // Si hay filtro específico de estado, aplicarlo
+          /*if (filtroEstado !== "todos") {
+            matchesTab = solvencia.creador.isAdmin && solvencia.statusSolicitud === (
+                filtroEstado === "revisando" ? "Revisión" :
+                    filtroEstado === "aprobadas" ? "Aprobada" :
+                        "Rechazada"
+            );
+          }*/
+
+        } else if (tabActual === "colegiado") {
+          // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
+          matchesTab = !solvencia.creador.isAdmin &&
+              solvencia.statusSolicitud !== "aprobado" &&
+              solvencia.statusSolicitud !== "rechazado";
+
+          // Si hay filtro específico de estado, aplicarlo
+          /*if (filtroEstado !== "todos") {
+            matchesTab = solvencia.creador.isAdmin && solvencia.statusSolicitud === (
+                filtroEstado === "revisando" ? "Revisión" :
+                    filtroEstado === "aprobadas" ? "Aprobada" :
+                        "Rechazada"
+            );
+          }*/
+
+        } else if (tabActual === "costo_especial") {
+          // En "costo_especial" mostrar solo las que tengan costo null
+          matchesTab = solvencia.statusSolicitud === 'costo_especial';
+        } else if (tabActual === "revision") {
+          // En "revisión" mostrar solo las que estén en revisión
+          matchesTab = solvencia.statusSolicitud === "revisando";
+
+          // Aplicar filtro de creador si está activo
+          /*if (filtroCreador !== "todos") {
+            matchesTab = matchesTab && (
+                filtroCreador === "admin" ? solvencia.creador.isAdmin : false
+            );
+          }*/
+        } else if (tabActual === "aprobadas") {
+          // En "aprobadas" mostrar solo las que estén aprobadas
+          matchesTab = solvencia.statusSolicitud === "aprobado";
+
+          // Aplicar filtro de creador si está activo
+          /*if (filtroCreador !== "todos") {
+            matchesTab = matchesTab && (
+              filtroCreador === "admin" ? solvencia.creador.isAdmin : false
+            );
+          }*/
+        } else if (tabActual === "rechazadas") {
+          // En "rechazadas" mostrar solo las que estén rechazadas
+          matchesTab = solvencia.statusSolicitud === "rechazado";
+
+          // Aplicar filtro de creador si está activo
+          /*if (filtroCreador !== "todos") {
+            matchesTab = matchesTab && (
+              filtroCreador === "admin" ? solvencia.creador.isAdmin :
+              false
+            );
+          }*/
         }
-      }
 
-      return matchesSearch && matchesTab && matchesFechas;
-    })
-    .sort((a, b) => {
-      const [diaA, mesA, anioA] = a.fecha.split('/');
-      const [diaB, mesB, anioB] = b.fecha.split('/');
+        // Filtro por rango de fechas
+        /*
+        let matchesFechas = true;
+        if (fechaInicio && fechaFin) {
+          const fechaSolvencia = parseStringToDate(solvencia.fecha);
+          const inicio = parseStringToDate(fechaInicio);
+          const fin = parseStringToDate(fechaFin);
 
-      const fechaA = new Date(anioA, mesA - 1, diaA);
-      const fechaB = new Date(anioB, mesB - 1, diaB);
+          if (fechaSolvencia && inicio && fin) {
+            fin.setHours(23, 59, 59, 999);
+            matchesFechas = fechaSolvencia >= inicio && fechaSolvencia <= fin;
+          }
+        }*/
 
-      return ordenFecha === "desc" ? fechaB - fechaA : fechaA - fechaB;
-    });
-}, [solvencias, searchTerm, tabActual, filtroEstado, filtroCreador, fechaInicio, fechaFin, ordenFecha]);
+        return matchesSearch && matchesTab;
+      })
+      .sort((a, b) => {
+        const [yearA, monthA, dayA] = a.fechaSolicitud.split('-');
+        const [yearB, monthB, dayB] = b.fechaSolicitud.split('-');
+
+        const fechaA = new Date(yearA, monthA - 1, dayA);
+        const fechaB = new Date(yearB, monthB - 1, dayB);
+
+        return ordenFecha === "desc" ? fechaB - fechaA : fechaA - fechaB;
+      });
+}, [solicitudesDeSolvencia, searchTerm, tabActual, filtroEstado, filtroCreador, fechaInicio, ordenFecha]);
 
   // Función para ver detalle de una solvencia
   const verDetalleSolvencia = (id) => {
@@ -239,7 +253,7 @@ const conteoSolvencias = useMemo(() => ({
     // Detener la propagación para evitar que el clic llegue a la fila
     event.stopPropagation();
 
-    const colegiado = colegiados.find(c => c.id === colegiadoId)
+    const colegiado = solicitudesDeSolvencia.find(c => c.idColegiado === colegiadoId)
     setColegiadoSeleccionado(colegiado)
     setShowModal(true)
   }
@@ -247,7 +261,7 @@ const conteoSolvencias = useMemo(() => ({
   // Actualizar una solvencia existente
   const actualizarSolvencia = (solvenciaActualizada) => {
     setSolvencias(prev => prev.map(s =>
-      s.id === solvenciaActualizada.id ? solvenciaActualizada : s
+      s.idSolicitudSolvencia === solvenciaActualizada.idSolicitudSolvencia ? solvenciaActualizada : s
     ))
   }
 
@@ -269,7 +283,7 @@ const conteoSolvencias = useMemo(() => ({
       <DetalleSolvencia
         solvenciaId={solvenciaSeleccionadaId}
         onVolver={volverALista}
-        solvencias={solvencias}
+        solvencias={solicitudesDeSolvencia}
         actualizarSolvencia={actualizarSolvencia}
       />
     )
@@ -286,7 +300,8 @@ const conteoSolvencias = useMemo(() => ({
         className="text-center mb-8 md:mb-10 mt-16 md:mt-22"
       >
         <motion.h1
-          className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
+          className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2
+          bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
@@ -310,7 +325,8 @@ const conteoSolvencias = useMemo(() => ({
             <input
               type="text"
               placeholder="Buscar por colegiado..."
-              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="pl-10 pr-4 py-2 border rounded-lg w-full
+              focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -323,22 +339,25 @@ const conteoSolvencias = useMemo(() => ({
 
           <button
             onClick={() => setShowDateFilter(!showDateFilter)}
-            className="cursor-pointer border border-gray-300 bg-white text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors w-full md:w-auto justify-center"
+            className="cursor-pointer border border-gray-300 bg-white text-gray-700
+            px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50
+            transition-colors w-full md:w-auto justify-center"
           >
             <Calendar size={20} />
             <span>Filtrar por fecha</span>
           </button>
           
-          <button
+          {/*<button
             onClick={() => {
               setColegiadoSeleccionado(null);
               setShowModal(true);
             }}
-            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
+            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4
+            py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
           >
             <PlusCircle size={20} />
             <span>Nueva solvencia</span>
-          </button>
+          </button>*/}
         </div>
       </div>
 
@@ -379,118 +398,119 @@ const conteoSolvencias = useMemo(() => ({
       )}
 
       {/* Tabs para filtrar por estado */}
-<div className="mb-6">
-  <div className="border-b border-gray-200">
-    <nav className="-mb-px flex flex-wrap">
-      <button
-        onClick={() => setTabActual("revision")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "revision"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        En revisión
-        {conteoSolvencias.revision > 0 && (
-          <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.revision}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("aprobadas")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "aprobadas"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        Aprobadas
-        {conteoSolvencias.aprobadas > 0 && (
-          <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.aprobadas}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("rechazadas")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "rechazadas"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        Rechazadas
-        {conteoSolvencias.rechazadas > 0 && (
-          <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.rechazadas}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("admin")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "admin"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        Creado por Admin
-        {conteoSolvencias.admin > 0 && (
-          <span className="ml-2 bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.admin}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("colegiado")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "colegiado"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        Creado por Colegiado
-        {conteoSolvencias.colegiado > 0 && (
-          <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-            {conteoSolvencias.colegiado}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => setTabActual("solicitud_costo")}
-        className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
-          tabActual === "solicitud_costo"
-            ? "border-[#C40180] text-[#C40180]"
-            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-        }`}
-      >
-        <div className="flex items-center">
-          <span>Solicitud de Costo</span>
-          {conteoSolvencias.solicitudCosto > 0 && (
-            <span className={`ml-2 ${
-              tabActual === "solicitud_costo"
-                ? "bg-[#C40180] text-white"
-                : "bg-red-500 text-white"
-            } text-xs px-2 py-0.5 rounded-full`}>
-              {conteoSolvencias.solicitudCosto}
-            </span>
-          )}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex flex-wrap">
+            <button
+              onClick={() => setTabActual("revision")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "revision"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              En revisión
+              {conteoSolvencias.revision > 0 && (
+                <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.revision}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("aprobadas")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "aprobadas"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Aprobadas
+              {conteoSolvencias.aprobadas > 0 && (
+                <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.aprobadas}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("rechazadas")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "rechazadas"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Rechazadas
+              {conteoSolvencias.rechazadas > 0 && (
+                <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.rechazadas}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("admin")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "admin"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Creado por Admin
+              {conteoSolvencias.admin > 0 && (
+                <span className="ml-2 bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.admin}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("colegiado")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "colegiado"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Creado por Colegiado
+              {conteoSolvencias.colegiado > 0 && (
+                <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.colegiado}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("costo_especial")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "costo_especial"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center">
+                <span>Solicitud de Costo</span>
+                {conteoSolvencias.solicitudCosto > 0 && (
+                  <span className={`ml-2 ${
+                    tabActual === "costo_especial"
+                      ? "bg-[#C40180] text-white"
+                      : "bg-red-500 text-white"
+                  } text-xs px-2 py-0.5 rounded-full`}>
+                    {conteoSolvencias.solicitudCosto}
+                  </span>
+                )}
+              </div>
+            </button>
+          </nav>
         </div>
-      </button>
-    </nav>
-  </div>
-</div>
+      </div>
       
       {/* Mensaje informativo para solicitudes de costo */}
-      {tabActual === "solicitud_costo" && (
+      {tabActual === "costo_especial" && (
         <div className="mb-6 flex items-center bg-indigo-50 p-4 rounded-lg border border-indigo-200">
           <div className="mr-2 bg-indigo-100 rounded-full p-1">
             <CreditCard size={20} className="text-indigo-600" />
           </div>
           <div>
             <p className="text-sm text-indigo-800 font-medium">Solicitudes pendientes de asignación de costo</p>
-            <p className="text-xs text-indigo-700">Estas solicitudes requieren que se les asigne un costo o se exoneren de pago.</p>
+            <p className="text-xs text-indigo-700">Estas solicitudes requieren que
+              se les asigne un costo o se exoneren de pago.</p>
           </div>
         </div>
       )}
@@ -509,14 +529,14 @@ const conteoSolvencias = useMemo(() => ({
                 {tabActual === "revision" && <Clock className="h-8 w-8 text-yellow-500" />}
                 {tabActual === "aprobadas" && <CheckCircle className="h-8 w-8 text-green-500" />}
                 {tabActual === "rechazadas" && <XCircle className="h-8 w-8 text-red-500" />}
-                {tabActual === "solicitud_costo" && <CreditCard className="h-8 w-8 text-indigo-500" />}
+                {tabActual === "costo_especial" && <CreditCard className="h-8 w-8 text-indigo-500" />}
                 {tabActual === "todas" && <Search className="h-8 w-8 text-gray-400" />}
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 {tabActual === "revision" && "No hay solvencias en revisión"}
                 {tabActual === "aprobadas" && "No hay solvencias aprobadas"}
                 {tabActual === "rechazadas" && "No hay solvencias rechazadas"}
-                {tabActual === "solicitud_costo" && "No hay solicitudes pendientes de costo"}
+                {tabActual === "costo_especial" && "No hay solicitudes pendientes de costo"}
                 {tabActual === "todas" && "No se encontraron solvencias"}
                 {filtroCosto !== "todas" && tabActual === "todas" && (
                   <span>
@@ -539,7 +559,8 @@ const conteoSolvencias = useMemo(() => ({
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Colegiado
                     </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                    <th className="px-6 py-3 text-center text-xs font-medium
+                      text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                       Fecha de Vencimiento
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -550,15 +571,15 @@ const conteoSolvencias = useMemo(() => ({
                 <tbody className="bg-white divide-y divide-gray-200">
                   {solvenciasFiltradas.map((solvencia) => (
                     <tr
-                      key={solvencia.id}
+                      key={solvencia.idSolicitudSolvencia}
                       className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => verDetalleSolvencia(solvencia.id)}
+                      onClick={() => verDetalleSolvencia(solvencia.idSolicitudSolvencia)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col items-center">
                           <div className="flex items-center gap-2 mb-1">
-                            <div className="text-sm text-gray-900">{solvencia.colegiadoNombre}</div>
-                            {solvencia.creador && solvencia.creador.esAdmin && (
+                            <div className="text-sm text-gray-900">{solvencia.nombreColegiado}</div>
+                            {solvencia.creador.isAdmin && (
                               <div className="flex items-center">
                                 <Shield size={14} className="text-purple-500" />
                                 <span className="ml-1 text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">
@@ -567,30 +588,31 @@ const conteoSolvencias = useMemo(() => ({
                               </div>
                             )}
                           </div>
-                          <button
+                          {/*<button
                             className="text-xs text-[#C40180] hover:underline"
-                            onClick={(e) => abrirModalParaColegiado(e, solvencia.colegiadoId)}
+                            onClick={(e) => abrirModalParaColegiado(e, solvencia.idColegiado)}
                           >
                             + Nueva solvencia
-                          </button>
+                          </button>*/}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                        <div className="text-sm text-gray-500">{solvencia.fechaVencimiento || "No establecida"}</div>
+                        <div className="text-sm text-gray-500">{solvencia.fechaExpSolvencia || "No establecida"}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex flex-col items-center">
-                          <span className={`inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            solvencia.estado === 'Revisión'
+                          <span className={`inline-flex items-center justify-center gap-1 px-2.5 py-0.5
+                            rounded-full text-xs font-medium ${
+                            solvencia.statusSolicitud === 'revisando'
                               ? 'bg-yellow-100 text-yellow-800'
-                              : solvencia.estado === 'Aprobada'
+                              : solvencia.statusSolicitud === 'aprobado'
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
                             }`}>
-                            {solvencia.estado === 'Revisión' && <Clock size={12} />}
-                            {solvencia.estado === 'Aprobada' && <CheckCircle size={12} />}
-                            {solvencia.estado === 'Rechazada' && <XCircle size={12} />}
-                            {solvencia.estado}
+                            {solvencia.statusSolicitud === 'revisando' && <Clock size={12} />}
+                            {solvencia.statusSolicitud === 'aprobado' && <CheckCircle size={12} />}
+                            {solvencia.statusSolicitud === 'rechazado' && <XCircle size={12} />}
+                            {solvencia.statusSolicitud}
                           </span>
                         </div>
                       </td>
@@ -611,7 +633,7 @@ const conteoSolvencias = useMemo(() => ({
             setColegiadoSeleccionado(null);
           }}
           onSolvenciaCreada={handleSolvenciaCreada}
-          colegiados={colegiados}
+          colegiados={solicitudesDeSolvencia}
           colegiadoPreseleccionado={colegiadoSeleccionado}
           onVerDetalle={verDetalleSolvencia}
           session={{

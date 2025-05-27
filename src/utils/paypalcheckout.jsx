@@ -29,7 +29,7 @@ const Checkout = ({ amount, pagoDetalles, handlePago }) => {
 
     const onApproveOrder = async (data, actions) => {
         try {
-            const capturedOrder = await fetch("http://localhost:8000/api/v1/solicitudes/capture-order/", {
+            const capturedOrder = await fetch(process.env.NEXT_PUBLIC_BACK_HOST + "/api/v1/solicitudes/capture-order/", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',

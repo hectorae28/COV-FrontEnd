@@ -22,10 +22,10 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
   const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
   const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
 
-  const costoEspecialMessage = colegiadoUser.requiere_solvencia_esp && colegiadoUser.puede_pedir_costo_especial ? 
+  const costoEspecialMessage = (colegiadoUser.requiere_solvencia_esp && colegiadoUser.puede_pedir_costo_especial) ?
     "" : "Su costo esta siendo calculado";
 
-  const mensajeDeCosto = colegiadoUser.requiere_solvencia_esp ?
+  const mensajeDeCosto = (colegiadoUser.requiere_solvencia_esp && colegiadoUser.costo_de_solvencia < 0) ?
     costoEspecialMessage : `Monto: ${colegiadoUser.costo_de_solvencia}`;
 
   const mostraBoton = () => {

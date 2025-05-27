@@ -22,6 +22,8 @@ export default function DashboardLayout({
     return today >= warningDate;
   };
 
+  const showSolvencyWarning = checkSolvencyStatus();
+
 
   return (
     <div className="bg-[#F9F9F9] min-h-screen flex relative">
@@ -57,7 +59,7 @@ export default function DashboardLayout({
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           isSolvent={colegiadoUser?.solvencia_status}
           userInfo={colegiadoUser}
-          showSolvencyWarning={()=>checkSolvencyStatus()}
+          showSolvencyWarning={showSolvencyWarning}
         />
         <main className="flex-1 overflow-y-auto pt-20">
           <div className="max-w-8xl mx-auto flex flex-col gap-8 px-10">
