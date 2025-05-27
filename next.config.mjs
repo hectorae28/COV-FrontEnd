@@ -20,9 +20,19 @@ const nextConfig = {
                 port: '8000',
                 pathname: '/**',
             },
-            {//https://hoped-metropolitan-gene-action.trycloudflare.com
+            {//https://toner-sunglasses-legitimate-nominations.trycloudflare.com
                 protocol: "https",
-                hostname: "hoped-metropolitan-gene-action.trycloudflare.com",
+                hostname: "collectibles-falls-dozens-gloves.trycloudflare.com",
+                pathname: '/**',
+            },
+            {
+                protocol: "https",
+                hostname: "www.youtube.com",
+                pathname: '/**',
+            },
+            {
+                protocol: "https",
+                hostname: "www.orientacionlaboral.org",
                 pathname: '/**',
             }
         ],

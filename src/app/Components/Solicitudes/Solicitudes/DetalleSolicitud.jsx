@@ -6,21 +6,27 @@ import {
   Download,
   MessageSquare,
   X,
+  FileCheck,
+  Eye,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+// import { DocumentViewer } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 
 // Componentes importados
-import PagosColg from "@/app/Components/Solicitudes/Solicitudes/PagosModalSolic";
+import PagosColg from "@/Components/PagosModal"
+import {PagosColgSolic} from "@/app/Components/Solicitudes/Solicitudes/PagosModalSolic"
 import ConfirmacionModal from "@/Components/Solicitudes/Solicitudes/ConfirmacionModal";
 import DocumentosSection from "@/Components/Solicitudes/Solicitudes/DocumentsManagerComponent";
-import { DocumentSection as DocumentsSection } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
+
+import { DocumentViewer } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import SolicitudHeader from "@/Components/Solicitudes/Solicitudes/HeaderSolic";
 import HistorialPagosSection from "@/Components/Solicitudes/Solicitudes/HistorialPagosSection";
 import RechazoModal from "@/Components/Solicitudes/Solicitudes/RechazoModal";
 import ServiciosSection from "@/Components/Solicitudes/Solicitudes/ServiciosSection";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import transformBackendData from "@/utils/formatDataSolicitudes";
+import api from "@/api/api";
 
 export default function DetalleSolicitud({ props }) {
   const { id, isAdmin } = props;
@@ -45,6 +51,7 @@ export default function DetalleSolicitud({ props }) {
   const [mostrarRechazo, setMostrarRechazo] = useState(false);
   const [mostrarModalPagos, setMostrarModalPagos] = useState(false);
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null);
+  const [documentosSistema, setDocumentosSistema] = useState([]);
 
   // Estados para formularios
   const [motivoRechazo, setMotivoRechazo] = useState("");
@@ -52,14 +59,19 @@ export default function DetalleSolicitud({ props }) {
 
   const loadSolicitudById = async () => {
     const solicitud = await getSolicitudById(id);
-    //setSolicitud(solicitud)
     setSolicitud(transformBackendData(solicitud));
     setIsLoading(false);
+
+    // Verificar si todas las solicitudes hijas están aprobadas
+    if (solicitud && solicitud.itemsSolicitud && 
+        solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada')) {
+      cargarDocumentosSistema();
+    }
   };
 
   useEffect(() => {
     loadSolicitudById();
-  }, [id, ]);
+  }, [id,]);
 
   // Calcular totales
   const calcularTotales = (solicitudData) => {
@@ -71,39 +83,30 @@ export default function DetalleSolicitud({ props }) {
         totalPagado: 0,
       };
 
-    const totalOriginal = solicitudData.itemsSolicitud.reduce(
+    // Fijar a 2 decimales para evitar errores de precisión
+    const fijarDecimales = (valor) => Number(valor.toFixed(2));
+
+    const totalOriginal = fijarDecimales(solicitudData.itemsSolicitud.reduce(
       (sum, item) => sum + item.costo,
       0
-    );
-    const totalExonerado = solicitudData.itemsSolicitud.reduce(
+    ));
+    
+    const totalExonerado = fijarDecimales(solicitudData.itemsSolicitud.reduce(
       (sum, item) => sum + (item.exonerado ? item.costo : 0),
       0
-    );
+    ));
 
-    // Cálculo mejorado para pagos parciales
-    let totalPendiente = 0;
-    let totalPagado = 0;
-
-    solicitudData.itemsSolicitud.forEach((item) => {
-      if (item.exonerado) {
-        // No hacer nada, ya se contabilizó en totalExonerado
-      } else if (item.pagado) {
-        // Ítems completamente pagados
-        totalPagado += item.costo;
-      } else if (item.pagadoParcialmente) {
-        // Ítems parcialmente pagados
-        const montoPagado = item.montoPagado || 0;
-        totalPagado += montoPagado;
-        totalPendiente += item.costo - montoPagado;
-      } else {
-        // Ítems sin pagar
-        totalPendiente += item.costo;
+    const totalPagado = fijarDecimales(pagosSolicitud.reduce((sum, pago) => {
+      if (pago.moneda === 'bs') {
+        return sum + (Number(pago.monto) / Number(pago.tasa_bcv_del_dia));
       }
-    });
+      return sum + Number(pago.monto);
+    }, 0));
 
-    const todoExonerado =
-      totalOriginal === totalExonerado || solicitudData?.estado === "Exonerada";
-    const todoPagado = totalPendiente === 0 && !todoExonerado;
+    const totalPendiente = fijarDecimales(totalOriginal - totalExonerado - totalPagado);
+
+    const todoExonerado = totalOriginal === totalExonerado || solicitudData?.estado === "Exonerada";
+    const todoPagado = totalPendiente <= 0.01 && !todoExonerado;
 
     return {
       totalOriginal,
@@ -116,7 +119,6 @@ export default function DetalleSolicitud({ props }) {
   };
 
   const totales = calcularTotales(solicitud);
-
   // Función para aprobar la solicitud
   const handleAprobarSolicitud = async () => {
     try {
@@ -171,13 +173,25 @@ export default function DetalleSolicitud({ props }) {
 
   // Función para ver un documento
   const handleVerDocumento = (documento) => {
-    setDocumentoSeleccionado(documento);
+    console.log("Documento:", documento);
+    // Si es un string, asumimos que es la URL directa
+    if (typeof documento === 'string') {
+      setDocumentoSeleccionado({ url: documento });
+    } 
+    // Si es un objeto, puede tener la URL en diferentes propiedades
+    else if (typeof documento === 'object') {
+      if (documento.url) {
+        setDocumentoSeleccionado(documento);
+      } else if (documento.archivo) {
+        setDocumentoSeleccionado({ url: documento.archivo });
+      } else {
+        setDocumentoSeleccionado(documento);
+      }
+    }
   };
 
   // Función para iniciar proceso de pago
   const handleIniciarPago = () => {
-    console.log({ solicitud });
-    console.log(pagosSolicitud)
     if (totales.totalPendiente === 0) {
       alert("No hay montos pendientes por pagar");
       return;
@@ -187,90 +201,53 @@ export default function DetalleSolicitud({ props }) {
   };
 
   // Función que se ejecuta cuando se completa un pago
-  const handlePaymentComplete = async(pagoInfo) => {
-    //Actualizar los items pagados según el monto pagado
-    console.log({pagoInfo})
-    await addPagosSolicitud(solicitud.id, pagoInfo);
-    return
-    let montoRestante = parseFloat(pagoInfo.monto);
-    const itemsActualizados = [...solicitud.itemsSolicitud];
-    console.log(pagoInfo)
-    
-
-    /**
-     * 
-     * 	
-
-{
-  "monto": "string",
-  "moneda": "bs",
-  "num_referencia": "string",
-  "metodo_de_pago": 0,
-  "status": "revisando",
-  "tasa_bcv_del_dia": "string",
-  "solicitud": 0,
-  "inscripcion": 0,
-  "solicitud_solvencia": {
-    "additionalProp1": "string",
-    "additionalProp2": "string",
-    "additionalProp3": "string"
-  }
-}
-     */
-    for (let item of itemsActualizados) {
-      if (montoRestante <= 0) break;
-      if (item.pagado || item.exonerado) continue;
-
-      if (montoRestante >= item.costo) {
-        // Caso: El monto restante cubre completamente este ítem
-        item.pagado = true;
-        montoRestante -= item.costo;
-      } else {
-        // Caso: Pago parcial del ítem - IMPORTANTE: Ahora mantenemos un registro del monto pendiente
-        item.pagadoParcialmente = true;
-        // Registramos cuánto se pagó y cuánto queda pendiente
-        item.montoPagado = item.montoPagado
-          ? item.montoPagado + montoRestante
-          : montoRestante;
-        item.montoPendiente = item.costo - item.montoPagado;
-
-        // Si el monto pagado cubre el costo total, marcarlo como pagado
-        if (item.montoPagado >= item.costo) {
-          item.pagado = true;
-          item.pagadoParcialmente = false;
-        }
-
-        montoRestante = 0;
-      }
+  const handlePaymentComplete = async (pagoInfo) => {
+    console.log("pagoInfo", pagoInfo);
+    try {
+      await addPagosSolicitud(solicitud.id, {
+        monto: Number(pagoInfo.totalAmount),
+        moneda: pagoInfo.metodo_de_pago.moneda,
+        num_referencia: pagoInfo.referenceNumber,
+        metodo_de_pago: pagoInfo.metodo_de_pago.id,
+        tasa_bcv_del_dia: pagoInfo.tasa_bcv_del_dia,
+        comprobante: pagoInfo.paymentFile,
+      });
+      
+      // Cerrar el modal de pagos
+      setMostrarModalPagos(false);
+      
+      // Mostrar alerta de éxito
+      mostrarAlerta("exito", "El pago se ha registrado correctamente");
+      
+      // Recargar la solicitud para obtener información actualizada
+      await loadSolicitudById();
+    } catch (error) {
+      console.error("Error al procesar el pago:", error);
+      mostrarAlerta("alerta", "Ocurrió un error al procesar el pago");
     }
-
-    //Actualizar la solicitud
-    const solicitudActualizada = {
-      ...solicitud,
-      itemsSolicitud: itemsActualizados,
-      estadoPago: itemsActualizados.every(
-        (item) => item.pagado || item.exonerado
-      )
-        ? "Pagado"
-        : "Pago parcial",
-      comprobantesPago: [
-        ...(solicitud.comprobantesPago || []),
-        {
-          id: `pago_${new Date().getTime()}`,
-          archivo: pagoInfo.archivo,
-          fecha: pagoInfo.fecha,
-          monto: pagoInfo.monto,
-          metodoPago: pagoInfo.metodoPago,
-          referencia: pagoInfo.referencia,
-        },
-      ],
-    };
-
-    actualizarSolicitud(solicitudActualizada);
-    setSolicitud(solicitudActualizada);
-    setMostrarModalPagos(false);
-    mostrarAlerta("exito", "El pago se ha registrado correctamente");
   };
+
+  // Función para cargar documentos generados por el sistema
+  const cargarDocumentosSistema = async () => {
+    // Verificar si todas las solicitudes hijas están aprobadas
+    if (solicitud && solicitud.itemsSolicitud && 
+        solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada')) {
+      // Aquí se implementaría la lógica para cargar documentos generados por el sistema
+      setDocumentosSistema([
+        { id: 1, nombre: "Constancia de inscripción", url: "/docs/constancia.pdf" },
+        { id: 2, nombre: "Comprobante de pago", url: "/docs/comprobante.pdf" },
+        { id: 3, nombre: "Certificado", url: "/docs/certificado.pdf" },
+      ]);
+    }
+  };
+
+  // Verificar si hay solicitudes hijas aprobadas al cargar o actualizar la solicitud
+  useEffect(() => {
+    if (solicitud && solicitud.itemsSolicitud && 
+        solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada')) {
+      cargarDocumentosSistema();
+    }
+  }, [solicitud]);
 
   // Función para mostrar alertas temporales
   const mostrarAlerta = (tipo, mensaje) => {
@@ -283,6 +260,36 @@ export default function DetalleSolicitud({ props }) {
     setTimeout(() => {
       setAlertaExito(null);
     }, 5000);
+  };
+
+  const handleUpdateDocumento = async (formData) => {
+    try {
+      if (updateDocumento) {
+        await updateDocumento(formData);
+        await loadSolicitudById();
+      }
+    } catch (error) {
+      console.error("Error al actualizar documento:", error);
+    }
+  };
+
+  // Handler for document status change (approve/reject)
+  const handleDocumentStatusChange = async (updatedDocument) => {
+    try {
+      console.log("updatedDocument", updatedDocument)
+      const requestBody = {
+        [`file_${updatedDocument.id}_validate`]: updatedDocument.status === 'approved',
+        [`file_${updatedDocument.id}_motivo_rechazo`]: updatedDocument.rejectionReason
+      }
+      const response = await api.patch(`/solicitudes/solicitud/${solicitud.id}/`, requestBody);
+        console.log('Documento validado:', response.data);
+    } catch (error) {
+      console.error("Error al actualizar el estado del documento:", error);
+      setAlertaExito({
+        tipo: "alerta",
+        mensaje: error.message || "Error al actualizar el estado del documento"
+      });
+    }
   };
 
   // Renderizar estado de carga
@@ -334,11 +341,10 @@ export default function DetalleSolicitud({ props }) {
       {/* Alertas de éxito o información */}
       {alertaExito && (
         <div
-          className={`mb-4 p-3 rounded-md flex items-start justify-between ${
-            alertaExito.tipo === "exito"
+          className={`mb-4 p-3 rounded-md flex items-start justify-between ${alertaExito.tipo === "exito"
               ? "bg-green-100 text-green-800"
               : "bg-yellow-100 text-yellow-800"
-          }`}
+            }`}
         >
           <div className="flex items-center">
             {alertaExito.tipo === "exito" ? (
@@ -370,25 +376,71 @@ export default function DetalleSolicitud({ props }) {
         isAdmin={isAdmin}
       />
 
-      {/* Documentos requeridos */}
+      {/* Documentos requeridos - esta sección es para verificación y siempre debe estar visible */}
       <DocumentosSection
         solicitud={solicitud}
         onVerDocumento={handleVerDocumento}
-        updateDocumento={(formData) => {
-          // Implement API call to update document
-          console.log("Updating document with formData:", formData);
-        }}
+        updateDocumento={handleUpdateDocumento}
+        onDocumentStatusChange={handleDocumentStatusChange}
+        isAdmin={isAdmin}
       />
+        {/* <DocumentSection
+        documentos={solicitud}
+        onViewDocument={handleVerDocumento}
+        updateDocumento={updateDocumento}
+        onDocumentStatusChange={handleDocumentStatusChange}
+        title="Documentos requeridos"
+        subtitle="Documentación obligatoria del solicitante"
+        recaudosId={pendienteId}
+      /> */}
+
+      {/* Documentos generados por el sistema - Solo visible cuando los pagos están aprobados */}
+      {solicitud.estado === "Aprobada" && (
+        <div className="bg-white rounded-lg shadow-md p-4 mb-5">
+          <h2 className="text-base font-medium text-gray-900 mb-3 flex items-center">
+            <FileCheck size={18} className="mr-2 text-blue-600" />
+            Documentos generados por el sistema
+          </h2>
+          <div className="space-y-3">
+            {documentosSistema.map((documento) => (
+              <div key={documento.id} className="border rounded-lg p-3 flex justify-between items-center bg-gray-50">
+                <div className="flex items-center">
+                  <FileCheck size={18} className="text-blue-500 mr-2" />
+                  <div>
+                    <p className="font-medium">{documento.nombre}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleVerDocumento(documento.url)}
+                    className="text-blue-600 hover:text-blue-800 p-1"
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button 
+                    onClick={() => window.open(documento.url, '_blank')}
+                    className="text-blue-600 hover:text-blue-800 p-1"
+                  >
+                    <Download size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Servicios solicitados */}
       <ServiciosSection
         solicitud={solicitud}
         totales={totales}
         onIniciarPago={handleIniciarPago}
+        pagosAprobados={pagosSolicitud && pagosSolicitud.length > 0 && pagosSolicitud.every(pago => pago.status === 'aprobado') && totales.totalPendiente <= 0.01}
+        pagosSolicitud={pagosSolicitud}
       />
 
       {/* Historial de pagos */}
-      {solicitud.comprobantesPago && solicitud.comprobantesPago.length > 0 && (
+      {pagosSolicitud && pagosSolicitud.length > 0 && (
         <HistorialPagosSection
           comprobantes={pagosSolicitud}
           onVerDocumento={handleVerDocumento}
@@ -446,10 +498,9 @@ export default function DetalleSolicitud({ props }) {
 
       {/* Modal para ver documento */}
       {documentoSeleccionado && (
-        <DocumentViewerModal
-          documento={{ url: documentoSeleccionado }}
+        <DocumentViewer
+          documento={documentoSeleccionado}
           onClose={() => setDocumentoSeleccionado(null)}
-          pendiente={null}
         />
       )}
 
@@ -471,8 +522,11 @@ export default function DetalleSolicitud({ props }) {
 
             <div className="flex-1 overflow-auto p-4">
               <PagosColg
-                onPaymentComplete={handlePaymentComplete}
-                totalPendiente={totales.totalPendiente}
+                props={{
+                  costo: totales.totalPendiente,
+                  allowMultiplePayments: true,
+                  handlePago: handlePaymentComplete,
+                }}
               />
             </div>
           </div>

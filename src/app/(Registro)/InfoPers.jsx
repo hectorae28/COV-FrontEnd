@@ -272,6 +272,11 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
     return validationErrors && validationErrors[fieldName];
   };
 
+  // Checks if a field has validation errors to display the required message
+  const isFieldDuplicate = (fieldName) => {
+    return validationErrors && validationErrors[fieldName+'-duplicate'];
+  };
+
   // Determinar si es pasaporte para la validación
   const isPasaporte = formData.documentType === "pasaporte";
 
@@ -415,6 +420,9 @@ export default function InfoPersonal({ formData, onInputChange, validationErrors
           )}
           {identityCardError && !isProfileEdit && formData.documentType === "cedula" && (
             <p className="mt-1 text-xs text-red-500">{identityCardError}</p>
+          )}
+          {isFieldDuplicate("identityCard") && !isProfileEdit && (
+            <p className="mt-1 text-xs text-red-500">El numero de identificación ya se encuentra registrado.</p>
           )}
         </div>
       </div>

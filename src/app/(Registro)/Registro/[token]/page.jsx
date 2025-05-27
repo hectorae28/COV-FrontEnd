@@ -19,6 +19,7 @@ export default async function RegistrationFormPage({params}) {
                 isAdmin={false}
                 recaudos={data}
                 error={null}
+                isColegiado={true}
             />
         );
     } catch (error) {
@@ -28,6 +29,7 @@ export default async function RegistrationFormPage({params}) {
                 id={token}
                 isAdmin={false}
                 recaudos={null}
+                isColegiado={true}
             />
         )
     }

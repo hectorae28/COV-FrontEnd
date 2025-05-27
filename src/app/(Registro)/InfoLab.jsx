@@ -1,10 +1,21 @@
-import EstadoData from "@/Shared/EstadoData";
 import institucionesList from "@/Shared/InstitucionesData";
 import { motion } from "framer-motion";
-import { Briefcase, BriefcaseBusiness, MapPin, Phone, Plus, Trash2 } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, Phone, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import DireccionForm from "./DireccionForm";
 
-// Función para capitalizar cada palabra de un texto
+// CAMBIO: Función correcta que permite mayúsculas seguidas
+const capitalizeWords = (text) => {
+  if (!text) return "";
+  return text
+    .split(" ")
+    .map((word) => /^[A-ZÁÉÍÓÚÜÑ.]+$/.test(word) 
+      ? word 
+      : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
+
+// Función original para nombres y cargos (primera letra mayúscula)
 const capitalizarPalabras = (texto) => {
   if (!texto) return "";
   return texto
@@ -13,12 +24,9 @@ const capitalizarPalabras = (texto) => {
     .join(' ');
 };
 
-// Función para formatear número de teléfono local
 const formatearTelefonoLocal = (value) => {
   if (!value) return '';
-  // Eliminar todos los caracteres no numéricos
   const digits = value.replace(/\D/g, '');
-  // Si tiene suficientes dígitos, formatear como 0212 123 4567
   if (digits.length >= 4) {
     const areaCode = digits.substring(0, 4);
     const firstPart = digits.substring(4, 7);
@@ -34,79 +42,58 @@ const formatearTelefonoLocal = (value) => {
   return digits;
 };
 
-export default function InfoLaboral({ formData, onInputChange, validationErrors, isEditMode = false, onSave }) {
-  // Lista de estados ordenados alfabéticamente
-  const estados = Object.keys(EstadoData).sort().map(capitalizarPalabras);
-  // Estado para manejar el estado laboral
+export default function InfoLaboralWithDireccionForm({ formData, onInputChange, validationErrors, isEditMode = false, onSave }) {
   const [workStatus, setWorkStatus] = useState(formData.workStatus || "labora");
-  
-  // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
-  
-  // Registros laborales
+
   const [registros, setRegistros] = useState(
     formData.laboralRegistros && formData.laboralRegistros.length > 0
       ? formData.laboralRegistros.map(registro => ({
         ...registro,
-        // Asegurar que los campos tengan el formato correcto
         institutionName: capitalizarPalabras(registro.institutionName || ""),
-        institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
+        // CAMBIO: Usar capitalizeWords para direcciones (permite mayúsculas seguidas)
+        institutionAddress: capitalizeWords(registro.institutionAddress || ""),
         cargo: capitalizarPalabras(registro.cargo || ""),
         selectedEstado: registro.selectedEstado || "",
-        selectedCiudad: registro.selectedCiudad || ""
+        selectedMunicipio: registro.selectedMunicipio || ""
       }))
       : [
         {
           id: 1,
+          id_direccion: formData.id_direccion,
           institutionType: formData.institutionType || "",
           institutionName: capitalizarPalabras(formData.institutionName || ""),
-          institutionAddress: capitalizarPalabras(formData.institutionAddress || ""),
+          // CAMBIO: Usar capitalizeWords para direcciones
+          institutionAddress: capitalizeWords(formData.institutionAddress || ""),
           institutionPhone: formData.institutionPhone || "",
           cargo: capitalizarPalabras(formData.cargo || ""),
           selectedEstado: formData.selectedEstado || "",
-          selectedCiudad: formData.selectedCiudad || ""
+          NameEstado: formData.NameEstado || "",
+          selectedMunicipio: formData.selectedMunicipio || "",
+          NameMunicipio: formData.NameMunicipio || "",
         }
       ]
   );
-  
+
   // Actualizar el estado local cuando cambian las props
   useEffect(() => {
     setLocalFormData(formData);
-    
+
     // Actualizar registros si cambian en las props
     if (formData.laboralRegistros && formData.laboralRegistros.length > 0) {
       setRegistros(formData.laboralRegistros.map(registro => ({
         ...registro,
         institutionName: capitalizarPalabras(registro.institutionName || ""),
-        institutionAddress: capitalizarPalabras(registro.institutionAddress || ""),
+        // CAMBIO: Usar capitalizeWords para direcciones
+        institutionAddress: capitalizeWords(registro.institutionAddress || ""),
         cargo: capitalizarPalabras(registro.cargo || ""),
         selectedEstado: registro.selectedEstado || "",
-        selectedCiudad: registro.selectedCiudad || ""
+        NameEstado: registro.NameEstado || "",
+        selectedMunicipio: registro.selectedMunicipio || "",
+        NameMunicipio: registro.NameMunicipio || ""
       })));
     }
-    
   }, [formData]);
-
-  // Estados para manejar ciudades disponibles para cada registro
-  const [ciudadesDisponibles, setCiudadesDisponibles] = useState({});
-
-  // Actualizar ciudades disponibles cuando cambia el estado seleccionado
-  useEffect(() => {
-    const nuevosCiudadesDisponibles = {};
-    registros.forEach(registro => {
-      if (registro.selectedEstado) {
-        // Convertir el estado seleccionado a minúsculas para buscar en el objeto EstadoData
-        const estadoKey = registro.selectedEstado.toLowerCase();
-        if (EstadoData[estadoKey]) {
-          // Ordenar ciudades alfabéticamente y capitalizar cada palabra
-          nuevosCiudadesDisponibles[registro.id] = EstadoData[estadoKey]
-            .sort()
-            .map(ciudad => capitalizarPalabras(ciudad));
-        }
-      }
-    });
-    setCiudadesDisponibles(nuevosCiudadesDisponibles);
-  }, [registros]);
 
   // Actualizar workStatus cuando cambie en formData
   useEffect(() => {
@@ -115,12 +102,9 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     }
   }, [formData.workStatus]);
 
-  // Manejar el cambio en el estado laboral
   const handleWorkStatusChange = (value) => {
     setWorkStatus(value);
-    // Si selecciona "No Laborando", limpiamos los campos laborales
     if (value === "noLabora") {
-      // Limpiar campos laborales
       const updatedData = {
         workStatus: value,
         institutionType: "N/A",
@@ -129,10 +113,10 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
         institutionPhone: "N/A",
         cargo: "N/A",
         selectedEstado: "N/A",
-        selectedCiudad: "N/A",
+        selectedMunicipio: "N/A",
         laboralRegistros: []
       };
-      
+
       if (isEditMode) {
         setLocalFormData(updatedData);
         setRegistros([]);
@@ -145,7 +129,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
         workStatus: value,
         laboralRegistros: registros
       };
-      
+
       if (isEditMode) {
         setLocalFormData(prev => ({
           ...prev,
@@ -157,31 +141,28 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     }
   };
 
-  // Manejar cambios en un registro específico
   const handleRegistroChange = (index, field, value) => {
     const nuevosRegistros = [...registros];
     const registro = nuevosRegistros[index];
-    // Aplicar formato según el campo
+
     if (field === "institutionName" || field === "cargo") {
       value = capitalizarPalabras(value);
     } else if (field === "institutionPhone") {
       value = formatearTelefonoLocal(value);
     } else if (field === "selectedEstado") {
       // Al cambiar el estado, resetear la ciudad
-      registro.selectedCiudad = "";
+      registro.selectedMunicipio = "";
     }
-    // Actualizar el campo en el registro
+
     registro[field] = value;
-    // Actualizar el array completo de registros
     setRegistros(nuevosRegistros);
-    
-    // Actualizar los campos principales con el primer registro (para compatibilidad)
+
     const updatedData = { laboralRegistros: nuevosRegistros };
-    
+
     if (index === 0) {
       updatedData[field] = value;
     }
-    
+
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
@@ -192,27 +173,37 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     }
   };
 
-  // Manejar cambios en la dirección (después de seleccionar estado y ciudad)
-  const handleDireccionChange = (index, value) => {
-    const nuevosRegistros = [...registros];
-    const registro = nuevosRegistros[index];
-    // Formatear la dirección con la primera letra de cada palabra en mayúscula
-    const direccionFormateada = capitalizarPalabras(value);
-    // Construir la dirección completa con el formato: "Ciudad, Estado - Dirección específica"
-    if (registro.selectedEstado && registro.selectedCiudad) {
-      const direccionCompleta = `${registro.selectedCiudad}, ${registro.selectedEstado} - ${direccionFormateada}`;
-      registro.institutionAddress = direccionCompleta;
+  const handleDireccionChange = (index, updates) => {
+  const nuevosRegistros = [...registros];
+  const registro = { ...nuevosRegistros[index] }; 
+  
+  // Aplicar las actualizaciones
+  Object.keys(updates).forEach(key => {
+    if (key === "institutionAddress") {
+      registro[key] = capitalizeWords(updates[key]);
     } else {
-      registro.institutionAddress = direccionFormateada;
+      registro[key] = updates[key];
     }
-    // Actualizar los campos principales con el primer registro (para compatibilidad)
-    if (index === 0) {
-      onInputChange({ institutionAddress: registro.institutionAddress });
-    }
-    // Actualizar el array completo de registros
-    setRegistros(nuevosRegistros);
-    onInputChange({ laboralRegistros: nuevosRegistros });
-  };
+  });
+  
+  nuevosRegistros[index] = registro;
+  setRegistros(nuevosRegistros);
+
+  const updatedData = { laboralRegistros: nuevosRegistros };
+  
+  // Si es el primer registro, también actualizar los campos principales
+  if (index === 0) {
+    Object.keys(updates).forEach(key => {
+      updatedData[key] = registro[key];
+    });
+  }
+  
+  if (isEditMode) {
+    setLocalFormData(prev => ({ ...prev, ...updatedData }));
+  } else {
+    onInputChange(updatedData);
+  }
+};
 
   // Agregar un nuevo registro laboral
   const agregarRegistro = () => {
@@ -227,13 +218,13 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
         institutionPhone: "",
         cargo: "",
         selectedEstado: "",
-        selectedCiudad: ""
+        selectedMunicipio: ""
       }
     ];
     setRegistros(nuevosRegistros);
-    
+
     const updatedData = { laboralRegistros: nuevosRegistros };
-    
+
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
@@ -250,9 +241,9 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
       const nuevosRegistros = [...registros];
       nuevosRegistros.splice(index, 1);
       setRegistros(nuevosRegistros);
-      
+
       const updatedData = { laboralRegistros: nuevosRegistros };
-      
+
       // Si se elimina el primer registro, actualizar los campos principales
       if (index === 0 && nuevosRegistros.length > 0) {
         Object.assign(updatedData, {
@@ -262,10 +253,10 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
           institutionPhone: nuevosRegistros[0].institutionPhone,
           cargo: nuevosRegistros[0].cargo,
           selectedEstado: nuevosRegistros[0].selectedEstado,
-          selectedCiudad: nuevosRegistros[0].selectedCiudad
+          selectedMunicipio: nuevosRegistros[0].selectedMunicipio
         });
       }
-      
+
       if (isEditMode) {
         setLocalFormData(prev => ({
           ...prev,
@@ -277,60 +268,75 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
     }
   };
 
-  // Checks if a field has validation errors to display the required message
+  // ARREGLAR: Validación mejorada para múltiples registros
   const isFieldEmpty = (registro, fieldName) => {
-    // Si no está laborando, no mostrar errores
-    if (workStatus === "noLabora") {
-      return false;
-    }
-    // Solo mostrar errores si validationErrors existe y contiene campos de este registro
-    if (!validationErrors) return false;
-    // Para el primer registro, podemos usar los nombres de campo directos
-    if (registro.id === 1) {
-      return validationErrors[fieldName];
-    }
-    // Para registros adicionales, habría que implementar una lógica más compleja
-    // si se quiere validar cada registro individualmente
+  if (workStatus === "noLabora") {
     return false;
-  };
+  }
+  if (!validationErrors) return false;
+
+  // Para campos de dirección, validar específicamente
+  if (fieldName === "institutionAddress" || fieldName === "selectedEstado" || fieldName === "selectedMunicipio") {
+    const registroIndex = registros.findIndex(r => r.id === registro.id);
+    
+    if (registroIndex === 0) {
+      // Para el primer registro, usar validationErrors del formulario principal
+      return validationErrors[fieldName];
+    } else {
+      // Para registros adicionales, validar contenido directamente
+      return !registro[fieldName] || registro[fieldName].toString().trim() === "";
+    }
+  }
+
+  // Para otros campos
+  if (registro.id === 1) {
+    return validationErrors[fieldName];
+  }
+  
+  return false;
+};
 
   const handleSaveClick = () => {
-    // Validar que haya al menos una institución con datos válidos
-    if (workStatus === "labora" && registros.length > 0) {
-      const hasValidInstitution = registros.some(reg => 
-        reg.institutionName && reg.institutionType && reg.institutionAddress
-      );
-      
-      if (!hasValidInstitution) {
-        alert("Debe completar los datos de al menos una institución");
-        return;
-      }
-      
-      // Actualizar datos en el formulario principal
-      const updatedData = {
-        workStatus: workStatus,
-        laboralRegistros: registros
-      };
-      
-      if (onSave && isEditMode) {
-        onSave(updatedData);
-      } else {
-        onInputChange(updatedData);
-      }
-    } else if (workStatus === "noLabora") {
-      // Si no labora, enviar estado con valores por defecto
-      const updatedData = {
-        workStatus: "noLabora",
-        laboralRegistros: []
-      };
-      
-      if (onSave && isEditMode) {
-        onSave(updatedData);
-      } else {
-        onInputChange(updatedData);
-      }
+  if (workStatus === "labora" && registros.length > 0) {
+    const hasValidInstitution = registros.some(reg =>
+      reg.institutionName && 
+      reg.institutionType && 
+      reg.institutionAddress &&
+      reg.selectedEstado &&
+      reg.selectedMunicipio &&
+      reg.cargo &&
+      reg.institutionPhone
+    );
+
+    if (!hasValidInstitution) {
+      // En lugar de alert, usar console.error o mostrar en UI
+      console.error("Debe completar todos los campos requeridos");
+      return;
     }
-  };
+
+    const updatedData = {
+      workStatus: workStatus,
+      laboralRegistros: registros
+    };
+
+    if (onSave && isEditMode) {
+      onSave(updatedData);
+    } else if (onInputChange) {
+      onInputChange(updatedData);
+    }
+  } else if (workStatus === "noLabora") {
+    const updatedData = {
+      workStatus: "noLabora",
+      laboralRegistros: []
+    };
+
+    if (onSave && isEditMode) {
+      onSave(updatedData);
+    } else if (onInputChange) {
+      onInputChange(updatedData);
+    }
+  }
+};
 
   return (
     <motion.div
@@ -339,7 +345,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
       transition={{ duration: 0.3 }}
       className="space-y-8"
     >
-      {/* Título y tabs de estado laboral */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <h2 className="text-xl font-semibold text-[#41023B] mb-4 sm:mb-0"></h2>
         <div className="bg-gray-100 rounded-lg p-1 flex w-full sm:w-auto">
@@ -367,7 +372,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
           </button>
         </div>
       </div>
-      {/* Mostrar información laboral solo si está laborando */}
+
       {workStatus === "labora" && (
         <>
           {registros.map((registro, index) => (
@@ -375,7 +380,6 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
               key={registro.id}
               className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm relative"
             >
-              {/* Título del registro */}
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-[#41023B] font-semibold text-lg">
                   {index === 0 ? "Información Laboral Principal" : `Institución Adicional ${index}`}
@@ -390,8 +394,8 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                   </button>
                 )}
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Tipo de Institución */}
                 <div>
                   <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                     Tipo de Institución
@@ -433,10 +437,10 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                     </div>
                   </div>
                   {isFieldEmpty(registro, "institutionType") && (
-                                      <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+                    <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                 </div>
-                {/* Nombre de Institución */}
+
                 <div>
                   <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                     Nombre de Institución
@@ -454,7 +458,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                     <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                 </div>
-                {/* Cargo */}
+
                 <div>
                   <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                     Cargo
@@ -472,7 +476,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                     <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
                 </div>
-                {/* Teléfono de Institución */}
+
                 <div>
                   <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                     Teléfono de Institución
@@ -497,127 +501,23 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
                   </p>
                 </div>
               </div>
-              {/* Dirección de Institución - Selección por pasos */}
-              <div className="mt-4">
-                <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-                  Dirección de Institución
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                {/* Selección en dos pasos (Estado y Municipio) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                  {/* Paso 1: Selección de Estado */}
-                  <div>
-                    <label className="mb-2 text-xs font-medium text-gray-700">
-                      Estado
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={registro.selectedEstado || ""}
-                        onChange={(e) => handleRegistroChange(index, "selectedEstado", e.target.value)}
-                        className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty(registro, "selectedEstado") ? "border-red-500 bg-red-50" : "border-gray-200"
-                          } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-                      >
-                        <option value="" disabled>Seleccione un estado</option>
-                        {estados.map((estado) => (
-                          <option key={estado} value={estado}>
-                            {estado}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg
-                          className="fill-current h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                        </svg>
-                      </div>
-                    </div>
-                    {isFieldEmpty(registro, "selectedEstado") && (
-                      <p className="mt-1 text-xs text-red-500">Debe seleccionar un estado</p>
-                    )}
-                  </div>
-                  {/* Paso 2: Selección de Municipio o Parroquia según el estado */}
-                  <div>
-                    {/* Aquí está el cambio: Mostrar "Parroquia" si el estado es Distrito Capital */}
-                    <label className={`mb-2 text-xs font-medium ${registro.selectedEstado ? "text-gray-700" : "text-gray-400"}`}>
-                      {registro.selectedEstado && registro.selectedEstado.toLowerCase() === "distrito capital" 
-                        ? "Parroquia" 
-                        : "Municipio"}
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={registro.selectedCiudad || ""}
-                        onChange={(e) => handleRegistroChange(index, "selectedCiudad", e.target.value)}
-                        className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty(registro, "selectedCiudad") ? "border-red-500 bg-red-50" : "border-gray-200"
-                          } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${registro.selectedEstado ? "text-gray-700" : "text-gray-400 bg-gray-50"
-                          }`}
-                        disabled={!registro.selectedEstado}
-                      >
-                        <option value="" disabled>
-                          {registro.selectedEstado && registro.selectedEstado.toLowerCase() === "distrito capital"
-                            ? "Seleccione una parroquia"
-                            : "Seleccione un municipio"}
-                        </option>
-                        {ciudadesDisponibles[registro.id]?.map((ciudad) => (
-                          <option key={ciudad} value={ciudad}>
-                            {ciudad}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg
-                          className="fill-current h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                        </svg>
-                      </div>
-                    </div>
-                    {isFieldEmpty(registro, "selectedCiudad") && registro.selectedEstado && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {registro.selectedEstado.toLowerCase() === "distrito capital"
-                          ? "Debe seleccionar una parroquia"
-                          : "Debe seleccionar un municipio"}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {/* Dirección específica */}
-                <div className={registro.selectedEstado && registro.selectedCiudad ? "" : "opacity-50"}>
-                  <label className="mb-2 text-xs font-medium text-gray-700">
-                    Dirección específica
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={
-                        // Extraer solo la parte específica de la dirección
-                        registro.institutionAddress && registro.selectedEstado && registro.selectedCiudad
-                          ? registro.institutionAddress.split(' - ')[1] || ''
-                          : registro.institutionAddress || ''
-                      }
-                      onChange={(e) => handleDireccionChange(index, e.target.value)}
-                      disabled={!(registro.selectedEstado && registro.selectedCiudad)}
-                      className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty(registro, "institutionAddress") ? "border-red-500 bg-red-50" : "border-gray-200"
-                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] ${registro.selectedEstado && registro.selectedCiudad ? "text-gray-700" : "text-gray-400 bg-gray-50"
-                        }`}
-                      placeholder="Calle, Avenida, Edificio, Piso, Oficina"
-                    />
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  </div>
-                  {isFieldEmpty(registro, "institutionAddress") && (
-                    <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-                  )}
-                </div>
-              </div>
+
+              <DireccionForm
+                formData={registro}
+                onInputChange={(updates) => handleDireccionChange(index, updates)}
+                isFieldEmpty={(fieldName) => isFieldEmpty(registro, fieldName)}
+                isEditMode={false}
+                fieldMapping={{
+                  state: "selectedEstado",
+                  municipio: "selectedMunicipio",
+                  address: "institutionAddress",
+                }}
+                title="Dirección de Institución"
+                addressPlaceholder="Calle, Avenida, Edificio, Piso, Oficina"
+              />
             </div>
           ))}
+
           {/* Botón para agregar nuevo registro */}
           <div className="flex justify-center">
             <button
@@ -629,6 +529,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
               Agregar otra institución
             </button>
           </div>
+
           {/* Explicación */}
           <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
             <h3 className="text-sm font-medium text-blue-800 mb-2">Información importante</h3>
@@ -639,7 +540,7 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
           </div>
         </>
       )}
-      {/* Mensaje informativo si no está laborando */}
+
       {workStatus === "noLabora" && (
         <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
           <div className="flex items-center justify-center mb-4">
@@ -647,17 +548,13 @@ export default function InfoLaboral({ formData, onInputChange, validationErrors,
           </div>
           <h3 className="text-center text-gray-700 font-medium mb-2">No laborando actualmente</h3>
           <p className="text-center text-gray-600 text-sm">
-            Ha indicado que no se encuentra laborando actualmente. Puede continuar con el siguiente paso.
-            Esta sección puede ser modificada o completada posteriormente si su situación laboral cambia.
+            Ha indicado que no se encuentra laborando actualmente.
           </p>
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-            <p className="text-xs text-blue-700 text-center">
-              Si comienza a laborar en el futuro, puede volver a esta sección y actualizar su información laboral.
-            </p>
-          </div>
         </div>
       )}
-   {isEditMode && (
+
+      {/* Botón Guardar cambios */}
+      {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           <button
             type="button"

@@ -20,7 +20,9 @@ import {useSolicitudesStore} from "@/store/SolicitudesStore.jsx"
 import useColegiadoUserStore from "@/store/colegiadoUserStore"
 import transformBackendData from "@/utils/formatDataSolicitudes";
 import {useRouter} from "next/navigation"
-export default function ListaSolicitudes({isAdmin  = false}) {
+export default function ListaSolicitudes({ params }) {
+  // Force isAdmin to be true for PanelControl
+  const isAdmin = false;
   
   // Estados para manejar los datos
   //const [solicitudes, setSolicitudes] = useState([])

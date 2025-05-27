@@ -157,7 +157,7 @@ export const useSolicitudesStore = create((set, get) => ({
         tiposActualizados.Carnet.costo = {id: costoCarnet.id, monto:parseFloat(costoCarnet.monto_usd)};
       }
       
-      const costoEspecializacion = costos.find(c => c.tipo_costo_nombre === "Especializacion");
+      const costoEspecializacion = costos.find(c => c.tipo_costo_nombre === "Especialidad");
       if (costoEspecializacion) {
         tiposActualizados.Especializacion.costo = {id: costoCarnet.id, monto:parseFloat(costoEspecializacion.monto_usd)};
       }
@@ -290,6 +290,23 @@ export const useSolicitudesStore = create((set, get) => ({
       throw error;
     }
   },
+  updateDocumentoSolicitud: async (id, updatedData) => {
+    set({ loading: true });
+    try {
+      const res = await patchDataSolicitud(
+        `solicitud/${id}`,
+        updatedData,
+      );
+  
+      return res.data;
+    } catch (error) {
+      set({ 
+        loading: false, 
+        error: error.message || "Error al actualizar estado de documento de solicitud"
+      });
+      throw error;
+    }
+  },
   // PAGOS
   getPagosSolicitud: async (id) => {
     set({ loading: true });
@@ -317,14 +334,22 @@ export const useSolicitudesStore = create((set, get) => ({
     set({ loading: true });
     try {
       const Form = new FormData();
-      Form.append("solicitud", id);
+      Form.append("solicitud", Number(id));
       Form.append("monto", pago.monto);
       Form.append("moneda", pago.moneda);
       Form.append("num_referencia", pago.num_referencia);
       Form.append("metodo_de_pago", pago.metodo_de_pago);
       Form.append("tasa_bcv_del_dia", pago.tasa_bcv_del_dia);
+      
+      if (pago.comprobante) {
+        Form.append("comprobante", pago.comprobante);
+      }
+      
+      if (pago.fecha_pago) {
+        Form.append("fecha_pago", pago.fecha_pago);
+      }
   
-      const res = await postDataSolicitud("pago", Form);
+      const res = await postDataSolicitud("pagos-solicitud", Form);
       get().getPagosSolicitud(id);
       
     } catch (error) {

@@ -31,7 +31,7 @@ function PaypalPaymentComponent({
     }
 
     setPagoDetalles({
-      user_id: colegiadoUser.id,
+      user_id: colegiadoUser?.id,
       metodo_de_pago_id: metodoDePagoId,
       tasa_bcv: tasaBCV,
       monto: parseFloat(montoPago),

@@ -192,7 +192,7 @@ export default function DataTable({
                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                                 <AlertCircle size={12} /> Rechazada
                                             </span>
-                                        ) : pendiente.status === "denegado" ? (
+                                        ) : pendiente.status === "anulado" ? (
                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                 <UserX size={12} /> Anulada
                                             </span>

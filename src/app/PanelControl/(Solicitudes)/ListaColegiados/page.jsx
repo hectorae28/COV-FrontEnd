@@ -1,13 +1,11 @@
 "use client";
-import DetalleColegiado from "@/app/Components/Solicitudes/ListaColegiados/DetalleColegiado";
-import DetallePendiente from "@/app/Components/Solicitudes/ListaColegiados/DetallePendiente";
+import DetalleInfo from "@/app/Components/Solicitudes/ListaColegiados/DetalleInfo";
 import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal";
 import { estados } from "@/Shared/UniversidadData";
 import useDataListaColegiados from "@/store/ListaColegiadosData";
-import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState,useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // Componentes
 import DataTable from "./DataTable";
@@ -39,10 +37,14 @@ export default function ListaColegiadosPage() {
   const getColegiadoPendiente = useDataListaColegiados(
     (state) => state.getColegiadoPendiente
   );
-  const recaudosAnulados = useDataListaColegiados((state)=>state.recaudosAnulados)
-  const recaudosAnuladosPagination = useDataListaColegiados((state)=>state.recaudosAnuladosPagination)
-  const recaudosRechazados = useDataListaColegiados((state)=>state.recaudosRechazados)
-  const recaudosRechazadosPagination = useDataListaColegiados((state)=>state.recaudosRechazadosPagination)
+  const recaudosAnulados = useDataListaColegiados((state) => state.recaudosAnulados);
+  const recaudosAnuladosPagination = useDataListaColegiados((state) => state.recaudosAnuladosPagination);
+  const recaudosRechazados = useDataListaColegiados((state) => state.recaudosRechazados);
+  const recaudosRechazadosPagination = useDataListaColegiados((state) => state.recaudosRechazadosPagination);
+  const pendientesRevisando = useDataListaColegiados((state) => state.pendientesRevisando);
+  const pendientesRevisandoPagination = useDataListaColegiados((state) => state.pendientesRevisandoPagination);
+  const pendientesPorPagar = useDataListaColegiados((state) => state.pendientesPorPagar);
+  const pendientesPorPagarPagination = useDataListaColegiados((state) => state.pendientesPorPagarPagination);
 
   // Estado local de UI
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,98 +71,98 @@ export default function ListaColegiadosPage() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Definir todos los filtros disponibles
-const allFilters = [
-  // Estado de solvencia
-  { id: "solventes", group: "Estado de solvencia", label: "Solventes", value: "solventes" },
-  { id: "noSolventes", group: "Estado de solvencia", label: "No Solventes", value: "noSolventes" },
-  { id: "solicitudes", group: "Estado de solvencia", label: "Con Solicitudes", value: "solicitudes" },
+  const allFilters = [
+    // Estado de solvencia
+    { id: "solventes", group: "Estado de solvencia", label: "Solventes", value: "solventes" },
+    { id: "noSolventes", group: "Estado de solvencia", label: "No Solventes", value: "noSolventes" },
+    { id: "solicitudes", group: "Estado de solvencia", label: "Con Solicitudes", value: "solicitudes" },
 
-  // Profesiones (cambiado a Profesión/Ocupación)
-  { id: "prof-odontologo", group: "Profesión/Ocupación", label: "Odontólogo", value: "odontologo" },
-  { id: "prof-tecnico", group: "Profesión/Ocupación", label: "Técnico Dental", value: "tecnico" },
-  { id: "prof-higienista", group: "Profesión/Ocupación", label: "Higienista", value: "higienista" },
-  
-  // Especialidad
-  { id: "especialidad-armonizacion", group: "Especialidades", label: "Armonización facial", value: "Armonización facial" },
-  { id: "especialidad-cirugia-bucal", group: "Especialidades", label: "Cirugía bucal", value: "Cirugía bucal" },
-  { id: "especialidad-cirugia-bucomaxilofacial", group: "Especialidades", label: "Cirugía bucomaxilofacial", value: "Cirugía bucomaxilofacial" },
-  { id: "especialidad-endodoncia", group: "Especialidades", label: "Endodoncia", value: "Endodoncia" },
-  { id: "especialidad-ortodoncia", group: "Especialidades", label: "Ortodoncia", value: "Ortodoncia" },
+    // Profesiones (cambiado a Profesión/Ocupación)
+    { id: "prof-odontologo", group: "Profesión/Ocupación", label: "Odontólogo", value: "odontologo" },
+    { id: "prof-tecnico", group: "Profesión/Ocupación", label: "Técnico Dental", value: "tecnico" },
+    { id: "prof-higienista", group: "Profesión/Ocupación", label: "Higienista", value: "higienista" },
 
-  // Edad
-  { id: "edad-rango", group: "Edad", label: "Edad", value: "personalizado" },
+    // Especialidad
+    { id: "especialidad-armonizacion", group: "Especialidades", label: "Armonización facial", value: "Armonización facial" },
+    { id: "especialidad-cirugia-bucal", group: "Especialidades", label: "Cirugía bucal", value: "Cirugía bucal" },
+    { id: "especialidad-cirugia-bucomaxilofacial", group: "Especialidades", label: "Cirugía bucomaxilofacial", value: "Cirugía bucomaxilofacial" },
+    { id: "especialidad-endodoncia", group: "Especialidades", label: "Endodoncia", value: "Endodoncia" },
+    { id: "especialidad-ortodoncia", group: "Especialidades", label: "Ortodoncia", value: "Ortodoncia" },
 
-  // Estado laboral
-  { id: "laborando", group: "Estado laboral", label: "Laborando", value: true },
-  { id: "no-laborando", group: "Estado laboral", label: "No laborando", value: false },
+    // Edad
+    { id: "edad-rango", group: "Edad", label: "Edad", value: "personalizado" },
 
-  // Género
-  { id: "masculino", group: "Género", label: "Masculino", value: "masculino" },
-  { id: "femenino", group: "Género", label: "Femenino", value: "femenino" },
-  { id: "otros", group: "Género", label: "Otros", value: "otro" },
+    // Estado laboral
+    { id: "laborando", group: "Estado laboral", label: "Laborando", value: true },
+    { id: "no-laborando", group: "Estado laboral", label: "No laborando", value: false },
 
-  // Documentos
-  { id: "documentos-incompletos", group: "Documentos", label: "Incompletos", value: "documentosIncompletos" },
-  { id: "documentos-rechazados", group: "Documentos", label: "Rechazados", value: "documentosRechazados" },
-  { id: "documentos-completos", group: "Documentos", label: "Completos", value: "documentosCompletos" },
-  { id: "documentos-pendientes", group: "Documentos", label: "Pendientes por aprobar", value: "documentosPendientes" },
+    // Género
+    { id: "masculino", group: "Género", label: "Masculino", value: "masculino" },
+    { id: "femenino", group: "Género", label: "Femenino", value: "femenino" },
+    { id: "otros", group: "Género", label: "Otros", value: "otro" },
 
-  // Pagos - añadido Rechazado
-  { id: "pagos-pendientes", group: "Pagos", label: "Pendientes", value: "pagosPendientes" },
-  { id: "pagos-exonerados", group: "Pagos", label: "Exonerados", value: "pagosExonerados" },
-  { id: "pagos-rechazados", group: "Pagos", label: "Rechazados", value: "pagosRechazados" },
+    // Documentos
+    { id: "documentos-incompletos", group: "Documentos", label: "Incompletos", value: "documentosIncompletos" },
+    { id: "documentos-rechazados", group: "Documentos", label: "Rechazados", value: "documentosRechazados" },
+    { id: "documentos-completos", group: "Documentos", label: "Completos", value: "documentosCompletos" },
+    { id: "documentos-pendientes", group: "Documentos", label: "Pendientes por aprobar", value: "documentosPendientes" },
 
-  // Creado por
-  { id: "creado-admin", group: "Creado por", label: "Admin", value: true},
-  { id: "creado-colegiado", group: "Creado por", label: "Colegiado", value: false },
+    // Pagos - añadido Rechazado
+    { id: "pagos-pendientes", group: "Pagos", label: "Pendientes", value: "pagosPendientes" },
+    { id: "pagos-exonerados", group: "Pagos", label: "Exonerados", value: "pagosExonerados" },
+    { id: "pagos-rechazados", group: "Pagos", label: "Rechazados", value: "pagosRechazados" },
 
-  // Institución
-  { id: "inst-asp", group: "Institución", label: "Agencias de Salud Pública", value: "ASP" },
-  { id: "inst-caa", group: "Institución", label: "Centros de Atención Ambulatoria", value: "CAA" },
-  { id: "inst-cc", group: "Institución", label: "Clínicas", value: "CC" },
-  { id: "inst-cdp", group: "Institución", label: "Consultorios", value: "CDP" },
-  { id: "inst-eo", group: "Institución", label: "Escuelas y Facultades de Odontología", value: "EO" },
-  { id: "inst-fap", group: "Institución", label: "Fuerzas Armadas y Servicios Penitenciarios", value: "FAP" },
-  { id: "inst-fmd", group: "Institución", label: "Fabricación de Materiales y Equipos Dentales", value: "FMD" },
-  { id: "inst-hd", group: "Institución", label: "Hospitales", value: "HD" },
-  { id: "inst-ldc", group: "Institución", label: "Laboratorio", value: "LDC" },
-  { id: "inst-ot", group: "Institución", label: "Otros", value: "OT" },
-  { id: "inst-pmsb", group: "Institución", label: "Programas Móviles de Salud Bucal", value: "PMSB" },
-  { id: "inst-ui", group: "Institución", label: "Universidades e Institutos de Investigación", value: "UI" },
+    // Creado por
+    { id: "creado-admin", group: "Creado por", label: "Admin", value: true },
+    { id: "creado-colegiado", group: "Creado por", label: "Colegiado", value: false },
 
-  // Universidad - simplemente ubicado antes de Ubicación en la lista
-  { id: "universidad-ucv", group: "Universidad", label: "Universidad Central de Venezuela (UCV)", value: "UCV" },
-  { id: "universidad-luz", group: "Universidad", label: "Universidad del Zulia (LUZ)", value: "LUZ" },
-  { id: "universidad-ula", group: "Universidad", label: "Universidad de Los Andes (ULA)", value: "ULA" },
-  { id: "universidad-usb", group: "Universidad", label: "Universidad Simón Bolívar (USB)", value: "USB" },
-  { id: "universidad-unimet", group: "Universidad", label: "Universidad Metropolitana (UNIMET)", value: "UNIMET" },
-  
-  // Estados -> Ubicación (ahora después de Universidad)
-  ...estados.map(estado => ({
-    id: `ubicacion-${estado.toLowerCase().replace(/\s+/g, '-')}`,
-    group: "Ubicación",
-    label: estado,
-    value: estado
-  })),
-];
+    // Institución
+    { id: "inst-asp", group: "Institución", label: "Agencias de Salud Pública", value: "ASP" },
+    { id: "inst-caa", group: "Institución", label: "Centros de Atención Ambulatoria", value: "CAA" },
+    { id: "inst-cc", group: "Institución", label: "Clínicas", value: "CC" },
+    { id: "inst-cdp", group: "Institución", label: "Consultorios", value: "CDP" },
+    { id: "inst-eo", group: "Institución", label: "Escuelas y Facultades de Odontología", value: "EO" },
+    { id: "inst-fap", group: "Institución", label: "Fuerzas Armadas y Servicios Penitenciarios", value: "FAP" },
+    { id: "inst-fmd", group: "Institución", label: "Fabricación de Materiales y Equipos Dentales", value: "FMD" },
+    { id: "inst-hd", group: "Institución", label: "Hospitales", value: "HD" },
+    { id: "inst-ldc", group: "Institución", label: "Laboratorio", value: "LDC" },
+    { id: "inst-ot", group: "Institución", label: "Otros", value: "OT" },
+    { id: "inst-pmsb", group: "Institución", label: "Programas Móviles de Salud Bucal", value: "PMSB" },
+    { id: "inst-ui", group: "Institución", label: "Universidades e Institutos de Investigación", value: "UI" },
+
+    // Universidad - simplemente ubicado antes de Ubicación en la lista
+    { id: "universidad-ucv", group: "Universidad", label: "Universidad Central de Venezuela (UCV)", value: "UCV" },
+    { id: "universidad-luz", group: "Universidad", label: "Universidad del Zulia (LUZ)", value: "LUZ" },
+    { id: "universidad-ula", group: "Universidad", label: "Universidad de Los Andes (ULA)", value: "ULA" },
+    { id: "universidad-usb", group: "Universidad", label: "Universidad Simón Bolívar (USB)", value: "USB" },
+    { id: "universidad-unimet", group: "Universidad", label: "Universidad Metropolitana (UNIMET)", value: "UNIMET" },
+
+    // Estados -> Ubicación (ahora después de Universidad)
+    ...estados.map(estado => ({
+      id: estado.id,
+      group: "Ubicación",
+      label: estado,
+      value: estado
+    })),
+  ];
 
   const router = useRouter();
+
   const initStoreAsync = async () => {
     await initStore();
-  }
+  };
 
   useEffect(() => {
     const initializeData = async () => {
       try {
         await initStore();
         setIsInitialized(true);
-        await fetchPendientes(1, 10, "", { status: "por_pagar,revisando" });
       } catch (error) {
         console.error("Error initializing store:", error);
       }
     };
     initializeData();
-  }, []);
+  }, [initStore]);
 
   // Inicialización
   useEffect(() => {
@@ -172,15 +174,29 @@ const allFilters = [
       paramsObject[key] = value;
     });
 
+    // Manejar parámetros de la URL para navegación directa
+    if (paramsObject.id) {
+      setColegiadoSeleccionadoId(paramsObject.id);
+
+      // Determinar el tipo basado en la URL o parámetros
+      if (paramsObject.type === "pendiente" || window.location.pathname.includes('/pendiente/')) {
+        setVistaActual("detallePendiente");
+      } else if (paramsObject.type === "colegiado" || window.location.pathname.includes('/colegiado/')) {
+        setVistaActual("detalleColegiado");
+      }
+    }
+
     setParams(paramsObject);
-    setColegiadoSeleccionadoId(paramsObject.id);
     console.log("Parámetros guardados:", paramsObject);
   }, []);
 
   // Fetch de datos basado en filtros
   useEffect(() => {
+    if (!isInitialized) {
+      return;
+    }
     const filtros = {};
-  
+
     activeFilters.forEach(filter => {
       switch (filter.group) {
         case "Estado de solvencia":
@@ -188,17 +204,17 @@ const allFilters = [
           if (filter.id === "noSolventes") filtros.solvencia_status = "false";
           if (filter.id === "solicitudes") filtros.tiene_solicitudes_pendientes = "true";
           break;
-  
+
         case "Profesión/Ocupación":
           if (!filtros.profesiones) filtros.profesiones = [];
           filtros.profesiones.push(filter.value);
           break;
-  
+
         case "Especialidades":
           if (!filtros.especialidades) filtros.especialidades = [];
           filtros.especialidades.push(filter.value);
           break;
-  
+
         case "Edad":
           if (edadExacta) {
             filtros.edad_min = edadExacta;
@@ -208,71 +224,73 @@ const allFilters = [
             if (edadMax) filtros.edad_max = edadMax;
           }
           break;
-  
+
         case "Estado laboral":
           filtros.laborando = filter.value.toString();
           break;
-  
+
         case "Género":
           filtros.genero = filter.value;
           break;
-  
+
         case "Documentos":
           if (filter.id === "documentos-incompletos") filtros.documentos_completos = "false";
           if (filter.id === "documentos-rechazados") filtros.documentos_rechazados = "true";
           if (filter.id === "documentos-completos") filtros.documentos_completos = "true";
           if (filter.id === "documentos-pendientes") filtros.documentos_pendientes = "true";
           break;
-  
+
         case "Pagos":
           if (filter.id === "pagos-pendientes") filtros.tiene_pago = "false";
           if (filter.id === "pagos-exonerados") filtros.pago_exonerado = "true";
           if (filter.id === "pagos-rechazados") filtros.pago_rechazado = "true";
           break;
-  
+
         case "Creado por":
           filtros.user_admin_create = filter.value;
           break;
-  
+
         case "Ubicación":
           if (!filtros.estados) filtros.estados = [];
           filtros.estados.push(filter.value);
           break;
-  
+
         case "Universidad":
           if (!filtros.universidades) filtros.universidades = [];
           filtros.universidades.push(filter.value);
           break;
-  
+
         case "Institución":
           if (!filtros.instituciones) filtros.instituciones = [];
           filtros.instituciones.push(filter.value);
           break;
       }
     });
-  
+
     if (fromDate) filtros.fecha_solicitud_desde = fromDate;
     if (toDate) filtros.fecha_solicitud_hasta = toDate;
-  
+
     if (filtros.profesiones) filtros.profesiones = filtros.profesiones.join(',');
     if (filtros.especialidades) filtros.especialidades = filtros.especialidades.join(',');
     if (filtros.estados) filtros.estados = filtros.estados.join(',');
     if (filtros.universidades) filtros.universidades = filtros.universidades.join(',');
     if (filtros.instituciones) filtros.instituciones = filtros.instituciones.join(',');
-  
+
     filtros.ordering = ordenFecha === "desc" ? "-created_at" : "created_at";
-  
+
+    let shouldFetch = true;
     if (tabActivo === "pendientes") {
       filtros.status = "por_pagar,revisando";
     } else if (tabActivo === "rechazados") {
       filtros.status = "rechazado";
     } else if (tabActivo === "anulados") {
       filtros.status = "anulado";
-    }
-    setCurrentPage(1) 
-    if (tabActivo === "registrados") {
+    } else if (tabActivo === "registrados") {
       fetchColegiados(currentPage, recordsPerPage, searchTerm, filtros);
-    } else {
+      shouldFetch = false; // Don't fetch pendientes when on the 'registrados' tab
+    }
+
+    if (tabActivo !== "registrados" && shouldFetch) {
       fetchPendientes(currentPage, recordsPerPage, searchTerm, filtros);
     }
   }, [
@@ -287,9 +305,11 @@ const allFilters = [
     edadMin,
     edadMax,
     tabActivo,
+    fetchColegiados,
+    fetchPendientes,
   ]);
 
-  // Funciones de navegación
+  // Funciones de navegación actualizadas
   const verDetalleColegiado = (id) => {
     setColegiadoSeleccionadoId(id);
     setVistaActual("detalleColegiado");
@@ -300,13 +320,20 @@ const allFilters = [
     setVistaActual("detallePendiente");
   };
 
-  const volverALista = () => {
+  const volverALista = (resultado = null) => {
     const temporalParams = window.location.search;
     if (temporalParams) {
       router.push("/PanelControl/ListaColegiados");
     }
     setVistaActual("lista");
     setColegiadoSeleccionadoId(null);
+
+    // Manejar resultados específicos
+    if (resultado?.aprobado) {
+      setAprobacionExitosa(true);
+      setTimeout(() => setAprobacionExitosa(false), 3000);
+      setTabActivo("registrados");
+    }
   };
 
   // Alternar orden de fecha para pendientes
@@ -318,22 +345,6 @@ const allFilters = [
   const handleRegistroExitoso = () => {
     setShowRegistro(false);
     setRegistroExitoso(true);
-  };
-
-  // Manejador para la aprobación de un colegiado pendiente
-  const handleAprobarPendiente = (resultado) => {
-    // Siempre volver a la lista primero, para evitar problemas de estado
-    volverALista();
-
-    // Comprobar si fue una aprobación exitosa
-    if (resultado && resultado.aprobado === true) {
-      // Solo mostrar notificación si se aprobó
-      setAprobacionExitosa(true);
-      setTimeout(() => setAprobacionExitosa(false), 3000);
-
-      // Cambiar al tab de registrados
-      setTabActivo("registrados");
-    }
   };
 
   // Manejador para cambio de tabs que ajusta los filtros
@@ -356,13 +367,13 @@ const allFilters = [
   };
 
   const TypoPendiente = {
-    pendientes: colegiadosPendientes,
+    pendientes: tabActivo === "revisando" ? pendientesRevisando : (tabActivo === "por_pagar" ? pendientesPorPagar : colegiadosPendientes),
     rechazados: recaudosRechazados,
     anulados: recaudosAnulados
   };
 
   const PaginationType = {
-    pendientes: colegiadosPendientesPagination,
+    pendientes: tabActivo === "revisando" ? pendientesRevisandoPagination : (tabActivo === "por_pagar" ? pendientesPorPagarPagination : colegiadosPendientesPagination),
     rechazados: recaudosRechazadosPagination,
     anulados: recaudosAnuladosPagination,
     registrados: colegiadosPagination
@@ -376,24 +387,24 @@ const allFilters = [
     return PaginationType[tabActivo] || {};
   }, [PaginationType, tabActivo]);
 
-  // Renderizar vista basada en el estado actual
+  // Renderizar vista basada en el estado actual - ACTUALIZADO
   if (vistaActual === "detalleColegiado") {
-    const colegiadoActual = getColegiado(colegiadoSeleccionadoId);
     return (
-      <DetalleColegiado
+      <DetalleInfo
         params={{ id: colegiadoSeleccionadoId }}
         onVolver={volverALista}
-        colegiado={colegiadoActual}
+        tipo="colegiado"
+        isAdmin={true}
       />
     );
   }
 
   if (vistaActual === "detallePendiente" || params.type === "pendiente") {
-    const pendienteActual = getColegiadoPendiente(colegiadoSeleccionadoId);
     return (
-      <DetallePendiente
-        params={{ id: colegiadoSeleccionadoId }}
-        onVolver={handleAprobarPendiente}
+      <DetalleInfo
+        params={{ id: colegiadoSeleccionadoId || params.id }}
+        onVolver={volverALista}
+        tipo="pendiente"
         isAdmin={true}
       />
     );

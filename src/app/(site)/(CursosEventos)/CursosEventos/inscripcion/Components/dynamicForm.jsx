@@ -2,8 +2,6 @@
 import api from "@/api/api";
 import { useState } from "react";
 
-// Sample form configuration
-
 export default function DynamicForm(props) {
   const { formulario } = props;
   const [formData, setFormData] = useState({});
@@ -353,9 +351,8 @@ export default function DynamicForm(props) {
               {campo.tipo === "archivo" && (
                 <div className="flex flex-col gap-2">
                   <div
-                    className={`flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 border-slate-300 ${
-                      isDragging ? "border-blue-500" : ""
-                    }`}
+                    className={`flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 border-slate-300 ${isDragging ? "border-blue-500" : ""
+                      }`}
                     onDrop={(e) => handleDrop(e)}
                     onDragEnter={(e) => handleDragEnter(e)}
                     onDragLeave={(e) => handleDragLeave(e)}
@@ -451,11 +448,10 @@ export default function DynamicForm(props) {
       <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col gap-4">
         {submitStatus && (
           <div
-            className={`w-full p-3 rounded-md text-sm ${
-              submitStatus.success
+            className={`w-full p-3 rounded-md text-sm ${submitStatus.success
                 ? "bg-green-50 text-green-700 border border-green-200"
                 : "bg-red-50 text-red-700 border border-red-200"
-            }`}
+              }`}
           >
             {submitStatus.message}
           </div>
@@ -464,11 +460,10 @@ export default function DynamicForm(props) {
           type="submit"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className={`w-full py-2 px-4 rounded-md font-medium text-white ${
-            isSubmitting
+          className={`w-full py-2 px-4 rounded-md font-medium text-white ${isSubmitting
               ? "bg-slate-400 cursor-not-allowed"
               : "bg-slate-700 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-          }`}
+            }`}
         >
           {isSubmitting ? "Enviando..." : "Enviar"}
         </button>

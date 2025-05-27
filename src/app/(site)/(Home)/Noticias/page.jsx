@@ -1,5 +1,5 @@
 "use client";
-import newsItems from "@/app/Models/Home/NoticiasData";
+import newsItems from "@/app/Models/PanelControl/PaginaWeb/Inicio/NoticiasData";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Calendar, ChevronRight, Clock, Filter, Search } from "lucide-react";
 import { useRouter } from "next/navigation";

@@ -6,7 +6,7 @@ import { CreditCard, DollarSign } from "lucide-react";
 import useColegiadoUserStore from "@/store/colegiadoUserStore";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 
-export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
+function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [paymentMethod, setPaymentMethod] = useState("")
     const [montoPago, setMontoPago] = useState("0.00")
@@ -460,3 +460,5 @@ export default function PagosColg({ onPaymentComplete, totalPendiente = 0 }) {
         </div>
     )
 }
+
+export { PagosColg as PagosColgSolic }

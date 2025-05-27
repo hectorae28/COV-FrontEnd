@@ -1,6 +1,6 @@
 "use client"
 
-import { CustomTooltip, FilterDropdown, SectionTitle } from "@/app/PanelControl/(Estadisticas)/Estadisticas/page";
+import { CustomTooltip, FilterDropdown, SectionTitle } from "@/app/PanelControl/(Estadisticas)/Estadisticas/EstadisticasUtils";
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 

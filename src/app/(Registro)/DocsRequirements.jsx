@@ -9,6 +9,7 @@ export default function DocsRequirements({
   isEditMode = false
 }) {
   // Inicializar fileNames basado en archivos existentes en formData
+  console.log("formData", formData);
   const [fileNames, setFileNames] = useState({
     ci: formData.ci ? (formData.ci.name || "Archivo seleccionado") : "",
     rif: formData.rif ? (formData.rif.name || "Archivo seleccionado") : "",
@@ -18,6 +19,9 @@ export default function DocsRequirements({
     fondo_negro_credencial: formData.fondo_negro_credencial ? (formData.fondo_negro_credencial.name || "Archivo seleccionado") : "",
     notas_curso: formData.notas_curso ? (formData.notas_curso.name || "Archivo seleccionado") : ""
   });
+
+  // Estado para controlar la aprobación de documentos
+  const [docsAprobados, setDocsAprobados] = useState(false);
 
   // Verificar si un campo tiene error de validación
   const isFieldEmpty = (fieldName) => {
@@ -33,6 +37,13 @@ export default function DocsRequirements({
       }));
       onInputChange({ [name]: files[0] });
     }
+  };
+
+  // Función para manejar el cambio de estado del switch de aprobación
+  const handleAprobacionChange = () => {
+    const nuevoEstado = !docsAprobados;
+    setDocsAprobados(nuevoEstado);
+    onInputChange({ documentos_aprobados: nuevoEstado });
   };
 
   // Determinar la etiqueta correcta para el fondo negro del título según la profesión
@@ -287,11 +298,47 @@ export default function DocsRequirements({
       <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
         <h3 className="text-sm font-medium text-blue-800 mb-2">Información importante</h3>
         <p className="text-xs text-blue-600">
-          Todos los documentos deben estar en formato PDF, JPG o PNG y ser claramente legibles.
-          El tamaño máximo por archivo es de 5MB. Asegúrese de que los documentos estén completos
+          Todos los documentos deben estar en formato PDF, JPG o PNG y ser claramente legibles. Asegúrese de que los documentos estén completos
           y vigentes para evitar retrasos en su proceso de colegiación.
         </p>
       </div>
+      
+      {/* Interruptor para aprobar documentos */}
+        {isEditMode && (
+
+        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-xl border border-gray-300">
+          <div>
+            <h3 className="text-sm font-medium text-gray-800">Aprobar todos los documentos</h3>
+            <p className="text-xs text-gray-600">
+              Confirme que todos los documentos proporcionados son correctos y válidos
+            </p>
+          </div>
+          <button 
+            type="button"
+            onClick={handleAprobacionChange}
+            className={`relative inline-flex items-center h-6 rounded-full w-12 focus:outline-none transition-colors duration-300 ease-in-out ${docsAprobados ? 'bg-green-600' : 'bg-red-600'}`}
+            aria-pressed={docsAprobados}
+          >
+            <span className="sr-only">Aprobar documentos</span>
+            <span
+              className={`absolute inset-y-0.5 left-0.5 flex items-center justify-center w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform duration-300 ease-in-out ${docsAprobados ? 'translate-x-6' : ''}`}
+            >
+              {docsAprobados ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5  text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+            </span>
+          </button>
+        </div>
+      )}
+
+      
+
     {/* Si estamos en modo edición, mostrar botones de guardar/cancelar */}
       {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
