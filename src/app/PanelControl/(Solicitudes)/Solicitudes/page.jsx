@@ -19,10 +19,26 @@ import Pagination from "@/Components/Paginations.jsx";
 import {useSolicitudesStore} from "@/store/SolicitudesStore.jsx"
 import useColegiadoUserStore from "@/store/colegiadoUserStore"
 import transformBackendData from "@/utils/formatDataSolicitudes";
+import { usePathname } from "next/navigation"
 import {useRouter} from "next/navigation"
-export default function ListaSolicitudes({ props }) {
+export default function ListaSolicitudes() {
   // Force isAdmin to be true for PanelControl
-  const isAdmin = props ? props.isAdmin : true;
+  const pathname = usePathname()
+  const isAdmin = pathname.includes('/PanelControl') ? true : (props?.isAdmin ?? false)
+  const setColegiadoUser = useColegiadoUserStore( state => state.setColegiadoUser);
+  const colegiadoId = useColegiadoUserStore( state => state.colegiadoUser);
+  if(!isAdmin){
+    const LoadAsyncData = async () => {
+      const UserData = await fetchMe()
+      setColegiadoUser(UserData.data)
+    }
+    useEffect(() => {
+      if(!colegiadoId){
+        LoadAsyncData()
+      }
+      setColegiadoUser(colegiadoId)
+    }, [colegiadoId])
+  }
   
   // Estados para manejar los datos
   //const [solicitudes, setSolicitudes] = useState([])
@@ -39,7 +55,7 @@ export default function ListaSolicitudes({ props }) {
   const loading = useSolicitudesStore((state)=>state.loading)
   const [searchTerm, setSearchTerm] = useState("")
   const [showModal, setShowModal] = useState(false)
-  const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(props?.colegiadoId)
+  const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(colegiadoId)
   //const [colegiados, setColegiados] = useState([])
   const user = useColegiadoUserStore((state) => state.colegiadoUser);
   const addSolicitud = useSolicitudesStore((state) => state.addSolicitud);
