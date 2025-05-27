@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle, ChevronLeft, X } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Componentes compartidos
 import AcademicInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
@@ -12,7 +12,6 @@ import {
   DocumentViewer,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import InstitutionsSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
-import NotificationSystem from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/NotificationSystem";
 import PaymentReceiptSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PaymentReceiptSection";
 import PersonalInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
 import UserProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/UserProfileCard";
@@ -122,24 +121,24 @@ export default function DetalleInfo({
   // 🔧 FUNCIÓN CRÍTICA: Validación de documentos aprobados
   const allDocumentsApproved = useCallback(() => {
     const currentData = entityData;
-    
+
     if (!currentData) {
       return false;
     }
 
     const tipoProfesion = currentData.tipo_profesion || "odontologo";
-    
+
     // Documentos requeridos según tipo
     const documentosRequeridosBase = [
       "file_ci",
-      "file_rif", 
+      "file_rif",
       "file_fondo_negro",
       "file_mpps",
     ];
 
     const documentosAdicionales = [
       "fondo_negro_credencial",
-      "notas_curso", 
+      "notas_curso",
       "fondo_negro_titulo_bachiller",
     ];
 
@@ -162,7 +161,7 @@ export default function DetalleInfo({
 
       const hasFile = !!currentData[urlField];
       const isApproved = currentData[validateField] === true;
-      
+
       if (hasFile && isApproved) {
         documentosAprobados++;
       }
@@ -174,7 +173,7 @@ export default function DetalleInfo({
     if (!currentData.pago_exonerado) {
       const comprobanteHasFile = !!comprobanteData?.url;
       const comprobanteApproved = comprobanteData?.status === "approved";
-      
+
       return docsApproved && comprobanteHasFile && comprobanteApproved;
     }
 
@@ -184,18 +183,18 @@ export default function DetalleInfo({
   // 🔧 FUNCIÓN CRÍTICA: Validación de documentos subidos
   const allDocumentsUploaded = useCallback(() => {
     const currentData = entityData;
-    
+
     if (!currentData) {
       return false;
     }
 
     const tipoProfesion = currentData.tipo_profesion || "odontologo";
-    
+
     // Documentos requeridos según tipo
     const documentosRequeridosBase = [
       "file_ci",
       "file_rif",
-      "file_fondo_negro", 
+      "file_fondo_negro",
       "file_mpps",
     ];
 
@@ -221,7 +220,7 @@ export default function DetalleInfo({
     documentosRequeridos.forEach((docId) => {
       const urlField = `${docId}_url`;
       const hasFile = !!currentData[urlField];
-      
+
       if (hasFile) {
         documentosSubidos++;
       }
@@ -284,21 +283,21 @@ export default function DetalleInfo({
 
   // Función para cargar datos del comprobante
   const loadComprobanteData = useCallback((pendienteData) => {
-    const comprobanteUrl = pendienteData.comprobante_url || 
-                          pendienteData.comprobante || 
-                          pendienteData.pago?.comprobante_url ||
-                          pendienteData.pago?.comprobante;
+    const comprobanteUrl = pendienteData.comprobante_url ||
+      pendienteData.comprobante ||
+      pendienteData.pago?.comprobante_url ||
+      pendienteData.pago?.comprobante;
 
-    const tieneComprobante = comprobanteUrl || 
-                           pendienteData.comprobante_pago_url || 
-                           pendienteData.file_comprobante_url ||
-                           (pendienteData.pago && pendienteData.pago.comprobante);
+    const tieneComprobante = comprobanteUrl ||
+      pendienteData.comprobante_pago_url ||
+      pendienteData.file_comprobante_url ||
+      (pendienteData.pago && pendienteData.pago.comprobante);
 
     if (tieneComprobante) {
-      const url = comprobanteUrl || 
-                 pendienteData.comprobante_pago_url || 
-                 pendienteData.file_comprobante_url ||
-                 pendienteData.pago?.comprobante;
+      const url = comprobanteUrl ||
+        pendienteData.comprobante_pago_url ||
+        pendienteData.file_comprobante_url ||
+        pendienteData.pago?.comprobante;
 
       const comprobanteInfo = {
         id: "comprobante_pago",
@@ -306,8 +305,8 @@ export default function DetalleInfo({
         archivo: typeof url === "string" ? url.split("/").pop() : "comprobante_pago.pdf",
         url: url,
         status: pendienteData.comprobante_validate === null ? "pending" :
-               pendienteData.comprobante_validate === true ? "approved" :
-               pendienteData.comprobante_validate === false ? "rechazado" : "pending",
+          pendienteData.comprobante_validate === true ? "approved" :
+            pendienteData.comprobante_validate === false ? "rechazado" : "pending",
         rejectionReason: pendienteData.comprobante_motivo_rechazo || "",
       };
 
@@ -494,7 +493,7 @@ export default function DetalleInfo({
         setEntityData(prevData => ({ ...prevData, ...response.data }));
         setDocumentUpdateTrigger(prev => prev + 1);
       }
-      
+
       return response;
     } catch (error) {
       throw error;
@@ -503,36 +502,36 @@ export default function DetalleInfo({
 
   // Manejador optimizado para cambios en documentos
   const handleDocumentStatusChange = useCallback(async (documentoActualizado) => {
-  try {
-    // 1. ACTUALIZA LOCALMENTE el estado del documento de forma optimista
-    setEntityData(prevData => ({
-      ...prevData,
-      [`${documentoActualizado.id}_validate`]: documentoActualizado.status === "approved",
-      [`${documentoActualizado.id}_motivo_rechazo`]: documentoActualizado.rejectionReason || ''
-    }));
-
-    // 2. Si es comprobante de pago, también actualiza el local del comprobante
-    if (documentoActualizado.id === "comprobante_pago") {
-      setComprobanteData(prev => ({
-        ...prev,
-        status: documentoActualizado.status,
-        rejectionReason: documentoActualizado.rejectionReason || ''
+    try {
+      // 1. ACTUALIZA LOCALMENTE el estado del documento de forma optimista
+      setEntityData(prevData => ({
+        ...prevData,
+        [`${documentoActualizado.id}_validate`]: documentoActualizado.status === "approved",
+        [`${documentoActualizado.id}_motivo_rechazo`]: documentoActualizado.rejectionReason || ''
       }));
-    }
 
-    // 3. Llama al backend para guardar el cambio
-    const updateData = {
-      [`${documentoActualizado.id}_validate`]: documentoActualizado.status === "approved"
-    };
-    if (documentoActualizado.status === "rechazado" && documentoActualizado.rejectionReason) {
-      updateData[`${documentoActualizado.id}_motivo_rechazo`] = documentoActualizado.rejectionReason;
-    }
+      // 2. Si es comprobante de pago, también actualiza el local del comprobante
+      if (documentoActualizado.id === "comprobante_pago") {
+        setComprobanteData(prev => ({
+          ...prev,
+          status: documentoActualizado.status,
+          rejectionReason: documentoActualizado.rejectionReason || ''
+        }));
+      }
 
-    await updateColegiadoPendiente(entityId, updateData);
-  } catch (error) {
-    console.error("Error updating document status:", error);
-  }
-}, [entityId, updateColegiadoPendiente, setComprobanteData]);
+      // 3. Llama al backend para guardar el cambio
+      const updateData = {
+        [`${documentoActualizado.id}_validate`]: documentoActualizado.status === "approved"
+      };
+      if (documentoActualizado.status === "rechazado" && documentoActualizado.rejectionReason) {
+        updateData[`${documentoActualizado.id}_motivo_rechazo`] = documentoActualizado.rejectionReason;
+      }
+
+      await updateColegiadoPendiente(entityId, updateData);
+    } catch (error) {
+      console.error("Error updating document status:", error);
+    }
+  }, [entityId, updateColegiadoPendiente, setComprobanteData]);
 
 
   // Función para manejar el upload del comprobante
@@ -549,7 +548,7 @@ export default function DetalleInfo({
         setEntityData(prevData => ({ ...prevData, ...response.data }));
         setDocumentUpdateTrigger(prev => prev + 1);
       }
-      
+
       return response;
     } catch (error) {
       throw error;
@@ -566,7 +565,7 @@ export default function DetalleInfo({
 
     const updateData = {
       comprobante_validate: updatedComprobante.status === "pending" ? null :
-                           updatedComprobante.status === "approved" ? true : false,
+        updatedComprobante.status === "approved" ? true : false,
     };
 
     if (updatedComprobante.rejectionReason) {
@@ -776,29 +775,6 @@ export default function DetalleInfo({
             Volver a la lista de colegiados
           </button>
         </div>
-      )}
-
-      {/* Notificaciones */}
-      {tipo === "pendiente" && (
-        <NotificationSystem
-          notifications={{
-            confirmacionExitosa,
-            rechazoExitoso,
-            denegacionExitosa,
-            exoneracionExitosa,
-            cambiosPendientes,
-            documentosCompletos: allDocumentsApproved(),
-          }}
-          handlers={{
-            setConfirmacionExitosa,
-            setRechazoExitoso,
-            setDenegacionExitosa,
-            setExoneracionExitosa,
-            setCambiosPendientes,
-          }}
-          pendiente={entityData}
-          allDocumentsUploaded={allDocumentsUploaded()}
-        />
       )}
 
       {/* Notificación de cambios pendientes para colegiados */}

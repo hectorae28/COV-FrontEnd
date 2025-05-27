@@ -8,7 +8,7 @@ import {
   FileText,
   Pencil,
   RefreshCcw,
-  Upload, 
+  Upload,
   X
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -33,11 +33,11 @@ export function DocumentSection({
   const [error, setError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedDocumentName, setUploadedDocumentName] = useState("");
-  
+
   // Estados para manejo optimista
   const [localPendienteData, setLocalPendienteData] = useState(pendienteData);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
+
   const fileInputRef = useRef(null);
 
   // Sincronizar datos cuando cambien los props
@@ -51,40 +51,40 @@ export function DocumentSection({
     if (!data) return [];
 
     const documentosMetadata = {
-      file_ci: { 
-        nombre: "Cédula de identidad", 
-        descripcion: "Copia escaneada por ambos lados", 
-        requerido: true 
+      file_ci: {
+        nombre: "Cédula de identidad",
+        descripcion: "Copia escaneada por ambos lados",
+        requerido: true
       },
-      file_rif: { 
-        nombre: "RIF", 
-        descripcion: "Registro de Información Fiscal", 
-        requerido: true 
+      file_rif: {
+        nombre: "RIF",
+        descripcion: "Registro de Información Fiscal",
+        requerido: true
       },
-      file_fondo_negro: { 
-        nombre: "Título universitario fondo negro", 
-        descripcion: "Título de Odontólogo con fondo negro", 
-        requerido: true 
+      file_fondo_negro: {
+        nombre: "Título universitario fondo negro",
+        descripcion: "Título de Odontólogo con fondo negro",
+        requerido: true
       },
-      file_mpps: { 
-        nombre: "Registro MPPS", 
-        descripcion: "Registro del Ministerio del Poder Popular para la Salud", 
-        requerido: true 
+      file_mpps: {
+        nombre: "Registro MPPS",
+        descripcion: "Registro del Ministerio del Poder Popular para la Salud",
+        requerido: true
       },
-      fondo_negro_credencial: { 
-        nombre: "Credencial fondo negro", 
-        descripcion: "Credencial profesional con fondo negro", 
-        requerido: (tipo) => tipo !== "odontologo" 
+      fondo_negro_credencial: {
+        nombre: "Credencial fondo negro",
+        descripcion: "Credencial profesional con fondo negro",
+        requerido: (tipo) => tipo !== "odontologo"
       },
-      notas_curso: { 
-        nombre: "Notas del curso", 
-        descripcion: "Certificado de notas académicas", 
-        requerido: (tipo) => tipo !== "odontologo" 
+      notas_curso: {
+        nombre: "Notas del curso",
+        descripcion: "Certificado de notas académicas",
+        requerido: (tipo) => tipo !== "odontologo"
       },
-      fondo_negro_titulo_bachiller: { 
-        nombre: "Título bachiller fondo negro", 
-        descripcion: "Título de bachiller con fondo negro", 
-        requerido: (tipo) => tipo !== "odontologo" 
+      fondo_negro_titulo_bachiller: {
+        nombre: "Título bachiller fondo negro",
+        descripcion: "Título de bachiller con fondo negro",
+        requerido: (tipo) => tipo !== "odontologo"
       }
     };
 
@@ -274,16 +274,16 @@ export function DocumentSection({
 
     // Crear URL temporal para mostrar inmediatamente
     const tempUrl = URL.createObjectURL(selectedFile);
-    
+
     // Actualizar estado local inmediatamente (optimistic update)
     const optimisticUpdate = {
       ...localPendienteData,
       [`${documentoParaSubir.id}_url`]: tempUrl,
       [`${documentoParaSubir.id}_status`]: 'uploading'
     };
-    
+
     setLocalPendienteData(optimisticUpdate);
-    
+
     // Notificar cambio optimista al componente padre
     if (onDocumentStatusChange) {
       onDocumentStatusChange({
@@ -309,13 +309,13 @@ export function DocumentSection({
 
         if (response?.data) {
           const realUrl = response.data[`${documentoParaSubir.id}_url`];
-          
+
           // Actualizar con datos reales del servidor
           setLocalPendienteData(prevData => ({
             ...prevData,
             ...response.data
           }));
-          
+
           // Notificar actualización real al padre
           if (onDocumentStatusChange) {
             onDocumentStatusChange({
@@ -346,7 +346,7 @@ export function DocumentSection({
 
       // Limpiar URL temporal
       URL.revokeObjectURL(tempUrl);
-      
+
       // Notificar error al padre
       if (onDocumentStatusChange) {
         onDocumentStatusChange({
@@ -461,7 +461,6 @@ export function DocumentSection({
 
   return (
     <motion.div
-      key={refreshTrigger}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
@@ -513,7 +512,7 @@ export function DocumentSection({
         {normalizedDocs.length > 0 ? (
           normalizedDocs.map((documento) => (
             <DocumentCard
-              key={`${documento.id}-${refreshTrigger}`}
+              key={`${documento.id}`}
               documento={documento}
               onView={() => onViewDocument(documento)}
               onReplace={() => handleReemplazarDocumento(documento)}
@@ -559,9 +558,8 @@ export function DocumentSection({
               </div>
 
               <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 cursor-pointer ${
-                  error ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-[#C40180] bg-gray-50"
-                }`}
+                className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 cursor-pointer ${error ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-[#C40180] bg-gray-50"
+                  }`}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
@@ -605,9 +603,8 @@ export function DocumentSection({
                 <button
                   onClick={handleUpload}
                   disabled={!selectedFile || isUploading}
-                  className={`px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${
-                    !selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
+                  className={`px-4 py-2 bg-gradient-to-r from-[#C40180] to-[#590248] text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 ${!selectedFile || isUploading ? "opacity-70 cursor-not-allowed" : ""
+                    }`}
                 >
                   {isUploading ? (
                     <>
@@ -704,7 +701,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
                   {documento.requerido && <span className="text-red-500 ml-1">*</span>}
                 </h3>
                 <p className="text-xs text-gray-500">{documento.descripcion}</p>
-                
+
                 {isUploading && (
                   <p className="text-xs text-blue-600 mt-1 font-medium">Subiendo documento...</p>
                 )}
@@ -747,9 +744,8 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
                   e.stopPropagation();
                   onReplace();
                 }}
-                className={`${
-                  tieneArchivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"
-                } p-2 rounded-full transition-colors`}
+                className={`${tieneArchivo ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"
+                  } p-2 rounded-full transition-colors`}
                 title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
               >
                 {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
@@ -930,9 +926,8 @@ export function DocumentViewer({ documento, onClose }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`bg-white rounded-lg shadow-xl flex flex-col ${
-          isFullscreen ? 'w-full h-full rounded-none' : 'w-[95vw] h-[90vh] max-w-6xl'
-        }`}
+        className={`bg-white rounded-lg shadow-xl flex flex-col ${isFullscreen ? 'w-full h-full rounded-none' : 'w-[95vw] h-[90vh] max-w-6xl'
+          }`}
         ref={containerRef}
       >
         {/* Header con controles */}
@@ -1075,7 +1070,7 @@ export function DocumentViewer({ documento, onClose }) {
             <div className="text-center">
               <FileText size={64} className="text-gray-400 mx-auto mb-4" />
               <p className="text-lg mb-2">Vista previa no disponible</p>
-              <a 
+              <a
                 href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
                 target="_blank"
                 rel="noopener noreferrer"
