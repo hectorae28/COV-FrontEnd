@@ -9,7 +9,6 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados })
     totalPagado, 
     todoExonerado 
   } = totales
-  
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-5">
       <h2 className="text-base font-medium text-gray-900 mb-3 flex items-center">
@@ -28,7 +27,7 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados })
           {solicitud.itemsSolicitud && solicitud.itemsSolicitud.map((item, index) => (
             <div key={index} className="p-2.5 grid grid-cols-12 items-center text-sm">
               <div className="col-span-8">
-                <span className="font-medium">{item.nombre}</span>
+                <span className="font-medium">{item.nombre}</span> <span className="text-xs text-gray-500">{item.institucion}</span>
               </div>
               <div className="col-span-4 text-right">
                 <span className={item.exonerado ? 'line-through text-gray-400' : 'text-[#C40180] font-medium'}>

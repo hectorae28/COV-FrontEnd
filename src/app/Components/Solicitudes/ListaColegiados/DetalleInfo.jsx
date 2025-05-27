@@ -48,7 +48,9 @@ export default function DetalleInfo({
   data = null,
   isAdmin = false,
   recaudos = null,
-  isColegiado = false,
+  isColegiado=false,
+  handleForward=null,
+
 }) {
   const entityId = params?.id || "1";
 
@@ -286,10 +288,109 @@ export default function DetalleInfo({
     }
   };
 
+  // Función para cargar documentos de pendientes
+  const loadPendienteDocuments = (pendienteData) => {
+    const documentosMetadata = {
+      file_ci: { nombre: "Cédula de identidad", descripcion: "Copia escaneada por ambos lados", requerido: true },
+      file_rif: { nombre: "RIF", descripcion: "Registro de Información Fiscal", requerido: true },
+      file_fondo_negro: { nombre: "Título universitario fondo negro", descripcion: "Título de Odontólogo con fondo negro", requerido: true },
+      file_mpps: { nombre: "Registro MPPS", descripcion: "Registro del Ministerio del Poder Popular para la Salud", requerido: true },
+      fondo_negro_credencial: { nombre: "Credencial fondo negro", descripcion: "Credencial profesional con fondo negro", requerido: (tipo) => tipo !== "odontologo" },
+      notas_curso: { nombre: "Notas del curso", descripcion: "Certificado de notas académicas", requerido: (tipo) => tipo !== "odontologo" },
+      fondo_negro_titulo_bachiller: { nombre: "Título bachiller fondo negro", descripcion: "Título de bachiller con fondo negro", requerido: (tipo) => tipo !== "odontologo" }
+    };
+
+    const obtenerNombreArchivo = (url) => {
+      if (!url) return "";
+      const partes = url.split('/');
+      return partes[partes.length - 1];
+    };
+
+    return [
+      {
+        id: "file_ci",
+        nombre: documentosMetadata.file_ci.nombre,
+        descripcion: documentosMetadata.file_ci.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.file_ci_url),
+        requerido: documentosMetadata.file_ci.requerido,
+        url: pendienteData.file_ci_url,
+        status: pendienteData.file_ci_validate === null ? 'pending' : pendienteData.file_ci_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.file_ci_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.file_ci_motivo_rechazo || ''
+      },
+      {
+        id: "file_rif",
+        nombre: documentosMetadata.file_rif.nombre,
+        descripcion: documentosMetadata.file_rif.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.file_rif_url),
+        requerido: documentosMetadata.file_rif.requerido,
+        url: pendienteData.file_rif_url,
+        status: pendienteData.file_rif_validate === null ? 'pending' : pendienteData.file_rif_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.file_rif_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.file_rif_motivo_rechazo || ''
+      },
+      {
+        id: "file_fondo_negro",
+        nombre: documentosMetadata.file_fondo_negro.nombre,
+        descripcion: documentosMetadata.file_fondo_negro.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.file_fondo_negro_url),
+        requerido: documentosMetadata.file_fondo_negro.requerido,
+        url: pendienteData.file_fondo_negro_url,
+        status: pendienteData.file_fondo_negro_validate === null ? 'pending' : pendienteData.file_fondo_negro_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.file_fondo_negro_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.file_fondo_negro_motivo_rechazo || ''
+      },
+      {
+        id: "file_mpps",
+        nombre: documentosMetadata.file_mpps.nombre,
+        descripcion: documentosMetadata.file_mpps.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.file_mpps_url),
+        requerido: documentosMetadata.file_mpps.requerido,
+        url: pendienteData.file_mpps_url,
+        status: pendienteData.file_mpps_validate === null ? 'pending' : pendienteData.file_mpps_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.file_mpps_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.file_mpps_motivo_rechazo || ''
+      },
+      // Documentos adicionales para técnicos e higienistas
+      {
+        id: "fondo_negro_credencial",
+        nombre: documentosMetadata.fondo_negro_credencial.nombre,
+        descripcion: documentosMetadata.fondo_negro_credencial.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.fondo_negro_credencial_url),
+        requerido: documentosMetadata.fondo_negro_credencial.requerido(pendienteData.tipo_profesion),
+        url: pendienteData.fondo_negro_credencial_url,
+        status: pendienteData.fondo_negro_credencial_validate === null ? 'pending' : pendienteData.fondo_negro_credencial_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.fondo_negro_credencial_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.fondo_negro_credencial_motivo_rechazo || ''
+      },
+      {
+        id: "notas_curso",
+        nombre: documentosMetadata.notas_curso.nombre,
+        descripcion: documentosMetadata.notas_curso.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.notas_curso_url),
+        requerido: documentosMetadata.notas_curso.requerido(pendienteData.tipo_profesion),
+        url: pendienteData.notas_curso_url,
+        status: pendienteData.notas_curso_validate === null ? 'pending' : pendienteData.notas_curso_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.notas_curso_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.notas_curso_motivo_rechazo || ''
+      },
+      {
+        id: "fondo_negro_titulo_bachiller",
+        nombre: documentosMetadata.fondo_negro_titulo_bachiller.nombre,
+        descripcion: documentosMetadata.fondo_negro_titulo_bachiller.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.fondo_negro_titulo_bachiller_url),
+        requerido: documentosMetadata.fondo_negro_titulo_bachiller.requerido(pendienteData.tipo_profesion),
+        url: pendienteData.fondo_negro_titulo_bachiller_url,
+        status: pendienteData.fondo_negro_titulo_bachiller_validate === null ? 'pending' : pendienteData.fondo_negro_titulo_bachiller_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.fondo_negro_titulo_bachiller_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.fondo_negro_titulo_bachiller_motivo_rechazo || ''
+      }
+    ].filter(doc => doc.url || doc.requerido); // Solo mostrar documentos que existen o son requeridos
+  };
+
   // Inicializar datos para pendientes
   const initializePendienteData = (data) => {
     setDatosPersonales(JSON.parse(JSON.stringify(data.persona || {})));
-
     setDatosContacto({
       email: data.persona?.correo || "",
       phoneNumber: data.persona?.telefono_movil?.split(" ")[1] || "",
@@ -336,8 +437,10 @@ export default function DetalleInfo({
       countryCode: persona.telefono_movil?.split(" ")[0] || "+58",
       homePhone: persona.telefono_de_habitacion || "",
       address: persona.direccion?.referencia || "",
-      city: persona.direccion?.ciudad || "",
-      state: persona.direccion?.estado || "",
+      city: data.persona?.direccion?.municipio || "",
+      city_name: data.persona?.direccion?.municipio_nombre || "",
+      state: data.persona?.direccion?.estado || "",
+      state_name: data.persona?.direccion?.estado_nombre || "",
     });
 
     setDatosAcademicos({
@@ -1341,6 +1444,16 @@ export default function DetalleInfo({
           documento={documentoSeleccionado}
           onClose={handleCerrarVistaDocumento}
         />
+      )}
+      {!isAdmin&& entityData.recaudos?.pago !== null && (
+        <div className="w-full flex items-center justify-center">
+          <button
+            onClick={handleForward}
+            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white p-4 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors "
+          >
+            <span>Reenviar Solicitud De Inscripcion</span>
+          </button>
+        </div>
       )}
     </div>
   );

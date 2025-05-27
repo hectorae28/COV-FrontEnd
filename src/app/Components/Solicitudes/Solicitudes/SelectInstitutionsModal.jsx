@@ -23,13 +23,13 @@ export default function SeleccionarInstitucionesModal({
 
     // Solo filtrar instituciones aprobadas para selección
     const institucionesDisponibles = instituciones.filter(
-        inst => inst.verification_status === 'approved'
+        inst => inst.verificado 
     );
 
     // Toggle de selección de institución (toda la card)
     const toggleInstitucion = (institucionId) => {
         const institucion = instituciones.find(i => i.id === institucionId);
-        if (institucion?.verification_status !== 'approved') {
+        if (!institucion?.verificado) {
             return; // No hacer nada si no está aprobada
         }
 
@@ -44,7 +44,7 @@ export default function SeleccionarInstitucionesModal({
     // Función de estado mejorada
     const getStatusInfo = (status) => {
         switch (status) {
-            case 'approved':
+            case true:
                 return {
                     icon: <CheckCircle size={16} />,
                     color: 'text-green-600',
@@ -52,7 +52,7 @@ export default function SeleccionarInstitucionesModal({
                     borderColor: 'border-green-200',
                     text: 'Aprobada'
                 };
-            case 'pending':
+            case null:
                 return {
                     icon: <Clock size={16} />,
                     color: 'text-yellow-600',
@@ -60,7 +60,7 @@ export default function SeleccionarInstitucionesModal({
                     borderColor: 'border-yellow-200',
                     text: 'En revisión'
                 };
-            case 'rechazado':
+            case false:
                 return {
                     icon: <XCircle size={16} />,
                     color: 'text-red-600',
@@ -97,7 +97,7 @@ export default function SeleccionarInstitucionesModal({
                 institucionId: instId,
                 institucionNombre: institucion.nombre,
                 institucionDireccion: institucion.direccion.referencia,
-                verificacionStatus: institucion.verification_status
+                verificacionStatus: institucion.verificado
             };
         });
 
@@ -155,8 +155,8 @@ export default function SeleccionarInstitucionesModal({
                         <div className="space-y-3">
                             {/* Lista de instituciones */}
                             {instituciones.map((institucion) => {
-                                const statusInfo = getStatusInfo(institucion.verification_status);
-                                const isSelectable = institucion.verification_status === 'approved';
+                                const statusInfo = getStatusInfo(institucion.verificado);
+                                const isSelectable = institucion.verificado;
                                 const isSelected = institucionesSeleccionadas.includes(institucion.id);
                                 const yaSeleccionadaPreviamente = institucionesYaSeleccionadas.includes(institucion.id);
 
@@ -208,7 +208,7 @@ export default function SeleccionarInstitucionesModal({
                                                 </div>
 
                                                 {/* Motivo de rechazo si aplica */}
-                                                {institucion.verification_status === 'rechazado' && institucion.rejection_reason && (
+                                                {!institucion.verificado && institucion.rejection_reason && (
                                                     <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-200">
                                                         <AlertCircle size={14} className="inline mr-1" />
                                                         <strong>Motivo del rechazo:</strong> {institucion.rejection_reason}
