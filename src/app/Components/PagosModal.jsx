@@ -125,6 +125,7 @@ export default function PagosColg({ props }) {
     if (tasaBCV > 0) {
       setMontoEnBs((parseFloat(costo) * tasaBCV).toFixed(2));
     }
+    setPaymentAmount(parseFloat(costo).toFixed(2))
   }, [tasaBCV, costo]);
 
   // Actualizar el monto en USD cuando se ingresa en Bs
@@ -132,7 +133,7 @@ export default function PagosColg({ props }) {
     const value = e.target.value;
     if (!value) {
       setMontoEnBs("");
-      setPaymentAmount("0.00");
+      setPaymentAmount("0.00");     
       return;
     }
 
