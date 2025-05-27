@@ -79,7 +79,7 @@ export default function DetallePendienteWrapper({
               <DetallePendiente
                 params={{ id }}
                 onVolver={handleAprobarPendiente}
-                isAdmin={isAdmin}
+                isAdmin={false}
                 recaudos={recaudos}
                 handleForward={handleForward}
                 isColegiado={isColegiado}

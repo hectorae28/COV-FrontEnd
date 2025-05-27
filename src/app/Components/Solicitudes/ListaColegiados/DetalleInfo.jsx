@@ -890,6 +890,7 @@ export default function DetalleInfo({
             readonly={entityData?.status === "anulado"}
             isColegiado={isColegiado}
             pendienteData={entityData}
+            isAdmin={isAdmin}
           />
 
           {/* Sección de comprobante de pago optimizada */}
