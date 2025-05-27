@@ -14,6 +14,7 @@ export default function transformBackendData(backendData) {
     costo: calcularTotal(backendData.detalles_solicitud),
     documentosRequeridos: getDocumentosRequeridos(backendData.detalles_solicitud),
     documentosAdjuntos: getDocumentosAdjuntos(backendData.detalles_solicitud),
+    detallesSolicitud: detallesSolicitud, // Preservar los detalles originales para validación de documentos
     itemsSolicitud: [],
     comprobantePago: null,
     estadoPago: "Pendiente de verificación",
@@ -58,11 +59,14 @@ function transformItem(item, type) {
       ? `Constancia: ${item.tipo_constancia.split("_").slice(1).map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ")}`
       : type,
     costo: parseFloat(item.monto.toFixed(2)),
+    institucion: item.institucion,
     exonerado: false,
     codigo: type === "Especialización" ? "ESPEC" : type === "Carnet" ? "CARNET" : "CONST",
     documentosRequeridos: type === "Especialización"
       ? Object.keys(item.archivos || {})
-      : []
+      : [],
+    estado: mapStatusToEstado(item.status),
+    tipoConstancia: type === "Constancia" ? item.tipo_constancia : null
   };
 }
 
@@ -105,14 +109,44 @@ function getDocumentosRequeridos(detalles) {
 }
 
 function getDocumentosAdjuntos(detalles) {
-  // Combine all document files from different request types
-  return {
-    // Carnet documents
-    ...(detalles.carnet?.archivos || {}),
+  const documentos = {};
+  
+  // Carnet documents
+  if (detalles.carnet?.archivos) {
+    // Map carnet photo specifically
+    if (detalles.carnet.archivos.file_foto) {
+      documentos.file_foto = detalles.carnet.archivos.file_foto;
+    }
     
-    // Especialización documents
-    ...(detalles.especializacion?.archivos || {}),
-      };
+    // Add any other carnet documents
+    Object.entries(detalles.carnet.archivos).forEach(([key, value]) => {
+      if (key !== 'file_foto' && !key.includes('_validate') && !key.includes('_motivo_rechazo')) {
+        documentos[key] = value;
+      }
+    });
+  }
+  
+  // Especialización documents
+  if (detalles.especializacion?.archivos) {
+    Object.entries(detalles.especializacion.archivos).forEach(([key, value]) => {
+      if (!key.includes('_validate') && !key.includes('_motivo_rechazo')) {
+        // Map especialización document names to expected frontend format
+        let mappedKey = key;
+        if (key === 'titulo_especializacion') mappedKey = 'file_titulo_especializacion';
+        else if (key === 'fondo_negro_titulo_especializacion') mappedKey = 'file_fondo_negro_titulo_especializacion';
+        else if (key === 'titulo_odontologo') mappedKey = 'file_titulo_odontologo';
+        else if (key === 'fondo_negro_titulo_odontologo') mappedKey = 'file_fondo_negro_titulo_odontologo';
+        else if (key === 'cedula_ampliada') mappedKey = 'file_cedula_ampliada';
+        else if (key === 'fotos_carnet') mappedKey = 'file_fotos_carnet';
+        else if (key === 'carta_solicitud') mappedKey = 'file_carta_solicitud';
+        else if (key === 'solvencia') mappedKey = 'file_solvencia';
+        
+        documentos[mappedKey] = value;
+      }
+    });
+  }
+  
+  return documentos;
 }
 
 function formatDate(dateString) {
@@ -136,4 +170,16 @@ function getConstanciaSubtype(id) {
 function getConstanciaNombre(id) {
   const subtype = getConstanciaSubtype(id);
   return subtype ? `Constancia: ${subtype}` : "Constancia";
+}
+
+function mapStatusToEstado(status) {
+  // Mapear el status del backend al estado del frontend
+  switch (status) {
+    case "aprobado":
+      return "Aprobada";
+    case "rechazado":
+      return "Rechazada";
+    default:
+      return "Pendiente";
+  }
 }

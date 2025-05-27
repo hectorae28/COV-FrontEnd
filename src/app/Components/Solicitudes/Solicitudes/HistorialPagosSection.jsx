@@ -42,7 +42,6 @@ const HistorialPagosSection = ({ comprobantes, onVerDocumento }) => {
                     const comprobanteName = hasComprobante ? 
                         (typeof comprobante.comprobante_url === 'object' ? comprobante.comprobante_url.nombre : 'Comprobante') : 
                         'Sin comprobante';
-                    console.log("Comprobante:", comprobante);
                     
                     return (
                         <div key={index} className={`border rounded-lg p-3 flex justify-between items-center ${statusInfo.bgColor} bg-opacity-30`}>

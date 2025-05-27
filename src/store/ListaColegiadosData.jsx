@@ -63,7 +63,6 @@ const useDataListaColegiados = create((set, get) => ({
         if (value) params += `&${key}=${key == "status" ? value : encodeURIComponent(value)}`;
       });
       const res = await fetchDataUsuario("register", null, params);
-      console.log(otrosFiltros)
 
       if (otrosFiltros.status === "revisando") {
         set({

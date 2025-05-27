@@ -590,7 +590,7 @@ export default function RegistrationForm(props) {
             }
           }
         } catch (error) {
-          setError({ detail: `Error: ${error.response?.data || error}` });
+          setError("Ocurrió un error al cargar los datos, verifique su conexión a internet")
         } finally {
           setIsSubmitting(false);
         }
@@ -662,7 +662,8 @@ export default function RegistrationForm(props) {
         setIsSubmitting(false)
       }
     } catch (error) {
-      setError({ detail: `error ${error.response?.data || error}` })
+        setError("Ocurrió un error al cargar los datos, verifique su conexión a internet")
+
     } finally {
       setIsSubmitting(false)
     }

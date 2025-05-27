@@ -19,6 +19,7 @@ export default function SeleccionarSolicitudesStep({
   const loading = useSolicitudesStore((state) => state.loading)
   const colegiados = useDataListaColegiados((state) => state.colegiados)
   const fetchColegiados = useDataListaColegiados((state) => state.fetchColegiados)
+  const getColegiado = useDataListaColegiados((state) => state.getColegiado)
   const [formData, setFormData] = useState({
     colegiadoId: colegiadoPreseleccionado ? colegiadoPreseleccionado.id : "",
     urgente: false,
@@ -56,99 +57,13 @@ export default function SeleccionarSolicitudesStep({
       console.error("Error al cargar colegiados:", error);
     }
   };
-
-  // Función para cargar instituciones del colegiado
-  // Función para cargar instituciones del colegiado
   const cargarInstitucionesColegiado = async (colegiadoId) => {
     try {
       // Datos de prueba fijos - siempre cargar estas 3 instituciones
-      const institucionesPrueba = [
-        {
-          id: 1,
-          nombre: "Hospital Central de Valencia",
-          cargo: "Odontólogo General",
-          telefono: "+58 241-555-0101",
-          direccion: {
-            referencia: "Av. Bolívar Norte, Valencia, Carabobo"
-          },
-          verification_status: "rechazado",
-          rejection_reason: "Documentación incompleta - Falta carta de autorización institucional"
-        },
-        {
-          id: 2,
-          nombre: "Clínica Dental Sonrisas",
-          cargo: "Coordinador de Odontología",
-          telefono: "+58 212-555-0202",
-          direccion: {
-            referencia: "Centro Comercial Los Naranjos, Caracas"
-          },
-          verification_status: "approved"
-        },
-        {
-          id: 3,
-          nombre: "Instituto Odontológico Dr. Pérez",
-          cargo: "Director Médico",
-          telefono: "+58 261-555-0303",
-          direccion: {
-            referencia: "Zona Industrial Norte, Maracaibo, Zulia"
-          },
-          verification_status: "approved"
-        }
-      ];
-
-      console.log("Cargando instituciones de prueba:", institucionesPrueba);
-      setInstitucionesColegiado(institucionesPrueba);
-
-      // Comentar el código que busca en los datos reales por ahora
-      /*
-      const colegiado = colegiados.find(c => c.id === colegiadoId);
-      if (colegiado && colegiado.instituciones) {
-        setInstitucionesColegiado(colegiado.instituciones);
-      } else if (colegiado && colegiado.recaudos?.instituciones) {
-        setInstitucionesColegiado(colegiado.recaudos.instituciones);
-      } else {
-        // Si no hay datos reales, usar datos de prueba
-        setInstitucionesColegiado(institucionesPrueba);
-      }
-      */
-
+      const colegiado = await getColegiado(colegiadoId)
+      setInstitucionesColegiado(colegiado.recaudos.instituciones);
     } catch (error) {
       console.error("Error cargando instituciones:", error);
-      // Si hay error, cargar datos de prueba como fallback
-      const institucionesPrueba = [
-        {
-          id: 1,
-          nombre: "Hospital Central de Valencia",
-          cargo: "Odontólogo General",
-          telefono: "+58 241-555-0101",
-          direccion: {
-            referencia: "Av. Bolívar Norte, Valencia, Carabobo"
-          },
-          verification_status: "rechazado",
-          rejection_reason: "Documentación incompleta - Falta carta de autorización institucional"
-        },
-        {
-          id: 2,
-          nombre: "Clínica Dental Sonrisas",
-          cargo: "Coordinador de Odontología",
-          telefono: "+58 212-555-0202",
-          direccion: {
-            referencia: "Centro Comercial Los Naranjos, Caracas"
-          },
-          verification_status: "approved"
-        },
-        {
-          id: 3,
-          nombre: "Instituto Odontológico Dr. Pérez",
-          cargo: "Director Médico",
-          telefono: "+58 261-555-0303",
-          direccion: {
-            referencia: "Zona Industrial Norte, Maracaibo, Zulia"
-          },
-          verification_status: "approved"
-        }
-      ];
-      setInstitucionesColegiado(institucionesPrueba);
     }
   };
 
@@ -163,13 +78,11 @@ export default function SeleccionarSolicitudesStep({
   }, [colegiadoPreseleccionado]);
 
   // Efecto para manejar el bloqueo por usuario
-  // Efecto para manejar el bloqueo por usuario
   useEffect(() => {
     if (colegiadoPreseleccionado || formData.colegiadoId) {
       setBloqueadoPorUsuario(false);
       // Cargar instituciones del colegiado
       const colegiadoId = colegiadoPreseleccionado?.id || formData.colegiadoId;
-      console.log("Cargando instituciones para colegiado:", colegiadoId);
       cargarInstitucionesColegiado(colegiadoId);
     } else if (mostrarSeleccionColegiado) {
       setBloqueadoPorUsuario(true);

@@ -11,7 +11,7 @@ export const TIPOS_SOLICITUD = {
         codigo: "CARNET",
         descripcion: "Solicitud de carnet de identificación profesional",
         documentosRequeridos: [
-            { displayName: "Foto tipo carnet", campo: "foto" },
+            { displayName: "Foto tipo carnet", campo: "file_foto" },
         ]
     },
     Especializacion: {
@@ -63,6 +63,7 @@ export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
   let especializacion = 0;
 
   solicitudJson.itemsSolicitud.forEach(item => {
+
     const tipoBase = item.tipo.toLowerCase();
     
     if (tipoBase === "carnet") {
@@ -247,7 +248,7 @@ export const useSolicitudesStore = create((set, get) => ({
     set({ loading: true });
     try {
       const formData = convertJsonToFormData(solicitudJson, opcionales);
-      
+      console.log({formData})
       const response = await postDataSolicitud('solicitud', formData);
       const solicitud = await get().getSolicitudById(response.data.id);
       

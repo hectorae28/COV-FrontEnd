@@ -777,7 +777,7 @@ export function mapDocumentsForSection(documentos = []) {
 }
 
 // Modal para visualizar documentos
-export function DocumentViewer({ documento, onClose }) {
+export function DocumentViewer({ documento, onClose, isAPDF }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [scale, setScale] = useState(1);
@@ -792,6 +792,7 @@ export function DocumentViewer({ documento, onClose }) {
   const isExonerado = documento && documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isImage = documento?.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(documento.url);
   const isPDF = documento?.url && /\.pdf$/i.test(documento.url);
+  console.log({documento,isExonerado,isImage,isPDF,isAPDF})
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -1066,7 +1067,13 @@ export function DocumentViewer({ documento, onClose }) {
                 draggable={false}
               />
             </div>
-          ) : documento.url ? (
+          ) : documento.isAPDF ? 
+          (<iframe
+        src={`${documento.url}`}
+        className="w-full h-full border-0"
+        title={documento.nombre}
+      /> ):documento.url ? (
+            // Para otros tipos de archivo
             <div className="text-center">
               <FileText size={64} className="text-gray-400 mx-auto mb-4" />
               <p className="text-lg mb-2">Vista previa no disponible</p>
@@ -1084,7 +1091,7 @@ export function DocumentViewer({ documento, onClose }) {
                 Descargar archivo
               </a>
             </div>
-          ) : (
+            ) :  (
             <div className="text-center text-gray-500">
               <p className="text-xl mb-2">No hay vista previa disponible</p>
               <p>No se puede mostrar este documento.</p>
