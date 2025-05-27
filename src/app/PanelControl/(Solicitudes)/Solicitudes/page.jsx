@@ -471,7 +471,7 @@ export default function ListaSolicitudes() {
               setSolicitudCreada(null);
             },
             onSolicitudCreada: handleSolicitudCreada,
-            colegiadoPreseleccionado: props?.colegiadoId,
+            colegiadoPreseleccionado: colegiadoId,
             onVerDetalle: verDetalleSolicitud,
             session: {
               user: {

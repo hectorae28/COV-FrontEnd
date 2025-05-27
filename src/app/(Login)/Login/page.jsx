@@ -237,11 +237,12 @@ export default function LoginScreen() {
                   {/* Redes Sociales con orden actualizado */}
                   <div className="flex justify-center items-center space-x-4 sm:space-x-6 mb-2 sm:mb-4 ">
                     
+                    <a
                       href={socialLinks.whatsapp}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    <a>
+                    >
                       <Image
                         src="/assets/icons/whatsapp.png"
                         alt="WhatsApp"
@@ -250,11 +251,13 @@ export default function LoginScreen() {
                       />
                     </a>
                     
+                    <a
                       href={socialLinks.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    <a>
+                    
+                    >
                       <Image
                         src="/assets/icons/instagram.png"
                         alt="Instagram"
@@ -263,11 +266,12 @@ export default function LoginScreen() {
                       />
                     </a>
                     
+                    <a
                       href={socialLinks.facebook}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    <a>
+                    >
                       <Image
                         src="/assets/icons/facebook.png"
                         alt="Facebook"
@@ -276,11 +280,12 @@ export default function LoginScreen() {
                       />
                     </a>
                     
+                    <a
                       href={socialLinks.youtube}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    <a>
+                    >
                       <Image
                         src="/assets/icons/youtube.png"
                         alt="Youtube"
@@ -289,11 +294,12 @@ export default function LoginScreen() {
                       />
                     </a>
                     
+                    <a
                       href={socialLinks.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    <a>
+                    >
                       <Image
                         src="/assets/icons/twitter.png"
                         alt="Twitter"
