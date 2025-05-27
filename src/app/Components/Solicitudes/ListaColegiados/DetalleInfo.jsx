@@ -336,60 +336,60 @@ export default function DetalleInfo({
   };
 
   // Función para cargar datos del comprobante
-  const loadComprobanteData = (pendienteData) => {
-    console.log("Cargando datos del comprobante:", pendienteData); // Debug
+  // const loadComprobanteData = (pendienteData) => {
+  //   console.log("Cargando datos del comprobante:", pendienteData); // Debug
 
-    // Verificar diferentes posibles ubicaciones del comprobante
-    const comprobanteUrl =
-      pendienteData.comprobante_url ||
-      pendienteData.comprobante ||
-      pendienteData.pago?.comprobante_url ||
-      pendienteData.pago?.comprobante;
+  //   // Verificar diferentes posibles ubicaciones del comprobante
+  //   const comprobanteUrl =
+  //     pendienteData.comprobante_url ||
+  //     pendienteData.comprobante ||
+  //     pendienteData.pago?.comprobante_url ||
+  //     pendienteData.pago?.comprobante;
 
-    // También verificar si hay un archivo de comprobante en los campos de archivos
-    const tieneComprobante =
-      comprobanteUrl ||
-      pendienteData.comprobante_pago_url ||
-      pendienteData.file_comprobante_url ||
-      (pendienteData.pago && pendienteData.pago.comprobante);
+  //   // También verificar si hay un archivo de comprobante en los campos de archivos
+  //   const tieneComprobante =
+  //     comprobanteUrl ||
+  //     pendienteData.comprobante_pago_url ||
+  //     pendienteData.file_comprobante_url ||
+  //     (pendienteData.pago && pendienteData.pago.comprobante);
 
-    if (tieneComprobante) {
-      const url =
-        comprobanteUrl ||
-        pendienteData.comprobante_pago_url ||
-        pendienteData.file_comprobante_url ||
-        pendienteData.pago?.comprobante;
+  //   if (tieneComprobante) {
+  //     const url =
+  //       comprobanteUrl ||
+  //       pendienteData.comprobante_pago_url ||
+  //       pendienteData.file_comprobante_url ||
+  //       pendienteData.pago?.comprobante;
 
-      const comprobanteInfo = {
-        id: "comprobante_pago",
-        nombre: "Comprobante de pago",
-        archivo:
-          typeof url === "string"
-            ? url.split("/").pop()
-            : "comprobante_pago.pdf",
-        url: url,
-        status:
-          pendienteData.comprobante_validate === null
-            ? "pending"
-            : pendienteData.comprobante_validate === true
-              ? "approved"
-              : pendienteData.comprobante_validate === false
-                ? "rechazado"
-                : "pending",
-        rejectionReason: pendienteData.comprobante_motivo_rechazo || "",
-      };
+  //     const comprobanteInfo = {
+  //       id: "comprobante_pago",
+  //       nombre: "Comprobante de pago",
+  //       archivo:
+  //         typeof url === "string"
+  //           ? url.split("/").pop()
+  //           : "comprobante_pago.pdf",
+  //       url: url,
+  //       status:
+  //         pendienteData.comprobante_validate === null
+  //           ? "pending"
+  //           : pendienteData.comprobante_validate === true
+  //             ? "approved"
+  //             : pendienteData.comprobante_validate === false
+  //               ? "rechazado"
+  //               : "pending",
+  //       rejectionReason: pendienteData.comprobante_motivo_rechazo || "",
+  //     };
 
-      setComprobanteData(comprobanteInfo);
+  //     setComprobanteData(comprobanteInfo);
 
-      console.log("Comprobante cargado:", {
-        url: url,
-        status: pendienteData.comprobante_validate,
-      }); // Debug
-    } else {
-      console.log("No se encontró comprobante"); // Debug
-      setComprobanteData(null);
-    }
-  };
+  //     console.log("Comprobante cargado:", {
+  //       url: url,
+  //       status: pendienteData.comprobante_validate,
+  //     }); // Debug
+  //   } else {
+  //     console.log("No se encontró comprobante"); // Debug
+  //     setComprobanteData(null);
+  //   }
+  // };
 
   // Función para cargar documentos de pendientes
   const loadPendienteDocuments = (pendienteData) => {
@@ -1291,22 +1291,23 @@ export default function DetalleInfo({
       {/* Modal para crear solicitud - para colegiados registrados */}
       {showCrearSolicitudModal && (
         <CrearSolicitudModal
-          onClose={() => setShowCrearSolicitudModal(false)}
-          onSolicitudCreada={(nuevaSolicitud) => {
-            setShowCrearSolicitudModal(false);
-            loadData();
-          }}
-          colegiados={[entityData]}
-          colegiadoPreseleccionado={entityData}
-          isAdmin={isAdmin}
-          session={{
+          props={{
+          onClose: () => setShowCrearSolicitudModal(false),
+            onSolicitudCreada: (nuevaSolicitud) => {
+              setShowCrearSolicitudModal(false);
+              loadData();
+            },
+            colegiados: [entityData],
+            colegiadoPreseleccionado: entityData,
+            isAdmin: isAdmin,
+            session: {
             user: {
               name: "Admin",
               email: "admin@system.com",
               role: "admin",
               isAdmin: true,
-            },
-          }}
+              },
+            }}}
         />
       )}
 
