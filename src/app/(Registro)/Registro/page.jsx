@@ -239,7 +239,8 @@ export default function RegistrationForm(props) {
     // Si es el paso 5 (Documentos), agregar campos adicionales según tipo_profesion
     if (stepIndex === 5) {
       // Crear una copia de los campos requeridos base
-      let fieldsToValidate = [...step.requiredFields]
+      let fieldsToValidate = [...step.requiredFields];
+
       // Agregar campos adicionales para técnicos e higienistas
       if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
         fieldsToValidate = [
@@ -247,27 +248,66 @@ export default function RegistrationForm(props) {
           "fondo_negro_titulo_bachiller",
           "fondo_negro_credencial",
           "notas_curso",
-        ]
+        ];
       }
+
       // Validar todos los campos requeridos
       fieldsToValidate.forEach((field) => {
-        if (!formData[field]) {
-          errors[field] = true
-          isValid = false
+        if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
+          errors[field] = true;
+          isValid = false;
         }
-      })
+      });
+
       // Establecer errores de validación si estamos validando activamente
       if (attemptedNext) {
-        setValidationErrors(errors)
+        setValidationErrors(errors);
       }
-      return isValid
+
+      return isValid;
+    }
+
+    // NUEVO: Validación especial para el paso 4 (Información Laboral)
+    if (stepIndex === 4) {
+      if (formData.workStatus === "noLabora") {
+        return true; // Si no labora, es válido
+      }
+
+      // Validar que tenga al menos un registro laboral válido
+      if (!formData.laboralRegistros || formData.laboralRegistros.length === 0) {
+        // Marcar errores en campos básicos para mostrar mensajes
+        const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio"];
+        requiredLabFields.forEach(field => {
+          errors[field] = true;
+        });
+        isValid = false;
+      } else {
+        // Validar cada registro laboral
+        formData.laboralRegistros.forEach((registro, index) => {
+          const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio"];
+
+          requiredLabFields.forEach(field => {
+            if (!registro[field] || (typeof registro[field] === "string" && registro[field].trim() === "")) {
+              // Para el primer registro, usar los nombres de campo del formData principal
+              if (index === 0) {
+                errors[field] = true;
+              }
+              // Para registros adicionales, marcar error en el registro específico
+              errors[`${field}_${registro.id}`] = true;
+              isValid = false;
+            }
+          });
+        });
+      }
+
+      // Establecer errores de validación si estamos validando activamente
+      if (attemptedNext) {
+        setValidationErrors(errors);
+      }
+      return isValid;
     }
 
     // Para los demás pasos, mantener la validación estándar
-    if (stepIndex === 4 && formData.workStatus === "noLabora") {
-      return true // Validación exitosa, no hay errores
-    }
-
     if (step.requiredFields && step.requiredFields.length > 0) {
       step.requiredFields.forEach((field) => {
         if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
@@ -672,6 +712,12 @@ export default function RegistrationForm(props) {
   }
 
   const CurrentIcon = steps[currentStep - 1]?.icon
+
+  const [documentosRequeridos, setDocumentosRequeridos] = useState({
+    required: [],
+    uploaded: [],
+    approved: []
+  });
 
   return (
     <>

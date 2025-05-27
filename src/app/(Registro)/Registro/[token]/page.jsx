@@ -1,20 +1,20 @@
-import DetallePendienteWrapper from "./DetallePendienteWrapper";
 import { fetchDataUsuario } from "@/api/endpoints/colegiado";
+import DetallePendienteWrapper from "./DetallePendienteWrapper";
 
-export default async function RegistrationFormPage({params}) {
+export default async function RegistrationFormPage({ params }) {
     const { token } = await params;
-    
+
     try {
-        
+
         const res = await fetchDataUsuario(`recaudos-token`, null, `?token=${token}`);
         if (!res || !res.data) {
             throw new Error("No data received from API");
         }
-        
+
         const data = res.data;
-        
+
         return (
-            <DetallePendienteWrapper 
+            <DetallePendienteWrapper
                 id={token}
                 isAdmin={false}
                 recaudos={data}
@@ -23,8 +23,8 @@ export default async function RegistrationFormPage({params}) {
             />
         );
     } catch (error) {
-        return(
-            <DetallePendienteWrapper 
+        return (
+            <DetallePendienteWrapper
                 error={error.message || "Error desconocido"}
                 id={token}
                 isAdmin={false}

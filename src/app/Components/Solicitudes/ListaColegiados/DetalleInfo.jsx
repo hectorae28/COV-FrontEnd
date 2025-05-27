@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle, ChevronLeft, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Componentes compartidos
 import AcademicInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
@@ -12,7 +12,6 @@ import {
   DocumentViewer,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import InstitutionsSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
-import NotificationSystem from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/NotificationSystem";
 import PaymentReceiptSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PaymentReceiptSection";
 import PersonalInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
 import UserProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/UserProfileCard";
@@ -34,6 +33,7 @@ import {
   ExonerationModal,
   RejectModal,
   ReportIllegalityModal,
+  TitleConfirmationModal,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ModalSystem";
 
 // Otros imports necesarios
@@ -83,6 +83,7 @@ export default function DetalleInfo({
   const [mostrarExoneracion, setMostrarExoneracion] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showCrearSolicitudModal, setShowCrearSolicitudModal] = useState(false);
+  const [showTitleConfirmationModal, setShowTitleConfirmationModal] = useState(false);
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [motivoExoneracion, setMotivoExoneracion] = useState("");
   const [datosRegistro, setDatosRegistro] = useState({
@@ -105,6 +106,9 @@ export default function DetalleInfo({
   const [pagosPendientes, setPagosPendientes] = useState(false);
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
 
+  // Estado para forzar actualizaciones
+  const [documentUpdateTrigger, setDocumentUpdateTrigger] = useState(0);
+
   // Funciones del store
   const {
     getColegiado,
@@ -116,6 +120,125 @@ export default function DetalleInfo({
     approveRegistration,
   } = useDataListaColegiados();
 
+  // 🔧 FUNCIÓN CRÍTICA: Validación de documentos aprobados
+  const allDocumentsApproved = useCallback(() => {
+    const currentData = entityData;
+
+    if (!currentData) {
+      return false;
+    }
+
+    const tipoProfesion = currentData.tipo_profesion || "odontologo";
+
+    // Documentos requeridos según tipo
+    const documentosRequeridosBase = [
+      "file_ci",
+      "file_rif",
+      "file_fondo_negro",
+      "file_mpps",
+    ];
+
+    const documentosAdicionales = [
+      "fondo_negro_credencial",
+      "notas_curso",
+      "fondo_negro_titulo_bachiller",
+    ];
+
+    let documentosRequeridos;
+    if (tipoProfesion === "odontologo") {
+      documentosRequeridos = documentosRequeridosBase;
+    } else {
+      documentosRequeridos = [
+        ...documentosRequeridosBase,
+        ...documentosAdicionales,
+      ];
+    }
+
+    // Verificar cada documento individualmente
+    let documentosAprobados = 0;
+
+    documentosRequeridos.forEach((docId) => {
+      const validateField = `${docId}_validate`;
+      const urlField = `${docId}_url`;
+
+      const hasFile = !!currentData[urlField];
+      const isApproved = currentData[validateField] === true;
+
+      if (hasFile && isApproved) {
+        documentosAprobados++;
+      }
+    });
+
+    const docsApproved = documentosAprobados === documentosRequeridos.length;
+
+    // Verificar comprobante de pago si no está exonerado
+    if (!currentData.pago_exonerado) {
+      const comprobanteHasFile = !!comprobanteData?.url;
+      const comprobanteApproved = comprobanteData?.status === "approved";
+
+      return docsApproved && comprobanteHasFile && comprobanteApproved;
+    }
+
+    return docsApproved;
+  }, [entityData, comprobanteData]);
+
+  // 🔧 FUNCIÓN CRÍTICA: Validación de documentos subidos
+  const allDocumentsUploaded = useCallback(() => {
+    const currentData = entityData;
+
+    if (!currentData) {
+      return false;
+    }
+
+    const tipoProfesion = currentData.tipo_profesion || "odontologo";
+
+    // Documentos requeridos según tipo
+    const documentosRequeridosBase = [
+      "file_ci",
+      "file_rif",
+      "file_fondo_negro",
+      "file_mpps",
+    ];
+
+    const documentosAdicionales = [
+      "fondo_negro_credencial",
+      "notas_curso",
+      "fondo_negro_titulo_bachiller",
+    ];
+
+    let documentosRequeridos;
+    if (tipoProfesion === "odontologo") {
+      documentosRequeridos = documentosRequeridosBase;
+    } else {
+      documentosRequeridos = [
+        ...documentosRequeridosBase,
+        ...documentosAdicionales,
+      ];
+    }
+
+    // Verificar cada documento - SOLO si tiene archivo subido
+    let documentosSubidos = 0;
+
+    documentosRequeridos.forEach((docId) => {
+      const urlField = `${docId}_url`;
+      const hasFile = !!currentData[urlField];
+
+      if (hasFile) {
+        documentosSubidos++;
+      }
+    });
+
+    const docsUploaded = documentosSubidos === documentosRequeridos.length;
+
+    // Verificar comprobante de pago si no está exonerado
+    if (!currentData.pago_exonerado) {
+      const comprobanteHasFile = !!comprobanteData?.url;
+      return docsUploaded && comprobanteHasFile;
+    }
+
+    return docsUploaded;
+  }, [entityData, comprobanteData]);
+
   // Función unificada para actualizar datos
   const updateData = async (id, datosActualizados) => {
     try {
@@ -126,27 +249,12 @@ export default function DetalleInfo({
         setDatosPersonales((prev) => ({ ...prev, ...dataToSend.persona }));
       }
 
-      if (
-        dataToSend.contacto ||
-        dataToSend.email ||
-        dataToSend.phoneNumber ||
-        dataToSend.address
-      ) {
+      if (dataToSend.contacto || dataToSend.email || dataToSend.phoneNumber || dataToSend.address) {
         const contactData = dataToSend.contacto || dataToSend;
         setDatosContacto((prev) => ({ ...prev, ...contactData }));
       }
 
-      if (
-        dataToSend.academicos ||
-        dataToSend.instituto_bachillerato ||
-        dataToSend.universidad ||
-        dataToSend.num_registro_principal ||
-        dataToSend.fecha_registro_principal ||
-        dataToSend.num_mpps ||
-        dataToSend.fecha_mpps ||
-        dataToSend.fecha_egreso_universidad ||
-        dataToSend.observaciones
-      ) {
+      if (dataToSend.academicos || dataToSend.instituto_bachillerato || dataToSend.universidad) {
         const acadData = dataToSend.academicos || dataToSend;
         setDatosAcademicos((prev) => ({ ...prev, ...acadData }));
       }
@@ -171,10 +279,44 @@ export default function DetalleInfo({
 
       setCambiosPendientes(false);
     } catch (error) {
-      console.error("Error al actualizar datos:", error);
       setCambiosPendientes(true);
     }
   };
+
+  // Función para cargar datos del comprobante
+  const loadComprobanteData = useCallback((pendienteData) => {
+    const comprobanteUrl = pendienteData.comprobante_url ||
+      pendienteData.comprobante ||
+      pendienteData.pago?.comprobante_url ||
+      pendienteData.pago?.comprobante;
+
+    const tieneComprobante = comprobanteUrl ||
+      pendienteData.comprobante_pago_url ||
+      pendienteData.file_comprobante_url ||
+      (pendienteData.pago && pendienteData.pago.comprobante);
+
+    if (tieneComprobante) {
+      const url = comprobanteUrl ||
+        pendienteData.comprobante_pago_url ||
+        pendienteData.file_comprobante_url ||
+        pendienteData.pago?.comprobante;
+
+      const comprobanteInfo = {
+        id: "comprobante_pago",
+        nombre: "Comprobante de pago",
+        archivo: typeof url === "string" ? url.split("/").pop() : "comprobante_pago.pdf",
+        url: url,
+        status: pendienteData.comprobante_validate === null ? "pending" :
+          pendienteData.comprobante_validate === true ? "approved" :
+            pendienteData.comprobante_validate === false ? "rechazado" : "pending",
+        rejectionReason: pendienteData.comprobante_motivo_rechazo || "",
+      };
+
+      setComprobanteData(comprobanteInfo);
+    } else {
+      setComprobanteData(null);
+    }
+  }, []);
 
   // Función para cargar datos
   const loadData = async () => {
@@ -199,7 +341,6 @@ export default function DetalleInfo({
       }
 
       if (entityData) {
-        console.log("Datos cargados:", entityData);
         setEntityData(entityData);
 
         // Inicializar estados según el tipo
@@ -211,22 +352,19 @@ export default function DetalleInfo({
         }
 
         // Cargar documentos SOLO para colegiados registrados
-        // Para pendientes, DocumentModule maneja esto internamente
         if (tipo === "colegiado") {
           try {
             const docs = await getDocumentos(entityId);
             setDocumentos(docs || []);
           } catch (docError) {
-            console.error("Error cargando documentos:", docError);
             setDocumentos([]);
           }
         } else {
-          // Para pendientes, establecer array vacío ya que DocumentModule maneja la carga
           setDocumentos([]);
         }
       }
     } catch (error) {
-      console.error("Error al cargar datos:", error);
+      // Error handling
     } finally {
       setIsLoading(false);
     }
@@ -387,7 +525,6 @@ export default function DetalleInfo({
       }
     ].filter(doc => doc.url || doc.requerido); // Solo mostrar documentos que existen o son requeridos
   };
-
   // Inicializar datos para pendientes
   const initializePendienteData = (data) => {
     setDatosPersonales(JSON.parse(JSON.stringify(data.persona || {})));
@@ -418,17 +555,13 @@ export default function DetalleInfo({
       fecha_emision_titulo: data.fecha_egreso_universidad || "",
     });
 
-    setInstituciones(
-      data.instituciones ? JSON.parse(JSON.stringify(data.instituciones)) : []
-    );
+    setInstituciones(data.instituciones ? JSON.parse(JSON.stringify(data.instituciones)) : []);
     setPagosPendientes(data.pago === null && !data.pago_exonerado);
   };
 
   // Inicializar datos para colegiados
   const initializeColegiadoData = (data) => {
-    setDatosPersonales(
-      JSON.parse(JSON.stringify(data.recaudos?.persona || {}))
-    );
+    setDatosPersonales(JSON.parse(JSON.stringify(data.recaudos?.persona || {})));
 
     const persona = data.recaudos?.persona || {};
     setDatosContacto({
@@ -466,26 +599,22 @@ export default function DetalleInfo({
     if (tipo === "pendiente" && entityData && entityData.tipo_profesion) {
       const loadPaymentData = async () => {
         try {
-          const tasa = await fetchDataSolicitudes("tasa-bcv");
+          const [tasa, costo, Mpagos] = await Promise.all([
+            fetchDataSolicitudes("tasa-bcv"),
+            fetchDataSolicitudes("costo", `?search=Inscripcion+${entityData.tipo_profesion?.titulo}&es_vigente=true`),
+            fetchDataSolicitudes("metodo-de-pago")
+          ]);
+
           setTasaBcv(tasa.data.rate);
+          setMetodoPago(Mpagos.data);
 
-          const costo = await fetchDataSolicitudes(
-            "costo",
-            `?search=Inscripcion+${entityData.tipo_profesion?.titulo}&es_vigente=true`
-          );
-
-          // Verificar que existan datos antes de acceder a monto_usd
           if (costo.data && costo.data.length > 0) {
             setCostoInscripcion(Number(costo.data[0].monto_usd));
           } else {
-            console.warn("No se encontraron datos de costo de inscripción");
-            setCostoInscripcion(0); // Valor por defecto
+            setCostoInscripcion(0);
           }
-
-          const Mpagos = await fetchDataSolicitudes("metodo-de-pago");
-          setMetodoPago(Mpagos.data);
         } catch (error) {
-          console.error("Error cargando datos de pago:", error);
+          // Error handling
         }
       };
 
@@ -507,207 +636,103 @@ export default function DetalleInfo({
     setDocumentoSeleccionado(null);
   };
 
-  // Función para actualizar documento
-  const updateDocumento = (documentoActualizado) => {
+  // Función optimizada para actualizar documentos SIN recargar
+  const updateDocumento = async (documentoActualizado) => {
     try {
-      if (!recaudos) {
-        updateColegiadoPendiente(entityId, documentoActualizado, true);
-      } else {
-        updateColegiadoPendienteWithToken(entityId, documentoActualizado, true);
-      }
-      loadData();
-    } catch (error) {
-      console.error("Error al actualizar documento:", error);
-    }
-  };
-
-  // Función para manejar el estado de documentos
-  // En DetalleInfo.jsx, actualiza la función handleDocumentStatusChange
-
-  const handleDocumentStatusChange = (updatedDocument) => {
-    // Para pendientes, actualizar entityData directamente ya que DocumentModule
-    // maneja los documentos internamente desde pendienteData
-    if (tipo === "pendiente") {
-      // Actualizar entityData localmente para reflejar el cambio inmediatamente
-      setEntityData(prevData => {
-        const updatedData = { ...prevData };
-
-        // Actualizar los campos de validación correspondientes
-        const docId = updatedDocument.id;
-        const validateField = `${docId}_validate`;
-        const motivoField = `${docId}_motivo_rechazo`;
-
-        updatedData[validateField] =
-          updatedDocument.status === "pending" ? null :
-            updatedDocument.status === "approved" ? true : false;
-
-        if (updatedDocument.rejectionReason) {
-          updatedData[motivoField] = updatedDocument.rejectionReason;
-        } else {
-          delete updatedData[motivoField];
-        }
-
-        return updatedData;
-      });
-
-      // Preparar datos para el backend
-      const updateData = {
-        [`${updatedDocument.id}_validate`]:
-          updatedDocument.status === "pending" ? null :
-            updatedDocument.status === "approved" ? true : false,
-      };
-
-      if (updatedDocument.rejectionReason) {
-        updateData[`${updatedDocument.id}_motivo_rechazo`] = updatedDocument.rejectionReason;
-      }
-
-      // Actualizar en el backend
-      if (!recaudos) {
-        updateColegiadoPendiente(entityId, updateData)
-          .then((response) => {
-            if (response && response.data) {
-              // Sincronizar con la respuesta del servidor
-              setEntityData(prevData => ({
-                ...prevData,
-                ...response.data
-              }));
-            }
-          })
-          .catch((error) => {
-            console.error("Error al actualizar estado del documento:", error);
-            // Revertir el cambio local si falla
-            loadData();
-          });
-      } else {
-        updateColegiadoPendienteWithToken(entityId, updateData)
-          .then((response) => {
-            if (response && response.data) {
-              setEntityData(prevData => ({
-                ...prevData,
-                ...response.data
-              }));
-            }
-          })
-          .catch((error) => {
-            console.error("Error al actualizar estado del documento:", error);
-            loadData();
-          });
-      }
-    } else {
-      // Para colegiados registrados, mantener la lógica original
-      const docsCopy = [...documentos];
-      const index = docsCopy.findIndex((doc) => doc.id === updatedDocument.id);
-      if (index !== -1) {
-        docsCopy[index] = {
-          ...docsCopy[index],
-          status: updatedDocument.status,
-          rejectionReason: updatedDocument.rejectionReason || "",
-        };
-        setDocumentos(docsCopy);
-      }
-
-      const updateData = {
-        [`${updatedDocument.id}_validate`]:
-          updatedDocument.status === "pending" ? null :
-            updatedDocument.status === "approved" ? true : false,
-      };
-
-      if (updatedDocument.rejectionReason) {
-        updateData[`${updatedDocument.id}_motivo_rechazo`] = updatedDocument.rejectionReason;
-      }
-
-      updateColegiado(entityId, updateData);
-    }
-  };
-
-  // Función para manejar el upload del comprobante
-  const handleUploadComprobante = async (formData) => {
-    try {
-      console.log("Subiendo comprobante...");
-
       let response;
       if (!recaudos) {
-        response = await updateColegiadoPendiente(entityId, formData, true);
+        response = await updateColegiadoPendiente(entityId, documentoActualizado, true);
       } else {
-        response = await updateColegiadoPendienteWithToken(
-          entityId,
-          formData,
-          true
-        );
+        response = await updateColegiadoPendienteWithToken(entityId, documentoActualizado, true);
       }
 
-      console.log("Respuesta de upload:", response);
-
-      // Actualizar solo el estado del comprobante sin recargar toda la página
+      // Si el backend devuelve el pending completo, actualizar sin recargar
       if (response && response.data) {
-        const updatedData = response.data;
-
-        // Actualizar entityData localmente
-        setEntityData((prevData) => ({
-          ...prevData,
-          ...updatedData,
-        }));
-
-        // Actualizar el comprobante directamente
-        const nuevoComprobante = {
-          id: "comprobante_pago",
-          nombre: "Comprobante de pago",
-          archivo: "comprobante_pago.pdf",
-          url:
-            updatedData.comprobante_url ||
-            updatedData.comprobante ||
-            updatedData.pago?.comprobante_url,
-          status:
-            updatedData.comprobante_validate === null
-              ? "pending"
-              : updatedData.comprobante_validate === true
-                ? "approved"
-                : updatedData.comprobante_validate === false
-                  ? "rechazado"
-                  : "pending",
-          rejectionReason: updatedData.comprobante_motivo_rechazo || "",
-        };
-
-        setComprobanteData(nuevoComprobante);
-        console.log("Comprobante actualizado localmente:", nuevoComprobante);
+        setEntityData(prevData => ({ ...prevData, ...response.data }));
+        setDocumentUpdateTrigger(prev => prev + 1);
       }
 
       return response;
     } catch (error) {
-      console.error("Error al subir comprobante:", error);
+      throw error;
+    }
+  };
+
+  // Manejador optimizado para cambios en documentos
+  const handleDocumentStatusChange = useCallback(async (documentoActualizado) => {
+    try {
+      // 1. ACTUALIZA LOCALMENTE el estado del documento de forma optimista
+      setEntityData(prevData => ({
+        ...prevData,
+        [`${documentoActualizado.id}_validate`]: documentoActualizado.status === "approved",
+        [`${documentoActualizado.id}_motivo_rechazo`]: documentoActualizado.rejectionReason || ''
+      }));
+
+      // 2. Si es comprobante de pago, también actualiza el local del comprobante
+      if (documentoActualizado.id === "comprobante_pago") {
+        setComprobanteData(prev => ({
+          ...prev,
+          status: documentoActualizado.status,
+          rejectionReason: documentoActualizado.rejectionReason || ''
+        }));
+      }
+
+      // 3. Llama al backend para guardar el cambio
+      const updateData = {
+        [`${documentoActualizado.id}_validate`]: documentoActualizado.status === "approved"
+      };
+      if (documentoActualizado.status === "rechazado" && documentoActualizado.rejectionReason) {
+        updateData[`${documentoActualizado.id}_motivo_rechazo`] = documentoActualizado.rejectionReason;
+      }
+
+      await updateColegiadoPendiente(entityId, updateData);
+    } catch (error) {
+      console.error("Error updating document status:", error);
+    }
+  }, [entityId, updateColegiadoPendiente, setComprobanteData]);
+
+
+  // Función para manejar el upload del comprobante
+  const handleUploadComprobante = async (formData) => {
+    try {
+      let response;
+      if (!recaudos) {
+        response = await updateColegiadoPendiente(entityId, formData, true);
+      } else {
+        response = await updateColegiadoPendienteWithToken(entityId, formData, true);
+      }
+
+      if (response && response.data) {
+        setEntityData(prevData => ({ ...prevData, ...response.data }));
+        setDocumentUpdateTrigger(prev => prev + 1);
+      }
+
+      return response;
+    } catch (error) {
       throw error;
     }
   };
 
   // Función para manejar el estado del comprobante
   const handleComprobanteStatusChange = (updatedComprobante) => {
-    // Actualizar estado local inmediatamente
     setComprobanteData((prev) => ({
       ...prev,
       status: updatedComprobante.status,
       rejectionReason: updatedComprobante.rejectionReason || "",
     }));
 
-    // Actualizar en el backend
     const updateData = {
-      comprobante_validate:
-        updatedComprobante.status === "pending"
-          ? null
-          : updatedComprobante.status === "approved"
-            ? true
-            : false,
+      comprobante_validate: updatedComprobante.status === "pending" ? null :
+        updatedComprobante.status === "approved" ? true : false,
     };
 
     if (updatedComprobante.rejectionReason) {
-      updateData.comprobante_motivo_rechazo =
-        updatedComprobante.rejectionReason;
+      updateData.comprobante_motivo_rechazo = updatedComprobante.rejectionReason;
     }
 
-    // Actualizar en backend sin recargar
     updateColegiadoPendiente(entityId, updateData)
       .then((response) => {
         if (response && response.data) {
-          // Actualizar entityData con la respuesta
           setEntityData((prevData) => ({
             ...prevData,
             ...response.data,
@@ -715,74 +740,8 @@ export default function DetalleInfo({
         }
       })
       .catch((error) => {
-        console.error("Error al actualizar estado del comprobante:", error);
+        // Error handling
       });
-  };
-
-  // Validación actualizada para incluir comprobante
-  // Validación actualizada para incluir comprobante
-  const allDocumentsApproved = () => {
-    // Usar entityData actualizado en lugar de documentos state
-    const currentData = entityData;
-    if (!currentData) return false;
-
-    // Obtener el tipo de profesión
-    const tipoProfesion = currentData.tipo_profesion || "odontologo";
-
-    console.log("Validando documentos - Tipo profesión:", tipoProfesion);
-    console.log("Datos actuales:", currentData);
-
-    // Para odontólogos: verificar solo 4 documentos base
-    const documentosRequeridosBase = [
-      "file_ci",
-      "file_rif",
-      "file_fondo_negro",
-      "file_mpps",
-    ];
-
-    const documentosAdicionales = [
-      "fondo_negro_credencial",
-      "notas_curso",
-      "fondo_negro_titulo_bachiller",
-    ];
-
-    let documentosRequeridos;
-    if (tipoProfesion === "odontologo") {
-      documentosRequeridos = documentosRequeridosBase;
-    } else {
-      documentosRequeridos = [
-        ...documentosRequeridosBase,
-        ...documentosAdicionales,
-      ];
-    }
-
-    // Verificar documentos requeridos
-    const docsApproved = documentosRequeridos.every((docId) => {
-      const validateField = `${docId}_validate`;
-      const urlField = `${docId}_url`;
-
-      const hasFile = currentData[urlField];
-      const isApproved = currentData[validateField] === true;
-
-      console.log(`Documento ${docId}: archivo=${!!hasFile}, aprobado=${isApproved}`);
-
-      return hasFile && isApproved;
-    });
-
-    console.log("Documentos aprobados:", docsApproved);
-
-    // Verificar comprobante de pago si no está exonerado
-    if (!currentData.pago_exonerado) {
-      const comprobanteApproved =
-        comprobanteData?.status === "approved" && comprobanteData?.url;
-
-      console.log("Comprobante aprobado:", comprobanteApproved);
-      console.log("Comprobante data:", comprobanteData);
-
-      return docsApproved && comprobanteApproved;
-    }
-
-    return docsApproved;
   };
 
   // Funciones para modales de pendientes
@@ -813,7 +772,7 @@ export default function DetalleInfo({
         }
       }, 2000);
     } catch (error) {
-      console.error("Error al aprobar solicitud:", error);
+      // Error handling
     }
   };
 
@@ -835,7 +794,7 @@ export default function DetalleInfo({
       onVolver({ rechazado: true });
       loadData();
     } catch (error) {
-      console.error("Error al rechazar solicitud:", error);
+      // Error handling
     }
   };
 
@@ -857,7 +816,7 @@ export default function DetalleInfo({
       onVolver({ denegado: true });
       loadData();
     } catch (error) {
-      console.error("Error al denegar solicitud:", error);
+      // Error handling
     }
   };
 
@@ -880,7 +839,7 @@ export default function DetalleInfo({
       setMostrarExoneracion(false);
       setMotivoExoneracion("");
     } catch (error) {
-      console.error("Error al exonerar pagos:", error);
+      // Error handling
     }
   };
 
@@ -916,8 +875,16 @@ export default function DetalleInfo({
   };
 
   const handleConfirmarTitulo = () => {
-    // Implementar lógica para confirmar entrega de título
-    console.log("Confirmar entrega de título para colegiado:", entityId);
+    setShowTitleConfirmationModal(true);
+  };
+
+  const handleConfirmTitleDelivery = async () => {
+    try {
+      // Implementar lógica para confirmar entrega de título
+      setShowTitleConfirmationModal(false);
+    } catch (error) {
+      // Error handling
+    }
   };
 
   if (isLoading) {
@@ -948,22 +915,13 @@ export default function DetalleInfo({
   }
 
   const nombreCompleto = `${entityData.persona?.nombre || entityData.recaudos?.persona?.nombre || ""
-    } ${entityData.persona?.segundo_nombre ||
-    entityData.recaudos?.persona?.segundo_nombre ||
-    ""
-    } ${entityData.persona?.primer_apellido ||
-    entityData.recaudos?.persona?.primer_apellido ||
-    ""
-    } ${entityData.persona?.segundo_apellido ||
-    entityData.recaudos?.persona?.segundo_apellido ||
-    ""
+    } ${entityData.persona?.segundo_nombre || entityData.recaudos?.persona?.segundo_nombre || ""
+    } ${entityData.persona?.primer_apellido || entityData.recaudos?.persona?.primer_apellido || ""
+    } ${entityData.persona?.segundo_apellido || entityData.recaudos?.persona?.segundo_apellido || ""
     }`.trim();
 
   return (
-    <div
-      className={`w-full px-4 md:px-10 py-10 md:py-28 ${isAdmin ? "bg-gray-50" : ""
-        }`}
-    >
+    <div className={`w-full px-4 md:px-10 py-10 md:py-28 ${isAdmin ? "bg-gray-50" : ""}`}>
       {/* Breadcrumbs */}
       {!isColegiado && onVolver && (
         <div className="mb-6">
@@ -977,37 +935,12 @@ export default function DetalleInfo({
         </div>
       )}
 
-      {/* Notificaciones */}
-      {tipo === "pendiente" && (
-        <NotificationSystem
-          notifications={{
-            confirmacionExitosa,
-            rechazoExitoso,
-            denegacionExitosa,
-            exoneracionExitosa,
-            cambiosPendientes,
-            documentosCompletos: allDocumentsApproved(),
-          }}
-          handlers={{
-            setConfirmacionExitosa,
-            setRechazoExitoso,
-            setDenegacionExitosa,
-            setExoneracionExitosa,
-            setCambiosPendientes,
-          }}
-          pendiente={entityData}
-        />
-      )}
-
       {/* Notificación de cambios pendientes para colegiados */}
       {tipo === "colegiado" && cambiosPendientes && (
         <div className="bg-blue-100 text-blue-800 p-4 mb-6 rounded-md flex items-start justify-between shadow-sm">
           <div className="flex items-center">
             <AlertCircle size={20} className="mr-2 flex-shrink-0" />
-            <span>
-              Hay cambios sin guardar. Por favor guarde los cambios antes de
-              continuar.
-            </span>
+            <span>Hay cambios sin guardar. Por favor guarde los cambios antes de continuar.</span>
           </div>
           <button
             onClick={() => setCambiosPendientes(false)}
@@ -1038,12 +971,7 @@ export default function DetalleInfo({
           <div className="flex justify-center">
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-2">Estado de solvencia</p>
-              <p
-                className={`font-bold text-xl ${entityData.solvencia_status
-                  ? "text-green-600"
-                  : "text-red-600"
-                  } flex items-center justify-center`}
-              >
+              <p className={`font-bold text-xl ${entityData.solvencia_status ? "text-green-600" : "text-red-600"} flex items-center justify-center`}>
                 {entityData.solvencia_status ? (
                   <>
                     <CheckCircle size={20} className="mr-2" />
@@ -1063,7 +991,7 @@ export default function DetalleInfo({
 
       {/* Contenido principal */}
       {tipo === "pendiente" ? (
-        // Vista para pendientes - Solo información y documentos
+        // Vista para pendientes
         <>
           <PersonalInfoSection
             props={{
@@ -1110,7 +1038,9 @@ export default function DetalleInfo({
             isAdmin={isAdmin}
           />
 
+          {/* DocumentSection optimizado */}
           <DocumentSection
+            key={`docs-${entityId}-${documentUpdateTrigger}`}
             documentos={[]}
             onViewDocument={handleVerDocumento}
             updateDocumento={updateDocumento}
@@ -1118,9 +1048,10 @@ export default function DetalleInfo({
             readonly={entityData?.status === "anulado"}
             isColegiado={isColegiado}
             pendienteData={entityData}
+            isAdmin={isAdmin}
           />
 
-          {/* Nueva sección de comprobante de pago */}
+          {/* Sección de comprobante de pago optimizada */}
           {isAdmin && !entityData.pago_exonerado && (
             <PaymentReceiptSection
               comprobanteData={comprobanteData}
@@ -1297,8 +1228,7 @@ export default function DetalleInfo({
               <TablaSolicitudes
                 colegiadoId={entityId}
                 onVerDetalle={(id) => {
-                  // Función para ver detalle de solicitud si es necesaria
-                  console.log("Ver detalle solicitud:", id);
+                  // Implementar lógica
                 }}
               />
             )}
@@ -1380,16 +1310,13 @@ export default function DetalleInfo({
               isOpen={showReportModal}
               onClose={() => setShowReportModal(false)}
               onSubmit={(reportData) => {
-                console.log("Reporte enviado:", reportData);
                 setShowReportModal(false);
                 alert("El reporte de ilegalidad ha sido enviado correctamente");
               }}
               colegiadoInfo={{
                 nombre: nombreCompleto,
                 id: entityId,
-                cedula:
-                  entityData.persona?.identificacion ||
-                  entityData.recaudos?.persona?.identificacion,
+                cedula: entityData.persona?.identificacion || entityData.recaudos?.persona?.identificacion,
               }}
             />
           )}
@@ -1401,9 +1328,7 @@ export default function DetalleInfo({
         <CrearSolicitudModal
           onClose={() => setShowCrearSolicitudModal(false)}
           onSolicitudCreada={(nuevaSolicitud) => {
-            console.log("Nueva solicitud creada:", nuevaSolicitud);
             setShowCrearSolicitudModal(false);
-            // Recargar datos si es necesario
             loadData();
           }}
           colegiados={[entityData]}
@@ -1420,13 +1345,21 @@ export default function DetalleInfo({
         />
       )}
 
+      {/* Modal de confirmación de título */}
+      {showTitleConfirmationModal && (
+        <TitleConfirmationModal
+          nombreColegiado={nombreCompleto}
+          onConfirm={handleConfirmTitleDelivery}
+          onClose={() => setShowTitleConfirmationModal(false)}
+        />
+      )}
+
       {/* Modal de reporte de irregularidad */}
       {showReportModal && tipo === "colegiado" && (
         <ReportIllegalityModal
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
           onSubmit={(reportData) => {
-            console.log("Reporte enviado:", reportData);
             setShowReportModal(false);
             alert("El reporte de ilegalidad ha sido enviado correctamente");
           }}

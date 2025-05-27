@@ -20,4 +20,15 @@ export const fetchMunicipios = async (estadoId) => {
     console.error('Error al obtener los municipios:', error);
     throw error;
   }
-}; 
+};
+
+// Función para obtener Universidades por Profesion/Ocupacion
+export const fetchUniversidades = async () => {
+  try {
+    const response = await fetchDataUsuario('universidades', null);
+    return response.data || [];
+  } catch (error) {
+    console.error('Error al obtener las universidades:', error);
+    throw error;
+  }
+};

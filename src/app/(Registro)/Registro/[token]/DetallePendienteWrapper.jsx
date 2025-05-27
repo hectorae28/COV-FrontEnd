@@ -40,11 +40,11 @@ export default function DetallePendienteWrapper({
 
           {/* Content with relative positioning to allow scrolling */}
           <div className="relative max-w-7xl z-20 ">
-            <div className="w-full flex justify-center py-10">
+            <div className="w-full flex justify-center mt-18">
               <Image
                 src="/assets/logo.png"
                 alt="Logo Colegio de Odontólogos de Venezuela"
-                width={300}
+                width={420}
                 height={80}
                 className="relative drop-shadow-md object-contain max-w-full h-auto"
               />
@@ -66,20 +66,20 @@ export default function DetallePendienteWrapper({
                     Token invalido, por favor pida denuevo el token.
                   </p>
                   <div className="w-full flex items-center justify-center">
-                      <Link
-                        href="/Login"
-                        className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white p-4 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors "
-                      >
-                        <span>Regresar a Inicio de Sesion</span>
-                      </Link>
-                    </div>
+                    <Link
+                      href="/Login"
+                      className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white p-4 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors "
+                    >
+                      <span>Regresar a Inicio de Sesion</span>
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             ) : !isSubmited ? (
               <DetallePendiente
                 params={{ id }}
                 onVolver={handleAprobarPendiente}
-                isAdmin={isAdmin}
+                isAdmin={false}
                 recaudos={recaudos}
                 handleForward={handleForward}
                 isColegiado={isColegiado}
@@ -103,7 +103,7 @@ export default function DetallePendienteWrapper({
                       Recibira un correo electronico una vez que los
                       administradores hayan revisado su solicitud.
                     </p>
-                    
+
                     <div className="w-full flex items-center justify-center">
                       <Link
                         href="/Login"

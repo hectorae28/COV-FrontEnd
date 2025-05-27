@@ -65,48 +65,48 @@ export default function PaymentReceiptSection({
 
     // Subida de comprobante desde PagosColg
     const handlePaymentComplete = async (paymentData) => {
-        try {
-            setIsProcessing(true);
-            const formData = new FormData();
-            if (paymentData.paymentFile) formData.append('comprobante', paymentData.paymentFile);
-            if (paymentData.paymentDate) formData.append('fecha_pago', paymentData.paymentDate);
-            if (paymentData.referenceNumber) formData.append('numero_referencia', paymentData.referenceNumber);
-            if (paymentData.totalAmount) formData.append('monto', paymentData.totalAmount);
-            if (paymentData.metodo_de_pago) {
-                formData.append('metodo_pago_id', paymentData.metodo_de_pago.id);
-                formData.append('metodo_pago_slug', paymentData.metodo_de_pago.datos_adicionales.slug);
+    let optimisticComprobante = null;
+
+    try {
+        setIsProcessing(true);
+
+        const tempUrl = URL.createObjectURL(paymentData.paymentFile);
+
+        optimisticComprobante = {
+            id: "comprobante_pago",
+            nombre: "Comprobante de pago",
+            archivo: paymentData.paymentFile?.name || "comprobante_pago.pdf",
+            url: tempUrl,
+            status: 'pending', // ✅ directamente a pending (ya que no hay backend)
+            isOptimistic: false,
+            tempUrl: tempUrl,
+            paymentDetails: {
+                fecha_pago: paymentData.paymentDate,
+                numero_referencia: paymentData.referenceNumber,
+                monto: paymentData.totalAmount,
+                metodo_pago: paymentData.metodo_de_pago?.nombre,
+                metodo_pago_slug: paymentData.metodo_de_pago?.datos_adicionales?.slug,
+                tasa_bcv: paymentData.tasa_bcv_del_dia
             }
-            if (paymentData.tasa_bcv_del_dia) formData.append('tasa_bcv', paymentData.tasa_bcv_del_dia);
+        };
 
-            const response = await onUploadComprobante(formData);
+        setLocalComprobanteData(optimisticComprobante);
+        setShowPaymentModal(false);
 
-            const nuevoComprobante = {
-                id: "comprobante_pago",
-                nombre: "Comprobante de pago",
-                archivo: paymentData.paymentFile?.name || "comprobante_pago.pdf",
-                url: response?.data?.comprobante_url || URL.createObjectURL(paymentData.paymentFile),
-                status: 'pending',
-                rejectionReason: '',
-                paymentDetails: {
-                    fecha_pago: paymentData.paymentDate,
-                    numero_referencia: paymentData.referenceNumber,
-                    monto: paymentData.totalAmount,
-                    metodo_pago: paymentData.metodo_de_pago?.nombre,
-                    metodo_pago_slug: paymentData.metodo_de_pago?.datos_adicionales?.slug,
-                    tasa_bcv: paymentData.tasa_bcv_del_dia
-                }
-            };
+        // 🔇 Simulación de carga local, sin llamada a API
+        // const response = await onUploadComprobante(formData);
 
-            setLocalComprobanteData(nuevoComprobante);
-            setShowPaymentModal(false);
-
-        } catch (error) {
-            console.error("Error al procesar el pago:", error);
-            alert("Error al registrar el pago. Por favor intente nuevamente.");
-        } finally {
-            setIsProcessing(false);
+    } catch (error) {
+        setLocalComprobanteData(null);
+        if (optimisticComprobante?.tempUrl) {
+            URL.revokeObjectURL(optimisticComprobante.tempUrl);
         }
-    };
+        alert("Error al simular el pago.");
+    } finally {
+        setIsProcessing(false);
+    }
+};
+
 
     // Visor avanzado
     const handleViewComprobante = (comprobante) => {

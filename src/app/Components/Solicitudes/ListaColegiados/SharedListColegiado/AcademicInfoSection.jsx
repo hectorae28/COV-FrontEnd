@@ -35,19 +35,12 @@ export default function AcademicInfoSection({
     return {
       tipo_profesion: pendiente?.tipo_profesion || "",
       graduateInstitute: datosAcademicos?.instituto_bachillerato || "",
-      universityState: datosAcademicos?.estado_universidad || "",
-      universityTitle: datosAcademicos?.universidad.titulo || "",
+      universityTitle: datosAcademicos?.universidad?.titulo || "",
       mppsRegistrationNumber: datosAcademicos?.num_mpps || "",
       mppsRegistrationDate: datosAcademicos?.fecha_mpps || "",
       titleIssuanceDate: datosAcademicos?.fecha_emision_titulo || "",
       mainRegistrationNumber: datosAcademicos?.num_registro_principal || "",
-      mainRegistrationDate: datosAcademicos?.fecha_registro_principal || "",
-      // Campos adicionales para universidades personalizadas
-      selectedEstado: datosAcademicos?.estado_universidad || "",
-      selectedCiudad: datosAcademicos?.municipio_universidad || "",
-      isCustomUniversity: datosAcademicos?.es_universidad_personalizada || false,
-      customUniversityName: datosAcademicos?.nombre_universidad_personalizada || "",
-      customUniversityAcronym: datosAcademicos?.acronimo_universidad_personalizada || ""
+      mainRegistrationDate: datosAcademicos?.fecha_registro_principal || ""
     };
   };
 
@@ -70,18 +63,15 @@ export default function AcademicInfoSection({
     const updatedAcademicos = {
       ...datosAcademicos,
       instituto_bachillerato: dataToUpdate.graduateInstitute,
-      estado_universidad: dataToUpdate.universityState || dataToUpdate.selectedEstado,
-      nombre_universidad: dataToUpdate.universityTitle,
-      municipio_universidad: dataToUpdate.selectedCiudad,
+      universidad: {
+        ...datosAcademicos.universidad,
+        titulo: dataToUpdate.universityTitle
+      },
       num_mpps: dataToUpdate.mppsRegistrationNumber,
       fecha_mpps: dataToUpdate.mppsRegistrationDate,
       fecha_emision_titulo: dataToUpdate.titleIssuanceDate,
       num_registro_principal: dataToUpdate.mainRegistrationNumber,
-      fecha_registro_principal: dataToUpdate.mainRegistrationDate,
-      // Campos adicionales
-      es_universidad_personalizada: dataToUpdate.isCustomUniversity,
-      nombre_universidad_personalizada: dataToUpdate.customUniversityName,
-      acronimo_universidad_personalizada: dataToUpdate.customUniversityAcronym
+      fecha_registro_principal: dataToUpdate.mainRegistrationDate
     };
 
     // Actualizar también el tipo de profesión en el pendiente
@@ -128,48 +118,56 @@ export default function AcademicInfoSection({
 
       {/* Fila 1: Tipo de Profesión y Ocupación */}
       <div className="bg-gray-50 p-3 rounded-md mt-6">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Tipo de Profesión/Ocupación</p>
-          <p className="font-medium text-gray-800">
-            {pendiente?.tipo_profesion
-              ? (pendiente.tipo_profesion === "odontologo" ? "Odontólogo" :
-                pendiente.tipo_profesion === "higienista" ? "Higienista" :
-                  pendiente.tipo_profesion === "tecnico" ? "Técnico Dental" :
-                    pendiente.tipo_profesion)
-              : "No especificado"}
-          </p>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Tipo de Profesión/Ocupación</p>
+        <p className="font-medium text-gray-800">
+          {pendiente?.tipo_profesion
+            ? (pendiente.tipo_profesion === "odontologo" ? "Odontólogo" :
+              pendiente.tipo_profesion === "higienista" ? "Higienista" :
+                pendiente.tipo_profesion === "tecnico" ? "Técnico Dental" :
+                  pendiente.tipo_profesion)
+            : "No especificado"}
+        </p>
       </div>
 
-      {/* Fila 2: Liceo/Colegio de Egreso (Bachillerato) */}
+      {/* Fila 2: Liceo/Colegio de Egreso */}
       <div className="bg-gray-50 p-3 rounded-md mt-6">
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Liceo / Colegio (Bachillerato)</p>
         <p className="font-medium text-gray-800">{datosAcademicos?.instituto_bachillerato || "No especificado"}</p>
       </div>
 
-      {/* Fila 3: Institución de Educación Superior - Estado y Municipio */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Estado de la Universidad</p>
-          <p className="font-medium text-gray-800">{datosAcademicos?.estado_universidad || "No especificado"}</p>
-        </div>
-        <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</p>
-          <p className="font-medium text-gray-800">{datosAcademicos?.universidad.titulo || "No especificado"}</p>
-        </div>
+      {/* Fila 3: Universidad */}
+      <div className="bg-gray-50 p-3 rounded-md mt-6">
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Universidad</p>
+        <p className="font-medium text-gray-800">{datosAcademicos?.universidad?.titulo || "No especificado"}</p>
       </div>
 
-      {/* Fila 4: Número MPPS y Fecha MPPS */}
+      {/* Fila 4: Registro Principal (solo para odontólogos) */}
+      {pendiente?.tipo_profesion === "odontologo" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de Registro Principal</p>
+            <p className="font-medium text-gray-800">{datosAcademicos?.num_registro_principal || "No especificado"}</p>
+          </div>
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de Registro Principal</p>
+            <p className="font-medium text-gray-800">{formatearFecha(datosAcademicos?.fecha_registro_principal)}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Fila 5: Registro MPPS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número MPPS</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Número de Registro MPPS</p>
           <p className="font-medium text-gray-800">{datosAcademicos?.num_mpps || "No especificado"}</p>
         </div>
         <div className="bg-gray-50 p-3 rounded-md">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha MPPS</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de Registro MPPS</p>
           <p className="font-medium text-gray-800">{formatearFecha(datosAcademicos?.fecha_mpps)}</p>
         </div>
       </div>
 
-      {/* Fila 5: Fecha de Emisión de Título */}
+      {/* Fila 6: Fecha de Emisión de Título */}
       <div className="bg-gray-50 p-3 rounded-md mt-6">
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Fecha de Emisión de Título</p>
         <p className="font-medium text-gray-800">{formatearFecha(datosAcademicos?.fecha_emision_titulo)}</p>
