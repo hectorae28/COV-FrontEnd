@@ -61,7 +61,6 @@ export default function DetalleSolicitud({ props }) {
 
   const loadSolicitudById = async () => {
     const solicitud = await getSolicitudById(id);
-    console.log("solicitud", solicitud)
     setSolicitud(transformBackendData(solicitud));
     setIsLoading(false);
 
@@ -78,7 +77,14 @@ export default function DetalleSolicitud({ props }) {
 
   useEffect(() => {
     if (solicitud && solicitud.itemsSolicitud) {
-      cargarDocumentosSistema();
+      // Verificar si hay al menos una constancia o carnet aprobado
+      const hayDocumentosAprobados = solicitud.itemsSolicitud.some(item => 
+        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && item.estado === 'Aprobada'
+      );
+      
+      if (hayDocumentosAprobados) {
+        cargarDocumentosSistema();
+      }
     }
   }, [solicitud]);
 
@@ -244,18 +250,34 @@ export default function DetalleSolicitud({ props }) {
     setLoadingDocumentos(true);
     try {
       
-      // Simplemente filtrar las constancias de la solicitud
+      // Filtrar constancias aprobadas
       const constancias = solicitud.itemsSolicitud.filter(
-        item => item.tipo === 'Constancia'
+        item => item.tipo === 'Constancia' && item.estado === 'Aprobada'
       );
 
+      // Filtrar carnets aprobados
+      const carnets = solicitud.itemsSolicitud.filter(
+        item => item.tipo === 'Carnet' && item.estado === 'Aprobada'
+      );
 
-      const documentosGenerados = constancias.map(constancia => ({
-        id: constancia.id,
-        nombre: constancia.nombre,
-        tipo: constancia.tipoConstancia, // fallback
-        solicitudId: solicitud.id
-      }));
+      const documentosGenerados = [
+        // Mapear constancias
+        ...constancias.map(constancia => ({
+          id: constancia.id,
+          nombre: constancia.nombre,
+          tipo: constancia.tipoConstancia,
+          solicitudId: solicitud.id,
+          tipoDocumento: 'constancia'
+        })),
+        // Mapear carnets
+        ...carnets.map(carnet => ({
+          id: carnet.id,
+          nombre: carnet.nombre,
+          tipo: 'carnet',
+          solicitudId: solicitud.id,
+          tipoDocumento: 'carnet'
+        }))
+      ];
 
       setDocumentosSistema(documentosGenerados);
     } catch (error) {
@@ -266,50 +288,80 @@ export default function DetalleSolicitud({ props }) {
     }
   };
 
-  // Función para visualizar PDF de constancia
-  const handleVisualizarConstancia = async (documento) => {
+  // Función para visualizar PDF de constancia o carnet
+  const handleVisualizarDocumento = async (documento) => {
     try {
-      
-      // Ir directamente al endpoint de datos usando el ID
-      const datosResponse = await api.get(`/solicitudes/constancia/${documento.solicitudId}/datos/`);
-      const datosCompletos = datosResponse.data;
-      
-      // Limpiar el tipo de constancia para el PDF
-      let tipoConstanciaLimpio = documento.tipo;
-      if (tipoConstanciaLimpio && tipoConstanciaLimpio.startsWith('constancia_')) {
-        tipoConstanciaLimpio = tipoConstanciaLimpio.replace('constancia_', '');
+      if (documento.tipoDocumento === 'carnet') {
+        // Para carnets, extraer el ID real del SolicitudCarnet del formato compuesto
+        const carnetId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
+        console.log("Debug - Generando carnet para SolicitudCarnet ID:", carnetId);
+        const datosResponse = await api.get(`/solicitudes/solicitud_carnet/${carnetId}/datos/`);
+        const datosCarnet = datosResponse.data;
+        
+        // Generar PDF de carnet usando la función correspondiente
+        const { docDefinition } = generateConstanciaPDF(datosCarnet, 'carnet');
+        const pdfUrl = await openPDF(docDefinition);
+        setDocumentoSeleccionado({ url: pdfUrl, nombre: documento.nombre, isAPDF: true });
+      } else {
+        // Para constancias, extraer el ID real del SolicitudConstancia del formato compuesto
+        const constanciaId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
+        console.log("Debug - Generando constancia para SolicitudConstancia ID:", constanciaId);
+        
+        const datosResponse = await api.get(`/solicitudes/solicitud_constancia/${constanciaId}/datos/`);
+        const datosCompletos = datosResponse.data;
+        
+        console.log("Debug - Datos de constancia obtenidos:", datosCompletos);
+        
+        // Limpiar el tipo de constancia para el PDF
+        let tipoConstanciaLimpio = documento.tipo;
+        if (tipoConstanciaLimpio && tipoConstanciaLimpio.startsWith('constancia_')) {
+          tipoConstanciaLimpio = tipoConstanciaLimpio.replace('constancia_', '');
+        }
+        
+        const { docDefinition } = generateConstanciaPDF(datosCompletos, tipoConstanciaLimpio);
+        const pdfUrl = await openPDF(docDefinition);
+        setDocumentoSeleccionado({ url: pdfUrl, nombre: documento.nombre, isAPDF: true });
       }
-      
-      const { docDefinition } = generateConstanciaPDF(datosCompletos, tipoConstanciaLimpio);
-      const pdfUrl = await openPDF(docDefinition);
-      setDocumentoSeleccionado({ url: pdfUrl, nombre: documento.nombre, isAPDF: true });
     } catch (error) {
       console.error("Error al generar PDF:", error);
-      mostrarAlerta("alerta", "Error al generar el documento PDF");
+      mostrarAlerta("alerta", "Error al generar el documento PDF: " + (error.response?.data?.error || error.message || error));
     }
   };
 
-  // Función para descargar PDF de constancia
-  const handleDescargarConstancia = async (documento) => {
+  // Función para descargar PDF de constancia o carnet
+  const handleDescargarDocumento = async (documento) => {
     try {
       console.log("Descargando PDF para:", documento);
       
-      // Ir directamente al endpoint de datos usando el ID
-      const datosResponse = await api.get(`/solicitudes/constancia/${documento.solicitudId}/datos/`);
-      const datosCompletos = datosResponse.data;
-      
-      // Limpiar el tipo de constancia para el PDF
-      let tipoConstanciaLimpio = documento.tipo;
-      if (tipoConstanciaLimpio && tipoConstanciaLimpio.startsWith('constancia_')) {
-        tipoConstanciaLimpio = tipoConstanciaLimpio.replace('constancia_', '');
+      if (documento.tipoDocumento === 'carnet') {
+        // Para carnets, extraer el ID real del SolicitudCarnet del formato compuesto
+        const carnetId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
+        const datosResponse = await api.get(`/solicitudes/solicitud_carnet/${carnetId}/datos/`);
+        const datosCarnet = datosResponse.data;
+        
+        // Generar PDF de carnet usando la función correspondiente
+        const { docDefinition, fileName } = generateConstanciaPDF(datosCarnet, 'carnet');
+        await downloadPDF(docDefinition, fileName);
+        mostrarAlerta("exito", "Documento descargado correctamente");
+      } else {
+        // Para constancias, extraer el ID real del SolicitudConstancia del formato compuesto
+        const constanciaId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
+        const datosResponse = await api.get(`/solicitudes/solicitud_constancia/${constanciaId}/datos/`);
+        const datosCompletos = datosResponse.data;
+        
+        // Limpiar el tipo de constancia para el PDF
+        let tipoConstanciaLimpio = documento.tipo;
+        if (tipoConstanciaLimpio && tipoConstanciaLimpio.startsWith('constancia_')) {
+          tipoConstanciaLimpio = tipoConstanciaLimpio.replace('constancia_', '');
+        }
+        
+        const { docDefinition, fileName } = generateConstanciaPDF(datosCompletos, tipoConstanciaLimpio);
+        await downloadPDF(docDefinition, fileName);
+        mostrarAlerta("exito", "Documento descargado correctamente");
       }
-      
-      const { docDefinition, fileName } = generateConstanciaPDF(datosCompletos, tipoConstanciaLimpio);
-      await downloadPDF(docDefinition, fileName);
-      mostrarAlerta("exito", "Documento descargado correctamente");
     } catch (error) {
       console.error("Error al descargar PDF:", error);
-      mostrarAlerta("alerta", "Error al descargar el documento PDF");
+      mostrarAlerta("alerta", "Error al descargar el documento PDF: " + (error.response?.data?.error || error.message || error));
     }
   };
 
@@ -343,6 +395,7 @@ export default function DetalleSolicitud({ props }) {
       // Determinar el nombre correcto del campo de validación
       let validateFieldName, motivoFieldName;
       
+      // Caso especial para foto de carnet
       if (updatedDocument.id === 'file_foto') {
         validateFieldName = 'foto_validate';
         motivoFieldName = 'foto_motivo_rechazo';
@@ -473,8 +526,10 @@ export default function DetalleSolicitud({ props }) {
         recaudosId={pendienteId}
       /> */}
 
-      {/* Documentos generados por el sistema - Visible cuando hay constancias aprobadas */}
-      {solicitud.estado === "Aprobada" && (
+      {/* Documentos generados por el sistema - Visible cuando hay constancias o carnets aprobados */}
+      {solicitud.itemsSolicitud && solicitud.itemsSolicitud.some(item => 
+        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && item.estado === 'Aprobada'
+      ) && (
         <div className="bg-white rounded-lg shadow-md p-4 mb-5">
           <h2 className="text-base font-medium text-gray-900 mb-3 flex items-center">
             <FileCheck size={18} className="mr-2 text-blue-600" />
@@ -510,14 +565,14 @@ export default function DetalleSolicitud({ props }) {
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleVisualizarConstancia(documento)}
+                      onClick={() => handleVisualizarDocumento(documento)}
                       className="text-blue-600 hover:text-blue-800 p-2 rounded-md hover:bg-blue-50 transition-colors"
                       title="Visualizar documento"
                     >
                       <Eye size={16} />
                     </button>
                     <button 
-                      onClick={() => handleDescargarConstancia(documento)}
+                      onClick={() => handleDescargarDocumento(documento)}
                       className="text-green-600 hover:text-green-800 p-2 rounded-md hover:bg-green-50 transition-colors"
                       title="Descargar documento"
                     >
@@ -531,7 +586,7 @@ export default function DetalleSolicitud({ props }) {
             <div className="text-center py-8 text-gray-500">
               <FileText size={48} className="mx-auto mb-2 text-gray-300" />
               <p>No hay documentos disponibles</p>
-              <p className="text-sm">Los documentos se generarán automáticamente cuando las constancias sean aprobadas</p>
+              <p className="text-sm">Los documentos se generarán automáticamente cuando las constancias o carnets sean aprobados</p>
             </div>
           )}
         </div>

@@ -109,14 +109,44 @@ function getDocumentosRequeridos(detalles) {
 }
 
 function getDocumentosAdjuntos(detalles) {
-  // Combine all document files from different request types
-  return {
-    // Carnet documents
-    ...(detalles.carnet?.archivos || {}),
+  const documentos = {};
+  
+  // Carnet documents
+  if (detalles.carnet?.archivos) {
+    // Map carnet photo specifically
+    if (detalles.carnet.archivos.file_foto) {
+      documentos.file_foto = detalles.carnet.archivos.file_foto;
+    }
     
-    // Especialización documents
-    ...(detalles.especializacion?.archivos || {}),
-      };
+    // Add any other carnet documents
+    Object.entries(detalles.carnet.archivos).forEach(([key, value]) => {
+      if (key !== 'file_foto' && !key.includes('_validate') && !key.includes('_motivo_rechazo')) {
+        documentos[key] = value;
+      }
+    });
+  }
+  
+  // Especialización documents
+  if (detalles.especializacion?.archivos) {
+    Object.entries(detalles.especializacion.archivos).forEach(([key, value]) => {
+      if (!key.includes('_validate') && !key.includes('_motivo_rechazo')) {
+        // Map especialización document names to expected frontend format
+        let mappedKey = key;
+        if (key === 'titulo_especializacion') mappedKey = 'file_titulo_especializacion';
+        else if (key === 'fondo_negro_titulo_especializacion') mappedKey = 'file_fondo_negro_titulo_especializacion';
+        else if (key === 'titulo_odontologo') mappedKey = 'file_titulo_odontologo';
+        else if (key === 'fondo_negro_titulo_odontologo') mappedKey = 'file_fondo_negro_titulo_odontologo';
+        else if (key === 'cedula_ampliada') mappedKey = 'file_cedula_ampliada';
+        else if (key === 'fotos_carnet') mappedKey = 'file_fotos_carnet';
+        else if (key === 'carta_solicitud') mappedKey = 'file_carta_solicitud';
+        else if (key === 'solvencia') mappedKey = 'file_solvencia';
+        
+        documentos[mappedKey] = value;
+      }
+    });
+  }
+  
+  return documentos;
 }
 
 function formatDate(dateString) {

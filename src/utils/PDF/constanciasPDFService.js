@@ -1,14 +1,85 @@
 // Importación dinámica para evitar problemas de SSR
-import pdfMake from 'pdfmake/build/pdfmake';
+let pdfMake;
+let pdfFonts;
 
-import pdfFonts from 'pdfmake/build/vfs_fonts';
+// Fallback con importación estática
+let staticPdfMake;
+let staticPdfFonts;
 
+if (typeof window !== 'undefined') {
+  try {
+    staticPdfMake = require('pdfmake/build/pdfmake');
+    staticPdfFonts = require('pdfmake/build/vfs_fonts');
+  } catch (error) {
+    console.warn('No se pudieron cargar las importaciones estáticas:', error);
+  }
+}
 
 const initializePdfMake = async () => {
-  if (typeof window !== 'undefined' && !pdfMake) {
-    pdfMake.vfs = pdfFonts.default.pdfMake.vfs;
+  if (typeof window !== 'undefined') {
+    try {
+      // Intentar importación dinámica primero
+      if (!pdfMake) {
+        try {
+          const pdfMakeModule = await import('pdfmake/build/pdfmake');
+          pdfMake = pdfMakeModule.default || pdfMakeModule;
+          pdfMake.tableLayouts = contentLayouts;
+        } catch (error) {
+          console.warn('Importación dinámica falló, usando estática:', error);
+          pdfMake = staticPdfMake;
+        }
+      }
+      
+      if (!pdfFonts) {
+        try {
+          const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
+          pdfFonts = pdfFontsModule.default || pdfFontsModule;
+        } catch (error) {
+          console.warn('Importación dinámica de fuentes falló, usando estática:', error);
+          pdfFonts = staticPdfFonts;
+        }
+      }
+      
+      if (!pdfMake) {
+        throw new Error('No se pudo cargar pdfMake con ningún método');
+      }
+      
+      if (!pdfMake.vfs && pdfFonts) {
+        // Manejar diferentes estructuras de importación de fuentes
+        let fonts;
+        if (pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
+          fonts = pdfFonts.pdfMake.vfs;
+        } else if (pdfFonts.default && pdfFonts.default.pdfMake && pdfFonts.default.pdfMake.vfs) {
+          fonts = pdfFonts.default.pdfMake.vfs;
+        } else if (pdfFonts.vfs) {
+          fonts = pdfFonts.vfs;
+        } else {
+          console.warn('Estructura de fuentes no reconocida:', pdfFonts);
+          fonts = pdfFonts;
+        }
+        
+        if (fonts) {
+          pdfMake.vfs = fonts;
+          
+          //Configurar fuentes disponibles
+          pdfMake.fonts = {
+            Roboto: {
+              normal: 'Roboto-Regular.ttf',
+              bold: 'Roboto-Medium.ttf',
+              italics: 'Roboto-Italic.ttf',
+              bolditalics: 'Roboto-MediumItalic.ttf'
+            }
+          };
+        }
+      }
+      
+      return pdfMake;
+    } catch (error) {
+      console.error('Error al inicializar pdfMake:', error);
+      throw new Error('No se pudo inicializar pdfMake');
+    }
   }
-  return pdfMake;
+  return null;
 };
 
 const formatDate = (dateString) => {
@@ -757,7 +828,27 @@ const getCarnetContent = (data) => {
           [{ text: ''}, { text: ''}, { text: ''}, { text: ''}, { text: ''}, { text: ''}]
         ]
       },
-      layout: 'dashedBorderLayout',
+      layout: {
+        hLineWidth: function (i, node) {
+          return (i === 0 || i === node.table.body.length) ? 1 : (i === 3) ? 2 : 0;
+        },
+        vLineWidth: function (i, node) {
+          return (i === 0 || i === node.table.body[0].length) ? 1 : 0;
+        },
+        hLineStyle: function (i, node) {
+          return (i === 0 || i === node.table.body.length) ? { dash: { length: 5, space: 3 } } : null;
+        },
+        vLineStyle: function (i, node) {
+          return (i === 0 || i === node.table.body[0].length) ? { dash: { length: 5, space: 3 } } : null;
+        },
+        hLineColor: function (i, node){
+            return (i === 3) ? '#FFF' : '#000';
+        },
+        paddingLeft: function (i, node) { return (i === 0 || i === node.table.body[0].length-1) ? 1 : (i === 1) ? 1 : 1; },
+        paddingRight: function (i, node) { return (i === 0 || i === node.table.body[0].length-1) ? 1 : (i === 1) ? 1 : 1; },
+        paddingTop: function (i, node) { return (i === 0 || i === node.table.body.length) ? 1 : (i === 4) ? 5 : 1; },
+        paddingBottom: function (i, node) { return (i === 0 || i === node.table.body.length) ? 1 : (i === 4) ? 5 : 1; }
+      },
       margin: [162, 40, 162, 0]
     },
     {
@@ -792,7 +883,31 @@ const getCarnetContent = (data) => {
           },{ text: ''},{ text: '' },{ text: ''}, { text: ''}]
         ]
       },
-      layout: 'dashedBorderLayoutSecond',
+      layout: {
+        hLineWidth: function (i, node) {
+          // Líneas horizontales: 1 para la primera y la última fila, 0 para las internas
+          return (i === 0 || i === node.table.body.length) ? 1 : (i === 3) ? 2 : 0;
+        },
+        vLineWidth: function (i, node) {
+          // Líneas verticales: 1 para la primera y la última columna, 0 para las internas
+          return (i === 0 || i === node.table.body[0].length) ? 1 : 0;
+        },
+        hLineStyle: function (i, node) {
+          // Estilo punteado solo para la primera y la última fila
+          return (i === 0 || i === node.table.body.length) ? { dash: { length: 5, space: 3 } } : null;
+        },
+        vLineStyle: function (i, node) {
+          // Estilo punteado solo para la primera y la última columna
+          return (i === 0 || i === node.table.body[0].length) ? { dash: { length: 5, space: 3 } } : null;
+        },
+        hLineColor: function (i, node){
+            return (i === 3) ? '#FFF' : '#000';
+        },
+        paddingLeft: function (i, node) { return (i === 0 || i === node.table.body[0].length-1) ? 1 : (i === 1) ? 5 : 4; },
+        paddingRight: function (i, node) { return (i === 0 || i === node.table.body[0].length-1) ? 1 : (i === 1) ? 5 : 4; },
+        paddingTop: function (i, node) { return (i === 0) ? 13 : 4; },
+        paddingBottom: function (i, node) { return (i === node.table.body.length-1) ? 13 : 4; }
+    },
       margin: [162, 10, 162, 0]
     }
   ];
@@ -840,6 +955,59 @@ const getFooter = (codigoDocumento) => ({
   },
   layout: 'noBorders',
 });
+
+const carnetLayout = {
+  dashedBorderLayout: {
+      hLineWidth: function (i, node) {
+        // Líneas horizontales: 1 para la primera y la última fila, 0 para las internas
+        return (i === 0 || i === node.table.body.length) ? 1 : (i === 3) ? 2 : 0;
+      },
+      vLineWidth: function (i, node) {
+        // Líneas verticales: 1 para la primera y la última columna, 0 para las internas
+        return (i === 0 || i === node.table.body[0].length) ? 1 : 0;
+      },
+      hLineStyle: function (i, node) {
+        // Estilo punteado solo para la primera y la última fila
+        return (i === 0 || i === node.table.body.length) ? { dash: { length: 5, space: 3 } } : null;
+      },
+      vLineStyle: function (i, node) {
+        // Estilo punteado solo para la primera y la última columna
+        return (i === 0 || i === node.table.body[0].length) ? { dash: { length: 5, space: 3 } } : null;
+      },
+      hLineColor: function (i, node){
+          return (i === 3) ? '#FFF' : '#000';
+      },
+      paddingLeft: function (i, node) { return (i === 0 || i === node.table.body[0].length-1) ? 1 : (i === 1) ? 1 : 1; },
+      paddingRight: function (i, node) { return (i === 0 || i === node.table.body[0].length-1) ? 1 : (i === 1) ? 1 : 1; },
+      paddingTop: function (i, node) { return (i === 0 || i === node.table.body.length) ? 1 : (i === 4) ? 5 : 1; },
+      paddingBottom: function (i, node) { return (i === 0 || i === node.table.body.length) ? 1 : (i === 4) ? 5 : 1; }
+  },
+  dashedBorderLayoutSecond: {
+      hLineWidth: function (i, node) {
+        // Líneas horizontales: 1 para la primera y la última fila, 0 para las internas
+        return (i === 0 || i === node.table.body.length) ? 1 : (i === 3) ? 2 : 0;
+      },
+      vLineWidth: function (i, node) {
+        // Líneas verticales: 1 para la primera y la última columna, 0 para las internas
+        return (i === 0 || i === node.table.body[0].length) ? 1 : 0;
+      },
+      hLineStyle: function (i, node) {
+        // Estilo punteado solo para la primera y la última fila
+        return (i === 0 || i === node.table.body.length) ? { dash: { length: 5, space: 3 } } : null;
+      },
+      vLineStyle: function (i, node) {
+        // Estilo punteado solo para la primera y la última columna
+        return (i === 0 || i === node.table.body[0].length) ? { dash: { length: 5, space: 3 } } : null;
+      },
+      hLineColor: function (i, node){
+          return (i === 3) ? '#FFF' : '#000';
+      },
+      paddingLeft: function (i, node) { return (i === 0 || i === node.table.body[0].length-1) ? 1 : (i === 1) ? 5 : 4; },
+      paddingRight: function (i, node) { return (i === 0 || i === node.table.body[0].length-1) ? 1 : (i === 1) ? 5 : 4; },
+      paddingTop: function (i, node) { return (i === 0) ? 13 : 4; },
+      paddingBottom: function (i, node) { return (i === node.table.body.length-1) ? 13 : 4; }
+  }
+};
 
 export const generateConstanciaPDF = (data, tipoConstancia) => {
   let content = [];
@@ -954,17 +1122,17 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         styles: {
           header: {
             fontSize: 18,
-            fontWeight: 'bold',
+            bold: true,
           }
         },
         defaultStyle: {
-          font: 'Tinos'
+          font: 'Roboto'
         },
         images: {
           escudo: 'http://localhost:3000/escudo.png',
           escudoBW: 'http://localhost:3000/escudo_bw.png',
           escudo_borde: 'http://localhost:3000/escudo_borde.png',
-          carnet_foto: data.foto_url || 'http://localhost:3000/carnet.png'
+          carnet_foto: `${process.env.NEXT_PUBLIC_BACK_HOST}${data.foto_url}` || 'http://localhost:3000/carnet.png'
         },
         patterns: {
           stripe45d: {
@@ -973,7 +1141,7 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
             yStep: 3,
             pattern: "1 w 0 1 m 4 5 l s 2 0 m 5 3 l s",
           },
-        }
+        },
       };
       break;
     default:
@@ -989,9 +1157,10 @@ export const downloadPDF = async (docDefinition, fileName) => {
     if (pdfMakeInstance) {
       pdfMakeInstance.createPdf(docDefinition).download(fileName);
     } else {
-      throw new Error('No se pudo inicializar pdfMake');
+      throw new Error('No se pudo inicializar pdfMake - ejecutándose en servidor');
     }
   } catch (error) {
+    console.error('Error detallado al descargar PDF:', error);
     throw new Error(`Error al descargar PDF: ${error.message}`);
   }
 };
@@ -1001,14 +1170,19 @@ export const openPDF = async (docDefinition) => {
     const pdfMakeInstance = await initializePdfMake();
     if (pdfMakeInstance) {
       return new Promise((resolve, reject) => {
-        pdfMakeInstance.createPdf(docDefinition).getDataUrl((dataUrl) => {
-          resolve(dataUrl);
-        });
+        try {
+          pdfMakeInstance.createPdf(docDefinition).getDataUrl((dataUrl) => {
+            resolve(dataUrl);
+          });
+        } catch (error) {
+          reject(error);
+        }
       });
     } else {
-      throw new Error('No se pudo inicializar pdfMake');
+      throw new Error('No se pudo inicializar pdfMake - ejecutándose en servidor');
     }
   } catch (error) {
+    console.error('Error detallado al generar PDF:', error);
     throw new Error(`Error al generar PDF: ${error.message}`);
   }
 }; 
