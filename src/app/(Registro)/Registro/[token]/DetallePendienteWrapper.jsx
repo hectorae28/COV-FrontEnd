@@ -66,13 +66,13 @@ export default function DetallePendienteWrapper({
                     Token invalido, por favor pida denuevo el token.
                   </p>
                   <div className="w-full flex items-center justify-center">
-                      <Link
-                        href="/Login"
-                        className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white p-4 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors "
-                      >
-                        <span>Regresar a Inicio de Sesion</span>
-                      </Link>
-                    </div>
+                    <Link
+                      href="/Login"
+                      className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white p-4 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors "
+                    >
+                      <span>Regresar a Inicio de Sesion</span>
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             ) : !isSubmited ? (
@@ -103,7 +103,7 @@ export default function DetallePendienteWrapper({
                       Recibira un correo electronico una vez que los
                       administradores hayan revisado su solicitud.
                     </p>
-                    
+
                     <div className="w-full flex items-center justify-center">
                       <Link
                         href="/Login"

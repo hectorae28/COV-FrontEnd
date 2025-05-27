@@ -284,18 +284,6 @@ export function DocumentSection({
 
     setLocalPendienteData(optimisticUpdate);
 
-    // Notificar cambio optimista al componente padre
-    if (onDocumentStatusChange) {
-      onDocumentStatusChange({
-        ...documentoParaSubir,
-        url: tempUrl,
-        archivo: selectedFile.name,
-        status: 'uploading',
-        isOptimistic: true,
-        tempUrl: tempUrl
-      });
-    }
-
     // Cerrar modal inmediatamente para mejor UX
     setDocumentoParaSubir(null);
     setSelectedFile(null);
@@ -316,20 +304,7 @@ export function DocumentSection({
             ...response.data
           }));
 
-          // Notificar actualización real al padre
-          if (onDocumentStatusChange) {
-            onDocumentStatusChange({
-              ...documentoParaSubir,
-              url: realUrl,
-              archivo: selectedFile.name,
-              status: 'pending',
-              isOptimistic: false,
-              fullData: response.data,
-              tempUrl: tempUrl
-            });
-          }
-
-          // Mostrar mensaje de éxito
+          // Mostrar mensaje de éxitoupdatedata
           setUploadSuccess(true);
           setUploadedDocumentName(documentoParaSubir.nombre);
           setTimeout(() => setUploadSuccess(false), 5000);
