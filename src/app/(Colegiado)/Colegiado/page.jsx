@@ -11,6 +11,7 @@ import Cards from "../Cards";
 import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
+import { set } from "date-fns";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
@@ -20,25 +21,32 @@ export default function Home() {
   const [userInfo, setUserInfo] = useState(null);
   const { data: session, status } = useSession();
   const [isSolvent, setIsSolvent] = useState(true); // Estado de solvencia
-  const [solvencyInfo, setSolvencyInfo] = useState(null);
   const [selectedSolicitudType, setSelectedSolicitudType] = useState(null)
   // Datos de solvencia
   const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
   const setCostos = useColegiadoUserStore((state) => state.setCostos);
   const setTasaBcv = useColegiadoUserStore((state) => state.setTasaBcv);
   const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
+  const [canShowTabs, setCanShowTabs] = useState(false);
 
   const checkSolvencyStatus = () => {
     if (!colegiadoUser) return;
 
-    const today = new Date();
-    const [year, month, day] = colegiadoUser?.solvente.split("-").map(Number);
+    const [year, month, day] = colegiadoUser.solvente.split("-").map(Number);
     const solvencyDate = new Date(year, month - 1, day);
 
-    const warningDate = new Date(solvencyDate);
-    warningDate.setDate(warningDate.getDate() - 14);
+    // 2. Figure out how many *whole* days are left (can be negative)
+    const today = new Date();
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+    // difference in milliseconds
+    const diffMs = solvencyDate.getTime() - today.getTime();
+    // convert to days; Math.ceil so that any partial day counts as “1 day left”
+    const diffDays = Math.ceil(diffMs / MS_PER_DAY);
 
-    setShowSolvencyWarning(today >= warningDate);
+    // 3. Your flag: true only if 0 ≤ diffDays ≤ 14
+    const shouldWarn = diffDays >= 0 && diffDays <= 14;
+
+    setShowSolvencyWarning(shouldWarn);
   };
 
   async function fetchCostos() {
@@ -79,18 +87,13 @@ export default function Home() {
       setUserInfo(userData);
       setColegiadoUser(userData);
       setIsSolvent(userData.solvencia_status);
+      setCanShowTabs(!isSolvent && colegiadoUser?.costo_de_solvencia > 0);
 
       // Get costos from the store to calculate solvency amount
       const costos = useColegiadoUserStore.getState().costos;
       const costo = costos?.find(
         (item) => item.tipo_costo_nombre === "Solvencia"
       )?.monto_usd;
-
-      setSolvencyInfo({
-        date: userData.solvente,
-        amount: Number(costo),
-        status: userData.solvencia_status,
-      });
 
       checkSolvencyStatus();
     } catch (error) {
@@ -218,28 +221,27 @@ export default function Home() {
           {/* Pestañas de navegación cuando se necesitan mostrar */}
 
           <div className="flex border-b border-gray-200">
-            {(!isSolvent || showSolvencyWarning) &&
+            {(canShowTabs || showSolvencyWarning) &&
               <button
                 onClick={() => {
                   setActiveTab("solicitudes");
                   setShowSolicitudForm(false);
                 }}
                 className={`px-4 py-2 font-medium text-sm ${activeTab === "solicitudes"
-                    ? "text-[#D7008A] border-b-2 border-[#D7008A]"
-                    : "text-gray-500 hover:text-[#41023B]"
+                  ? "text-[#D7008A] border-b-2 border-[#D7008A]"
+                  : "text-gray-500 hover:text-[#41023B]"
                   }`}
               >
                 Panel Principal
               </button>
             }
 
-
-            {(!isSolvent || showSolvencyWarning) &&
+            {(canShowTabs || showSolvencyWarning) &&
               <button
                 onClick={() => setActiveTab("solvencia")}
                 className={`px-4 py-2 font-medium text-sm ${activeTab === "solvencia"
-                    ? "text-[#D7008A] border-b-2 border-[#D7008A]"
-                    : "text-gray-500 hover:text-[#41023B]"
+                  ? "text-[#D7008A] border-b-2 border-[#D7008A]"
+                  : "text-gray-500 hover:text-[#41023B]"
                   }`}
               >
                 Pago de Solvencia
