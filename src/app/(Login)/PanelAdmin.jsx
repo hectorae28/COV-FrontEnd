@@ -86,8 +86,8 @@ export default function PanelAdmin({ onClose, isClosing }) {
         <div className="absolute -bottom-40 -right-20 w-[30rem] h-[30rem] rounded-full bg-gradient-to-tl from-[#41023B]/10 to-[#D7008A]/5 blur-3xl"></div>
       </div>
 
-      {/* Gradient Chevron button - no background, pointing left */}
-      <div className="absolute top-6 right-6 lg:top-1/2 lg:right-10 lg:transform lg:-translate-y-1/2 lg:translate-x-1/2 z-50">
+      {/* Boton de Cierre */}
+      {/* <div className="absolute top-6 right-6 lg:top-1/2 lg:right-10 lg:transform lg:-translate-y-1/2 lg:translate-x-1/2 z-50">
         <motion.button
           onClick={onClose}
           className="cursor-pointer"
@@ -119,7 +119,7 @@ export default function PanelAdmin({ onClose, isClosing }) {
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </motion.button>
-      </div>
+      </div> */}
 
       <div className="relative z-10 h-full flex flex-col justify-center px-6 md:px-12 lg:px-20">
         <div className="max-w-md mx-auto w-full">

@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from 'next/link';
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Colegiados from "../Colegiados";
 import PanelAdmin from "../PanelAdmin";
@@ -17,7 +17,9 @@ export default function LoginScreen() {
   const [isClosing, setIsClosing] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
+  
   const authRouter = {
     Colegiados: "/Colegiado",
     Personal_Administrativo: "/PanelControl",
@@ -31,6 +33,19 @@ export default function LoginScreen() {
     youtube: "https://www.youtube.com/@elcovorg",
     twitter: "https://x.com/elcovorg"
   };
+
+  // Effect to handle direct access to colegiados section
+  useEffect(() => {
+    const directParam = searchParams.get("direct");
+    if (directParam === "colegiados" && status !== "loading") {
+      // Only show colegiados directly if user is not already authenticated
+      if (status !== "authenticated") {
+        setDirection("right");
+        setShowLogin(true);
+        setIsClosing(false);
+      }
+    }
+  }, [searchParams, status]);
 
   // Corregido para manejar adecuadamente la sesión y la redirección
   useEffect(() => {
@@ -59,6 +74,8 @@ export default function LoginScreen() {
     setTimeout(() => {
       setShowLogin(false);
       setIsClosing(false);
+      // Clean the URL parameter when closing
+      router.replace("/Login");
     }, 10);
   };
 
@@ -231,12 +248,12 @@ export default function LoginScreen() {
                 >
                   {/* Redes Sociales con orden actualizado */}
                   <div className="flex justify-center items-center space-x-4 sm:space-x-6 mb-2 sm:mb-4 ">
-                    <a
+                    
                       href={socialLinks.whatsapp}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    >
+                    <a>
                       <Image
                         src="/assets/icons/whatsapp.png"
                         alt="WhatsApp"
@@ -244,12 +261,12 @@ export default function LoginScreen() {
                         height={20}
                       />
                     </a>
-                    <a
+                    
                       href={socialLinks.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    >
+                    <a>
                       <Image
                         src="/assets/icons/instagram.png"
                         alt="Instagram"
@@ -257,12 +274,12 @@ export default function LoginScreen() {
                         height={20}
                       />
                     </a>
-                    <a
+                    
                       href={socialLinks.facebook}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    >
+                    <a>
                       <Image
                         src="/assets/icons/facebook.png"
                         alt="Facebook"
@@ -270,12 +287,12 @@ export default function LoginScreen() {
                         height={20}
                       />
                     </a>
-                    <a
+                    
                       href={socialLinks.youtube}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    >
+                    <a>
                       <Image
                         src="/assets/icons/youtube.png"
                         alt="Youtube"
@@ -283,12 +300,12 @@ export default function LoginScreen() {
                         height={20}
                       />
                     </a>
-                    <a
+                    
                       href={socialLinks.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-40 transition-opacity"
-                    >
+                    <a>
                       <Image
                         src="/assets/icons/twitter.png"
                         alt="Twitter"

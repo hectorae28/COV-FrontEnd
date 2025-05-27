@@ -1,12 +1,11 @@
 "use client";
 
+import InfoLaboralWithDireccionForm from "@/app/(Registro)/InfoLabWithDireccionForm";
 import { motion } from "framer-motion";
 import { Briefcase, MapPin, Pencil, Phone } from "lucide-react";
 import { useState } from "react";
-import InfoLaboralWithDireccionForm from "@/app/(Registro)/InfoLabWithDireccionForm"
 
 import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
-import InfoLaboral from "@/app/(Registro)/InfoLab";
 import VerificationSwitch from "../VerificationSwitch";
 
 export default function InstitutionsSection({
@@ -75,7 +74,7 @@ export default function InstitutionsSection({
         NameEstado: inst.direccion.estado_nombre || "",
         selectedMunicipio: inst.direccion.municipio || "",
         NameMunicipio: inst.direccion.municipio_nombre || "",
-        verification_status: inst.verification_status || false,
+        verification_status: inst.verification_status || undefined,
         rejection_reason: inst.rejection_reason || ''
       }))
       : [];
@@ -125,7 +124,7 @@ export default function InstitutionsSection({
         cargo: reg.cargo,
         selectedEstado: reg.selectedEstado,
         selectedMunicipio: reg.selectedMunicipio,
-        verificado: reg.verification_status || false,
+        verificado: reg.verification_status || undefined,
         motivo_rechazo: reg.rejection_reason || ''
       }));
 

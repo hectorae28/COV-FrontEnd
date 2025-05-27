@@ -283,41 +283,6 @@ export default function DetalleInfo({
     }
   };
 
-  // Función para cargar datos del comprobante
-  const loadComprobanteData = useCallback((pendienteData) => {
-    const comprobanteUrl = pendienteData.comprobante_url ||
-      pendienteData.comprobante ||
-      pendienteData.pago?.comprobante_url ||
-      pendienteData.pago?.comprobante;
-
-    const tieneComprobante = comprobanteUrl ||
-      pendienteData.comprobante_pago_url ||
-      pendienteData.file_comprobante_url ||
-      (pendienteData.pago && pendienteData.pago.comprobante);
-
-    if (tieneComprobante) {
-      const url = comprobanteUrl ||
-        pendienteData.comprobante_pago_url ||
-        pendienteData.file_comprobante_url ||
-        pendienteData.pago?.comprobante;
-
-      const comprobanteInfo = {
-        id: "comprobante_pago",
-        nombre: "Comprobante de pago",
-        archivo: typeof url === "string" ? url.split("/").pop() : "comprobante_pago.pdf",
-        url: url,
-        status: pendienteData.comprobante_validate === null ? "pending" :
-          pendienteData.comprobante_validate === true ? "approved" :
-            pendienteData.comprobante_validate === false ? "rechazado" : "pending",
-        rejectionReason: pendienteData.comprobante_motivo_rechazo || "",
-      };
-
-      setComprobanteData(comprobanteInfo);
-    } else {
-      setComprobanteData(null);
-    }
-  }, []);
-
   // Función para cargar datos
   const loadData = async () => {
     try {

@@ -58,7 +58,7 @@ export default function Colegiados({ onClose, isClosing }) {
       className="absolute top-0 bottom-0 right-0 w-full lg:w-[45%] bg-gradient-to-br from-white to-gray-300 rounded-l-[50px] shadow-2xl overflow-hidden"
     >
       {/* Botón de cierre */}
-      <div className="absolute top-6 left-6 lg:top-1/2 lg:left-10 lg:transform lg:-translate-y-1/2 lg:-translate-x-1/2 z-50">
+      {/* <div className="absolute top-6 left-6 lg:top-1/2 lg:left-10 lg:transform lg:-translate-y-1/2 lg:-translate-x-1/2 z-50">
         <motion.button
           onClick={onClose}
           className="cursor-pointer"
@@ -91,7 +91,7 @@ export default function Colegiados({ onClose, isClosing }) {
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </motion.button>
-      </div>
+      </div> */}
       <div className="relative z-10 h-full flex flex-col justify-center px-6 md:px-12 lg:px-20">
         <div className="max-w-lg mx-auto w-full">
           {/* Logo */}

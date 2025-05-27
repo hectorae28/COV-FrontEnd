@@ -126,10 +126,10 @@ export default function AppBar() {
 
   // New function for handling login navigation with loading state
   const navigateToLogin = () => {
-    setIsLoading(true);
-    // Navigate to login page
-    router.push("/Login");
-  };
+  setIsLoading(true);
+  // Navigate to login page with direct colegiados parameter
+  router.push("/Login?direct=colegiados");
+};
 
   const handleBridgeHover = (index) => {
     setOpenMenu(index);
