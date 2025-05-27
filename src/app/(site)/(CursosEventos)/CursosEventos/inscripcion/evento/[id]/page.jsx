@@ -1,10 +1,10 @@
 "use client";
 import { fetchEventosCursos } from "@/api/endpoints/landingPage";
+import EventCard from "@/app/(site)/(CursosEventos)/CursosEventos/EventCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Filter, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import EventCard from "./EventCard";
 
 export default function Eventos() {
   const [visibleEvents, setVisibleEvents] = useState([]);

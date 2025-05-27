@@ -4,7 +4,7 @@ import PagosColg from "@/app/Components/PagosModal";
 import { Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import useColegiadoUserStore from "@/store/colegiadoUserStore";
-import { pagoSolvencia } from "@/api/endpoints/solicitud";
+import { pagoSolvencia, pagoSolvenciaEspecial } from "@/api/endpoints/solicitud";
 import { fetchMe } from "@/api/endpoints/colegiado";
 
 export default function SolvenciaPago({ props }) {
@@ -25,7 +25,8 @@ export default function SolvenciaPago({ props }) {
 
   const handlePagoSolvencia = async (detallesPagoSolvencia) => {
     try {
-      const pagoResult = await pagoSolvencia(detallesPagoSolvencia);
+      const pagoResult = colegiadoUser.requiere_solvencia_esp ?
+          await pagoSolvenciaEspecial(detallesPagoSolvencia) : await pagoSolvencia(detallesPagoSolvencia);
       const colegiadoResult = await fetchMe();
       setColegiadoUser(colegiadoResult.data);
       setActiveTab("solicitudes");

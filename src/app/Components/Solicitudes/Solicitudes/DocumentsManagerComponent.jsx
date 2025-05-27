@@ -1,6 +1,6 @@
 "use client"
 
-import DocumentVerificationSwitch from "@/app/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentVerificationSwitch";
+import VerificationSwitch from "@/app/Components/Solicitudes/ListaColegiados/VerificationSwitch";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import { motion } from "framer-motion";
 import { AlertCircle, Eye, FileText, RefreshCcw, Upload, X } from "lucide-react";
@@ -16,7 +16,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
     // Función para limpiar los documentosAdjuntos quitando las keys numéricas
     const limpiarDocumentosAdjuntos = (documentosAdjuntos) => {
         if (!documentosAdjuntos) return {};
-        
+
         return Object.fromEntries(
             Object.entries(documentosAdjuntos).filter(([key]) => isNaN(key) || key.includes('_'))
         );
@@ -41,7 +41,6 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
     // Función para buscar el campo backend de manera más flexible
     const buscarCampoBackend = (docNombre) => {
         const docNombreNormalizado = docNombre.toLowerCase();
-        
         // Primero buscar coincidencia exacta
         if (documentosMapping[docNombreNormalizado]) {
             return documentosMapping[docNombreNormalizado];
@@ -143,7 +142,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                 });
             }
         }
-        
+
         // Determine status based on validation field
         let status = 'pending';
         if (validateField === true) {
@@ -151,14 +150,14 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
         } else if (validateField === false) {
             status = 'rechazado';
         }
-        
+
         return {
             id: campoBackend || `doc-${index}`,
             nombre: docNombre,
             descripcion: "Documento requerido para la solicitud",
             requerido: true,
-            url: campoBackend && documentosAdjuntosLimpios[campoBackend] 
-                ? documentosAdjuntosLimpios[campoBackend] 
+            url: campoBackend && documentosAdjuntosLimpios[campoBackend]
+                ? documentosAdjuntosLimpios[campoBackend]
                 : null,
             status: status,
             rejectionReason: motivoRechazoField || '',
@@ -262,7 +261,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                 onVerDocumento(documento.url)
             }
         }
-        
+
         return (
             <div
                 className={`border rounded-lg ${tieneArchivo ? "border-gray-200 hover:border-[#C40180]" : "border-red-200 bg-red-50"
@@ -296,11 +295,11 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                             )}
                             {tieneArchivo && (
                                 <div className="mt-3">
-                                    <DocumentVerificationSwitch
-                                    documento={documento}
-                                    onChange={onDocumentStatusChange}
-                                    readOnly={isReadOnly}
-                                    isColegiado={!isAdmin}
+
+                                    <VerificationSwitch
+                                        item={documento}
+                                        onChange={onDocumentStatusChange}
+                                        readOnly={isReadOnly}
                                     />
                                 </div>
                             )}

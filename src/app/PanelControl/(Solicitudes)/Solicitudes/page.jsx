@@ -20,7 +20,7 @@ import {useSolicitudesStore} from "@/store/SolicitudesStore.jsx"
 import useColegiadoUserStore from "@/store/colegiadoUserStore"
 import transformBackendData from "@/utils/formatDataSolicitudes";
 import {useRouter} from "next/navigation"
-export default function ListaSolicitudes({props}) {
+export default function ListaSolicitudes({ params }) {
   // Force isAdmin to be true for PanelControl
   const isAdmin = props ? props.isAdmin : true;
   

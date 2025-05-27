@@ -18,7 +18,6 @@ const ListaSolicitudesColegiado = () => {
     }
     setColegiadoUser(colegiadoId)
   }, [colegiadoId])
-  console.log({colegiadoId})
   return (
     <>
         <ListaSolicitudes props={{isAdmin:false,colegiadoId:colegiadoId}} />

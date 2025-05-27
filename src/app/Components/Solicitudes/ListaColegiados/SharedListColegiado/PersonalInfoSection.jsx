@@ -30,8 +30,8 @@ export default function PersonalInfoSection({
   const getInitialFormData = () => {
     return {
       documentType: datosPersonales?.nacionalidad === "extranjera" ? "pasaporte" : "cedula",
-      identityCard: datosPersonales?.identificacion?.substring(0, 1) || "",
-      idType: datosPersonales?.identificacion?.substring(1) || "V",
+      identityCard: datosPersonales?.identificacion?.substring(1) || "",
+      idType: datosPersonales?.identificacion?.substring(0, 1) || "V",
       firstName: datosPersonales?.nombre || "",
       secondName: datosPersonales?.segundo_nombre || "",
       firstLastName: datosPersonales?.primer_apellido || "",
@@ -67,7 +67,7 @@ export default function PersonalInfoSection({
       nacionalidad: dataToUpdate.documentType === "pasaporte" ? "extranjera" : "venezolana",
       identificacion: dataToUpdate.documentType === "pasaporte"
         ? dataToUpdate.identityCard
-        : `${dataToUpdate.idType}-${dataToUpdate.identityCard}`,
+        : `${dataToUpdate.idType}${dataToUpdate.identityCard}`,
       fecha_de_nacimiento: dataToUpdate.birthDate,
       genero: dataToUpdate.gender,
       estado_civil: dataToUpdate.maritalStatus
@@ -166,23 +166,23 @@ export default function PersonalInfoSection({
         {/* Segunda fila - Nombres */}
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer nombre</p>
-          <p className="font-medium text-gray-800">{tempFormData?.firstName || datosPersonales?.nombre || "No especificado"}</p>
+          <p className="font-medium text-gray-800">{tempFormData?.firstName || datosPersonales?.nombre || ""}</p>
         </div>
 
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo nombre</p>
-          <p className="font-medium text-gray-800">{tempFormData?.secondName || datosPersonales?.segundo_nombre || "No especificado"}</p>
+          <p className="font-medium text-gray-800">{tempFormData?.secondName || datosPersonales?.segundo_nombre || ""}</p>
         </div>
 
         {/* Tercera fila - Apellidos */}
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Primer apellido</p>
-          <p className="font-medium text-gray-800">{tempFormData?.firstLastName || datosPersonales?.primer_apellido || "No especificado"}</p>
+          <p className="font-medium text-gray-800">{tempFormData?.firstLastName || datosPersonales?.primer_apellido || ""}</p>
         </div>
 
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Segundo apellido</p>
-          <p className="font-medium text-gray-800">{tempFormData?.secondLastName || datosPersonales?.segundo_apellido || "No especificado"}</p>
+          <p className="font-medium text-gray-800">{tempFormData?.secondLastName || datosPersonales?.segundo_apellido || ""}</p>
         </div>
       </div>
 

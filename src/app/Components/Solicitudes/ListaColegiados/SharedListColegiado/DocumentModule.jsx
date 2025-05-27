@@ -2,16 +2,16 @@ import DocsRequirements from "@/app/(Registro)/DocsRequirements";
 import Modal from "@/app/Components/Solicitudes/ListaColegiados/Modal";
 import { motion } from "framer-motion";
 import {
-    AlertCircle,
-    Briefcase,
-    CheckCircle,
-    FileText,
-    Pencil,
-    RefreshCcw,
-    Upload, X
+  AlertCircle,
+  Briefcase,
+  CheckCircle,
+  FileText,
+  Pencil,
+  RefreshCcw,
+  Upload, X
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import DocumentVerificationSwitch from "./DocumentVerificationSwitch";
+import VerificationSwitch from "../VerificationSwitch";
 
 // Componente principal de gestión de documentos
 export function DocumentSection({
@@ -21,13 +21,148 @@ export function DocumentSection({
   onDocumentStatusChange,
   readonly = false,
   filter = doc => !doc.id?.includes('comprobante_pago'),
-  isColegiado=false,
+  isColegiado = false,
+  pendienteData = null
 }) {
-  // Asegúrate de que documentos sea siempre un array antes de filtrar
-  const docs = Array.isArray(documentos) ? documentos : [];
+  // Estados para el modal de edición de documentos
+  const [showModal, setShowModal] = useState(false);
+  const [localFormData, setLocalFormData] = useState(null);
+  const [documentoParaSubir, setDocumentoParaSubir] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadedDocumentName, setUploadedDocumentName] = useState("");
 
-  // Normalizamos los documentos para garantizar una estructura consistente
-  const normalizedDocs = docs.map(doc => ({
+  // Función para cargar documentos de pendientes DENTRO de DocumentModule
+  const loadPendienteDocuments = useCallback((pendienteData) => {
+    if (!pendienteData) return [];
+
+    const documentosMetadata = {
+      file_ci: { nombre: "Cédula de identidad", descripcion: "Copia escaneada por ambos lados", requerido: true },
+      file_rif: { nombre: "RIF", descripcion: "Registro de Información Fiscal", requerido: true },
+      file_fondo_negro: { nombre: "Título universitario fondo negro", descripcion: "Título de Odontólogo con fondo negro", requerido: true },
+      file_mpps: { nombre: "Registro MPPS", descripcion: "Registro del Ministerio del Poder Popular para la Salud", requerido: true },
+      fondo_negro_credencial: { nombre: "Credencial fondo negro", descripcion: "Credencial profesional con fondo negro", requerido: (tipo) => tipo !== "odontologo" },
+      notas_curso: { nombre: "Notas del curso", descripcion: "Certificado de notas académicas", requerido: (tipo) => tipo !== "odontologo" },
+      fondo_negro_titulo_bachiller: { nombre: "Título bachiller fondo negro", descripcion: "Título de bachiller con fondo negro", requerido: (tipo) => tipo !== "odontologo" }
+    };
+
+    const obtenerNombreArchivo = (url) => {
+      if (!url) return "";
+      const partes = url.split('/');
+      return partes[partes.length - 1];
+    };
+
+    // Obtener el tipo de profesión
+    const tipoProfesion = pendienteData.tipo_profesion || 'odontologo';
+    console.log("Tipo de profesión detectado:", tipoProfesion);
+
+    // Definir qué documentos mostrar según el tipo de profesión
+    const documentosParaMostrar = tipoProfesion === 'odontologo'
+      ? ['file_ci', 'file_rif', 'file_fondo_negro', 'file_mpps']
+      : ['file_ci', 'file_rif', 'file_fondo_negro', 'file_mpps', 'fondo_negro_credencial', 'notas_curso', 'fondo_negro_titulo_bachiller'];
+
+    console.log("Documentos para mostrar:", documentosParaMostrar);
+
+    const todosLosDocumentos = [
+      {
+        id: "file_ci",
+        nombre: documentosMetadata.file_ci.nombre,
+        descripcion: documentosMetadata.file_ci.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.file_ci_url),
+        requerido: documentosMetadata.file_ci.requerido,
+        url: pendienteData.file_ci_url,
+        status: pendienteData.file_ci_validate === null ? 'pending' : pendienteData.file_ci_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.file_ci_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.file_ci_motivo_rechazo || ''
+      },
+      {
+        id: "file_rif",
+        nombre: documentosMetadata.file_rif.nombre,
+        descripcion: documentosMetadata.file_rif.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.file_rif_url),
+        requerido: documentosMetadata.file_rif.requerido,
+        url: pendienteData.file_rif_url,
+        status: pendienteData.file_rif_validate === null ? 'pending' : pendienteData.file_rif_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.file_rif_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.file_rif_motivo_rechazo || ''
+      },
+      {
+        id: "file_fondo_negro",
+        nombre: documentosMetadata.file_fondo_negro.nombre,
+        descripcion: documentosMetadata.file_fondo_negro.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.file_fondo_negro_url),
+        requerido: documentosMetadata.file_fondo_negro.requerido,
+        url: pendienteData.file_fondo_negro_url,
+        status: pendienteData.file_fondo_negro_validate === null ? 'pending' : pendienteData.file_fondo_negro_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.file_fondo_negro_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.file_fondo_negro_motivo_rechazo || ''
+      },
+      {
+        id: "file_mpps",
+        nombre: documentosMetadata.file_mpps.nombre,
+        descripcion: documentosMetadata.file_mpps.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.file_mpps_url),
+        requerido: documentosMetadata.file_mpps.requerido,
+        url: pendienteData.file_mpps_url,
+        status: pendienteData.file_mpps_validate === null ? 'pending' : pendienteData.file_mpps_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.file_mpps_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.file_mpps_motivo_rechazo || ''
+      },
+      // Documentos adicionales para técnicos e higienistas
+      {
+        id: "fondo_negro_credencial",
+        nombre: documentosMetadata.fondo_negro_credencial.nombre,
+        descripcion: documentosMetadata.fondo_negro_credencial.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.fondo_negro_credencial_url),
+        requerido: documentosMetadata.fondo_negro_credencial.requerido(tipoProfesion),
+        url: pendienteData.fondo_negro_credencial_url,
+        status: pendienteData.fondo_negro_credencial_validate === null ? 'pending' : pendienteData.fondo_negro_credencial_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.fondo_negro_credencial_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.fondo_negro_credencial_motivo_rechazo || ''
+      },
+      {
+        id: "notas_curso",
+        nombre: documentosMetadata.notas_curso.nombre,
+        descripcion: documentosMetadata.notas_curso.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.notas_curso_url),
+        requerido: documentosMetadata.notas_curso.requerido(tipoProfesion),
+        url: pendienteData.notas_curso_url,
+        status: pendienteData.notas_curso_validate === null ? 'pending' : pendienteData.notas_curso_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.notas_curso_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.notas_curso_motivo_rechazo || ''
+      },
+      {
+        id: "fondo_negro_titulo_bachiller",
+        nombre: documentosMetadata.fondo_negro_titulo_bachiller.nombre,
+        descripcion: documentosMetadata.fondo_negro_titulo_bachiller.descripcion,
+        archivo: obtenerNombreArchivo(pendienteData.fondo_negro_titulo_bachiller_url),
+        requerido: documentosMetadata.fondo_negro_titulo_bachiller.requerido(tipoProfesion),
+        url: pendienteData.fondo_negro_titulo_bachiller_url,
+        status: pendienteData.fondo_negro_titulo_bachiller_validate === null ? 'pending' : pendienteData.fondo_negro_titulo_bachiller_validate ? 'approved' : 'rechazado',
+        isReadOnly: pendienteData.fondo_negro_titulo_bachiller_status === 'approved' && pendienteData.status === 'rechazado',
+        rejectionReason: pendienteData.fondo_negro_titulo_bachiller_motivo_rechazo || ''
+      }
+    ];
+
+    // Filtrar solo los documentos que deben mostrarse para este tipo de profesión
+    const documentosFiltrados = todosLosDocumentos.filter(doc =>
+      documentosParaMostrar.includes(doc.id) && (doc.url || doc.requerido)
+    );
+
+    console.log("Documentos filtrados:", documentosFiltrados);
+    return documentosFiltrados;
+  }, []);
+
+  // Determinar qué documentos usar
+  const documentosToUse = pendienteData
+    ? loadPendienteDocuments(pendienteData).filter(filter)
+    : (Array.isArray(documentos) ? documentos : []).filter(filter);
+
+  // Normalizar documentos para garantizar una estructura consistente
+  const normalizedDocs = documentosToUse.map(doc => ({
     id: doc.id || doc.nombre?.toLowerCase().replace(/\s+/g, '_') || `doc-${Math.random()}`,
     nombre: doc.nombre || "Documento",
     descripcion: doc.descripcion || "Sin descripción",
@@ -40,20 +175,6 @@ export function DocumentSection({
     rejectionReason: doc.rejectionReason || ''
   }));
 
-  // Ahora es seguro usar filter
-  const documentosFiltrados = normalizedDocs.filter(filter);
-  const [documentoParaSubir, setDocumentoParaSubir] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState("");
-  const fileInputRef = useRef(null);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploadedDocumentName, setUploadedDocumentName] = useState("");
-
-  // Estados para el modal de edición de documentos
-  const [showModal, setShowModal] = useState(false);
-  const [localFormData, setLocalFormData] = useState(null);
-
   // Manejadores de eventos
   const handleReemplazarDocumento = useCallback((documento) => {
     setDocumentoParaSubir(documento);
@@ -65,8 +186,7 @@ export function DocumentSection({
   const mapDocumentosToDocsRequirements = useCallback(() => {
     const mappedFiles = {};
 
-    documentosFiltrados.forEach(doc => {
-      // Mapear cada documento a la estructura esperada por DocsRequirements
+    normalizedDocs.forEach(doc => {
       let fileKey;
 
       switch (doc.id) {
@@ -101,14 +221,12 @@ export function DocumentSection({
           fileKey = doc.id;
       }
 
-      // Crear un objeto File simulado si hay URL
       if (doc.url) {
         mappedFiles[fileKey] = {
           name: doc.archivo || "Archivo existente",
           size: 0,
           type: doc.url.endsWith('pdf') ? 'application/pdf' : 'image/jpeg',
           lastModified: Date.now(),
-          // Marcar como archivo existente
           isExisting: true,
           url: doc.url
         };
@@ -117,13 +235,11 @@ export function DocumentSection({
 
     return {
       ...mappedFiles,
-      // Agregar campos adicionales que DocsRequirements podría necesitar
-      tipo_profesion: "odontologo", // Valor por defecto, actualizar si tienes el tipo real
+      tipo_profesion: pendienteData?.tipo_profesion || "odontologo",
       documentos_aprobados: false
     };
-  }, [documentosFiltrados]);
+  }, [normalizedDocs, pendienteData]);
 
-  // Inicializar datos locales cuando se abre el modal
   const handleOpenModal = () => {
     const docsData = mapDocumentosToDocsRequirements();
     setLocalFormData(docsData);
@@ -134,9 +250,8 @@ export function DocumentSection({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validar archivo
     const validTypes = ["application/pdf", "image/jpeg", "image/png"];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
 
     if (!validTypes.includes(file.type)) {
       setError("Tipo de archivo no válido. Por favor suba un archivo PDF, JPG o PNG.");
@@ -166,7 +281,6 @@ export function DocumentSection({
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
 
-      // Validar archivo
       const validTypes = ["application/pdf", "image/jpeg", "image/png"];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -195,29 +309,19 @@ export function DocumentSection({
     setError("")
 
     try {
-      const uploadedFileUrl = URL.createObjectURL(selectedFile)
       if (updateDocumento) {
         const Form = new FormData();
         Form.append(`${documentoParaSubir.id}`, selectedFile)
 
-        // Check if this is a payment receipt
-        const isPaymentReceipt =
-          documentoParaSubir.id.includes("comprobante_pago") ||
-          documentoParaSubir.nombre.toLowerCase().includes("comprobante")
-
-        // Update the document
         updateDocumento(Form)
       }
 
-      // Cerrar modal después de subir
       setDocumentoParaSubir(null)
       setSelectedFile(null)
 
-      // Mostrar mensaje de éxito
       setUploadSuccess(true);
       setUploadedDocumentName(documentoParaSubir.nombre);
 
-      // Ocultar mensaje después de 5 segundos
       setTimeout(() => {
         setUploadSuccess(false);
       }, 5000);
@@ -230,27 +334,20 @@ export function DocumentSection({
     }
   }
 
-  // Manejador para guardar cambios desde DocsRequirements
   const handleSaveChanges = (updates) => {
     if (!updates) return;
 
-    // Cerrar el modal primero
     setShowModal(false);
     setLocalFormData(null);
 
-    // Procesar cada archivo actualizado en DocsRequirements
     Object.entries(updates).forEach(([key, file]) => {
-      // Solo procesar si es un archivo y tiene propiedades de File
       if (file && (file instanceof File || (typeof file === 'object' && file.name && !file.isExisting))) {
-        // Buscar el documento correspondiente
         const docId = key;
         if (docId) {
-          // Crear FormData para este documento específico
           const Form = new FormData();
           Form.append(docId, file);
 
           if (updateDocumento) {
-            // Actualizar el documento en el backend
             updateDocumento(Form);
           }
         }
@@ -258,7 +355,6 @@ export function DocumentSection({
     });
   };
 
-  // Función para manejar cambios en el formulario de documentos
   const handleDocsInputChange = (changes) => {
     setLocalFormData(prev => ({
       ...prev,
@@ -318,8 +414,8 @@ export function DocumentSection({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {documentosFiltrados.length > 0 ? (
-          documentosFiltrados.map((documento) => (
+        {normalizedDocs.length > 0 ? (
+          normalizedDocs.map((documento) => (
             <DocumentCard
               key={documento.id}
               documento={documento}
@@ -457,8 +553,8 @@ export function DocumentSection({
   );
 }
 
-// Componente de tarjeta individual de documento
-function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiado=false }) {
+// Componente de tarjeta individual
+function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiado = false }) {
   const tieneArchivo = documento.url !== null;
   const isExonerado = documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isReadOnly = documento.status === 'approved' && documento.isReadOnly;
@@ -469,9 +565,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
     }
   };
 
-  // Función para manejar el click en la card
   const handleCardClick = (e) => {
-    // Verificar si el click fue en un botón de acción o en el switch de verificación
     const isActionButton = e.target.closest('.action-button') ||
       e.target.closest('.document-verification-switch');
 
@@ -518,7 +612,6 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
               </div>
             </div>
 
-            {/* Mensaje cuando no hay archivo */}
             {!tieneArchivo && !isExonerado && (
               <div className="mt-2 flex items-start bg-red-100 p-2 rounded text-xs text-red-600">
                 <AlertCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
@@ -529,7 +622,6 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
               </div>
             )}
 
-            {/* Mensaje cuando es exonerado */}
             {isExonerado && (
               <div className="mt-2 flex items-start bg-green-100 p-2 rounded text-xs text-green-600">
                 <CheckCircle size={14} className="mr-1 flex-shrink-0 mt-0.5" />
@@ -537,23 +629,19 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
               </div>
             )}
 
-            {/* Switch de verificación si tiene archivo */}
             {tieneArchivo && (
               <div className="document-verification-switch">
-                <DocumentVerificationSwitch
-                  documento={documento}
-                  onChange={handleStatusChange}
-                  readOnly={isReadOnly}
-                  isColegiado={isColegiado}
+                <VerificationSwitch
+                  item={documento}
+                  onChange={onStatusChange}
+                  type="documento"
+                  readOnly={documento.isReadOnly}
                 />
               </div>
             )}
           </div>
 
-          {/* Botones de acción */}
           <div className="flex items-center space-x-2 action-button text-[10px] text-gray-400">
-
-            {/* Botón de reemplazo/subida */}
             {(!isReadOnly && !isExonerado && documento.status !== 'approved') && (
               <button
                 onClick={(e) => {
@@ -576,7 +664,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
   );
 }
 
-// Función helper para normalizar documentos
+// funciones helper
 export function mapDocumentsForSection(documentos = []) {
   if (!Array.isArray(documentos)) return [];
 
@@ -595,7 +683,6 @@ export function mapDocumentsForSection(documentos = []) {
 }
 
 // Modal para visualizar documentos
-// Modal para visualizar documentos con zoom
 export function DocumentViewer({ documento, onClose, isAPDF }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -916,18 +1003,19 @@ export function DocumentViewer({ documento, onClose, isAPDF }) {
               <FileText size={64} className="text-gray-400 mx-auto mb-4" />
               <p className="text-lg mb-2">Vista previa no disponible</p>
 
-              href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A0016A] transition-colors"
 
-              <svg width="16" height="16" className="mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7,10 12,15 17,10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Descargar archivo
-
+              <a href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A0016A] transition-colors"
+              >
+                <svg width="16" height="16" className="mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7,10 12,15 17,10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Descargar archivo
+              </a>
             </div>
             ) :  (
             <div className="text-center text-gray-500">
