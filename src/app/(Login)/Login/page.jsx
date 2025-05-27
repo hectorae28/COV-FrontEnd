@@ -17,7 +17,6 @@ export default function LoginScreen() {
   const [isClosing, setIsClosing] = useState(false);
 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   
   const authRouter = {
@@ -34,18 +33,7 @@ export default function LoginScreen() {
     twitter: "https://x.com/elcovorg"
   };
 
-  // Effect to handle direct access to colegiados section
-  useEffect(() => {
-    const directParam = searchParams.get("direct");
-    if (directParam === "colegiados" && status !== "loading") {
-      // Only show colegiados directly if user is not already authenticated
-      if (status !== "authenticated") {
-        setDirection("right");
-        setShowLogin(true);
-        setIsClosing(false);
-      }
-    }
-  }, [searchParams, status]);
+
 
   // Corregido para manejar adecuadamente la sesión y la redirección
   useEffect(() => {

@@ -20,7 +20,7 @@ const ListaSolicitudesColegiado = () => {
   }, [colegiadoId])
   return (
     <>
-        <ListaSolicitudes props={{isAdmin:false,colegiadoId:colegiadoId}} />
+        <ListaSolicitudes />
     </>
   )
 }

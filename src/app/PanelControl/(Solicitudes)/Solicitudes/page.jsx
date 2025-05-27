@@ -24,7 +24,7 @@ import {useRouter} from "next/navigation"
 export default function ListaSolicitudes() {
   // Force isAdmin to be true for PanelControl
   const pathname = usePathname()
-  const isAdmin = pathname.includes('/PanelControl') ? true : (props?.isAdmin ?? false)
+  const isAdmin = pathname.includes('/PanelControl')
   const setColegiadoUser = useColegiadoUserStore( state => state.setColegiadoUser);
   const colegiadoId = useColegiadoUserStore( state => state.colegiadoUser);
   if(!isAdmin){

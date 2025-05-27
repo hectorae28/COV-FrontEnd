@@ -1,83 +1,86 @@
-// Agregar al archivo src/app/Models/PanelControl/Solicitudes/SolicitudesData.jsx
+// src/app/Models/PanelControl/Solicitudes/SolicitudesData.jsx
 
 import { create } from "zustand";
 import { fetchSolicitudes } from "@/api/endpoints/solicitud";
 import { postDataSolicitud, patchDataSolicitud } from "@/api/endpoints/solicitud";
 
 export const TIPOS_SOLICITUD = {
-    Carnet: {
-        id: "carnet",
-        nombre: "Carnet",
-        codigo: "CARNET",
-        descripcion: "Solicitud de carnet de identificación profesional",
-        documentosRequeridos: [
-            { displayName: "Foto tipo carnet", campo: "file_foto" },
-        ]
-    },
-    Especializacion: {
-        id: "especializacion",
-        nombre: "Especialización",
-        codigo: "ESPEC",
-        descripcion: "Registro de título de especialización odontológica",
-        documentosRequeridos: [
-            { displayName: "Título de Especialización", campo: "file_titulo_especializacion" },
-            { displayName: "Título de Especialización (Fondo Negro)", campo: "file_fondo_negro_titulo_especializacion" },
-            { displayName: "Título de Odontólogo", campo: "file_titulo_odontologo" },
-            { displayName: "Título de Odontólogo (Fondo Negro)", campo: "file_fondo_negro_titulo_odontologo" },
-            { displayName: "Cédula de Identidad Ampliada", campo: "file_cedula_ampliada" },
-            { displayName: "Fotos tipo Carnet", campo: "file_fotos_carnet" },
-            { displayName: "Comprobante de Solvencia", campo: "file_solvencia" },
-            { displayName: "Carta de Solicitud", campo: "file_carta_solicitud" }
-        ]
-    },
-    Constancia: {
-        id: "constancia",
-        nombre: "Constancia",
-        codigo: "CONST",
-        descripcion: "Constancia profesional (requiere seleccionar tipo específico)",
-        documentosRequeridos: [
-            { displayName: "Cédula de Identidad", campo: "file_cedula" },
-        ],
-        subtipos: [
-            { codigo: "inscripcion_cov", nombre: "Inscripción del COV" },
-            { codigo: "solvencia", nombre: "Solvencia" },
-            { codigo: "libre_ejercicio", nombre: "Libre ejercicio" },
-            { codigo: "declaracion_habilitacion", nombre: "Declaración de habilitación" },
-            { codigo: "continuidad_laboral", nombre: "Continuidad laboral" },
-            { codigo: "deontologia_odontologica", nombre: "Deontología odontológica" }
-        ]
-    }
+  Carnet: {
+    id: "carnet",
+    nombre: "Carnet",
+    codigo: "CARNET",
+    descripcion: "Solicitud de carnet de identificación profesional",
+    documentosRequeridos: [
+      // Asegúrate que el backend acepta ambos nombres de campo:
+      { displayName: "Foto tipo carnet", campo: "file_foto" },
+      // { displayName: "Foto tipo carnet", campo: "foto" }, // <-- si tu backend acepta solo uno, comenta el otro.
+    ]
+  },
+  Especializacion: {
+    id: "especializacion",
+    nombre: "Especialización",
+    codigo: "ESPEC",
+    descripcion: "Registro de título de especialización odontológica",
+    documentosRequeridos: [
+      { displayName: "Título de Especialización", campo: "file_titulo_especializacion" },
+      { displayName: "Título de Especialización (Fondo Negro)", campo: "file_fondo_negro_titulo_especializacion" },
+      { displayName: "Título de Odontólogo", campo: "file_titulo_odontologo" },
+      { displayName: "Título de Odontólogo (Fondo Negro)", campo: "file_fondo_negro_titulo_odontologo" },
+      { displayName: "Cédula de Identidad Ampliada", campo: "file_cedula_ampliada" },
+      { displayName: "Fotos tipo Carnet", campo: "file_fotos_carnet" },
+      { displayName: "Comprobante de Solvencia", campo: "file_solvencia" },
+      { displayName: "Carta de Solicitud", campo: "file_carta_solicitud" }
+    ]
+  },
+  Constancia: {
+    id: "constancia",
+    nombre: "Constancia",
+    codigo: "CONST",
+    descripcion: "Constancia profesional (requiere seleccionar tipo específico)",
+    documentosRequeridos: [
+      { displayName: "Cédula de Identidad", campo: "file_cedula" },
+    ],
+    subtipos: [
+      { codigo: "inscripcion_cov", nombre: "Inscripción del COV" },
+      { codigo: "solvencia", nombre: "Solvencia" },
+      { codigo: "libre_ejercicio", nombre: "Libre ejercicio" },
+      { codigo: "declaracion_habilitacion", nombre: "Declaración de habilitación" },
+      { codigo: "continuidad_laboral", nombre: "Continuidad laboral" },
+      { codigo: "deontologia_odontologica", nombre: "Deontología odontológica" }
+    ]
+  }
 };
-
 export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
   const form = new FormData();
-  
+
   // Basic fields
   form.append("colegiado", solicitudJson.colegiadoId);
   solicitudJson.creador?.id && form.append("user", solicitudJson.creador.id);
 
-  // Process items and their costs
+  // Procesamiento de items
   const constancias = [];
   let costo_solicitud_carnet = 0;
   let costo_solicitud_especializacion = 0;
   let especializacion = 0;
 
-  solicitudJson.itemsSolicitud.forEach(item => {
-    if (item.tipo === "Carnet") {
-      costo_solicitud_carnet = item.costo.id;
-    } else if (item.tipo === "Especializacion") {
-      costo_solicitud_especializacion = item.costo.id;
-      especializacion = 1;
-    } else if (item.tipo === "Constancia") {
-      constancias.push({code:item.codigo,institucion:item?.institucionId});
-    }
-  });
+  if (solicitudJson.itemsSolicitud && Array.isArray(solicitudJson.itemsSolicitud)) {
+    solicitudJson.itemsSolicitud.forEach(item => {
+      if (item.tipo === "Carnet") {
+        costo_solicitud_carnet = item.costo?.id || item.costo || 0;
+      } else if (item.tipo === "Especializacion") {
+        costo_solicitud_especializacion = item.costo?.id || item.costo || 0;
+        especializacion = 1;
+      } else if (item.tipo === "Constancia") {
+        constancias.push({ code: item.codigo, institucion: item?.institucionId });
+      }
+    });
+  }
 
-  // Add processed costs
-  if(solicitudJson.descripcion){
+  // Descripción opcional
+  if (solicitudJson.descripcion) {
     form.append("descripcion", solicitudJson.descripcion);
   }
-  if (costo_solicitud_carnet !== 0) { 
+  if (costo_solicitud_carnet !== 0) {
     form.append("costo_solicitud_carnet", costo_solicitud_carnet);
   }
   if (costo_solicitud_especializacion !== 0) {
@@ -87,18 +90,17 @@ export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
     form.append("especializacion", especializacion);
   }
 
-  // Add constancias as JSON string
+  // Constancias en formato JSON
   if (constancias.length > 0) {
     form.append("solicitud_constancias", JSON.stringify({ constancias }));
   }
 
-  // Add files
+  // Adjuntar archivos
   if (solicitudJson.documentosAdjuntos) {
     Object.entries(solicitudJson.documentosAdjuntos).forEach(([key, value]) => {
       if (value instanceof File || value instanceof Blob) {
         form.append(key, value);
       } else {
-        // If no file is provided, append an empty string
         form.append(key, "");
       }
     });
@@ -106,7 +108,6 @@ export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
 
   return form;
 };
-
 export const useSolicitudesStore = create((set, get) => ({
   solicitudes: [],
   solicitudesPagination: {},
@@ -114,7 +115,9 @@ export const useSolicitudesStore = create((set, get) => ({
   solicitudesAbiertasPagination: {},
   solicitudesCerradas: [],
   solicitudesCerradasPagination: {},
-  pagosSolicitud:[],
+  pagosSolicitud: [],
+  solicitudesDeSolvencia: [],
+  solicitudesDeSolvenciaPagination: {},
   tipos_solicitud: TIPOS_SOLICITUD,
   loading: false,
   error: null,
@@ -125,63 +128,63 @@ export const useSolicitudesStore = create((set, get) => ({
     await get().fetchSolicitudes("abierta");
     await get().fetchSolicitudes(null);
   },
-  
+
   fetchTiposSolicitud: async () => {
     set({ loading: true });
     try {
-      const response = await fetchSolicitudes('costo',"?es_vigente=true");
+      const response = await fetchSolicitudes('costo', "?es_vigente=true");
       const costos = response.data;
-      
+
       const tiposActualizados = { ...TIPOS_SOLICITUD };
-      
+
       const costoCarnet = costos.find(c => c.tipo_costo_nombre === "Carnet");
       if (costoCarnet) {
-        tiposActualizados.Carnet.costo = {id: costoCarnet.id, monto:parseFloat(costoCarnet.monto_usd)};
+        tiposActualizados.Carnet.costo = { id: costoCarnet.id, monto: parseFloat(costoCarnet.monto_usd) };
       }
-      
+
       const costoEspecializacion = costos.find(c => c.tipo_costo_nombre === "Especialidad");
       if (costoEspecializacion) {
-        tiposActualizados.Especializacion.costo = {id: costoCarnet.id, monto:parseFloat(costoEspecializacion.monto_usd)};
+        tiposActualizados.Especializacion.costo = { id: costoEspecializacion.id, monto: parseFloat(costoEspecializacion.monto_usd) };
       }
-      
+
       tiposActualizados.Constancia.subtipos = tiposActualizados.Constancia.subtipos.map(subtipo => {
         const costo = costos.find(c => {
           const backendCodigo = c.tipo_costo_nombre.replace('constancia_', '');
           return backendCodigo === subtipo.codigo;
         });
-        
+
         return {
           ...subtipo,
-          costo: costo ? {id: costoCarnet.id, monto:parseFloat(costo.monto_usd)} : {id: 0, monto:0}
+          costo: costo ? { id: costo?.id, monto: parseFloat(costo.monto_usd) } : { id: 0, monto: 0 }
         };
       });
-      
-      set({ 
+
+      set({
         tipos_solicitud: tiposActualizados,
-        loading: false 
+        loading: false
       });
-      
+
       return tiposActualizados;
     } catch (error) {
-      set({ 
-        loading: false, 
+      set({
+        loading: false,
         error: error.message || "Error al cargar los tipos de solicitud"
       });
       throw error;
     }
   },
-  
-  fetchSolicitudes: async (estado,page = 1, pageSize = 10, filtros = {}) => {
+
+  fetchSolicitudes: async (estado, page = 1, pageSize = 10, filtros = {}) => {
     set({ loading: true });
     try {
-      let params = `?page=${page}&page_size=${pageSize}${estado && `&status=${estado}`}`;
-      
+      let params = `?page=${page}&page_size=${pageSize}${estado ? `&status=${estado}` : ""}`;
+
       Object.entries(filtros).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           params += `&${key}=${encodeURIComponent(value)}`;
         }
       });
-      
+
       const res = await fetchSolicitudes("solicitud_unida", params);
       if (estado === "cerrada") {
         set({
@@ -190,14 +193,14 @@ export const useSolicitudesStore = create((set, get) => ({
           loading: false
         });
         return res.data;
-      }else if(estado === "abierta"){
+      } else if (estado === "abierta") {
         set({
           solicitudesAbiertas: res.data.results,
           solicitudesAbiertasPagination: res.data,
           loading: false
         });
         return res.data;
-      }else{
+      } else {
         set({
           solicitudes: res.data.results,
           solicitudesPagination: res.data,
@@ -206,8 +209,8 @@ export const useSolicitudesStore = create((set, get) => ({
         return res.data;
       }
     } catch (error) {
-      set({ 
-        loading: false, 
+      set({
+        loading: false,
         error: error.message || "Error al cargar solicitudes"
       });
       throw error;
@@ -217,37 +220,36 @@ export const useSolicitudesStore = create((set, get) => ({
   getSolicitudById: async (id) => {
     try {
       const res = await fetchSolicitudes(`solicitud_unida/${id}`);
-      get().getPagosSolicitud(id);
+      await get().getPagosSolicitud(id);
       return res.data;
     } catch (error) {
       set({ error: error.message || "Error al obtener detalles de la solicitud" });
       throw error;
     }
   },
-  
+
   addSolicitud: async (solicitudJson, opcionales = {}) => {
     set({ loading: true });
     try {
       const formData = convertJsonToFormData(solicitudJson, opcionales);
-      console.log({formData})
       const response = await postDataSolicitud('solicitud', formData);
       const solicitud = await get().getSolicitudById(response.data.id);
-      
+
       set(state => ({
         solicitudes: [solicitud, ...state.solicitudes],
         loading: false
       }));
-      
+
       return solicitud;
     } catch (error) {
-      set({ 
-        loading: false, 
+      set({
+        loading: false,
         error: error.message || "Error al crear la solicitud"
       });
       throw error;
     }
   },
-  
+
   updateSolicitudStatus: async (id, nuevoEstado, observaciones = "") => {
     set({ loading: true });
     try {
@@ -255,23 +257,24 @@ export const useSolicitudesStore = create((set, get) => ({
         estado: nuevoEstado,
         observaciones: observaciones
       });
-      
+
       set(state => ({
-        solicitudes: state.solicitudes.map(sol => 
+        solicitudes: state.solicitudes.map(sol =>
           sol.id === id ? { ...sol, estado: nuevoEstado, observaciones } : sol
         ),
         loading: false
       }));
-      
+
       return response.data;
     } catch (error) {
-      set({ 
-        loading: false, 
+      set({
+        loading: false,
         error: error.message || "Error al actualizar estado de solicitud"
       });
       throw error;
     }
   },
+
   updateDocumentoSolicitud: async (id, updatedData) => {
     set({ loading: true });
     try {
@@ -279,37 +282,36 @@ export const useSolicitudesStore = create((set, get) => ({
         `solicitud/${id}`,
         updatedData,
       );
-  
       return res.data;
     } catch (error) {
-      set({ 
-        loading: false, 
+      set({
+        loading: false,
         error: error.message || "Error al actualizar estado de documento de solicitud"
       });
       throw error;
     }
   },
+
   // PAGOS
   getPagosSolicitud: async (id) => {
     set({ loading: true });
     try {
-      const res = await fetchSolicitudes(`pago`,"?solicitud="+id);
-
+      const res = await fetchSolicitudes(`pago`, "?solicitud=" + id);
       set({
         pagosSolicitud: res.data,
         loading: false
-      })
+      });
       return res.data;
     } catch (error) {
-      set({ 
-        loading: false, 
+      set({
+        loading: false,
         error: error.message || "Error al cargar los pagos de la solicitud"
       });
       throw error;
     }
   },
 
-  addPagosSolicitud : async(id, pago) => {
+  addPagosSolicitud: async (id, pago) => {
     set({ loading: true });
     try {
       const Form = new FormData();
@@ -319,24 +321,80 @@ export const useSolicitudesStore = create((set, get) => ({
       Form.append("num_referencia", pago.num_referencia);
       Form.append("metodo_de_pago", pago.metodo_de_pago);
       Form.append("tasa_bcv_del_dia", pago.tasa_bcv_del_dia);
-      
+
       if (pago.comprobante) {
         Form.append("comprobante", pago.comprobante);
       }
-      
       if (pago.fecha_pago) {
         Form.append("fecha_pago", pago.fecha_pago);
       }
-  
-      const res = await postDataSolicitud("pagos-solicitud", Form);
-      get().getPagosSolicitud(id);
-      
+
+      await postDataSolicitud("pagos-solicitud", Form);
+      await get().getPagosSolicitud(id);
+
     } catch (error) {
-      set({ 
-        loading: false, 
+      set({
+        loading: false,
         error: error.message || "Error al crear el pago"
       });
       throw error;
     }
-  }
+  },
+
+  // SOLICITUDES DE SOLVENCIA (de la versión "Copy", mejora para nuevas features)
+  fetchSolicitudesDeSolvencia: async (page = 1, pageSize = 10, filtros = {}) => {
+    set({ loading: true });
+    try {
+      let params = `?page=${page}&page_size=${pageSize}`;
+      Object.entries(filtros).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params += `&${key}=${encodeURIComponent(value)}`;
+        }
+      });
+      const res = await fetchSolicitudes("list_solicitud_solvencias", params);
+      const solicitudesOrdenadas = [];
+      res.data.results.forEach((solicitud) => {
+        solicitudesOrdenadas.push({
+          idColegiado: solicitud.id,
+          idSolicitudSolvencia: solicitud.solicitudes_solvencia.lista[0].id,
+          nombreColegiado: solicitud.nombre,
+          statusSolvencia: solicitud.solvencia_status,
+          statusSolicitud: solicitud.solicitudes_solvencia.lista[0].status,
+          fechaSolicitud: solicitud.solicitudes_solvencia.lista[0].fecha_solicitud,
+          costoRegularSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_regular,
+          costoEspecialSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
+          fechaExpSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
+          modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
+          adminCreador: solicitud.solicitudes_solvencia.lista[0].user_admin_create,
+          fechaRechazo: solicitud.solicitudes_solvencia.lista[0].fecha_rechazo,
+          motivoRechazo: solicitud.solicitudes_solvencia.lista[0].motivo_rechazo,
+          adminActualizador: solicitud.solicitudes_solvencia.lista[0].user_admin_update,
+          fechaAprobacion: solicitud.solicitudes_solvencia.lista[0].fecha_aprobacion,
+          fechaExoneracion: solicitud.solicitudes_solvencia.lista[0].fecha_exoneracion,
+          motivoExoneracion: solicitud.solicitudes_solvencia.lista[0].motivo_exoneracion,
+          creador: {
+            nombreCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.nombre_creador,
+            idCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.id_creador,
+            isAdmin: solicitud.solicitudes_solvencia.lista[0].detalles.creador.is_admin,
+          }
+        });
+      });
+      set({
+        solicitudesDeSolvencia: solicitudesOrdenadas,
+        solicitudesDeSolvenciaPagination: res.data,
+        loading: false
+      });
+    } catch (error) {
+      set({
+        loading: false,
+        error: error.message || "Error al cargar los pagos de la solicitud"
+      });
+      throw error;
+    }
+  },
+
+  setSolicitudesDeSolvencia: (solicitudes) => {
+    set({ solicitudesDeSolvencia: solicitudes });
+  },
 }));
+
