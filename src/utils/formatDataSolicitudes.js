@@ -14,6 +14,7 @@ export default function transformBackendData(backendData) {
     costo: calcularTotal(backendData.detalles_solicitud),
     documentosRequeridos: getDocumentosRequeridos(backendData.detalles_solicitud),
     documentosAdjuntos: getDocumentosAdjuntos(backendData.detalles_solicitud),
+    detallesSolicitud: detallesSolicitud, // Preservar los detalles originales para validación de documentos
     itemsSolicitud: [],
     comprobantePago: null,
     estadoPago: "Pendiente de verificación",

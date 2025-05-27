@@ -24,44 +24,123 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
 
     // Obtener documentos adjuntos limpios
     const documentosAdjuntosLimpios = limpiarDocumentosAdjuntos(solicitud.documentosAdjuntos);
-
     // Mapa de equivalencias entre nombres de documentos y claves del backend
     const documentosMapping = {
-        "foto tipo carnet": "foto",
-        "fotos tipo carnet": "fotos_carnet",
-        "título de especialización": "titulo_especializacion",
-        "título de especialización (fondo negro)": "fondo_negro_titulo_especializacion",
-        "título de odontólogo": "titulo_odontologo",
-        "título de odontólogo (fondo negro)": "fondo_negro_titulo_odontologo",
-        "cédula de identidad ampliada": "cedula_ampliada",
-        "comprobante de solvencia": "solvencia",
-        "carta de solicitud": "carta_solicitud",
+        "foto tipo carnet": "file_foto",
+        "fotos tipo carnet": "file_fotos_carnet",
+        "título de especialización": "file_titulo_especializacion",
+        "título de especialización (fondo negro)": "file_fondo_negro_titulo_especializacion",
+        "título de odontólogo": "file_titulo_odontologo",
+        "título de odontólogo (fondo negro)": "file_fondo_negro_titulo_odontologo",
+        "cédula de identidad ampliada": "file_cedula_ampliada",
+        "comprobante de solvencia": "file_solvencia",
+        "carta de solicitud": "file_carta_solicitud",
         "cédula de identidad": "file_cedula"
+    };
+
+    // Función para buscar el campo backend de manera más flexible
+    const buscarCampoBackend = (docNombre) => {
+        const docNombreNormalizado = docNombre.toLowerCase();
+        
+        // Primero buscar coincidencia exacta
+        if (documentosMapping[docNombreNormalizado]) {
+            return documentosMapping[docNombreNormalizado];
+        }
+        
+        // Buscar coincidencias parciales
+        if (docNombreNormalizado.includes("foto") && docNombreNormalizado.includes("carnet")) {
+            return docNombreNormalizado.includes("fotos") ? "fotos_carnet" : "file_foto";
+        }
+        if (docNombreNormalizado.includes("título") && docNombreNormalizado.includes("especialización")) {
+            return docNombreNormalizado.includes("fondo negro") ? "fondo_negro_titulo_especializacion" : "titulo_especializacion";
+        }
+        if (docNombreNormalizado.includes("título") && docNombreNormalizado.includes("odontólogo")) {
+            return docNombreNormalizado.includes("fondo negro") ? "fondo_negro_titulo_odontologo" : "titulo_odontologo";
+        }
+        if (docNombreNormalizado.includes("cédula") && docNombreNormalizado.includes("ampliada")) {
+            return "cedula_ampliada";
+        }
+        if (docNombreNormalizado.includes("solvencia")) {
+            return "solvencia";
+        }
+        if (docNombreNormalizado.includes("carta")) {
+            return "carta_solicitud";
+        }
+        if (docNombreNormalizado.includes("cédula")) {
+            return "file_cedula";
+        }
+        
+        return null;
     };
 
     // Mapear los documentos requeridos al formato esperado por el componente
     const documentosFormateados = solicitud.documentosRequeridos.map((docNombre, index) => {
-        const docNombreNormalizado = docNombre.toLowerCase();
-        
-        // Buscar la clave en el mapa
-        const campoBackend = documentosMapping[docNombreNormalizado];
+        const campoBackend = buscarCampoBackend(docNombre);
         
         // Get validation status from solicitud data
         let validateField = null;
         let motivoRechazoField = null;
         
-        if (campoBackend && solicitud.documentosAdjuntos) {
+        if (campoBackend && solicitud.detallesSolicitud) {
             // Search for validation status in all sections (carnet, especializacion, etc.)
+            
+            // Para documentos de carnet
             if (solicitud.detallesSolicitud?.carnet?.archivos) {
-                validateField = solicitud.detallesSolicitud.carnet.archivos[`${campoBackend}_validate`];
-                motivoRechazoField = solicitud.detallesSolicitud.carnet.archivos[`${campoBackend}_motivo_rechazo`];
+                const carnetArchivos = solicitud.detallesSolicitud.carnet.archivos;
+                
+                // Buscar con diferentes patrones de nombres
+                const possibleKeys = [
+                    `${campoBackend}_validate`,
+                    `file_${campoBackend}_validate`,
+                    campoBackend === 'file_foto' ? 'foto_validate' : null // Caso especial para foto de carnet
+                ].filter(Boolean);
+                
+                for (const key of possibleKeys) {
+                    if (carnetArchivos[key] !== undefined) {
+                        validateField = carnetArchivos[key];
+                        motivoRechazoField = carnetArchivos[key.replace('_validate', '_motivo_rechazo')];
+                        break;
+                    }
+                }
             }
+            
+            // Para documentos de especialización
             if (solicitud.detallesSolicitud?.especializacion?.archivos) {
                 const especialArchivos = solicitud.detallesSolicitud.especializacion.archivos;
-                if (especialArchivos[`${campoBackend}_validate`] !== undefined) {
-                    validateField = especialArchivos[`${campoBackend}_validate`];
-                    motivoRechazoField = especialArchivos[`${campoBackend}_motivo_rechazo`];
+                
+                // Buscar con diferentes patrones de nombres
+                const possibleKeys = [
+                    `${campoBackend}_validate`,
+                    `file_${campoBackend}_validate`
+                ];
+                
+                for (const key of possibleKeys) {
+                    if (especialArchivos[key] !== undefined) {
+                        validateField = especialArchivos[key];
+                        motivoRechazoField = especialArchivos[key.replace('_validate', '_motivo_rechazo')];
+                        break;
+                    }
                 }
+            }
+            
+            // Para documentos de constancia
+            if (solicitud.detallesSolicitud?.constancias) {
+                solicitud.detallesSolicitud.constancias.forEach(constancia => {
+                    if (constancia.archivos) {
+                        const possibleKeys = [
+                            `${campoBackend}_validate`,
+                            `file_${campoBackend}_validate`
+                        ];
+                        
+                        for (const key of possibleKeys) {
+                            if (constancia.archivos[key] !== undefined) {
+                                validateField = constancia.archivos[key];
+                                motivoRechazoField = constancia.archivos[key.replace('_validate', '_motivo_rechazo')];
+                                break;
+                            }
+                        }
+                    }
+                });
             }
         }
         
@@ -70,7 +149,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
         if (validateField === true) {
             status = 'approved';
         } else if (validateField === false) {
-            status = 'rejected';
+            status = 'rechazado';
         }
         
         return {
@@ -221,6 +300,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                                     documento={documento}
                                     onChange={onDocumentStatusChange}
                                     readOnly={isReadOnly}
+                                    isColegiado={!isAdmin}
                                     />
                                 </div>
                             )}

@@ -61,6 +61,7 @@ export default function DetalleSolicitud({ props }) {
 
   const loadSolicitudById = async () => {
     const solicitud = await getSolicitudById(id);
+    console.log("solicitud", solicitud)
     setSolicitud(transformBackendData(solicitud));
     setIsLoading(false);
 
@@ -75,12 +76,8 @@ export default function DetalleSolicitud({ props }) {
     loadSolicitudById();
   }, [id,]);
 
-  // Verificar si hay solicitudes hijas aprobadas al cargar o actualizar la solicitud
   useEffect(() => {
-    console.log("useEffect - solicitud:", solicitud);
     if (solicitud && solicitud.itemsSolicitud) {
-      console.log("useEffect - itemsSolicitud:", solicitud.itemsSolicitud);
-      // Cargar documentos si hay constancias en la solicitud
       cargarDocumentosSistema();
     }
   }, [solicitud]);
@@ -185,7 +182,6 @@ export default function DetalleSolicitud({ props }) {
 
   // Función para ver un documento
   const handleVerDocumento = (documento) => {
-    console.log("Documento:", documento);
     // Si es un string, asumimos que es la URL directa
     if (typeof documento === 'string') {
       setDocumentoSeleccionado({ url: documento });
@@ -241,22 +237,18 @@ export default function DetalleSolicitud({ props }) {
 
   // Función para cargar documentos generados por el sistema
   const cargarDocumentosSistema = async () => {
-    console.log("cargarDocumentosSistema - solicitud:", solicitud);
     if (!solicitud || !solicitud.itemsSolicitud) {
-      console.log("No hay solicitud o itemsSolicitud");
       return;
     }
     
     setLoadingDocumentos(true);
     try {
-      console.log("itemsSolicitud:", solicitud.itemsSolicitud);
       
       // Simplemente filtrar las constancias de la solicitud
       const constancias = solicitud.itemsSolicitud.filter(
         item => item.tipo === 'Constancia'
       );
 
-      console.log("constancias encontradas:", constancias);
 
       const documentosGenerados = constancias.map(constancia => ({
         id: constancia.id,
@@ -265,7 +257,6 @@ export default function DetalleSolicitud({ props }) {
         solicitudId: solicitud.id
       }));
 
-      console.log("documentosGenerados:", documentosGenerados);
       setDocumentosSistema(documentosGenerados);
     } catch (error) {
       console.error("Error al cargar documentos del sistema:", error);
@@ -278,7 +269,6 @@ export default function DetalleSolicitud({ props }) {
   // Función para visualizar PDF de constancia
   const handleVisualizarConstancia = async (documento) => {
     try {
-      console.log("Generando PDF para:", documento);
       
       // Ir directamente al endpoint de datos usando el ID
       const datosResponse = await api.get(`/solicitudes/constancia/${documento.solicitudId}/datos/`);
@@ -289,7 +279,6 @@ export default function DetalleSolicitud({ props }) {
       if (tipoConstanciaLimpio && tipoConstanciaLimpio.startsWith('constancia_')) {
         tipoConstanciaLimpio = tipoConstanciaLimpio.replace('constancia_', '');
       }
-      console.log("tipoConstanciaLimpio:", tipoConstanciaLimpio);
       
       const { docDefinition } = generateConstanciaPDF(datosCompletos, tipoConstanciaLimpio);
       const pdfUrl = await openPDF(docDefinition);
@@ -351,12 +340,28 @@ export default function DetalleSolicitud({ props }) {
   // Handler for document status change (approve/reject)
   const handleDocumentStatusChange = async (updatedDocument) => {
     try {
-      const requestBody = {
-        [`file_${updatedDocument.id}_validate`]: updatedDocument.status === 'approved',
-        [`file_${updatedDocument.id}_motivo_rechazo`]: updatedDocument.rejectionReason
+      // Determinar el nombre correcto del campo de validación
+      let validateFieldName, motivoFieldName;
+      
+      if (updatedDocument.id === 'file_foto') {
+        validateFieldName = 'foto_validate';
+        motivoFieldName = 'foto_motivo_rechazo';
+      } else if (updatedDocument.id.startsWith('file_')) {
+        validateFieldName = `${updatedDocument.id}_validate`;
+        motivoFieldName = `${updatedDocument.id}_motivo_rechazo`;
+      } else {
+        validateFieldName = `file_${updatedDocument.id}_validate`;
+        motivoFieldName = `file_${updatedDocument.id}_motivo_rechazo`;
       }
+
+      const requestBody = {
+        [validateFieldName]: updatedDocument.status === 'approved' ? true : 
+                           updatedDocument.status === 'rechazado' ? false : null,
+        [motivoFieldName]: updatedDocument.rejectionReason || ''
+      }
+      
       const response = await api.patch(`/solicitudes/solicitud/${solicitud.id}/`, requestBody);
-        console.log('Documento validado:', response.data);
+      await loadSolicitudById();
     } catch (error) {
       console.error("Error al actualizar el estado del documento:", error);
       setAlertaExito({
@@ -533,21 +538,29 @@ export default function DetalleSolicitud({ props }) {
       )}
 
       {/* Servicios solicitados */}
-      <ServiciosSection
-        solicitud={solicitud}
-        totales={totales}
-        onIniciarPago={handleIniciarPago}
-        pagosAprobados={pagosSolicitud && pagosSolicitud.length > 0 && pagosSolicitud.every(pago => pago.status === 'aprobado') && totales.totalPendiente <= 0.01}
-        pagosSolicitud={pagosSolicitud}
-      />
+      <div className="flex flex-col md:flex-row gap-4 ">
+        <div className="md:w-1/2">
 
-      {/* Historial de pagos */}
-      {pagosSolicitud && pagosSolicitud.length > 0 && (
-        <HistorialPagosSection
-          comprobantes={pagosSolicitud}
-          onVerDocumento={handleVerDocumento}
-        />
-      )}
+          <ServiciosSection
+            solicitud={solicitud}
+            totales={totales}
+            onIniciarPago={handleIniciarPago}
+            pagosAprobados={pagosSolicitud && pagosSolicitud.length > 0 && pagosSolicitud.every(pago => pago.status === 'aprobado') && totales.totalPendiente <= 0.01}
+            pagosSolicitud={pagosSolicitud}
+          />
+        </div>
+
+        {/* Historial de pagos */}
+        {pagosSolicitud && pagosSolicitud.length > 0 && (
+          <div className="md:w-1/2">
+
+          <HistorialPagosSection
+            comprobantes={pagosSolicitud}
+              onVerDocumento={handleVerDocumento}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Observaciones - solo en estado pendiente */}
       {solicitud.estado === "Pendiente" && (

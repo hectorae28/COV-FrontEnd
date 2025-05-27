@@ -1210,6 +1210,16 @@ export default function DetalleInfo({
           onClose={handleCerrarVistaDocumento}
         />
       )}
+      {!isAdmin&& entityData.recaudos?.pago !== null && (
+        <div className="w-full flex items-center justify-center">
+          <button
+            onClick={()=>{alert("Reenviar Solicitud De Inscripcion")}}
+            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white p-4 rounded-md flex items-center text-sm font-medium hover:bg-purple-200 transition-colors "
+          >
+            <span>Reenviar Solicitud De Inscripcion</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

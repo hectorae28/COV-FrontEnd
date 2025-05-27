@@ -57,9 +57,6 @@ export default function SeleccionarSolicitudesStep({
       console.error("Error al cargar colegiados:", error);
     }
   };
-
-  // Función para cargar instituciones del colegiado
-  // Función para cargar instituciones del colegiado
   const cargarInstitucionesColegiado = async (colegiadoId) => {
     try {
       // Datos de prueba fijos - siempre cargar estas 3 instituciones

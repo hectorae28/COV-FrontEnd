@@ -632,6 +632,172 @@ const getConstanciaDeontologiaOdontologicaContent = (data) => {
     ];
 }
 
+const getCarnetContent = (data) => {
+  const formatDateCarnet = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const fechaEmision = formatDateCarnet(data.fecha_emision || new Date());
+  const fechaVencimiento = formatDateCarnet(data.fecha_vencimiento || new Date(new Date().setFullYear(new Date().getFullYear() + 1)));
+  
+  return [
+    {
+      columns: [
+        { text: '', width: '*'},
+        { image: 'escudo', width: 100},
+        { text: '', width: '*'}
+      ],
+      marginTop: 25,
+    },
+    {
+      columns: [
+        { text: '', width: '*'},
+        {   
+          stack: [
+            { 
+              text: 'COLEGIO DE ODONTOLOGOS DE VENEZUELA',
+              fontSize: 20,
+              alignment: 'left',
+              bold: true
+            },
+            { 
+              text: 'RIF J-00041277-4'
+            }
+          ],
+          width: 'auto'
+        },
+        { text: '', width: '*'},
+      ],
+      marginTop: 10,
+    },
+    {
+      table: {
+        widths: [1,'*', 'auto', '*', 40, 1],
+        body: [
+          [{ text: ''}, { text: ''}, { text: ''}, { text: ''}, { text: ''}, { text: ''}],
+          [{ text: ''}, {colSpan: 4, text: 'REPÚBLICA BOLIVARIANA DE VENEZUELA', fontSize: 6, bold: true , alignment: 'center', fillColor: '#522D8A', color: '#FFFFFF' }, { text: '' }, { text: '' }, { text: ''}, { text: ''}],
+          [{ text: ''}, {colSpan: 4, text: 'COLEGIO DE ODONTÓLOGOS DE VENEZUELA', fontSize: 7, bold: true , alignment: 'center', fillColor: '#522D8A', color: '#FFFFFF'}, { text: '' }, { text: ''}, { text: ''}, { text: ''}],
+          [{ text: ''}, {colSpan: 4, text: data.universidad || 'Universidad Central de Venezuela', fontSize: 4, bold: true , alignment: 'center', fillColor: '#522D8A', color: '#FFFFFF'}, { text: '' }, { text: ''}, { text: ''}, { text: ''}],
+          [{ text: ''},{ colSpan: 3,
+            columns: [
+              {   
+                stack: [
+                  { image: 'carnet_foto', fit: [50,60], marginLeft: 4},
+                  { columns: [{ text: 'C.O.V', bold: true, color: '#522D8A', fontSize: 7}, { text: data.colegiado_numero, bold: true}], marginTop: 3, fontSize: 7, alignment: 'center'},
+                  { columns: [{ text: 'M.P.P.S', bold: true, color: '#522D8A', fontSize: 7}, { text: data.mpps_numero, bold: true}], marginTop: 3, fontSize: 7, alignment: 'center'}
+                ],
+                width: 'auto',
+                paddingLeft: 10
+              },
+              {   
+                stack: [
+                  { text: `${data.colegiado_primer_apellido} ${data.colegiado_segundo_apellido || ''}`.trim().toUpperCase(), bold: true, marginTop: 2, fontSize: 7},
+                  { text: 'Apellidos', bold: true, color: '#522D8A', marginTop: 1, marginBottom: 1, fontSize: 7},
+                  { text: data.colegiado_nombre.toUpperCase(), bold: true, marginTop: 2, fontSize: 7},
+                  { text: 'Nombres', bold: true, color: '#522D8A', marginTop: 1, marginBottom: 1, fontSize: 7},
+                  { text: data.colegiado_identificacion, bold: true, marginTop: 2, fontSize: 7},
+                  { text: 'Cédula de Identidad', bold: true, color: '#522D8A', marginTop: 2, marginBottom: 1, fontSize: 7},
+                  { columns: [{ text: 'F. Emisión:', bold: true, color: '#522D8A'}, { text: fechaEmision, bold: true}], marginTop: 3, fontSize: 7},
+                  { columns: [{ text: 'Válido Hasta:', bold: true, color: '#522D8A'}, { text: fechaVencimiento, bold: true}], marginTop: 3, fontSize: 7},
+                  {   
+                    columns: [
+                      {
+                        stack: [
+                          { image: 'escudo', fit: [20, 10], alignment: 'center'},
+                          { text: 'Dr. Pablo Quintero', bold: true, color: '#522D8A', fontSize: 4},
+                          { text: 'Presidente', bold: true, color: '#522D8A', fontSize: 4},
+                        ]
+                      },
+                      {
+                        stack: [
+                          { image: 'escudo', fit: [20, 10], alignment: 'center'},
+                          { text: 'Dra. Doyi S. Hernandez', bold: true, color: '#522D8A', fontSize: 4},
+                          { text: 'Sec. de Organización', bold: true, color: '#522D8A', fontSize: 4},
+                        ]
+                      }
+                    ],
+                    marginTop: 3, fontSize: 7
+                  },
+                ],
+                width: 'auto',
+                marginLeft: 20
+              }
+            ]
+          },{ text: ''},{ text: '' },
+          { columns: [
+              { image: 'escudo_borde', width: 75, marginLeft: -39.5, marginTop: 20.5, marginBottom: -23},
+            ],
+            fillColor: '#522D8A'
+          }, { text: ''}],
+          [{ text: ''}, {colSpan: 2, text: (data.colegiado_profesion || 'ODONTÓLOGO').toUpperCase(), fontSize: 10, bold: true, marginTop: 3 , alignment: 'right', fillColor: '#522D8A', color: '#FFFFFF'}, { text: '' },
+            {
+              colSpan: 2,
+              svg: `  <svg viewBox="0 0 115.3 20" xmlns:xlink="http://www.w3.org/1999/xlink">
+                          <defs>
+                              <path d="M16 4.588l2.833 8.719H28l-7.416 5.387 2.832 8.719L16 22.023l-7.417 5.389 2.833-8.719L4 13.307h9.167L16 4.588z" fill="#ffffff" id="d"/>
+                          </defs>
+                          <path d="M0 0 L0 0 L0 20 L45 20 L65 0" fill="#522D8A" stroke="#522D8A"/>
+                          <path d="M74 0 L74 0 L55 20 L115.3 20 L115.3 0" fill="#cf142b" stroke="#cf142b"/>
+                          <path d="M67.4 6.67 L67.4 6.67 L61.4 13.27 L115.3 13.27 L115.3 6.67" fill="#00247d" stroke="#00247d"/>
+                          <path d="M74 0 L74 0 L67.4 6.67 L115.3 6.67 L115.3 0" fill="#fc0" stroke="#fc0"/>
+                          <use xlink:href="#d" transform="scale(0.15) translate(480,50)" />
+                          <use xlink:href="#d" transform="scale(0.15) translate(510,50)" />
+                          <use xlink:href="#d" transform="scale(0.15) translate(540,50)" />
+                          <use xlink:href="#d" transform="scale(0.15) translate(570,50)" />
+                          <use xlink:href="#d" transform="scale(0.15) translate(600,50)" />
+                          <use xlink:href="#d" transform="scale(0.15) translate(630,50)" />
+                          <use xlink:href="#d" transform="scale(0.15) translate(660,50)" />
+                          <use xlink:href="#d" transform="scale(0.15) translate(690,50)" />
+                      </svg>` , padding: [0,0,0,0], margin: [-1,-1,-1,-1]},
+            { text: ''}, { text: ''}],
+          [{ text: ''}, { text: ''}, { text: ''}, { text: ''}, { text: ''}, { text: ''}]
+        ]
+      },
+      layout: 'dashedBorderLayout',
+      margin: [162, 40, 162, 0]
+    },
+    {
+      table: {
+        widths: [1,'*', 'auto', '*', 'auto', 1],
+        body: [
+          [{ text: ''}, { text: ''}, { text: ''}, { text: ''}, { text: ''}, { text: ''}],
+          [{ text: ''},{ colSpan: 4,
+            columns: [
+              {   
+                stack: [
+                  { qr: data.url_verificacion || 'https://colegiadoscov.sistemasjrpm.com/searchs', fit: '70', marginTop: 2, alignment:'center'},
+                  { text: 'Verifique la validez de este', alignment: 'center', bold: true, marginTop: 8, fontSize: 5},
+                  { text: 'carnet escaneando el codigo', alignment: 'center', bold: true, fontSize: 5},
+                  { text: 'QR', alignment: 'center', bold: true, fontSize: 5},
+                ],
+                width: 'auto',
+              },
+              {   
+                stack: [
+                  { text: 'Asegúrate de ser atendido', bold: true, italics: true, marginTop: 4, fontSize: 10},
+                  { text: 'por un Profesional', bold: true, italics: true, marginTop: 2, fontSize: 10},
+                  { text: 'Acreditado por el Colegio', bold: true, italics: true, marginTop: 2, fontSize: 10},
+                  { text: 'de Odontólogos de', bold: true, italics: true, marginTop: 2, fontSize: 10},
+                  { text: 'Venezuela', bold: true, italics: true, marginTop: 2, fontSize: 10},
+                  { image: 'escudoBW', width: 50, alignment: 'right', marginTop: 2},
+                ],
+                width: '*',
+                marginLeft: 20
+              }
+            ]
+          },{ text: ''},{ text: '' },{ text: ''}, { text: ''}]
+        ]
+      },
+      layout: 'dashedBorderLayoutSecond',
+      margin: [162, 10, 162, 0]
+    }
+  ];
+};
+
 const getFooter = (codigoDocumento) => ({
   table: {
     widths: ['*',63,'auto',63, '*'],
@@ -678,50 +844,141 @@ const getFooter = (codigoDocumento) => ({
 export const generateConstanciaPDF = (data, tipoConstancia) => {
   let content = [];
   let fileName = '';
+  let docDefinition = {};
   
   switch(tipoConstancia) {
     case 'inscripcion_cov':
       content = getConstanciaInscripcionContent(data);
       fileName = `Constancia_Inscripcion_${data.colegiado_numero}.pdf`;
+      docDefinition = {
+        content: content,
+        footer: getFooter(data.codigo_documento),
+        pageSize: 'LETTER',
+        pageMargins: [0, 0, 0, 80],
+        images: {
+          escudo: 'http://localhost:3000/escudo.png',
+          firma_presidente: 'http://localhost:3000/firmaPablo.png',
+          sello_cov: 'http://localhost:3000/sello_colegio.png'
+        }
+      };
       break;
     case 'continuidad_laboral':
       content = getConstanciaContinuidadLaboralContent(data);
       fileName = `Constancia_Continuidad_Laboral_${data.colegiado_numero}.pdf`;
+      docDefinition = {
+        content: content,
+        footer: getFooter(data.codigo_documento),
+        pageSize: 'LETTER',
+        pageMargins: [0, 0, 0, 80],
+        images: {
+          escudo: 'http://localhost:3000/escudo.png',
+          firma_presidente: 'http://localhost:3000/firmaPablo.png',
+          sello_cov: 'http://localhost:3000/sello_colegio.png'
+        }
+      };
       break;
     case 'libre_ejercicio':
       content = getConstanciaLibreEjercicioContent(data);
       fileName = `Constancia_Libre_Ejercicio_${data.colegiado_numero}.pdf`;
+      docDefinition = {
+        content: content,
+        footer: getFooter(data.codigo_documento),
+        pageSize: 'LETTER',
+        pageMargins: [0, 0, 0, 80],
+        images: {
+          escudo: 'http://localhost:3000/escudo.png',
+          firma_presidente: 'http://localhost:3000/firmaPablo.png',
+          sello_cov: 'http://localhost:3000/sello_colegio.png'
+        }
+      };
       break;
     case 'deontologia_odontologica':
-      // Por ahora usar el mismo template que libre ejercicio
       content = getConstanciaDeontologiaOdontologicaContent(data);
       fileName = `Constancia_Deontologia_Odontologica_${data.colegiado_numero}.pdf`;
+      docDefinition = {
+        content: content,
+        footer: getFooter(data.codigo_documento),
+        pageSize: 'LETTER',
+        pageMargins: [0, 0, 0, 80],
+        images: {
+          escudo: 'http://localhost:3000/escudo.png',
+          firma_presidente: 'http://localhost:3000/firmaPablo.png',
+          sello_cov: 'http://localhost:3000/sello_colegio.png'
+        }
+      };
       break;
     case 'solvencia':
-      // Usar el mismo template que libre ejercicio por ahora
       content = getConstanciaLibreEjercicioContent(data);
       fileName = `Constancia_Solvencia_${data.colegiado_numero}.pdf`;
+      docDefinition = {
+        content: content,
+        footer: getFooter(data.codigo_documento),
+        pageSize: 'LETTER',
+        pageMargins: [0, 0, 0, 80],
+        images: {
+          escudo: 'http://localhost:3000/escudo.png',
+          firma_presidente: 'http://localhost:3000/firmaPablo.png',
+          sello_cov: 'http://localhost:3000/sello_colegio.png'
+        }
+      };
       break;
     case 'declaracion_habilitacion':
-      // Usar el mismo template que libre ejercicio por ahora
       content = getConstanciaLibreEjercicioContent(data);
       fileName = `Constancia_Declaracion_Habilitacion_${data.colegiado_numero}.pdf`;
+      docDefinition = {
+        content: content,
+        footer: getFooter(data.codigo_documento),
+        pageSize: 'LETTER',
+        pageMargins: [0, 0, 0, 80],
+        images: {
+          escudo: 'http://localhost:3000/escudo.png',
+          firma_presidente: 'http://localhost:3000/firmaPablo.png',
+          sello_cov: 'http://localhost:3000/sello_colegio.png'
+        }
+      };
+      break;
+    case 'carnet':
+      content = getCarnetContent(data);
+      fileName = `Carnet_${data.colegiado_numero}_${data.colegiado_nombre}_${data.colegiado_primer_apellido}.pdf`;
+      docDefinition = {
+        pageOrientation: 'portrait',
+        pageSize: 'FOLIO',
+        pageMargins: [20, 30, 20, 30],
+        info: {
+          title: `Carnet - ${data.colegiado_nombre} ${data.colegiado_primer_apellido}`,
+          author: 'COLEGIO DE ODONTÓLOGOS DE VENEZUELA',
+          subject: 'Carnet - Odontología',
+          keywords: 'carnet',
+        },
+        content: content,
+        styles: {
+          header: {
+            fontSize: 18,
+            fontWeight: 'bold',
+          }
+        },
+        defaultStyle: {
+          font: 'Tinos'
+        },
+        images: {
+          escudo: 'http://localhost:3000/escudo.png',
+          escudoBW: 'http://localhost:3000/escudo_bw.png',
+          escudo_borde: 'http://localhost:3000/escudo_borde.png',
+          carnet_foto: data.foto_url || 'http://localhost:3000/carnet.png'
+        },
+        patterns: {
+          stripe45d: {
+            boundingBox: [1, 1, 4, 4],
+            xStep: 3,
+            yStep: 3,
+            pattern: "1 w 0 1 m 4 5 l s 2 0 m 5 3 l s",
+          },
+        }
+      };
       break;
     default:
-      throw new Error(`Tipo de constancia no soportado: ${tipoConstancia}`);
+      throw new Error(`Tipo de documento no soportado: ${tipoConstancia}`);
   }
-
-  const docDefinition = {
-    content: content,
-    footer: getFooter(data.codigo_documento),
-    pageSize: 'LETTER',
-    pageMargins: [0, 0, 0, 80],
-    images: {
-        escudo: 'http://localhost:3000/escudo.png',
-        firma_presidente: 'http://localhost:3000/firmaPablo.png',
-        sello_cov: 'http://localhost:3000/sello_colegio.png'
-    }
-  };
 
   return { docDefinition, fileName };
 };

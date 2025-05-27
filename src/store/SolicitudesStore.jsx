@@ -11,7 +11,7 @@ export const TIPOS_SOLICITUD = {
         codigo: "CARNET",
         descripcion: "Solicitud de carnet de identificación profesional",
         documentosRequeridos: [
-            { displayName: "Foto tipo carnet", campo: "foto" },
+            { displayName: "Foto tipo carnet", campo: "file_foto" },
         ]
     },
     Especializacion: {
