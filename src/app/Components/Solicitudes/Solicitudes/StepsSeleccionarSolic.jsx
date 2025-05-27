@@ -561,12 +561,12 @@ export default function SeleccionarSolicitudesStep({
       if (!colegiadoSeleccionado) {
         throw new Error("No se pudo identificar al colegiado seleccionado");
       }
-
+      console.log(colegiadoSeleccionado, "colegiadoSeleccionado")
       // Crear objeto de nueva solicitud
       const nuevaSolicitud = {
         id: `sol-${Date.now()}`,
         tipo: tipoMostrar,
-        colegiadoId: formData.colegiadoId,
+        colegiadoId: colegiadoSeleccionado.colegiado_id,
         colegiadoNombre:
           (colegiadoSeleccionado.recaudos?.persona?.nombre) ||
           colegiadoSeleccionado.firstname ||
@@ -676,7 +676,7 @@ export default function SeleccionarSolicitudesStep({
                   </div>
                 )}
                 {/* Lista de colegiados */}
-                {showColegiadosList && !colegiadoSeleccionado && (
+                {showColegiadosList && isAdmin && (
                   <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
                     {colegiadosFiltrados.length === 0 ? (
                       <div className="p-3 text-sm text-gray-500">

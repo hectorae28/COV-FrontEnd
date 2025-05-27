@@ -1,7 +1,7 @@
 "use client"
 
 import { fetchMe } from '@/api/endpoints/colegiado';
-import ListaSolicitudes from '@/app/PanelControl/(Solicitudes)/Solicitudes/page'
+import ListaSolicitudes from '@/app/PanelControl/(Solicitudes)/Solicitudes/ListaSolicitudes'
 import useColegiadoUserStore from '@/store/colegiadoUserStore'
 import { useEffect } from 'react';
 
@@ -20,7 +20,7 @@ const ListaSolicitudesColegiado = () => {
   }, [colegiadoId])
   return (
     <>
-        <ListaSolicitudes />
+        <ListaSolicitudes props={{isAdmin:false,colegiadoId:colegiadoId}} />
     </>
   )
 }
