@@ -40,11 +40,11 @@ export default function DetallePendienteWrapper({
 
           {/* Content with relative positioning to allow scrolling */}
           <div className="relative max-w-7xl z-20 ">
-            <div className="w-full flex justify-center py-10">
+            <div className="w-full flex justify-center mt-18">
               <Image
                 src="/assets/logo.png"
                 alt="Logo Colegio de Odontólogos de Venezuela"
-                width={300}
+                width={420}
                 height={80}
                 className="relative drop-shadow-md object-contain max-w-full h-auto"
               />

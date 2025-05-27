@@ -1,7 +1,5 @@
-import { fetchEstados } from "@/api/endpoints/ubicacion";
-import { capitalizarPalabras, obtenerUniversidadesPorEstado } from "@/Shared/UniversidadData";
+import { fetchUniversidades } from "@/api/endpoints/ubicacion";
 import { motion } from "framer-motion";
-
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -14,19 +12,13 @@ export default function InfoColegiado({
   onSave
 }) {
   const [showTitleDateWarning, setShowTitleDateWarning] = useState(false);
-  const [selectedEstado, setSelectedEstado] = useState("");
   const [universidadesDisponibles, setUniversidadesDisponibles] = useState([]);
-  const [otraUniversidad, setOtraUniversidad] = useState(false);
-  const [nombreUniversidad, setNombreUniversidad] = useState("");
-  const [acronimoUniversidad, setAcronimoUniversidad] = useState("");
-  const [estados, setEstados] = useState([]);
-  const [municipios, setMunicipios] = useState([]);
-  const [isLoadingMunicipios, setIsLoadingMunicipios] = useState(false);
+  const [todasLasUniversidades, setTodasLasUniversidades] = useState([]);
 
   // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
 
-  // Añadir estados para las partes de las fechas
+  // Estados para las partes de las fechas
   const [mppsDateParts, setMppsDateParts] = useState({
     day: formData.mppsRegistrationDate ? formData.mppsRegistrationDate.split('-')[2] : "",
     month: formData.mppsRegistrationDate ? formData.mppsRegistrationDate.split('-')[1] : "",
@@ -45,7 +37,63 @@ export default function InfoColegiado({
     year: formData.mainRegistrationDate ? formData.mainRegistrationDate.split('-')[0] : ""
   });
 
-  // Generar arrays para los selectores
+  const handleTipoProfesionChange = (e) => {
+    const { name, value } = e.target;
+
+    if (isEditMode) {
+      setLocalFormData(prev => ({
+        ...prev,
+        [name]: value,
+        universityTitle: ""
+      }));
+    } else {
+      onInputChange({
+        [name]: value,
+        universityTitle: ""
+      });
+    }
+  };
+
+  // Cargar todas las universidades al montar el componente
+  useEffect(() => {
+    const cargarUniversidades = async () => {
+      try {
+        const universidades = await fetchUniversidades();
+        setTodasLasUniversidades(universidades);
+      } catch (error) {
+        console.error('Error al cargar universidades:', error);
+      }
+    };
+
+    cargarUniversidades();
+  }, []);
+
+  // Filtrar universidades según el tipo de profesión
+  useEffect(() => {
+    if (todasLasUniversidades.length > 0 && formData.tipo_profesion) {
+      let universidadesFiltradas = [];
+
+      switch (formData.tipo_profesion) {
+        case 'odontologo':
+          universidadesFiltradas = todasLasUniversidades.filter(univ => univ.is_odontologo);
+          break;
+        case 'tecnico':
+          universidadesFiltradas = todasLasUniversidades.filter(univ => univ.is_tecnico);
+          break;
+        case 'higienista':
+          universidadesFiltradas = todasLasUniversidades.filter(univ => univ.is_higienista);
+          break;
+        default:
+          universidadesFiltradas = todasLasUniversidades;
+      }
+
+      setUniversidadesDisponibles(universidadesFiltradas);
+    } else {
+      setUniversidadesDisponibles([]);
+    }
+  }, [todasLasUniversidades, formData.tipo_profesion]);
+
+  // Generar arrays para los selectores de fecha
   const years = Array.from({ length: 80 }, (_, i) => {
     const year = new Date().getFullYear() - i;
     return { value: year.toString(), label: year.toString() };
@@ -77,19 +125,6 @@ export default function InfoColegiado({
       };
     });
   };
-  useEffect(() => {
-    const loadEstados = async () => {
-      try {
-        const data = await fetchEstados();
-        console.log("Estados cargados:", data);
-        setEstados(data);
-      } catch (error) {
-        console.error("Error al cargar los estados:", error);
-      }
-    };
-
-    loadEstados();
-  }, []);
 
   // Actualizar el estado local cuando cambian las props
   useEffect(() => {
@@ -115,7 +150,6 @@ export default function InfoColegiado({
       .split(' ')
       .map(palabra => {
         if (palabra.length === 0) return palabra;
-        // Solo capitalizar la primera letra si está en minúscula, mantener el resto como está
         const primeraLetra = palabra.charAt(0).toUpperCase();
         const resto = palabra.slice(1);
         return primeraLetra + resto;
@@ -123,35 +157,11 @@ export default function InfoColegiado({
       .join(' ');
   };
 
-  // Actualizar las universidades disponibles cuando se selecciona un estado
-  useEffect(() => {
-    if (selectedEstado) {
-      setUniversidadesDisponibles(obtenerUniversidadesPorEstado(selectedEstado));
-    } else {
-      setUniversidadesDisponibles([]);
-    }
-  }, [selectedEstado]);
-
-  // Cuando se carga el componente, intentar establecer el estado basado en los datos existentes
-  useEffect(() => {
-    if (formData.universityState) {
-      setSelectedEstado(formData.universityState);
-
-      // Si tenemos información de "otra universidad"
-      if (formData.isCustomUniversity) {
-        setOtraUniversidad(true);
-        setNombreUniversidad(formData.customUniversityName || "");
-        setAcronimoUniversidad(formData.customUniversityAcronym || "");
-      }
-    }
-  }, [formData.universityState, formData.isCustomUniversity, formData.customUniversityName, formData.customUniversityAcronym]);
-
   // Manejar el ingreso de instituto de graduación (liceo)
   const handleGraduateInstituteChange = (e) => {
     const rawValue = e.target.value;
     const formattedValue = capitalizarMayusculas(rawValue);
 
-    // Actualizar el formData con el valor formateado
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
@@ -162,126 +172,23 @@ export default function InfoColegiado({
     }
   };
 
-  // Manejar el cambio de estado
-  const handleEstadoChange = (e) => {
-    const nuevoEstado = e.target.value;
-    setSelectedEstado(nuevoEstado);
-    setOtraUniversidad(false);
-
-    // Actualizar el formData
-    if (isEditMode) {
-      setLocalFormData(prev => ({
-        ...prev,
-        universityState: nuevoEstado,
-        universityTitle: "", // Resetear la universidad seleccionada
-        isCustomUniversity: false,
-        customUniversityName: "",
-        customUniversityAcronym: ""
-      }));
-    } else {
-      onInputChange({
-        universityState: nuevoEstado,
-        universityTitle: "", // Resetear la universidad seleccionada
-        isCustomUniversity: false,
-        customUniversityName: "",
-        customUniversityAcronym: ""
-      });
-    }
-  };
-
-  // Manejar el cambio de universidad
+  // Manejar el cambio de universidad - Simplificado
   const handleUniversidadChange = (e) => {
     const value = e.target.value;
 
-    if (value === "otra") {
-      setOtraUniversidad(true);
-      setNombreUniversidad("");
-      setAcronimoUniversidad("");
-
-      // Actualizar el formData
-      if (isEditMode) {
-        setLocalFormData(prev => ({
-          ...prev,
-          universityTitle: "",
-          isCustomUniversity: true,
-          customUniversityName: "",
-          customUniversityAcronym: ""
-        }));
-      } else {
-        onInputChange({
-          universityTitle: "",
-          isCustomUniversity: true,
-          customUniversityName: "",
-          customUniversityAcronym: ""
-        });
-      }
-    } else {
-      setOtraUniversidad(false);
-
-      // Buscar la universidad seleccionada para obtener el acrónimo
-      const universidadSeleccionada = universidadesDisponibles.find(u => u.nombre === value);
-
-      // Actualizar el formData
-      if (isEditMode) {
-        setLocalFormData(prev => ({
-          ...prev,
-          universityTitle: value,
-          isCustomUniversity: false,
-          customUniversityName: "",
-          customUniversityAcronym: universidadSeleccionada ? universidadSeleccionada.acronimo : ""
-        }));
-      } else {
-        onInputChange({
-          universityTitle: value,
-          isCustomUniversity: false,
-          customUniversityName: "",
-          customUniversityAcronym: universidadSeleccionada ? universidadSeleccionada.acronimo : ""
-        });
-      }
-    }
-  };
-
-  // Manejar el ingreso de nombre personalizado de universidad
-  const handleCustomNameChange = (e) => {
-    const rawValue = e.target.value;
-    const formattedValue = capitalizarPalabras(rawValue);
-    setNombreUniversidad(formattedValue);
-
-    // Actualizar el formData
     if (isEditMode) {
       setLocalFormData(prev => ({
         ...prev,
-        customUniversityName: formattedValue,
-        universityTitle: formattedValue
+        universityTitle: value
       }));
     } else {
-      onInputChange({
-        customUniversityName: formattedValue,
-        universityTitle: formattedValue
-      });
-    }
-  };
-
-  // Manejar el ingreso de acrónimo personalizado
-  const handleCustomAcronymChange = (e) => {
-    const value = e.target.value.toUpperCase();
-    setAcronimoUniversidad(value);
-
-    // Actualizar el formData
-    if (isEditMode) {
-      setLocalFormData(prev => ({
-        ...prev,
-        customUniversityAcronym: value
-      }));
-    } else {
-      onInputChange({ customUniversityAcronym: value });
+      onInputChange({ universityTitle: value });
     }
   };
 
   // Manejar el cambio en campo numérico (solo números permitidos)
   const handleNumericInput = (e) => {
     const { name, value } = e.target;
-    // Filtrar para permitir solo dígitos
     const numericValue = value.replace(/\D/g, '');
 
     if (isEditMode) {
@@ -299,7 +206,6 @@ export default function InfoColegiado({
     const newDateParts = { ...mppsDateParts, [field]: value };
     setMppsDateParts(newDateParts);
 
-    // Si tenemos las tres partes, actualizar la fecha completa
     if (newDateParts.year && newDateParts.month && newDateParts.day) {
       const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
 
@@ -319,7 +225,6 @@ export default function InfoColegiado({
     const newDateParts = { ...titleDateParts, [field]: value };
     setTitleDateParts(newDateParts);
 
-    // Si tenemos las tres partes, actualizar la fecha completa
     if (newDateParts.year && newDateParts.month && newDateParts.day) {
       const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
 
@@ -339,7 +244,6 @@ export default function InfoColegiado({
     const newDateParts = { ...mainRegDateParts, [field]: value };
     setMainRegDateParts(newDateParts);
 
-    // Si tenemos las tres partes, actualizar la fecha completa
     if (newDateParts.year && newDateParts.month && newDateParts.day) {
       const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
 
@@ -360,10 +264,9 @@ export default function InfoColegiado({
   };
 
   const handleSaveClick = () => {
-    // Simplemente guardamos sin validación estricta en modo edición
     if (onSave) {
       onSave(localFormData);
-    } else if (onInputChange) { // ← Agregar esta verificación
+    } else if (onInputChange) {
       onInputChange(localFormData);
     }
   };
@@ -383,7 +286,6 @@ export default function InfoColegiado({
         </label>
         <div className="relative">
           {isProfileEdit ? (
-            // En modo perfil, no editable
             <input
               type="text"
               value={typeof formData.tipo_profesion === 'object' ? formData.tipo_profesion.titulo : formData.tipo_profesion || "No especificada"}
@@ -391,12 +293,11 @@ export default function InfoColegiado({
               disabled
             />
           ) : (
-            // En modo normal, editable
             <>
               <select
                 name="tipo_profesion"
                 value={typeof formData.tipo_profesion === 'object' ? formData.tipo_profesion.id : formData.tipo_profesion}
-                onChange={handleChange}
+                onChange={handleTipoProfesionChange}
                 className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("tipo_profesion") ? "border-red-500 bg-red-50" : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
               >
@@ -424,7 +325,7 @@ export default function InfoColegiado({
         )}
       </div>
 
-      {/* Graduate Institute - Con capitalización de palabras */}
+      {/* Graduate Institute */}
       <div>
         <label className="mb-2 text-sm font-medium text-[#41023B] flex items-center">
           Liceo/Colegio de Egreso (Bachillerato)
@@ -444,134 +345,66 @@ export default function InfoColegiado({
         )}
       </div>
 
-      {/* University - Sistema de selección en dos pasos */}
+      {/* Universidad - Select filtrado por tipo de profesión */}
       <div>
         <label className="mb-2 text-sm font-medium text-[#41023B] flex items-center">
-          Institución de Educación Superior (universidad)
+          Institución de Educación Superior (Universidad)
           <span className="text-red-500 ml-1">*</span>
         </label>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Paso 1: Selección de Estado */}
-          <div>
-            <label className="mb-2 text-xs font-medium text-gray-700">
-              Seleccione el Estado
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="relative">
-              <select
-                name="universityState"
-                value={selectedEstado}
-                onChange={handleEstadoChange}
-                className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("universityState") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-                disabled={isProfileEdit}
+        {/* Mostrar mensaje si no hay tipo de profesión seleccionado */}
+        {!formData.tipo_profesion ? (
+          <div className={`w-full px-4 py-3 border ${isFieldEmpty("universityTitle") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl bg-gray-50`}>
+            <p className="text-gray-500 text-sm">
+              Primero seleccione el tipo de profesión para ver las universidades disponibles
+            </p>
+          </div>
+        ) : (
+          <div className="relative">
+            <select
+              name="universityTitle"
+              value={formData.universityTitle || ""}
+              onChange={handleUniversidadChange}
+              className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("universityTitle") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${universidadesDisponibles.length === 0 ? "text-gray-400 bg-gray-50" : "text-gray-700"
+                }`}
+              disabled={isProfileEdit || universidadesDisponibles.length === 0}
+            >
+              <option value="" disabled>
+                {universidadesDisponibles.length === 0
+                  ? "Cargando universidades..."
+                  : "Seleccione una universidad"
+                }
+              </option>
+              {universidadesDisponibles.map((univ) => (
+                <option key={univ.id} value={univ.titulo}>
+                  {univ.titulo}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg
+                className="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
               >
-                <option value="" disabled>Seleccione un estado</option>
-                {estados.map((estado, index) => (
-                  <option key={index} value={estado.id}>
-                    {estado.nombre}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg
-                  className="fill-current h-4 w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
-            {isFieldEmpty("universityState") && (
-              <p className="mt-1 text-xs text-red-500">Debe seleccionar un estado</p>
-            )}
-          </div>
-
-          {/* Paso 2: Selección de Universidad */}
-          <div>
-            <label className={`mb-2 text-xs font-medium ${selectedEstado ? "text-gray-700" : "text-gray-400"}`}>
-              Seleccione la Universidad
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="relative">
-              <select
-                name="universityTitle"
-                value={otraUniversidad ? "otra" : formData.universityTitle}
-                onChange={handleUniversidadChange}
-                className={`cursor-pointer w-full px-4 py-3 border ${isFieldEmpty("universityTitle") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none ${selectedEstado ? "text-gray-700" : "text-gray-400 bg-gray-50"
-                  }`}
-                disabled={isProfileEdit || !selectedEstado}
-              >
-                <option value="" disabled>Seleccione una universidad</option>
-                {universidadesDisponibles.map((univ) => (
-                  <option key={univ.acronimo} value={univ.nombre}>
-                    {univ.nombre} ({univ.acronimo})
-                  </option>
-                ))}
-                <option value="otra">Otra (no está en la lista)</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg
-                  className="fill-current h-4 w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
-            {isFieldEmpty("universityTitle") && selectedEstado && (
-              <p className="mt-1 text-xs text-red-500">Debe seleccionar una universidad</p>
-            )}
-          </div>
-        </div>
-
-        {/* Campos adicionales para "Otra Universidad" */}
-        {otraUniversidad && selectedEstado && (
-          <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <h4 className="text-sm font-medium text-[#41023B]">Ingrese los datos de la universidad</h4>
-
-            {/* Nombre completo de la universidad */}
-            <div>
-              <label className="mb-2 text-xs font-medium text-gray-700">
-                Nombre completo de la universidad
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <input
-                type="text"
-                value={nombreUniversidad}
-                onChange={handleCustomNameChange}
-                className={`w-full px-4 py-3 border ${isFieldEmpty("customUniversityName") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                placeholder="Nombre completo de la universidad"
-              />
-              {isFieldEmpty("customUniversityName") && (
-                <p className="mt-1 text-xs text-red-500">Debe ingresar el nombre de la universidad</p>
-              )}
-            </div>
-
-            {/* Acrónimo de la universidad */}
-            <div>
-              <label className="mb-2 text-xs font-medium text-gray-700">
-                Acrónimo de la universidad (en MAYÚSCULAS)
-                <span className="text-red-500 ml-1">*</span>
-              </label>
-              <input
-                type="text"
-                value={acronimoUniversidad}
-                onChange={handleCustomAcronymChange}
-                className={`w-full px-4 py-3 border ${isFieldEmpty("customUniversityAcronym") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                placeholder="Ejemplo: UCV, USB, LUZ"
-              />
-              {isFieldEmpty("customUniversityAcronym") && (
-                <p className="mt-1 text-xs text-red-500">Debe ingresar el acrónimo de la universidad</p>
-              )}
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
             </div>
           </div>
+        )}
+
+        {/* Mensajes de validación mejorados */}
+        {!formData.tipo_profesion && isFieldEmpty("universityTitle") && (
+          <p className="mt-1 text-xs text-red-500">Primero debe seleccionar el tipo de profesión</p>
+        )}
+
+        {formData.tipo_profesion && isFieldEmpty("universityTitle") && (
+          <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+        )}
+
+        {formData.tipo_profesion && universidadesDisponibles.length === 0 && !isFieldEmpty("universityTitle") && (
+          <p className="mt-1 text-xs text-yellow-600">No hay universidades disponibles para esta profesión</p>
         )}
       </div>
 
@@ -584,7 +417,6 @@ export default function InfoColegiado({
               <span className="text-red-500 ml-1">*</span>
             </label>
             {isProfileEdit ? (
-              // En modo perfil, no editable
               <input
                 type="text"
                 maxLength={6}
@@ -593,7 +425,6 @@ export default function InfoColegiado({
                 disabled
               />
             ) : (
-              // En modo normal, editable"
               <input
                 type="text"
                 inputMode="numeric"
@@ -621,7 +452,6 @@ export default function InfoColegiado({
             </label>
             <div className="relative">
               {isProfileEdit ? (
-                // En modo perfil, no editable
                 <input
                   type="text"
                   value={formData.mainRegistrationDate || "No especificada"}
@@ -629,7 +459,6 @@ export default function InfoColegiado({
                   disabled
                 />
               ) : (
-                // En modo normal, editable con selectores
                 <div className="grid grid-cols-3 gap-2">
                   {/* Selector de año */}
                   <div className="relative">
@@ -715,7 +544,6 @@ export default function InfoColegiado({
             <span className="text-red-500 ml-1">*</span>
           </label>
           {isProfileEdit ? (
-            // En modo perfil, no editable
             <input
               type="text"
               value={formData.mppsRegistrationNumber || "No especificado"}
@@ -724,7 +552,6 @@ export default function InfoColegiado({
               disabled
             />
           ) : (
-            // En modo normal, editable - Cambiado de type="number" a type="text"
             <input
               type="text"
               inputMode="numeric"
@@ -752,7 +579,6 @@ export default function InfoColegiado({
           </label>
           <div className="relative">
             {isProfileEdit ? (
-              // En modo perfil, no editable
               <input
                 type="text"
                 value={formData.mppsRegistrationDate || "No especificada"}
@@ -760,7 +586,6 @@ export default function InfoColegiado({
                 disabled
               />
             ) : (
-              // En modo normal, editable con selectores
               <div className="grid grid-cols-3 gap-2">
                 {/* Selector de año */}
                 <div className="relative">
@@ -844,7 +669,6 @@ export default function InfoColegiado({
           <span className="text-red-500 ml-1">*</span>
         </label>
         <div className="relative">
-          {/* Selectores para fecha de emisión de título */}
           <div className="grid grid-cols-3 gap-2">
             {/* Selector de año */}
             <div className="relative">
@@ -922,7 +746,7 @@ export default function InfoColegiado({
         <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
       )}
 
-      {/* Warning message that appears when date field is focused */}
+      {/* Warning message que aparece cuando el campo de fecha está enfocado */}
       {showTitleDateWarning && (
         <div className="absolute z-10 mt-2 w-full sm:w-80 md:w-96 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r shadow-md">
           <div className="flex items-center">
@@ -941,6 +765,7 @@ export default function InfoColegiado({
           </p>
         </div>
       )}
+
       {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           <button

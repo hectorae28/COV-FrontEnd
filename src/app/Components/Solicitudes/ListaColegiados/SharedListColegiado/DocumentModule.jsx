@@ -22,8 +22,7 @@ export function DocumentSection({
   readonly = false,
   filter = doc => !doc.id?.includes('comprobante_pago'),
   isColegiado = false,
-  pendienteData = null,
-  isAdmin = false
+  pendienteData = null
 }) {
   // Estados para el modal de edición y subida
   const [showModal, setShowModal] = useState(false);
@@ -285,6 +284,18 @@ export function DocumentSection({
 
     setLocalPendienteData(optimisticUpdate);
 
+    // Notificar cambio optimista al componente padre
+    if (onDocumentStatusChange) {
+      onDocumentStatusChange({
+        ...documentoParaSubir,
+        url: tempUrl,
+        archivo: selectedFile.name,
+        status: 'uploading',
+        isOptimistic: true,
+        tempUrl: tempUrl
+      });
+    }
+
     // Cerrar modal inmediatamente para mejor UX
     setDocumentoParaSubir(null);
     setSelectedFile(null);
@@ -305,7 +316,20 @@ export function DocumentSection({
             ...response.data
           }));
 
-          // Mostrar mensaje de éxitoupdatedata
+          // Notificar actualización real al padre
+          if (onDocumentStatusChange) {
+            onDocumentStatusChange({
+              ...documentoParaSubir,
+              url: realUrl,
+              archivo: selectedFile.name,
+              status: 'pending',
+              isOptimistic: false,
+              fullData: response.data,
+              tempUrl: tempUrl
+            });
+          }
+
+          // Mostrar mensaje de éxito
           setUploadSuccess(true);
           setUploadedDocumentName(documentoParaSubir.nombre);
           setTimeout(() => setUploadSuccess(false), 5000);
@@ -494,7 +518,6 @@ export function DocumentSection({
               onReplace={() => handleReemplazarDocumento(documento)}
               onStatusChange={onDocumentStatusChange}
               isColegiado={isColegiado}
-              isAdmin={isAdmin}
             />
           ))
         ) : (
@@ -623,8 +646,8 @@ export function DocumentSection({
   );
 }
 
-// Actualiza la definición de DocumentCard para incluir isAdmin en las props
-function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiado = false, isAdmin = false }) {
+// Componente de tarjeta individual optimizado
+function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiado = false }) {
   const tieneArchivo = documento.url !== null;
   const isExonerado = documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isReadOnly = documento.status === 'approved' && documento.isReadOnly;
@@ -702,8 +725,7 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
               </div>
             )}
 
-            {/* Solo mostrar VerificationSwitch si isAdmin es true */}
-            {tieneArchivo && !isUploading && isAdmin && (
+            {tieneArchivo && !isUploading && (
               <div className="document-verification-switch">
                 <VerificationSwitch
                   item={documento}
