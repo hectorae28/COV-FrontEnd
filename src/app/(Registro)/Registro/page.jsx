@@ -59,6 +59,9 @@ const steps = [
       "universityTitle",
       "titleIssuanceDate",
       "tipo_profesion",
+      "mppsRegistrationNumber",
+      "mainRegistrationNumber",
+      "mainRegistrationDate",
     ],
   },
   {
@@ -101,8 +104,8 @@ export default function RegistrationForm(props) {
 
     // Persona data
     documentType: props?.persona?.documentType || "", // Nuevo campo para tipo de documento (vacío por defecto)
-    identityCard: props?.persona?.identificacion?.substring(0, 1) || "",
-    idType: props?.persona?.identificacion?.substring(1) || "V",
+    identityCard: props?.persona?.identificacion?.substring(1) || "",
+    idType: props?.persona?.identificacion?.substring(0, 1) || "V",
     firstName: props?.persona?.nombre || "",
     secondName: props?.persona?.segundo_nombre || "",
     firstLastName: props?.persona?.primer_apellido || "",
@@ -125,6 +128,7 @@ export default function RegistrationForm(props) {
     graduateInstitute: props?.instituto_bachillerato || "",
     universityTitle: props?.universidad || "",
     mainRegistrationNumber: props?.num_registro_principal || "",
+    mppsRegistrationNumber: props?.num_mpps || "",
     mainRegistrationDate: props?.fecha_registro_principal || "",
     titleIssuanceDate: props?.fecha_egreso_universidad || "",
 
@@ -528,7 +532,7 @@ export default function RegistrationForm(props) {
               formData.documentType === "cedula" ? "venezolana" : "extranjera",
             identificacion:
               formData.documentType === "cedula"
-                ? `${formData.idType}${formData.identityCard}`
+                ? `${formData.idType}-${formData.identityCard}`
                 : formData.identityCard,
             correo: formData.email,
             telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
@@ -540,16 +544,16 @@ export default function RegistrationForm(props) {
         Form.append("instituto_bachillerato", formData.graduateInstitute);
         Form.append("universidad", formData.universityTitle);
         Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
-        if (formData.tipo_profesion === "odontologo") {
-          Form.append(
-            "num_registro_principal",
-            formData.mainRegistrationNumber
-          );
-          Form.append(
-            "fecha_registro_principal",
-            formData.mainRegistrationDate
-          );
-        }
+        Form.append("num_mpps", formData.mppsRegistrationNumber);
+        // Enviar siempre los campos de registro principal para todas las profesiones
+        Form.append(
+          "num_registro_principal",
+          formData.mainRegistrationNumber
+        );
+        Form.append(
+          "fecha_registro_principal",
+          formData.mainRegistrationDate
+        );
         Form.append(
           "instituciones",
           JSON.stringify(
