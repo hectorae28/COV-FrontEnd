@@ -455,7 +455,8 @@ export default function PagosColg({ props }) {
           ) : (
             // Vista original de botones para 4 métodos o menos
             <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
-              {metodoDePago.map((metodo, index) => (
+              {metodoDePago.filter(metodo => metodo.es_visible_colegiado)
+                .map((metodo, index) => (
                 <button
                   key={index}
                   className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
