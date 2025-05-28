@@ -79,9 +79,8 @@ export default function Home() {
   // Separate method for fetching user data and solvency info
   async function fetchUserAndSolvency() {
     try {
-      if (!session) return;
 
-      const userResponse = await fetchMe(session);
+      const userResponse = await fetchMe();
       const userData = userResponse.data;
 
       setUserInfo(userData);
@@ -120,9 +119,7 @@ export default function Home() {
   useEffect(() => {
     const loadUserData = async () => {
       // Fetch costos and tasa-bcv in parallel
-      await Promise.all([fetchCostos(), fetchTasaBcv()]);
-      // Fetch user data after costos are available
-      await fetchUserAndSolvency();
+      await Promise.all([fetchCostos(), fetchTasaBcv(), fetchUserAndSolvency()]);
     };
 
     if (session) {
@@ -306,17 +303,18 @@ export default function Home() {
       {/* Modal para crear solicitud - renderizado a nivel de página */}
       {showModal && (
         <CrearSolicitudModal
-          onClose={() => setShowModal(false)}
-          onSolicitudCreada={handleSolicitudCreada}
-          colegiadoPreseleccionado={colegiado}
-          mostrarSeleccionColegiado={false}
-          session={session}
-          tipoSolicitud={solicitudTipo}
+          props={{
+            colegiadoPreseleccionado: colegiadoUser,
+            mostrarSeleccionColegiado: false,
+            session: session,
+            tipoSolicitud: solicitudTipo,
+            onClose: () => setShowModal(false),
+            onSolicitudCreada: handleSolicitudCreada
+          }}
         />
       )}
 
       <Chat />
-      {/* </DashboardLayout> */}
     </>
   )
 }

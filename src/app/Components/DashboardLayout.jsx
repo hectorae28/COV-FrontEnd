@@ -13,7 +13,7 @@ export default function DashboardLayout({
     if (!colegiadoUser) return;
     
     const today = new Date();
-    const [year, month, day] = colegiadoUser.solvente.split("-").map(Number);
+    const [year, month, day] = colegiadoUser?.solvente.split("-").map(Number);
     const solvencyDate = new Date(year, month - 1, day);
 
     const warningDate = new Date(solvencyDate);

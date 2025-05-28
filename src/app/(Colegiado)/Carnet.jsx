@@ -1,11 +1,38 @@
 "use client";
 
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Expand, Download } from 'lucide-react';
+import useColegiadoUserStore from '@/store/colegiadoUserStore';
+import api from '@/api/api';
+import { generateConstanciaPDF, downloadPDF, openPDF } from '@/utils/PDF/constanciasPDFService';
 
 export default function Carnet() {
     const [isHovered, setIsHovered] = useState(false);
+    const [carnet, setCarnet] = useState(null);
+    const colegiadoUser = useColegiadoUserStore(state => state.colegiadoUser);
+    const loadCarnet = async () => {
+        try {
+            if (!colegiadoUser) return;
+            const solicitudCarnet = await api.get(`/solicitudes/solicitud_unida/?colegiado=${colegiadoUser.colegiado_id}&status=cerrada&solicitudcarnet__status=aprobado`);
+            const datosResponse = await api.get(`/solicitudes/solicitud_carnet/${solicitudCarnet.data.results[0].id}/datos/`);
+            const datosCarnet = datosResponse.data;
+            const { docDefinition } = generateConstanciaPDF(datosCarnet, 'carnet');
+            const pdfUrl = await openPDF(docDefinition);
+            setCarnet({url:pdfUrl,datos:datosCarnet});
+        } catch (error) {
+            console.error("Error al cargar el carnet:", error);
+        }
+    }
+    useEffect(() => {
+        loadCarnet();
+    }, [colegiadoUser]);
 
+    const getFileName = () => {
+        if (!carnet?.datos) return 'carnet.pdf';
+        const colegiado = carnet.datos.colegiado_nombre || 'colegiado';
+        const fecha = new Date().toISOString().split('T')[0]; 
+        return `carnet_${colegiado.replace(/\s+/g, '_')}_${fecha}.pdf`;
+    };
     return (
         <div className="w-full h-full">
             {/* Versión completa para pantallas grandes (lg y más grandes) */}
@@ -14,12 +41,12 @@ export default function Carnet() {
                 <div className="bg-gradient-to-b from-[#41023B] to-[#D7008A] p-4">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center text-white">
-                            <h2 className="text-sm font-semibold">Carnet Vigente hasta: 12/12/2025</h2>
+                            <h2 className="text-sm font-semibold">Carnet Vigente hasta: {carnet ? carnet.datos.fecha_vencimiento : "No hay carnet vigente"}</h2>
                         </div>
                         <div className="flex space-x-2">
                             <a
-                                href="/assets/carnet.pdf"
-                                download
+                                href={carnet?.url}
+                                download={getFileName()}
                                 className="text-white hover:text-gray-200 transition-colors"
                                 title="Descargar PDF"
                             >
@@ -38,7 +65,7 @@ export default function Carnet() {
                     <div className="pdf-container overflow-hidden relative border-t border-gray-100 h-full">
                         {/* Visor de PDF */}
                         <iframe
-                            src="/assets/carnet.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit"
+                            src={carnet?.url}
                             title="Carnet PDF"
                             className="w-full h-full min-h-[400px]"
                             style={{ overflow: 'hidden' }}
@@ -46,7 +73,7 @@ export default function Carnet() {
 
                         {/* Overlay con efecto hover */}
                         <a
-                            href="/assets/carnet.pdf"
+                            href={carnet?.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 flex items-end justify-center p-4 transition-opacity duration-300 ${isHovered ? 'opacity-100' : ''}`}
@@ -60,15 +87,14 @@ export default function Carnet() {
                 </div>
             </div>
 
-            {/* Versión simplificada para pantallas medianas y pequeñas (md, sm y móvil) */}
             <div className="lg:hidden flex flex-col items-center justify-center bg-white rounded-xl p-6 shadow-md">
                 <div className="text-center mb-4">
                     <h2 className="text-lg font-semibold text-[#41023B]">Carnet Vigente</h2>
                     <p className="text-sm text-gray-600 mt-1">Válido hasta: 12/12/2025</p>
                 </div>
                 <a
-                    href="/assets/carnet.pdf"
-                    download
+                    href={carnet?.url}
+                    download={getFileName()}
                     className="flex items-center justify-center gap-2 bg-gradient-to-b from-[#41023B] to-[#D7008A] hover:from-[#510549] hover:to-[#e20091] text-white font-medium py-3 px-6 rounded-lg transition-all duration-300"
                 >
                     <Download size={20} />
