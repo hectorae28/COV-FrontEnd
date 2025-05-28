@@ -1,10 +1,10 @@
 "use client";
 import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
-import { FaChevronDown, FaBars, FaTimes, FaSpinner } from "react-icons/fa";
-import Whatsapp from "./BottomFloat";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { FaBars, FaChevronDown, FaSpinner, FaTimes } from "react-icons/fa";
 import LogoDownloadModal from "../../Components/SobreCOV/LogoDownloadModal";
+import Whatsapp from "./BottomFloat";
 
 const menuItems = [
   { title: "Inicio", route: "/" },
@@ -128,7 +128,7 @@ export default function AppBar() {
   const navigateToLogin = () => {
   setIsLoading(true);
   // Navigate to login page with direct colegiados parameter
-  router.push("/Login?direct=colegiados");
+  router.push("/Login");
 };
 
   const handleBridgeHover = (index) => {
