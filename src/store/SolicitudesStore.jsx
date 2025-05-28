@@ -41,7 +41,7 @@ export const TIPOS_SOLICITUD = {
       { displayName: "Cédula de Identidad", campo: "file_cedula" },
     ],
     subtipos: [
-      { codigo: "inscripcion_cov", nombre: "Inscripción del COV" },
+      // { codigo: "inscripcion_cov", nombre: "Inscripción del COV" },
       { codigo: "solvencia", nombre: "Solvencia" },
       { codigo: "libre_ejercicio", nombre: "Libre ejercicio" },
       { codigo: "declaracion_habilitacion", nombre: "Declaración de habilitación" },

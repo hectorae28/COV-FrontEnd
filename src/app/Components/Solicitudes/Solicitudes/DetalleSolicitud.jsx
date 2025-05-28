@@ -15,7 +15,6 @@ import Link from "next/link";
 
 // Componentes importados
 import PagosColg from "@/Components/PagosModal"
-import {PagosColgSolic} from "@/app/Components/Solicitudes/Solicitudes/PagosModalSolic"
 import ConfirmacionModal from "@/Components/Solicitudes/Solicitudes/ConfirmacionModal";
 import DocumentosSection from "@/Components/Solicitudes/Solicitudes/DocumentsManagerComponent";
 
@@ -216,7 +215,6 @@ export default function DetalleSolicitud({ props }) {
 
   // Función que se ejecuta cuando se completa un pago
   const handlePaymentComplete = async (pagoInfo) => {
-    console.log("pagoInfo", pagoInfo);
     try {
       await addPagosSolicitud(solicitud.id, {
         monto: Number(pagoInfo.totalAmount),
@@ -294,7 +292,6 @@ export default function DetalleSolicitud({ props }) {
       if (documento.tipoDocumento === 'carnet') {
         // Para carnets, extraer el ID real del SolicitudCarnet del formato compuesto
         const carnetId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
-        console.log("Debug - Generando carnet para SolicitudCarnet ID:", carnetId);
         const datosResponse = await api.get(`/solicitudes/solicitud_carnet/${carnetId}/datos/`);
         const datosCarnet = datosResponse.data;
         
@@ -305,12 +302,9 @@ export default function DetalleSolicitud({ props }) {
       } else {
         // Para constancias, extraer el ID real del SolicitudConstancia del formato compuesto
         const constanciaId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
-        console.log("Debug - Generando constancia para SolicitudConstancia ID:", constanciaId);
         
         const datosResponse = await api.get(`/solicitudes/solicitud_constancia/${constanciaId}/datos/`);
         const datosCompletos = datosResponse.data;
-        
-        console.log("Debug - Datos de constancia obtenidos:", datosCompletos);
         
         // Limpiar el tipo de constancia para el PDF
         let tipoConstanciaLimpio = documento.tipo;
