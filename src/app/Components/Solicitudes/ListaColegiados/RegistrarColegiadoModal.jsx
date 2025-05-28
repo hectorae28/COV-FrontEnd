@@ -33,8 +33,10 @@ export default function RegistroColegiados({
   const [metodoPago, setMetodoPago] = useState([]);
   const initialState = {
     tipo_profesion: "",
+    documentType: "cedula",
     nationality: "",
     identityCard: "",
+    idType: "V",
     firstName: "",
     secondName: "",
     firstLastName: "",
@@ -65,14 +67,27 @@ export default function RegistroColegiados({
     mainRegistrationNumber: "",
     mainRegistrationDate: "",
     mppsRegistrationNumber: "",
-    mppsRegistrationDate: "",
     titleIssuanceDate: "",
-    state: "",
     ci: null,
     rif: null,
     titulo: null,
     mpps: null,
-    documentos: {}
+    documentos: {},
+    workStatus: "labora",
+    institutionType: "",
+    cargo: "",
+    selectedEstado: "",
+    selectedMunicipio: "",
+    laboralRegistros: [{
+      id: 1,
+      institutionType: "",
+      institutionName: "",
+      institutionAddress: "",
+      institutionPhone: "",
+      cargo: "",
+      selectedEstado: "",
+      selectedMunicipio: ""
+    }]
   };
 
   // Estado para los datos del formulario
@@ -195,50 +210,51 @@ export default function RegistroColegiados({
     metodo_de_pago = null,
   }) => {
     setIsSubmitting(true);
+    console.log("FormData antes del envío:", formData);
+    
     const Form = new FormData();
     Form.append("tipo_profesion", formData.tipo_profesion);
     Form.append(
       "persona",
       JSON.stringify({
         direccion: {
-          referencia: formData.address,
+          referencia: formData.address || "",
           estado: 1,
         },
-        nombre: formData.firstName,
-        primer_apellido: formData.firstLastName,
-        segundo_apellido: formData.secondLastName,
-        segundo_nombre: formData.secondName,
-        genero: formData.gender,
-        nacionalidad: formData.nationality,
-        identificacion: `${formData.idType}-${formData.identityCard}`,
-        correo: formData.email,
-        telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
-        telefono_de_habitacion: formData.homePhone,
-        fecha_de_nacimiento: formData.birthDate,
-        estado_civil: formData.maritalStatus,
+        nombre: formData.firstName || "",
+        primer_apellido: formData.firstLastName || "",
+        segundo_apellido: formData.secondLastName || "",
+        segundo_nombre: formData.secondName || "",
+        genero: formData.gender || "",
+        nacionalidad: formData.documentType === "cedula" ? "venezolana" : "extranjera",
+        identificacion: `${formData.idType || "V"}-${formData.identityCard || ""}`,
+        correo: formData.email || "",
+        telefono_movil: `${formData.countryCode || "+58"} ${formData.phoneNumber || ""}`,
+        telefono_de_habitacion: formData.homePhone || "",
+        fecha_de_nacimiento: formData.birthDate || "",
+        estado_civil: formData.maritalStatus || "",
       })
     );
-    Form.append("instituto_bachillerato", formData.graduateInstitute);
-    Form.append("universidad", formData.universityTitle);
-    Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
-    if (formData.tipo_profesion === "odontologo") {
-      Form.append("num_registro_principal", formData.mainRegistrationNumber);
-      Form.append("fecha_registro_principal", formData.mainRegistrationDate);
-    }
-    Form.append("num_mpps", formData.mppsRegistrationNumber);
-    Form.append("fecha_mpps", formData.mppsRegistrationDate);
-    Form.append(
-      "instituciones",
-      JSON.stringify(
-        formData.laboralRegistros.map((registro) => ({
-          nombre: registro.institutionName,
-          cargo: registro.cargo,
-          direccion: registro.institutionAddress,
-          telefono: registro.institutionPhone,
-          tipo_institucion: registro.institutionType,
-        })) || []
-      )
-    );
+    Form.append("instituto_bachillerato", formData.graduateInstitute || "");
+    Form.append("universidad", formData.universityTitle || "");
+    Form.append("fecha_egreso_universidad", formData.titleIssuanceDate || "");
+    // Enviar siempre los campos de registro principal para todas las profesiones
+    Form.append("num_registro_principal", formData.mainRegistrationNumber || "");
+    Form.append("fecha_registro_principal", formData.mainRegistrationDate || "");
+    Form.append("num_mpps", formData.mppsRegistrationNumber || "");
+    
+    // Manejo más robusto de instituciones laborales
+    const instituciones = (formData.laboralRegistros && Array.isArray(formData.laboralRegistros)) 
+      ? formData.laboralRegistros.map((registro) => ({
+          nombre: registro.institutionName || "",
+          cargo: registro.cargo || "",
+          direccion: registro.institutionAddress || "",
+          telefono: registro.institutionPhone || "",
+          tipo_institucion: registro.institutionType || "CDP",
+        }))
+      : [];
+    
+    Form.append("instituciones", JSON.stringify(instituciones));
     Form.append("file_ci", formData.ci);
     Form.append("file_rif", formData.rif);
     Form.append("file_fondo_negro", formData.titulo);
@@ -269,24 +285,28 @@ export default function RegistroColegiados({
       : Form.append("pago", null);
     exonerarPagos && Form.append("pago_exonerado", true)
     try {
+      console.log("Enviando formulario...");
       const response = await api.post("usuario/register/", Form, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
+      console.log("Respuesta exitosa:", response);
       if (response.status === 201) {
         setPasoActual(7);
         onRegistroExitoso();
         setIsSubmitting(false);
-
       }
     } catch (error) {
+      console.error("Error completo:", error);
+      console.error("Error response:", error.response);
+      console.error("Error data:", error.response?.data);
+      console.error("Error status:", error.response?.status);
       console.error(
         "Error al enviar los datos:",
-        error.response?.data || error
+        error.response?.data || error.message || error
       );
       setIsSubmitting(false);
-
     } finally {
       setIsSubmitting(false);
     }

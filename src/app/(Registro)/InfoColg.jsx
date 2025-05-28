@@ -18,7 +18,7 @@ export default function InfoColegiado({
   // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
 
-  // Estados para las partes de las fechas (removemos mppsDateParts)
+  // Estados para las partes de las fechas
   const [titleDateParts, setTitleDateParts] = useState({
     day: formData.titleIssuanceDate ? formData.titleIssuanceDate.split('-')[2] : "",
     month: formData.titleIssuanceDate ? formData.titleIssuanceDate.split('-')[1] : "",
@@ -279,9 +279,9 @@ export default function InfoColegiado({
                 <option value="" disabled>
                   Seleccione una opción
                 </option>
+                <option value="higienista">Higienista</option>
                 <option value="odontologo">Odontólogo</option>
                 <option value="tecnico">Técnico Dental</option>
-                <option value="higienista">Higienista</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                 <svg
@@ -383,217 +383,253 @@ export default function InfoColegiado({
         )}
       </div>
 
-      {/* Registration Number - Solo se muestra para odontólogos o si estamos en modo edición de perfil */}
-      {(formData.tipo_profesion === "odontologo" || isProfileEdit) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-              Número de Registro Principal
-              <span className="text-red-500 ml-1">*</span>
-            </label>
+      {/* Registration Number - Siempre mostrar independientemente de la profesión */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Número de Registro Principal
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          {isProfileEdit ? (
+            <input
+              type="text"
+              maxLength={6}
+              value={formData.mainRegistrationNumber ? `COV-${formData.mainRegistrationNumber}` : "No especificado"}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
+              disabled
+            />
+          ) : (
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              name="mainRegistrationNumber"
+              maxLength={6}
+              value={formData.mainRegistrationNumber}
+              onChange={handleNumericInput}
+              className={`w-full px-4 py-3 border ${isFieldEmpty("mainRegistrationNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+              placeholder="Número de registro"
+            />
+          )}
+          {isProfileEdit && (
+            <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
+          )}
+          {isFieldEmpty("mainRegistrationNumber") && !isProfileEdit && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
+        </div>
+        <div>
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Fecha de Registro Principal
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="relative">
             {isProfileEdit ? (
               <input
                 type="text"
-                maxLength={6}
-                value={formData.mainRegistrationNumber ? `COV-${formData.mainRegistrationNumber}` : "No especificado"}
+                value={formData.mainRegistrationDate || "No especificada"}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
                 disabled
               />
             ) : (
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                name="mainRegistrationNumber"
-                maxLength={6}
-                value={formData.mainRegistrationNumber}
-                onChange={handleNumericInput}
-                className={`w-full px-4 py-3 border ${isFieldEmpty("mainRegistrationNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
-                  } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-                placeholder="Número de registro"
-              />
-            )}
-            {isProfileEdit && (
-              <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
-            )}
-            {isFieldEmpty("mainRegistrationNumber") && !isProfileEdit && (
-              <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-            )}
-          </div>
-          <div>
-            <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-              Fecha de Registro Principal
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="relative">
-              {isProfileEdit ? (
-                <input
-                  type="text"
-                  value={formData.mainRegistrationDate || "No especificada"}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
-                  disabled
-                />
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {/* Selector de año */}
-                  <div className="relative">
-                    <select
-                      value={mainRegDateParts.year}
-                      onChange={(e) => handleMainRegDateChange('year', e.target.value)}
-                      className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-                    >
-                      <option value="">Año</option>
-                      {years.map(year => (
-                        <option key={`mainreg-year-${year.value}`} value={year.value}>
-                          {year.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Selector de mes */}
-                  <div className="relative">
-                    <select
-                      value={mainRegDateParts.month}
-                      onChange={(e) => handleMainRegDateChange('month', e.target.value)}
-                      className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-                    >
-                      <option value="">Mes</option>
-                      {months.map(month => (
-                        <option key={`mainreg-month-${month.value}`} value={month.value}>
-                          {month.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Selector de día */}
-                  <div className="relative">
-                    <select
-                      value={mainRegDateParts.day}
-                      onChange={(e) => handleMainRegDateChange('day', e.target.value)}
-                      disabled={!mainRegDateParts.year || !mainRegDateParts.month}
-                      className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-                    >
-                      <option value="">Día</option>
-                      {getDaysInMonth(mainRegDateParts.year, mainRegDateParts.month).map(day => (
-                        <option key={`mainreg-day-${day.value}`} value={day.value}>
-                          {day.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                      </svg>
-                    </div>
+              <div className="grid grid-cols-3 gap-2">
+                {/* Selector de año */}
+                <div className="relative">
+                  <select
+                    value={mainRegDateParts.year}
+                    onChange={(e) => handleMainRegDateChange('year', e.target.value)}
+                    className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                  >
+                    <option value="">Año</option>
+                    {years.map(year => (
+                      <option key={`mainreg-year-${year.value}`} value={year.value}>
+                        {year.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
                   </div>
                 </div>
-              )}
-            </div>
-            {isProfileEdit && (
-              <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
-            )}
-            {isFieldEmpty("mainRegistrationDate") && !isProfileEdit && (
-              <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+
+                {/* Selector de mes */}
+                <div className="relative">
+                  <select
+                    value={mainRegDateParts.month}
+                    onChange={(e) => handleMainRegDateChange('month', e.target.value)}
+                    className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                  >
+                    <option value="">Mes</option>
+                    {months.map(month => (
+                      <option key={`mainreg-month-${month.value}`} value={month.value}>
+                        {month.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Selector de día */}
+                <div className="relative">
+                  <select
+                    value={mainRegDateParts.day}
+                    onChange={(e) => handleMainRegDateChange('day', e.target.value)}
+                    disabled={!mainRegDateParts.year || !mainRegDateParts.month}
+                    className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mainRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                  >
+                    <option value="">Día</option>
+                    {getDaysInMonth(mainRegDateParts.year, mainRegDateParts.month).map(day => (
+                      <option key={`mainreg-day-${day.value}`} value={day.value}>
+                        {day.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Title Issuance Date */}
-      <div className="relative">
-        <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-          Fecha de Emisión del Título
-          <span className="text-red-500 ml-1">*</span>
-        </label>
-        <div className="relative">
-          <div className="grid grid-cols-3 gap-2">
-            {/* Selector de año */}
-            <div className="relative">
-              <select
-                value={titleDateParts.year}
-                onChange={(e) => handleTitleDateChange('year', e.target.value)}
-                onFocus={() => setShowTitleDateWarning(true)}
-                onBlur={() => setShowTitleDateWarning(false)}
-                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-              >
-                <option value="">Año</option>
-                {years.map(year => (
-                  <option key={`title-year-${year.value}`} value={year.value}>
-                    {year.label}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Selector de mes */}
-            <div className="relative">
-              <select
-                value={titleDateParts.month}
-                onChange={(e) => handleTitleDateChange('month', e.target.value)}
-                onFocus={() => setShowTitleDateWarning(true)}
-                onBlur={() => setShowTitleDateWarning(false)}
-                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-              >
-                <option value="">Mes</option>
-                {months.map(month => (
-                  <option key={`title-month-${month.value}`} value={month.value}>
-                    {month.label}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Selector de día */}
-            <div className="relative">
-              <select
-                value={titleDateParts.day}
-                onChange={(e) => handleTitleDateChange('day', e.target.value)}
-                onFocus={() => setShowTitleDateWarning(true)}
-                onBlur={() => setShowTitleDateWarning(false)}
-                disabled={!titleDateParts.year || !titleDateParts.month}
-                className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-              >
-                <option value="">Día</option>
-                {getDaysInMonth(titleDateParts.year, titleDateParts.month).map(day => (
-                  <option key={`title-day-${day.value}`} value={day.value}>
-                    {day.label}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
-          </div>
+          {isProfileEdit && (
+            <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
+          )}
+          {isFieldEmpty("mainRegistrationDate") && !isProfileEdit && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
         </div>
       </div>
-      {isFieldEmpty("titleIssuanceDate") && (
-        <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-      )}
+
+      {/* M.P.P.S Registration y Fecha de Emisión del Título en la misma línea */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Número de Registro M.P.P.S
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          {isProfileEdit ? (
+            <input
+              type="text"
+              value={formData.mppsRegistrationNumber || "No especificado"}
+              maxLength={6}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
+              disabled
+            />
+          ) : (
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              name="mppsRegistrationNumber"
+              value={formData.mppsRegistrationNumber}
+              maxLength={6}
+              onChange={handleNumericInput}
+              className={`w-full px-4 py-3 border ${isFieldEmpty("mppsRegistrationNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
+              placeholder="Número de registro M.P.P.S"
+            />
+          )}
+          {isProfileEdit && (
+            <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
+          )}
+          {isFieldEmpty("mppsRegistrationNumber") && !isProfileEdit && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
+        </div>
+
+        {/* Fecha de Emisión del Título */}
+        <div className="relative">
+          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+            Fecha de Emisión del Título
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="relative">
+            <div className="grid grid-cols-3 gap-2">
+              {/* Selector de año */}
+              <div className="relative">
+                <select
+                  value={titleDateParts.year}
+                  onChange={(e) => handleTitleDateChange('year', e.target.value)}
+                  onFocus={() => setShowTitleDateWarning(true)}
+                  onBlur={() => setShowTitleDateWarning(false)}
+                  className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                >
+                  <option value="">Año</option>
+                  {years.map(year => (
+                    <option key={`title-year-${year.value}`} value={year.value}>
+                      {year.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Selector de mes */}
+              <div className="relative">
+                <select
+                  value={titleDateParts.month}
+                  onChange={(e) => handleTitleDateChange('month', e.target.value)}
+                  onFocus={() => setShowTitleDateWarning(true)}
+                  onBlur={() => setShowTitleDateWarning(false)}
+                  className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                >
+                  <option value="">Mes</option>
+                  {months.map(month => (
+                    <option key={`title-month-${month.value}`} value={month.value}>
+                      {month.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Selector de día */}
+              <div className="relative">
+                <select
+                  value={titleDateParts.day}
+                  onChange={(e) => handleTitleDateChange('day', e.target.value)}
+                  onFocus={() => setShowTitleDateWarning(true)}
+                  onBlur={() => setShowTitleDateWarning(false)}
+                  disabled={!titleDateParts.year || !titleDateParts.month}
+                  className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("titleIssuanceDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
+                >
+                  <option value="">Día</option>
+                  {getDaysInMonth(titleDateParts.year, titleDateParts.month).map(day => (
+                    <option key={`title-day-${day.value}`} value={day.value}>
+                      {day.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          {isFieldEmpty("titleIssuanceDate") && (
+            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
+          )}
+        </div>
+      </div>
 
       {/* Warning message que aparece cuando el campo de fecha está enfocado */}
       {showTitleDateWarning && (
