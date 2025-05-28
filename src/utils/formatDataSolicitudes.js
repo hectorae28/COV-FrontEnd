@@ -19,13 +19,6 @@ export default function transformBackendData(backendData) {
     comprobantePago: null,
     estadoPago: "Pendiente de verificación",
     fechaCompletado: formatDate(backendData.updated_at),
-    creador: {
-      username: "Administrador",
-      email: "admin@ejemplo.com",
-      esAdmin: true,
-      fecha: backendData.created_at,
-      tipo: "creado"
-    }
   };
 
   // Transformar ítems
@@ -52,7 +45,7 @@ export default function transformBackendData(backendData) {
 // Funciones auxiliares para la transformación
 function transformItem(item, type) {
   return {
-    id: `${type}-${item.id}`,
+    id: item.id,
     tipo: type,
     subtipo: type === "Constancia" ? getConstanciaSubtype(item.id) : null,
     nombre: type === "Constancia"
