@@ -1,6 +1,6 @@
 import institucionesList from "@/Shared/InstitucionesData";
 import { motion } from "framer-motion";
-import { Briefcase, BriefcaseBusiness, Phone, Plus, Trash2 } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, Phone, Plus, Trash2, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import DireccionForm from "./DireccionForm";
 
@@ -43,8 +43,9 @@ const formatearTelefonoLocal = (value) => {
 };
 
 export default function InfoLaboralWithDireccionForm({ formData, onInputChange, validationErrors, attemptedNext, isEditMode = false, onSave }) {
-  const [workStatus, setWorkStatus] = useState(formData.workStatus || "labora");
+  const [workStatus, setWorkStatus] = useState(formData.workStatus || "");
   const [localFormData, setLocalFormData] = useState(formData);
+  const [showInitialSelection, setShowInitialSelection] = useState(!formData.workStatus);
 
   const [registros, setRegistros] = useState(
     formData.laboralRegistros && formData.laboralRegistros.length > 0
@@ -99,11 +100,14 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
   useEffect(() => {
     if (formData.workStatus !== undefined) {
       setWorkStatus(formData.workStatus);
+      setShowInitialSelection(!formData.workStatus);
     }
   }, [formData.workStatus]);
 
   const handleWorkStatusChange = (value) => {
     setWorkStatus(value);
+    setShowInitialSelection(false);
+    
     if (value === "noLabora") {
       const updatedData = {
         workStatus: value,
@@ -349,6 +353,90 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
     }
   };
 
+  // Pantalla inicial de selección
+  if (showInitialSelection) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-8"
+      >
+        {/* Mensaje principal */}
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-6">
+            <BriefcaseBusiness className="w-10 h-10 text-white" />
+          </div>
+          
+          <h2 className="text-2xl font-bold text-[#41023B] mb-4">
+            Situación Laboral Actual
+          </h2>
+          
+          <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+            Para continuar con su proceso de colegiación, necesitamos conocer su situación laboral actual. 
+            Por favor, seleccione la opción que mejor describa su estado:
+          </p>
+        </div>
+
+        {/* Opciones de selección */}
+        <div className="max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Opción: Laborando */}
+            <motion.button
+              type="button"
+              onClick={() => handleWorkStatusChange("labora")}
+              className="group relative p-8 bg-white border-2 border-gray-200 rounded-xl hover:border-[#D7008A] hover:shadow-lg transition-all duration-300"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
+                  <BriefcaseBusiness className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#41023B] mb-2">
+                  Actualmente Laborando
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Estoy ejerciendo mi profesión en una o más instituciones
+                </p>
+                <div className="mt-4 flex items-center justify-center text-[#D7008A] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium mr-2">Continuar</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </motion.button>
+
+            {/* Opción: No Laborando */}
+            <motion.button
+              type="button"
+              onClick={() => handleWorkStatusChange("noLabora")}
+              className="group relative p-8 bg-white border-2 border-gray-200 rounded-xl hover:border-[#D7008A] hover:shadow-lg transition-all duration-300"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-4 group-hover:bg-gray-200 transition-colors">
+                  <Briefcase className="w-8 h-8 text-gray-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#41023B] mb-2">
+                  No Laborando Actualmente
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  No estoy ejerciendo mi profesión en este momento
+                </p>
+                <div className="mt-4 flex items-center justify-center text-[#D7008A] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium mr-2">Continuar</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Formulario principal (se muestra después de seleccionar)
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -357,31 +445,22 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       className="space-y-8"
     >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 className="text-xl font-semibold text-[#41023B] mb-4 sm:mb-0"></h2>
-        <div className="bg-gray-100 rounded-lg p-1 flex w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => handleWorkStatusChange("labora")}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex-1 sm:flex-auto ${workStatus === "labora"
-              ? "bg-white text-[#D7008A] shadow-sm"
-              : "text-gray-600 hover:bg-gray-200"
-              }`}
-          >
-            <BriefcaseBusiness size={18} />
-            <span>Laborando</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleWorkStatusChange("noLabora")}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex-1 sm:flex-auto ${workStatus === "noLabora"
-              ? "bg-white text-[#D7008A] shadow-sm"
-              : "text-gray-600 hover:bg-gray-200"
-              }`}
-          >
-            <Briefcase size={18} />
-            <span>No Laborando</span>
-          </button>
+        {/* Mostrar estado seleccionado */}
+        <div className="flex items-center mb-4 sm:mb-0">
+          <div className={`w-3 h-3 rounded-full mr-3 ${workStatus === "labora" ? "bg-green-500" : "bg-gray-500"}`}></div>
+          <span className="text-lg font-medium text-[#41023B]">
+            {workStatus === "labora" ? "Actualmente laborando" : "No laborando actualmente"}
+          </span>
         </div>
+        
+        {/* Botón para cambiar selección */}
+        <button
+          type="button"
+          onClick={() => setShowInitialSelection(true)}
+          className="text-sm text-[#D7008A] hover:text-[#41023B] font-medium underline"
+        >
+          Cambiar selección
+        </button>
       </div>
 
       {workStatus === "labora" && (
@@ -507,9 +586,6 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                   {isFieldEmpty(registro, "institutionPhone") && (
                     <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
-                    Ingrese código de área y número. Ej: 0212 123 4567
-                  </p>
                 </div>
               </div>
 
@@ -518,6 +594,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                 onInputChange={(updates) => handleDireccionChange(index, updates)}
                 isFieldEmpty={(fieldName) => isFieldEmpty(registro, fieldName)}
                 isEditMode={false}
+                localFormData={localFormData}
+                setLocalFormData={setLocalFormData}
                 fieldMapping={{
                   state: "selectedEstado",
                   municipio: "selectedMunicipio",
