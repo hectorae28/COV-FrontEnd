@@ -49,15 +49,15 @@ export default function DocsRequirements({
   // Determinar la etiqueta correcta para el fondo negro del título según la profesión
   const getTituloLabel = () => {
     if (formData.tipo_profesion === "odontologo") {
-      return "Fondo Negro del Título";
+      return "Foto del Título";
     } else if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
-      return "Fondo Negro del Título de Bachiller";
+      return "Foto del Título";
     } else {
-      return "Fondo Negro del Título";
+      return "Foto del Título";
     }
   };
 
-   const handleSaveClick = () => {
+  const handleSaveClick = () => {
     // Aquí podría haber validación, pero en este caso probablemente
     // solo queremos enviar los archivos que se han actualizado
     onInputChange(formData);
@@ -263,7 +263,7 @@ export default function DocsRequirements({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-                Fondo negro del título de bachiller
+                Fondo negro del Título de bachiller
                 <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
@@ -302,9 +302,9 @@ export default function DocsRequirements({
           y vigentes para evitar retrasos en su proceso de colegiación.
         </p>
       </div>
-      
+
       {/* Interruptor para aprobar documentos */}
-        {isEditMode && (
+      {isEditMode && (
 
         <div className="flex items-center justify-between p-2 bg-gray-50 rounded-xl border border-gray-300">
           <div>
@@ -313,7 +313,7 @@ export default function DocsRequirements({
               Confirme que todos los documentos proporcionados son correctos y válidos
             </p>
           </div>
-          <button 
+          <button
             type="button"
             onClick={handleAprobacionChange}
             className={`relative inline-flex items-center h-6 rounded-full w-12 focus:outline-none transition-colors duration-300 ease-in-out ${docsAprobados ? 'bg-green-600' : 'bg-red-600'}`}
@@ -337,9 +337,9 @@ export default function DocsRequirements({
         </div>
       )}
 
-      
 
-    {/* Si estamos en modo edición, mostrar botones de guardar/cancelar */}
+
+      {/* Si estamos en modo edición, mostrar botones de guardar/cancelar */}
       {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           <button

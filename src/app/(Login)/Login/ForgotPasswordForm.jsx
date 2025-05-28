@@ -9,7 +9,7 @@ import { useState } from "react";
 export default function ForgotPasswordForm({ onBackToLogin }) {
   const [correoRecuperacion, setCorreoRecuperacion] = useState("");
   const [isLoading, setIsLoading] = useState(false)
-  const [mesagge, setMesagge] = useState({text:"",type:"info"})
+  const [mesagge, setMesagge] = useState({ text: "", type: "info" })
 
   const handleInputChange = (e) => {
     setCorreoRecuperacion(e.target.value);
@@ -22,10 +22,10 @@ export default function ForgotPasswordForm({ onBackToLogin }) {
       email: correoRecuperacion,
     }).then((_) => {
       setIsLoading(false);
-      onBackToLogin({text:"Se ha enviado un correo de recuperación a tu correo electrónico.",type:"success"});
+      onBackToLogin({ text: "Se ha enviado un correo de recuperación a tu correo electrónico.", type: "success" });
     }).catch((error) => {
       setIsLoading(false);
-      setMesagge({text:error.status==404?" El correo no esta registrado":error.status==500?"Error interno del servidor.":"Error desconocido.",type:"alert"});
+      setMesagge({ text: error.status == 404 ? " El correo no esta registrado" : error.status == 500 ? "Error interno del servidor." : "Error desconocido.", type: "alert" });
     }
     );
 
@@ -34,7 +34,7 @@ export default function ForgotPasswordForm({ onBackToLogin }) {
 
   return (
     <form onSubmit={handleSubmit}>
-            {(mesagge.text.length > 0 && !isLoading )&& (
+      {(mesagge.text.length > 0 && !isLoading) && (
         <Alert type={mesagge.type}>{mesagge.text}</Alert>
 
       )}
@@ -75,7 +75,7 @@ export default function ForgotPasswordForm({ onBackToLogin }) {
           className="text-[#D7008A] font-medium hover:underline flex items-center justify-center"
           onClick={(e) => {
             e.preventDefault();
-            onBackToLogin();
+            onBackToLogin({ text: "", type: "info" });
           }}
         >
           <ArrowLeft className="mr-2 h-5 w-5" /> Volver a Iniciar Sesión

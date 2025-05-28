@@ -18,13 +18,7 @@ export default function InfoColegiado({
   // Estado local para el formulario en modo edición
   const [localFormData, setLocalFormData] = useState(formData);
 
-  // Estados para las partes de las fechas
-  const [mppsDateParts, setMppsDateParts] = useState({
-    day: formData.mppsRegistrationDate ? formData.mppsRegistrationDate.split('-')[2] : "",
-    month: formData.mppsRegistrationDate ? formData.mppsRegistrationDate.split('-')[1] : "",
-    year: formData.mppsRegistrationDate ? formData.mppsRegistrationDate.split('-')[0] : ""
-  });
-
+  // Estados para las partes de las fechas (removemos mppsDateParts)
   const [titleDateParts, setTitleDateParts] = useState({
     day: formData.titleIssuanceDate ? formData.titleIssuanceDate.split('-')[2] : "",
     month: formData.titleIssuanceDate ? formData.titleIssuanceDate.split('-')[1] : "",
@@ -201,25 +195,6 @@ export default function InfoColegiado({
     }
   };
 
-  // Para manejar cambios en los selectores de fecha MPPS
-  const handleMppsDateChange = (field, value) => {
-    const newDateParts = { ...mppsDateParts, [field]: value };
-    setMppsDateParts(newDateParts);
-
-    if (newDateParts.year && newDateParts.month && newDateParts.day) {
-      const fullDate = `${newDateParts.year}-${newDateParts.month}-${newDateParts.day}`;
-
-      if (isEditMode) {
-        setLocalFormData(prev => ({
-          ...prev,
-          mppsRegistrationDate: fullDate
-        }));
-      } else {
-        onInputChange({ mppsRegistrationDate: fullDate });
-      }
-    }
-  };
-
   // Para manejar cambios en los selectores de fecha de título
   const handleTitleDateChange = (field, value) => {
     const newDateParts = { ...titleDateParts, [field]: value };
@@ -304,9 +279,9 @@ export default function InfoColegiado({
                 <option value="" disabled>
                   Seleccione una opción
                 </option>
-                <option value="higienista">Higienista</option>
                 <option value="odontologo">Odontólogo</option>
                 <option value="tecnico">Técnico Dental</option>
+                <option value="higienista">Higienista</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                 <svg
@@ -535,132 +510,6 @@ export default function InfoColegiado({
           </div>
         </div>
       )}
-
-      {/* M.P.P.S Registration */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            Número de Registro M.P.P.S
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          {isProfileEdit ? (
-            <input
-              type="text"
-              value={formData.mppsRegistrationNumber || "No especificado"}
-              maxLength={6}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
-              disabled
-            />
-          ) : (
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              name="mppsRegistrationNumber"
-              value={formData.mppsRegistrationNumber}
-              maxLength={6}
-              onChange={handleNumericInput}
-              className={`w-full px-4 py-3 border ${isFieldEmpty("mppsRegistrationNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
-              placeholder="Número de registro M.P.P.S"
-            />
-          )}
-          {isProfileEdit && (
-            <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
-          )}
-          {isFieldEmpty("mppsRegistrationNumber") && !isProfileEdit && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-          )}
-        </div>
-        <div>
-          <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
-            Fecha de Registro M.P.P.S
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="relative">
-            {isProfileEdit ? (
-              <input
-                type="text"
-                value={formData.mppsRegistrationDate || "No especificada"}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-700 cursor-not-allowed"
-                disabled
-              />
-            ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {/* Selector de año */}
-                <div className="relative">
-                  <select
-                    value={mppsDateParts.year}
-                    onChange={(e) => handleMppsDateChange('year', e.target.value)}
-                    className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mppsRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-                  >
-                    <option value="">Año</option>
-                    {years.map(year => (
-                      <option key={`mpps-year-${year.value}`} value={year.value}>
-                        {year.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Selector de mes */}
-                <div className="relative">
-                  <select
-                    value={mppsDateParts.month}
-                    onChange={(e) => handleMppsDateChange('month', e.target.value)}
-                    className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mppsRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-                  >
-                    <option value="">Mes</option>
-                    {months.map(month => (
-                      <option key={`mpps-month-${month.value}`} value={month.value}>
-                        {month.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Selector de día */}
-                <div className="relative">
-                  <select
-                    value={mppsDateParts.day}
-                    onChange={(e) => handleMppsDateChange('day', e.target.value)}
-                    disabled={!mppsDateParts.year || !mppsDateParts.month}
-                    className={`cursor-pointer w-full px-2 py-3 border ${isFieldEmpty("mppsRegistrationDate") ? "border-red-500 bg-red-50" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A] appearance-none text-gray-700`}
-                  >
-                    <option value="">Día</option>
-                    {getDaysInMonth(mppsDateParts.year, mppsDateParts.month).map(day => (
-                      <option key={`mpps-day-${day.value}`} value={day.value}>
-                        {day.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          {isProfileEdit && (
-            <p className="mt-1 text-xs text-gray-500">Este campo no se puede editar</p>
-          )}
-          {isFieldEmpty("mppsRegistrationDate") && !isProfileEdit && (
-            <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
-          )}
-        </div>
-      </div>
 
       {/* Title Issuance Date */}
       <div className="relative">

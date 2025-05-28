@@ -4,7 +4,7 @@ import { fetchExistencePersona } from "@/api/endpoints/persona"
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation"
 import confetti from "canvas-confetti"
 import { AnimatePresence, motion } from "framer-motion"
-import { Building, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User } from "lucide-react"
+import { Building, Camera, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -17,6 +17,7 @@ import Head from "next/head"
 import PagosColg from "../../Components/PagosModal"
 import DocsRequirements from "../DocsRequirements"
 import EmailVerification from "../EmailVerification"
+import FotoColegiado from "../FotoColegiado"
 import InfoColegiado from "../InfoColg"
 import InfoContacto from "../InfoCont"
 import InfoLaboralWithDireccionForm from "../InfoLab"
@@ -56,8 +57,6 @@ const steps = [
     requiredFields: [
       "graduateInstitute",
       "universityTitle",
-      "mppsRegistrationNumber",
-      "mppsRegistrationDate",
       "titleIssuanceDate",
       "tipo_profesion",
     ],
@@ -77,6 +76,14 @@ const steps = [
     icon: FilePlus,
     component: DocsRequirements,
     requiredFields: ["ci", "rif", "titulo", "mpps"],
+  },
+  {
+    id: 6,
+    title: "Foto Tipo Carnet",
+    description: "Foto para su carnet de colegiado",
+    icon: Camera,
+    component: FotoColegiado,
+    requiredFields: ["foto_colegiado"],
   },
 ]
 
@@ -119,8 +126,6 @@ export default function RegistrationForm(props) {
     universityTitle: props?.universidad || "",
     mainRegistrationNumber: props?.num_registro_principal || "",
     mainRegistrationDate: props?.fecha_registro_principal || "",
-    mppsRegistrationNumber: props?.num_mpps || "",
-    mppsRegistrationDate: props?.fecha_mpps || "",
     titleIssuanceDate: props?.fecha_egreso_universidad || "",
 
     // Archivos requeridos
@@ -133,6 +138,9 @@ export default function RegistrationForm(props) {
     fondo_negro_credencial: props?.file_fondo_negro_credencial_url || null,
     notas_curso: props?.file_notas_curso_url || null,
     fondo_negro_titulo_bachiller: props?.file_fondo_negro_titulo_bachiller_url || null,
+
+    // Foto del colegiado
+    foto_colegiado: props?.file_foto_colegiado_url || null,
 
     // Datos laborales (que se recorren como un array)
     laboralRegistros:
@@ -258,6 +266,22 @@ export default function RegistrationForm(props) {
           isValid = false;
         }
       });
+
+      // Establecer errores de validación si estamos validando activamente
+      if (attemptedNext) {
+        setValidationErrors(errors);
+      }
+
+      return isValid;
+    }
+
+    // Validación para el paso 6 (Foto del Carnet)
+    if (stepIndex === 6) {
+      // Validar que se haya subido la foto
+      if (!formData.foto_colegiado) {
+        errors["foto_colegiado"] = true;
+        isValid = false;
+      }
 
       // Establecer errores de validación si estamos validando activamente
       if (attemptedNext) {
@@ -526,8 +550,6 @@ export default function RegistrationForm(props) {
             formData.mainRegistrationDate
           );
         }
-        Form.append("num_mpps", formData.mppsRegistrationNumber);
-        Form.append("fecha_mpps", formData.mppsRegistrationDate);
         Form.append(
           "instituciones",
           JSON.stringify(
@@ -548,6 +570,7 @@ export default function RegistrationForm(props) {
         Form.append("file_rif", formData.rif || null);
         Form.append("file_fondo_negro", formData.titulo || null);
         Form.append("file_mpps", formData.mpps || null);
+        Form.append("file_foto_colegiado", formData.foto_colegiado || null);
         if (
           formData.tipo_profesion === "tecnico" ||
           formData.tipo_profesion === "higienista"
@@ -662,7 +685,7 @@ export default function RegistrationForm(props) {
         setIsSubmitting(false)
       }
     } catch (error) {
-        setError("Ocurrió un error al cargar los datos, verifique su conexión a internet")
+      setError("Ocurrió un error al cargar los datos, verifique su conexión a internet")
 
     } finally {
       setIsSubmitting(false)
