@@ -12,11 +12,15 @@ export async function middleware(request) {
 
     if (!token) {
         url.pathname = '/Login';
-        return NextResponse.redirect(url);
+        return NextResponse.redirect(url);``
     }
 
-    if (url.pathname.startsWith('/Colegiado') && (token.role !== 'Colegiados'  && token.role !== 'Admin')) {
+    if (url.pathname.startsWith('/Colegiado') && (token.role !== 'Colegiados' && token.role !== 'Personal_Administrativo')) {
         url.pathname = '/NotColegiado';
+        return NextResponse.redirect(url);
+    }
+    if (url.pathname.startsWith('/Colegiado') && (token.role === 'Personal_Administrativo')) {
+        url.pathname = '/PanelControl';
         return NextResponse.redirect(url);
     }
     if (url.pathname.startsWith('/PanelContro') && (token.role !== 'Personal_Administrativo' && token.role !== 'Admin')) {
@@ -24,7 +28,7 @@ export async function middleware(request) {
         return NextResponse.redirect(url);
     }
     if (url.pathname.startsWith('/Login') && (token.role === 'Colegiados' || token.role === 'Personal_Administrativo' || token.role === 'Admin')) {
-        if (token.role === 'Colegiados' || token.role === 'Admin') {
+        if (token.role === 'Colegiados') {
             url.pathname = '/Colegiado';
         } else if (token.role === 'Personal_Administrativo'|| token.role === 'Admin') {
             url.pathname = '/PanelControl';
