@@ -48,8 +48,8 @@ export default function DetalleInfo({
   data = null,
   isAdmin = false,
   recaudos = null,
-  isColegiado=false,
-  handleForward=null,
+  isColegiado = false,
+  handleForward = null,
 }) {
   const entityId = params?.id || "1";
 
@@ -524,12 +524,12 @@ export default function DetalleInfo({
       const updateData = {
         [`${documentoActualizado.id}_validate`]: validateValue
       };
-      
+
       if (documentoActualizado.rejectionReason) {
         updateData[`${documentoActualizado.id}_motivo_rechazo`] = documentoActualizado.rejectionReason;
       }
 
-      // Actualizar estado local inmediatamente
+      // ✅ Actualizar estado local inmediatamente
       setEntityData(prevData => ({
         ...prevData,
         ...updateData
@@ -544,7 +544,7 @@ export default function DetalleInfo({
         }));
       }
 
-      // Actualizar en backend
+      // Actualizar en backend en segundo plano
       await updateColegiadoPendiente(entityId, updateData);
     } catch (error) {
       console.error("Error updating document validation:", error);
@@ -897,13 +897,13 @@ export default function DetalleInfo({
             isAdmin={isAdmin}
           />
 
-          {/* ✅ DocumentSection con props corregidos */}
+          {/* ✅ DocumentSection simplificado */}
           <DocumentSection
             key={`docs-${entityId}-${documentUpdateTrigger}`}
             documentos={[]}
             onViewDocument={handleVerDocumento}
             updateDocumento={updateDocumento}
-            onValidationChange={handleDocumentValidationChange} // ✅ Cambio de nombre
+            onValidationChange={handleDocumentValidationChange}
             readonly={entityData?.status === "anulado"}
             isColegiado={isColegiado}
             pendienteData={entityData}
@@ -1106,7 +1106,7 @@ export default function DetalleInfo({
                 documentos={documentos}
                 onViewDocument={handleVerDocumento}
                 updateDocumento={updateDocumento}
-                onValidationChange={handleDocumentValidationChange} // ✅ Cambio de nombre
+                onValidationChange={handleDocumentValidationChange}
                 title="Documentos"
                 subtitle="Documentación del colegiado"
                 isColegiado={isColegiado}
@@ -1186,7 +1186,7 @@ export default function DetalleInfo({
       {showCrearSolicitudModal && (
         <CrearSolicitudModal
           props={{
-          onClose: () => setShowCrearSolicitudModal(false),
+            onClose: () => setShowCrearSolicitudModal(false),
             onSolicitudCreada: (nuevaSolicitud) => {
               setShowCrearSolicitudModal(false);
               loadData();
@@ -1195,13 +1195,14 @@ export default function DetalleInfo({
             colegiadoPreseleccionado: entityData,
             isAdmin: isAdmin,
             session: {
-            user: {
-              name: "Admin",
-              email: "admin@system.com",
-              role: "admin",
-              isAdmin: true,
+              user: {
+                name: "Admin",
+                email: "admin@system.com",
+                role: "admin",
+                isAdmin: true,
               },
-            }}}
+            }
+          }}
         />
       )}
 
@@ -1238,7 +1239,7 @@ export default function DetalleInfo({
           onClose={handleCerrarVistaDocumento}
         />
       )}
-      {!isAdmin&& entityData.recaudos?.pago !== null && (
+      {!isAdmin && entityData.recaudos?.pago !== null && (
         <div className="w-full flex items-center justify-center">
           <button
             onClick={handleForward}
