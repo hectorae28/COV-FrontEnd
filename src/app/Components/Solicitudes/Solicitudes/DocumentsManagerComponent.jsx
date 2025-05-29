@@ -41,6 +41,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
     // Función para buscar el campo backend de manera más flexible
     const buscarCampoBackend = (docNombre) => {
         const docNombreNormalizado = docNombre.toLowerCase();
+        console.log({docNombreNormalizado})
         // Primero buscar coincidencia exacta
         if (documentosMapping[docNombreNormalizado]) {
             return documentosMapping[docNombreNormalizado];
@@ -75,6 +76,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
     // Mapear los documentos requeridos al formato esperado por el componente
     const documentosFormateados = solicitud.documentosRequeridos.map((docNombre, index) => {
         const campoBackend = buscarCampoBackend(docNombre).replace('file_', '');
+        console.log({dd:documentosAdjuntosLimpios[`file_${campoBackend}`]})
         
         // Get validation status from solicitud data
         let validateField = null;
@@ -158,8 +160,8 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
             nombre: docNombre,
             descripcion: "Documento requerido para la solicitud",
             requerido: true,
-            url: campoBackend && documentosAdjuntosLimpios[campoBackend]
-                ? documentosAdjuntosLimpios[campoBackend]
+            url: campoBackend && documentosAdjuntosLimpios[`file_${campoBackend}`]
+                ? documentosAdjuntosLimpios[`file_${campoBackend}`]
                 : null,
             status: validateField,
             rejectionReason: motivoRechazoField || '',
