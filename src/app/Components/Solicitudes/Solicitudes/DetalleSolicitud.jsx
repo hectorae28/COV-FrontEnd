@@ -417,7 +417,7 @@ export default function DetalleSolicitud({ props }) {
       let validateFieldName, motivoFieldName;
       
       // Caso especial para foto de carnet
-      if (updatedDocument.id === 'file_foto') {
+      if (updatedDocument.id === 'foto') {
         validateFieldName = 'foto_validate';
         motivoFieldName = 'foto_motivo_rechazo';
       } else if (updatedDocument.id.startsWith('file_')) {

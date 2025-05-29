@@ -1024,9 +1024,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: 'http://localhost:3000/escudo.png',
-          firma_presidente: 'http://localhost:3000/firmaPablo.png',
-          sello_cov: 'http://localhost:3000/sello_colegio.png'
+          escudo: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo.png`,
+          firma_presidente: `${process.env.NEXT_PUBLIC_BACK_HOST}firmaPablo.png`,
+          sello_cov: `${process.env.NEXT_PUBLIC_BACK_HOST}sello_colegio.png`
         }
       };
       break;
@@ -1039,9 +1039,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: 'http://localhost:3000/escudo.png',
-          firma_presidente: 'http://localhost:3000/firmaPablo.png',
-          sello_cov: 'http://localhost:3000/sello_colegio.png'
+          escudo: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo.png`,
+          firma_presidente: `${process.env.NEXT_PUBLIC_BACK_HOST}firmaPablo.png`,
+          sello_cov: `${process.env.NEXT_PUBLIC_BACK_HOST}sello_colegio.png`
         }
       };
       break;
@@ -1054,9 +1054,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: 'http://localhost:3000/escudo.png',
-          firma_presidente: 'http://localhost:3000/firmaPablo.png',
-          sello_cov: 'http://localhost:3000/sello_colegio.png'
+          escudo: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo.png`,
+          firma_presidente: `${process.env.NEXT_PUBLIC_BACK_HOST}firmaPablo.png`,
+          sello_cov: `${process.env.NEXT_PUBLIC_BACK_HOST}sello_colegio.png`
         }
       };
       break;
@@ -1129,10 +1129,10 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
           font: 'Roboto'
         },
         images: {
-          escudo: 'http://localhost:3000/escudo.png',
-          escudoBW: 'http://localhost:3000/escudo_bw.png',
-          escudo_borde: 'http://localhost:3000/escudo_borde.png',
-          carnet_foto: `${process.env.NEXT_PUBLIC_BACK_HOST}${data.foto_url}` || 'http://localhost:3000/carnet.png'
+          escudo: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo.png`,
+          escudoBW: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo_bw.png`,
+          escudo_borde: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo_borde.png`,
+          carnet_foto: `${process.env.NEXT_PUBLIC_BACK_HOST}${data.foto_url}` || `${process.env.NEXT_PUBLIC_BACK_HOST}carnet.png`
         },
         patterns: {
           stripe45d: {
