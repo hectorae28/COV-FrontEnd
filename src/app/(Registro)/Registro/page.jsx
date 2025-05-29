@@ -639,9 +639,9 @@ export default function RegistrationForm(props) {
     totalAmount = null,
     metodo_de_pago = null,
   }) => {
+    const PaymentForm = new FormData()
     if (!pagarLuego) {
-      const Form = new FormData()
-      Form.append(
+      PaymentForm.append(
         "pago",
         JSON.stringify({
           fecha_pago: paymentDate,
@@ -650,15 +650,16 @@ export default function RegistrationForm(props) {
           monto: totalAmount,
         }),
       )
-      Form.append("comprobante", paymentFile)
+      PaymentForm.append("comprobante", paymentFile)
       setIsSubmitting(true)
     }
     try {
       let res
+      console.log({PaymentForm})
       if (!pagarLuego) {
         res = await patchDataUsuario(
           `register/${recaudoCreado.id}`,
-          Form,
+          PaymentForm,
         );
         if (res?.status === 200) {
           setError(null)
