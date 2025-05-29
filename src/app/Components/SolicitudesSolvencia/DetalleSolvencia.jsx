@@ -635,17 +635,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                     </div>
                   </div>
                 )}
-
-                {/* Información adicional - Motivo de rechazo */}
-                {solvencia.statusSolicitud === "rechazado" && solvencia.motivoRechazo && (
-                  <div className="bg-red-50 p-6 rounded-xl border border-red-200">
-                    <h3 className="text-lg font-medium text-red-800 mb-3 flex items-center">
-                      <X className="mr-2" size={20} />
-                      Motivo del Rechazo
-                    </h3>
-                    <p className="text-red-700">{solvencia.motivoRechazo}</p>
-                  </div>
-                )}
               </div>
             </div>
           </div>

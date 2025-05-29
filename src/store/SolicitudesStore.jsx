@@ -124,7 +124,6 @@ export const formatSolicitudSolvencia = (solicitud) => {
           modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
           adminCreador: solicitud.solicitudes_solvencia.lista[0].user_admin_create,
           fechaRechazo: solicitud.solicitudes_solvencia.lista[0].fecha_rechazo,
-          motivoRechazo: solicitud.solicitudes_solvencia.lista[0].motivo_rechazo,
           adminActualizador: solicitud.solicitudes_solvencia.lista[0].user_admin_update,
           fechaAprobacion: solicitud.solicitudes_solvencia.lista[0].fecha_aprobacion,
           fechaExoneracion: solicitud.solicitudes_solvencia.lista[0].fecha_exoneracion,
