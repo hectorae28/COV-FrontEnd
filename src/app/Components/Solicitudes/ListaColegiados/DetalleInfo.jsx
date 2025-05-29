@@ -8,8 +8,8 @@ import { useCallback, useEffect, useState } from "react";
 import AcademicInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
 import ContactInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ContactInfoSection";
 import {
-  DocumentSection,
-  DocumentViewer,
+    DocumentSection,
+    DocumentViewer,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import InstitutionsSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
 import PaymentReceiptSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PaymentReceiptSection";
@@ -29,11 +29,11 @@ import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolic
 
 // Modales para pendientes
 import {
-  ApprovalModal,
-  ExonerationModal,
-  RejectModal,
-  ReportIllegalityModal,
-  TitleConfirmationModal,
+    ApprovalModal,
+    ExonerationModal,
+    RejectModal,
+    ReportIllegalityModal,
+    TitleConfirmationModal,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ModalSystem";
 
 // Otros imports necesarios
@@ -44,13 +44,12 @@ import useDataListaColegiados from "@/store/ListaColegiadosData";
 export default function DetalleInfo({
   params,
   onVolver,
-  tipo = "pendiente", // "pendiente" | "colegiado"
+  tipo = "pendiente",
   data = null,
   isAdmin = false,
   recaudos = null,
   isColegiado=false,
   handleForward=null,
-
 }) {
   const entityId = params?.id || "1";
 
@@ -336,160 +335,51 @@ export default function DetalleInfo({
   };
 
   // Función para cargar datos del comprobante
-  // const loadComprobanteData = (pendienteData) => {
-  //   console.log("Cargando datos del comprobante:", pendienteData); // Debug
+  const loadComprobanteData = (pendienteData) => {
+    const comprobanteUrl =
+      pendienteData.comprobante_url ||
+      pendienteData.comprobante ||
+      pendienteData.pago?.comprobante_url ||
+      pendienteData.pago?.comprobante;
 
-  //   // Verificar diferentes posibles ubicaciones del comprobante
-  //   const comprobanteUrl =
-  //     pendienteData.comprobante_url ||
-  //     pendienteData.comprobante ||
-  //     pendienteData.pago?.comprobante_url ||
-  //     pendienteData.pago?.comprobante;
+    const tieneComprobante =
+      comprobanteUrl ||
+      pendienteData.comprobante_pago_url ||
+      pendienteData.file_comprobante_url ||
+      (pendienteData.pago && pendienteData.pago.comprobante);
 
-  //   // También verificar si hay un archivo de comprobante en los campos de archivos
-  //   const tieneComprobante =
-  //     comprobanteUrl ||
-  //     pendienteData.comprobante_pago_url ||
-  //     pendienteData.file_comprobante_url ||
-  //     (pendienteData.pago && pendienteData.pago.comprobante);
+    if (tieneComprobante) {
+      const url =
+        comprobanteUrl ||
+        pendienteData.comprobante_pago_url ||
+        pendienteData.file_comprobante_url ||
+        pendienteData.pago?.comprobante;
 
-  //   if (tieneComprobante) {
-  //     const url =
-  //       comprobanteUrl ||
-  //       pendienteData.comprobante_pago_url ||
-  //       pendienteData.file_comprobante_url ||
-  //       pendienteData.pago?.comprobante;
+      const comprobanteInfo = {
+        id: "comprobante_pago",
+        nombre: "Comprobante de pago",
+        archivo:
+          typeof url === "string"
+            ? url.split("/").pop()
+            : "comprobante_pago.pdf",
+        url: url,
+        status:
+          pendienteData.comprobante_validate === null
+            ? "pending"
+            : pendienteData.comprobante_validate === true
+              ? "approved"
+              : pendienteData.comprobante_validate === false
+                ? "rechazado"
+                : "pending",
+        rejectionReason: pendienteData.comprobante_motivo_rechazo || "",
+      };
 
-  //     const comprobanteInfo = {
-  //       id: "comprobante_pago",
-  //       nombre: "Comprobante de pago",
-  //       archivo:
-  //         typeof url === "string"
-  //           ? url.split("/").pop()
-  //           : "comprobante_pago.pdf",
-  //       url: url,
-  //       status:
-  //         pendienteData.comprobante_validate === null
-  //           ? "pending"
-  //           : pendienteData.comprobante_validate === true
-  //             ? "approved"
-  //             : pendienteData.comprobante_validate === false
-  //               ? "rechazado"
-  //               : "pending",
-  //       rejectionReason: pendienteData.comprobante_motivo_rechazo || "",
-  //     };
-
-  //     setComprobanteData(comprobanteInfo);
-
-  //     console.log("Comprobante cargado:", {
-  //       url: url,
-  //       status: pendienteData.comprobante_validate,
-  //     }); // Debug
-  //   } else {
-  //     console.log("No se encontró comprobante"); // Debug
-  //     setComprobanteData(null);
-  //   }
-  // };
-
-  // Función para cargar documentos de pendientes
-  const loadPendienteDocuments = (pendienteData) => {
-    const documentosMetadata = {
-      file_ci: { nombre: "Cédula de identidad", descripcion: "Copia escaneada por ambos lados", requerido: true },
-      file_rif: { nombre: "RIF", descripcion: "Registro de Información Fiscal", requerido: true },
-      file_fondo_negro: { nombre: "Título universitario fondo negro", descripcion: "Título de Odontólogo con fondo negro", requerido: true },
-      file_mpps: { nombre: "Registro MPPS", descripcion: "Registro del Ministerio del Poder Popular para la Salud", requerido: true },
-      fondo_negro_credencial: { nombre: "Credencial fondo negro", descripcion: "Credencial profesional con fondo negro", requerido: (tipo) => tipo !== "odontologo" },
-      notas_curso: { nombre: "Notas del curso", descripcion: "Certificado de notas académicas", requerido: (tipo) => tipo !== "odontologo" },
-      fondo_negro_titulo_bachiller: { nombre: "Título bachiller fondo negro", descripcion: "Título de bachiller con fondo negro", requerido: (tipo) => tipo !== "odontologo" }
-    };
-
-    const obtenerNombreArchivo = (url) => {
-      if (!url) return "";
-      const partes = url.split('/');
-      return partes[partes.length - 1];
-    };
-
-    return [
-      {
-        id: "file_ci",
-        nombre: documentosMetadata.file_ci.nombre,
-        descripcion: documentosMetadata.file_ci.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.file_ci_url),
-        requerido: documentosMetadata.file_ci.requerido,
-        url: pendienteData.file_ci_url,
-        status: pendienteData.file_ci_validate === null ? 'pending' : pendienteData.file_ci_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.file_ci_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.file_ci_motivo_rechazo || ''
-      },
-      {
-        id: "file_rif",
-        nombre: documentosMetadata.file_rif.nombre,
-        descripcion: documentosMetadata.file_rif.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.file_rif_url),
-        requerido: documentosMetadata.file_rif.requerido,
-        url: pendienteData.file_rif_url,
-        status: pendienteData.file_rif_validate === null ? 'pending' : pendienteData.file_rif_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.file_rif_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.file_rif_motivo_rechazo || ''
-      },
-      {
-        id: "file_fondo_negro",
-        nombre: documentosMetadata.file_fondo_negro.nombre,
-        descripcion: documentosMetadata.file_fondo_negro.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.file_fondo_negro_url),
-        requerido: documentosMetadata.file_fondo_negro.requerido,
-        url: pendienteData.file_fondo_negro_url,
-        status: pendienteData.file_fondo_negro_validate === null ? 'pending' : pendienteData.file_fondo_negro_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.file_fondo_negro_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.file_fondo_negro_motivo_rechazo || ''
-      },
-      {
-        id: "file_mpps",
-        nombre: documentosMetadata.file_mpps.nombre,
-        descripcion: documentosMetadata.file_mpps.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.file_mpps_url),
-        requerido: documentosMetadata.file_mpps.requerido,
-        url: pendienteData.file_mpps_url,
-        status: pendienteData.file_mpps_validate === null ? 'pending' : pendienteData.file_mpps_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.file_mpps_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.file_mpps_motivo_rechazo || ''
-      },
-      // Documentos adicionales para técnicos e higienistas
-      {
-        id: "fondo_negro_credencial",
-        nombre: documentosMetadata.fondo_negro_credencial.nombre,
-        descripcion: documentosMetadata.fondo_negro_credencial.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.fondo_negro_credencial_url),
-        requerido: documentosMetadata.fondo_negro_credencial.requerido(pendienteData.tipo_profesion),
-        url: pendienteData.fondo_negro_credencial_url,
-        status: pendienteData.fondo_negro_credencial_validate === null ? 'pending' : pendienteData.fondo_negro_credencial_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.fondo_negro_credencial_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.fondo_negro_credencial_motivo_rechazo || ''
-      },
-      {
-        id: "notas_curso",
-        nombre: documentosMetadata.notas_curso.nombre,
-        descripcion: documentosMetadata.notas_curso.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.notas_curso_url),
-        requerido: documentosMetadata.notas_curso.requerido(pendienteData.tipo_profesion),
-        url: pendienteData.notas_curso_url,
-        status: pendienteData.notas_curso_validate === null ? 'pending' : pendienteData.notas_curso_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.notas_curso_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.notas_curso_motivo_rechazo || ''
-      },
-      {
-        id: "fondo_negro_titulo_bachiller",
-        nombre: documentosMetadata.fondo_negro_titulo_bachiller.nombre,
-        descripcion: documentosMetadata.fondo_negro_titulo_bachiller.descripcion,
-        archivo: obtenerNombreArchivo(pendienteData.fondo_negro_titulo_bachiller_url),
-        requerido: documentosMetadata.fondo_negro_titulo_bachiller.requerido(pendienteData.tipo_profesion),
-        url: pendienteData.fondo_negro_titulo_bachiller_url,
-        status: pendienteData.fondo_negro_titulo_bachiller_validate === null ? 'pending' : pendienteData.fondo_negro_titulo_bachiller_validate ? 'approved' : 'rechazado',
-        isReadOnly: pendienteData.fondo_negro_titulo_bachiller_status === 'approved' && pendienteData.status === 'rechazado',
-        rejectionReason: pendienteData.fondo_negro_titulo_bachiller_motivo_rechazo || ''
-      }
-    ].filter(doc => doc.url || doc.requerido); // Solo mostrar documentos que existen o son requeridos
+      setComprobanteData(comprobanteInfo);
+    } else {
+      setComprobanteData(null);
+    }
   };
+
   // Inicializar datos para pendientes
   const initializePendienteData = (data) => {
     setDatosPersonales(JSON.parse(JSON.stringify(data.persona || {})));
@@ -601,7 +491,7 @@ export default function DetalleInfo({
     setDocumentoSeleccionado(null);
   };
 
-  // Función optimizada para actualizar documentos SIN recargar
+  // ✅ FUNCIÓN SIMPLIFICADA: Solo para actualizar archivos (NO validación)
   const updateDocumento = async (documentoActualizado) => {
     try {
       let response;
@@ -611,7 +501,7 @@ export default function DetalleInfo({
         response = await updateColegiadoPendienteWithToken(entityId, documentoActualizado, true);
       }
 
-      // Si el backend devuelve el pending completo, actualizar sin recargar
+      // Si el backend devuelve el pending completo, actualizar
       if (response && response.data) {
         setEntityData(prevData => ({ ...prevData, ...response.data }));
         setDocumentUpdateTrigger(prev => prev + 1);
@@ -623,17 +513,29 @@ export default function DetalleInfo({
     }
   };
 
-  // Manejador optimizado para cambios en documentos
-  const handleDocumentStatusChange = useCallback(async (documentoActualizado) => {
+  // ✅ FUNCIÓN NUEVA: Solo para manejar validación desde VerificationSwitch
+  const handleDocumentValidationChange = useCallback(async (documentoActualizado) => {
     try {
-      // 1. ACTUALIZA LOCALMENTE el estado del documento de forma optimista
+      // Determinar valor de validación
+      let validateValue = null;
+      if (documentoActualizado.status === "approved") validateValue = true;
+      if (documentoActualizado.status === "rechazado") validateValue = false;
+
+      const updateData = {
+        [`${documentoActualizado.id}_validate`]: validateValue
+      };
+      
+      if (documentoActualizado.rejectionReason) {
+        updateData[`${documentoActualizado.id}_motivo_rechazo`] = documentoActualizado.rejectionReason;
+      }
+
+      // Actualizar estado local inmediatamente
       setEntityData(prevData => ({
         ...prevData,
-        [`${documentoActualizado.id}_validate`]: documentoActualizado.status === "approved",
-        [`${documentoActualizado.id}_motivo_rechazo`]: documentoActualizado.rejectionReason || ''
+        ...updateData
       }));
 
-      // 2. Si es comprobante de pago, también actualiza el local del comprobante
+      // Si es comprobante de pago, también actualizar el local del comprobante
       if (documentoActualizado.id === "comprobante_pago") {
         setComprobanteData(prev => ({
           ...prev,
@@ -642,20 +544,12 @@ export default function DetalleInfo({
         }));
       }
 
-      // 3. Llama al backend para guardar el cambio
-      const updateData = {
-        [`${documentoActualizado.id}_validate`]: documentoActualizado.status === "approved"
-      };
-      if (documentoActualizado.status === "rechazado" && documentoActualizado.rejectionReason) {
-        updateData[`${documentoActualizado.id}_motivo_rechazo`] = documentoActualizado.rejectionReason;
-      }
-
+      // Actualizar en backend
       await updateColegiadoPendiente(entityId, updateData);
     } catch (error) {
-      console.error("Error updating document status:", error);
+      console.error("Error updating document validation:", error);
     }
-  }, [entityId, updateColegiadoPendiente, setComprobanteData]);
-
+  }, [entityId, updateColegiadoPendiente]);
 
   // Función para manejar el upload del comprobante
   const handleUploadComprobante = async (formData) => {
@@ -1003,13 +897,13 @@ export default function DetalleInfo({
             isAdmin={isAdmin}
           />
 
-          {/* DocumentSection optimizado */}
+          {/* ✅ DocumentSection con props corregidos */}
           <DocumentSection
             key={`docs-${entityId}-${documentUpdateTrigger}`}
             documentos={[]}
             onViewDocument={handleVerDocumento}
             updateDocumento={updateDocumento}
-            onDocumentStatusChange={handleDocumentStatusChange}
+            onValidationChange={handleDocumentValidationChange} // ✅ Cambio de nombre
             readonly={entityData?.status === "anulado"}
             isColegiado={isColegiado}
             pendienteData={entityData}
@@ -1212,7 +1106,7 @@ export default function DetalleInfo({
                 documentos={documentos}
                 onViewDocument={handleVerDocumento}
                 updateDocumento={updateDocumento}
-                onDocumentStatusChange={handleDocumentStatusChange}
+                onValidationChange={handleDocumentValidationChange} // ✅ Cambio de nombre
                 title="Documentos"
                 subtitle="Documentación del colegiado"
                 isColegiado={isColegiado}
