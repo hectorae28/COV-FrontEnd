@@ -52,7 +52,7 @@ export default function VerificationSwitch({
     const getMotivosRechazo = () => {
         const motivosBase = [
             "Documento ilegible",
-            "Documento incompleto", 
+            "Documento incompleto",
             "Información incorrecta",
             "Archivo dañado o corrupto",
             "Formato no válido",
@@ -91,7 +91,7 @@ export default function VerificationSwitch({
     const handleStatusChange = (newStatus, e) => {
         e?.stopPropagation();
         if (readOnly || isApproved) return;
-        
+
         if (newStatus === "approved") {
             setIsApprovalOpen(true);
         } else if (newStatus === "rechazado") {
@@ -112,7 +112,7 @@ export default function VerificationSwitch({
             motivo_rechazo: "",
             rejection_reason: ""
         };
-        
+
         // ✅ LLAMAR AL CALLBACK con el item actualizado y el índice si existe
         onChange(updatedItem, index);
         setIsApprovalOpen(false);
@@ -140,7 +140,7 @@ export default function VerificationSwitch({
 
         // ✅ LLAMAR AL CALLBACK con el item actualizado y el índice si existe
         onChange(updatedItem, index);
-        
+
         // Limpiar estado del modal
         setIsRejectionOpen(false);
         setRejectionPreset("");
@@ -156,11 +156,10 @@ export default function VerificationSwitch({
                 <button
                     onClick={(e) => handleStatusChange("approved", e)}
                     disabled={isApproved || readOnly}
-                    className={`p-2 rounded-md transition-all ${
-                        isApproved
+                    className={`p-2 rounded-md transition-all ${isApproved
                             ? "bg-green-200 text-green-800 ring-2 ring-green-500"
                             : "bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600"
-                    } ${isApproved || readOnly ? "opacity-80 cursor-not-allowed" : "cursor-pointer"}`}
+                        } ${isApproved || readOnly ? "opacity-80 cursor-not-allowed" : "cursor-pointer"}`}
                     title="Aprobar"
                 >
                     <CheckCircle size={20} />
@@ -170,11 +169,10 @@ export default function VerificationSwitch({
                 <button
                     onClick={(e) => handleStatusChange("rechazado", e)}
                     disabled={isApproved || readOnly}
-                    className={`p-2 rounded-md transition-all ${
-                        isRejected
+                    className={`p-2 rounded-md transition-all ${isRejected
                             ? "bg-red-100 text-red-700 ring-2 ring-red-500"
                             : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600"
-                    } ${isApproved || readOnly ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                        } ${isApproved || readOnly ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                     title="Rechazar"
                 >
                     <XCircle size={20} />
@@ -182,13 +180,12 @@ export default function VerificationSwitch({
 
                 {/* Estado actual */}
                 <span
-                    className={`text-sm font-medium ${
-                        isApproved
+                    className={`text-sm font-medium ${isApproved
                             ? "text-green-700"
                             : isRejected
                                 ? "text-red-700"
                                 : "text-gray-600"
-                    }`}
+                        }`}
                 >
                     {isApproved ? labels.aprobado : isRejected ? labels.rechazado : labels.pendiente}
                 </span>
@@ -210,10 +207,10 @@ export default function VerificationSwitch({
                             Confirmar aprobación
                         </h3>
                         <div className="mb-4 text-gray-700">
-                            ¿Está seguro de que desea aprobar este {type}? 
+                            ¿Está seguro de que desea aprobar este {type}?
                             {type === "documento" && (
                                 <span className="block mt-2 text-sm text-amber-600 font-medium">
-                                    ⚠️ Esta acción es <strong>irreversible</strong>. 
+                                    ⚠️ Esta acción es <strong>irreversible</strong>.
                                     Una vez aprobado, no podrá ser modificado.
                                 </span>
                             )}

@@ -8,8 +8,8 @@ import { useCallback, useEffect, useState } from "react";
 import AcademicInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
 import ContactInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ContactInfoSection";
 import {
-    DocumentSection,
-    DocumentViewer,
+  DocumentSection,
+  DocumentViewer,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import InstitutionsSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
 import PaymentReceiptSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PaymentReceiptSection";
@@ -29,11 +29,11 @@ import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolic
 
 // Modales para pendientes
 import {
-    ApprovalModal,
-    ExonerationModal,
-    RejectModal,
-    ReportIllegalityModal,
-    TitleConfirmationModal,
+  ApprovalModal,
+  ExonerationModal,
+  RejectModal,
+  ReportIllegalityModal,
+  TitleConfirmationModal,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ModalSystem";
 
 // Otros imports necesarios
@@ -48,8 +48,8 @@ export default function DetalleInfo({
   data = null,
   isAdmin = false,
   recaudos = null,
-  isColegiado=false,
-  handleForward=null,
+  isColegiado = false,
+  handleForward = null,
 }) {
   const entityId = params?.id || "1";
 
@@ -340,19 +340,18 @@ export default function DetalleInfo({
       pendienteData.comprobante_url ||
       pendienteData.comprobante ||
       pendienteData.pago?.comprobante_url ||
-      pendienteData.pago?.comprobante;
+      pendienteData.pago?.comprobante ||
+      pendienteData.file_comprobante_url;
 
     const tieneComprobante =
       comprobanteUrl ||
       pendienteData.comprobante_pago_url ||
-      pendienteData.file_comprobante_url ||
       (pendienteData.pago && pendienteData.pago.comprobante);
 
     if (tieneComprobante) {
       const url =
         comprobanteUrl ||
         pendienteData.comprobante_pago_url ||
-        pendienteData.file_comprobante_url ||
         pendienteData.pago?.comprobante;
 
       const comprobanteInfo = {
@@ -372,6 +371,17 @@ export default function DetalleInfo({
                 ? "rechazado"
                 : "pending",
         rejectionReason: pendienteData.comprobante_motivo_rechazo || "",
+        // Agregar detalles del pago si están disponibles
+        paymentDetails: pendienteData.pago ? {
+          fecha_pago: pendienteData.pago.fecha_pago,
+          numero_referencia: pendienteData.pago.num_referencia,
+          monto: pendienteData.pago.monto,
+          metodo_pago: pendienteData.pago.metodo_de_pago?.nombre || 
+                      pendienteData.pago.metodo_pago?.nombre,
+          metodo_pago_slug: pendienteData.pago.metodo_de_pago?.datos_adicionales?.slug || 
+                           pendienteData.pago.metodo_pago?.datos_adicionales?.slug,
+          tasa_bcv: pendienteData.pago.tasa_bcv_del_dia || pendienteData.pago.tasa_bcv
+        } : null
       };
 
       setComprobanteData(comprobanteInfo);
@@ -504,7 +514,11 @@ export default function DetalleInfo({
       // Si el backend devuelve el pending completo, actualizar
       if (response && response.data) {
         setEntityData(prevData => ({ ...prevData, ...response.data }));
-        setDocumentUpdateTrigger(prev => prev + 1);
+        // setDocumentUpdateTrigger(prev => prev + 1); // Comentado temporalmente para evitar re-render de documentos
+        
+        // Actualizar también los datos del comprobante local
+        console.log("🔄 Actualizando comprobanteData...");
+        loadComprobanteData(response.data);
       }
 
       return response;
@@ -524,12 +538,12 @@ export default function DetalleInfo({
       const updateData = {
         [`${documentoActualizado.id}_validate`]: validateValue
       };
-      
+
       if (documentoActualizado.rejectionReason) {
         updateData[`${documentoActualizado.id}_motivo_rechazo`] = documentoActualizado.rejectionReason;
       }
 
-      // Actualizar estado local inmediatamente
+      // ✅ Actualizar estado local inmediatamente
       setEntityData(prevData => ({
         ...prevData,
         ...updateData
@@ -544,7 +558,7 @@ export default function DetalleInfo({
         }));
       }
 
-      // Actualizar en backend
+      // Actualizar en backend en segundo plano
       await updateColegiadoPendiente(entityId, updateData);
     } catch (error) {
       console.error("Error updating document validation:", error);
@@ -554,20 +568,36 @@ export default function DetalleInfo({
   // Función para manejar el upload del comprobante
   const handleUploadComprobante = async (formData) => {
     try {
+      console.log("🔄 DetalleInfo: Recibiendo FormData para subir comprobante");
+      console.log("📝 Tipo de recaudos:", recaudos ? "Con token" : "Sin token");
+      console.log("🆔 Entity ID:", entityId);
+      
       let response;
       if (!recaudos) {
+        console.log("📤 Enviando via updateColegiadoPendiente...");
         response = await updateColegiadoPendiente(entityId, formData, true);
       } else {
+        console.log("📤 Enviando via updateColegiadoPendienteWithToken...");
         response = await updateColegiadoPendienteWithToken(entityId, formData, true);
       }
 
+      console.log("✅ Respuesta recibida en DetalleInfo:", response);
+
       if (response && response.data) {
+        console.log("🔄 Actualizando entityData con respuesta del servidor...");
         setEntityData(prevData => ({ ...prevData, ...response.data }));
-        setDocumentUpdateTrigger(prev => prev + 1);
+        // setDocumentUpdateTrigger(prev => prev + 1); // Comentado temporalmente para evitar re-render de documentos
+        
+        // Actualizar también los datos del comprobante local
+        console.log("🔄 Actualizando comprobanteData...");
+        loadComprobanteData(response.data);
       }
 
       return response;
     } catch (error) {
+      console.error("❌ Error en handleUploadComprobante:", error);
+      console.error("📋 Error details:", error.response?.data);
+      console.error("🔢 Error status:", error.response?.status);
       throw error;
     }
   };
@@ -897,13 +927,13 @@ export default function DetalleInfo({
             isAdmin={isAdmin}
           />
 
-          {/* ✅ DocumentSection con props corregidos */}
+          {/* ✅ DocumentSection simplificado */}
           <DocumentSection
             key={`docs-${entityId}-${documentUpdateTrigger}`}
             documentos={[]}
             onViewDocument={handleVerDocumento}
             updateDocumento={updateDocumento}
-            onValidationChange={handleDocumentValidationChange} // ✅ Cambio de nombre
+            onValidationChange={handleDocumentValidationChange}
             readonly={entityData?.status === "anulado"}
             isColegiado={isColegiado}
             pendienteData={entityData}
@@ -1106,7 +1136,7 @@ export default function DetalleInfo({
                 documentos={documentos}
                 onViewDocument={handleVerDocumento}
                 updateDocumento={updateDocumento}
-                onValidationChange={handleDocumentValidationChange} // ✅ Cambio de nombre
+                onValidationChange={handleDocumentValidationChange}
                 title="Documentos"
                 subtitle="Documentación del colegiado"
                 isColegiado={isColegiado}
@@ -1186,7 +1216,7 @@ export default function DetalleInfo({
       {showCrearSolicitudModal && (
         <CrearSolicitudModal
           props={{
-          onClose: () => setShowCrearSolicitudModal(false),
+            onClose: () => setShowCrearSolicitudModal(false),
             onSolicitudCreada: (nuevaSolicitud) => {
               setShowCrearSolicitudModal(false);
               loadData();
@@ -1195,13 +1225,14 @@ export default function DetalleInfo({
             colegiadoPreseleccionado: entityData,
             isAdmin: isAdmin,
             session: {
-            user: {
-              name: "Admin",
-              email: "admin@system.com",
-              role: "admin",
-              isAdmin: true,
+              user: {
+                name: "Admin",
+                email: "admin@system.com",
+                role: "admin",
+                isAdmin: true,
               },
-            }}}
+            }
+          }}
         />
       )}
 
@@ -1238,7 +1269,7 @@ export default function DetalleInfo({
           onClose={handleCerrarVistaDocumento}
         />
       )}
-      {!isAdmin&& entityData.recaudos?.pago !== null && (
+      {!isAdmin && entityData.recaudos?.pago !== null && (
         <div className="w-full flex items-center justify-center">
           <button
             onClick={handleForward}
