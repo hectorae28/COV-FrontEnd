@@ -1024,9 +1024,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo.png`,
-          firma_presidente: `${process.env.NEXT_PUBLIC_BACK_HOST}firmaPablo.png`,
-          sello_cov: `${process.env.NEXT_PUBLIC_BACK_HOST}sello_colegio.png`
+          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
+          firma_presidente: `${process.env.NEXT_REDIRECT}firmaPablo.png`,
+          sello_cov: `${process.env.NEXT_REDIRECT}sello_colegio.png`
         }
       };
       break;
@@ -1039,9 +1039,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo.png`,
-          firma_presidente: `${process.env.NEXT_PUBLIC_BACK_HOST}firmaPablo.png`,
-          sello_cov: `${process.env.NEXT_PUBLIC_BACK_HOST}sello_colegio.png`
+          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
+          firma_presidente: `${process.env.NEXT_REDIRECT}firmaPablo.png`,
+          sello_cov: `${process.env.NEXT_REDIRECT}sello_colegio.png`
         }
       };
       break;
@@ -1054,9 +1054,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo.png`,
-          firma_presidente: `${process.env.NEXT_PUBLIC_BACK_HOST}firmaPablo.png`,
-          sello_cov: `${process.env.NEXT_PUBLIC_BACK_HOST}sello_colegio.png`
+          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
+          firma_presidente: `${process.env.NEXT_REDIRECT}firmaPablo.png`,
+          sello_cov: `${process.env.NEXT_REDIRECT}sello_colegio.png`
         }
       };
       break;
@@ -1129,10 +1129,10 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
           font: 'Roboto'
         },
         images: {
-          escudo: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo.png`,
-          escudoBW: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo_bw.png`,
-          escudo_borde: `${process.env.NEXT_PUBLIC_BACK_HOST}escudo_borde.png`,
-          carnet_foto: `${process.env.NEXT_PUBLIC_BACK_HOST}${data.foto_url}` || `${process.env.NEXT_PUBLIC_BACK_HOST}carnet.png`
+          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
+          escudoBW: `${process.env.NEXT_REDIRECT}escudo_bw.png`,
+          escudo_borde: `${process.env.NEXT_REDIRECT}escudo_borde.png`,
+          carnet_foto: `${process.env.NEXT_REDIRECT}${data.foto_url}` || `${process.env.NEXT_REDIRECT}carnet.png`
         },
         patterns: {
           stripe45d: {
