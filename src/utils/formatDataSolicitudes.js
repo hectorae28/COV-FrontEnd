@@ -14,6 +14,7 @@ export default function transformBackendData(backendData) {
     costo: calcularTotal(backendData.detalles_solicitud),
     documentosRequeridos: getDocumentosRequeridos(backendData.detalles_solicitud),
     documentosAdjuntos: getDocumentosAdjuntos(backendData.detalles_solicitud),
+    isAllDocumentosValidados: isAllDocumentosValidados(backendData.detalles_solicitud),
     detallesSolicitud: detallesSolicitud, // Preservar los detalles originales para validación de documentos
     itemsSolicitud: [],
     comprobantePago: null,
@@ -40,6 +41,32 @@ export default function transformBackendData(backendData) {
   }
 
   return frontendData;
+}
+function isAllDocumentosValidados(detalles) {
+  const allValidateKeys = [];
+  
+  if (detalles.carnet?.archivos) {
+    const carnetValidateKeys = Object.keys(detalles.carnet.archivos).filter(key => key.endsWith('_validate'));
+    allValidateKeys.push(...carnetValidateKeys.map(key => detalles.carnet.archivos[key]));
+  }
+  
+  if (detalles.especializacion?.archivos) {
+    const especValidateKeys = Object.keys(detalles.especializacion.archivos).filter(key => key.endsWith('_validate'));
+    allValidateKeys.push(...especValidateKeys.map(key => detalles.especializacion.archivos[key]));
+  }
+  
+  if (detalles.constancias) {
+    detalles.constancias.forEach(constancia => {
+      if (constancia.archivos) {
+        const constanciaValidateKeys = Object.keys(constancia.archivos).filter(key => key.endsWith('_validate'));
+        allValidateKeys.push(...constanciaValidateKeys.map(key => constancia.archivos[key]));
+      }
+    });
+  }
+  
+  if (allValidateKeys.length === 0) return true;
+  
+  return allValidateKeys.every(value => value === true);
 }
 
 // Funciones auxiliares para la transformación

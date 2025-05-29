@@ -134,6 +134,39 @@ export default function DetalleSolicitud({ props }) {
   };
 
   const totales = calcularTotales(solicitud);
+
+  // Función para verificar que todos los documentos estén validados (todos los campos *_validate sean true)
+  const verificarDocumentosValidados = (solicitudData) => {
+    console.log({solicitudData})
+    if (!solicitudData) return false;
+
+    // Obtener todas las propiedades de la solicitud que terminan en '_validate'
+    const camposValidacion = Object.keys(solicitudData).filter(key => key.endsWith('_validate'));
+    
+    // Usar reduce para verificar que todos los campos de validación sean true
+    const todosValidados = camposValidacion.reduce((acumulador, campo) => {
+      const valorCampo = solicitudData[campo];
+      // Solo consideramos válido si el campo es explícitamente true
+      return acumulador && valorCampo === true;
+    }, true); // Inicializamos en true, si no hay campos de validación, retorna true
+
+    // También verificar si hay campos de validación (para evitar casos donde no hay documentos)
+    const hayDocumentosParaValidar = camposValidacion.length > 0;
+    return {
+      todosValidados,
+      hayDocumentosParaValidar,
+      camposValidacion,
+      estadoValidacion: camposValidacion.reduce((estado, campo) => {
+        estado[campo] = solicitudData[campo];
+        return estado;
+      }, {})
+    };
+  };
+
+  const estadoValidacionDocumentos = solicitud?.isAllDocumentosValidados;
+  console.log({estadoValidacionDocumentos})
+  
+
   // Función para aprobar la solicitud
   const handleAprobarSolicitud = async () => {
     try {
@@ -324,7 +357,6 @@ export default function DetalleSolicitud({ props }) {
   // Función para descargar PDF de constancia o carnet
   const handleDescargarDocumento = async (documento) => {
     try {
-      console.log("Descargando PDF para:", documento);
       
       if (documento.tipoDocumento === 'carnet') {
         // Para carnets, extraer el ID real del SolicitudCarnet del formato compuesto

@@ -655,7 +655,6 @@ export default function RegistrationForm(props) {
     }
     try {
       let res
-      console.log({PaymentForm})
       if (!pagarLuego) {
         res = await patchDataUsuario(
           `register/${recaudoCreado.id}`,
