@@ -28,10 +28,14 @@ export default function PersonalInfoSection({
 
   // Extraer los valores iniciales para el formulario de edición
   const getInitialFormData = () => {
+    // Determinar el tipo de documento basándose en la identificación
+    const identificacion = datosPersonales?.identificacion || "";
+    const hasPrefix = identificacion.startsWith("V-") || identificacion.startsWith("E-");
+    
     return {
-      documentType: datosPersonales?.nacionalidad === "extranjera" ? "pasaporte" : "cedula",
-      identityCard: datosPersonales?.identificacion?.substring(1) || "",
-      idType: datosPersonales?.identificacion?.substring(0, 1) || "V",
+      documentType: hasPrefix ? "cedula" : "pasaporte",
+      identityCard: hasPrefix ? identificacion.substring(2) : identificacion,
+      idType: hasPrefix ? identificacion.substring(0, 1) : "V",
       firstName: datosPersonales?.nombre || "",
       secondName: datosPersonales?.segundo_nombre || "",
       firstLastName: datosPersonales?.primer_apellido || "",
@@ -67,7 +71,7 @@ export default function PersonalInfoSection({
       nacionalidad: dataToUpdate.documentType === "pasaporte" ? "extranjera" : "venezolana",
       identificacion: dataToUpdate.documentType === "pasaporte"
         ? dataToUpdate.identityCard
-        : `${dataToUpdate.idType}${dataToUpdate.identityCard}`,
+        : `${dataToUpdate.idType}-${dataToUpdate.identityCard}`,
       fecha_de_nacimiento: dataToUpdate.birthDate,
       genero: dataToUpdate.gender,
       estado_civil: dataToUpdate.maritalStatus
@@ -145,20 +149,27 @@ export default function PersonalInfoSection({
             Tipo de documento
           </p>
           <p className="font-medium text-gray-800">
-            {tempFormData?.documentType === "pasaporte" ? "Pasaporte" :
-              (datosPersonales?.nacionalidad === "extranjera" ? "Pasaporte" : "Cédula de identidad")}
+            {(() => {
+              const identificacion = datosPersonales?.identificacion || "";
+              const hasPrefix = identificacion.startsWith("V-") || identificacion.startsWith("E-");
+              return hasPrefix ? "Cédula de identidad" : "Pasaporte";
+            })()}
           </p>
         </div>
 
         <div className="bg-gray-50 p-3 rounded-md">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-            {(tempFormData?.documentType || datosPersonales?.nacionalidad === "extranjera") ? "Pasaporte" : "Cédula"}
+            {(() => {
+              const identificacion = datosPersonales?.identificacion || "";
+              const hasPrefix = identificacion.startsWith("V-") || identificacion.startsWith("E-");
+              return hasPrefix ? "Cédula" : "Pasaporte";
+            })()}
           </p>
           <p className="font-medium text-gray-800">
             {tempFormData ?
               (tempFormData.documentType === "pasaporte" ?
                 tempFormData.identityCard :
-                `${tempFormData.idType || "V"}-${tempFormData.identityCard}`) :
+                `${tempFormData.idType}-${tempFormData.identityCard}`) :
               datosPersonales?.identificacion}
           </p>
         </div>

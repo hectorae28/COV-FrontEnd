@@ -3,11 +3,11 @@
 import { ArrowLeft, ArrowRight, CheckCircle, UserPlus, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
-// Import components and data store
 import api from "@/api/api";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import { fetchExistencePersona } from "@/api/endpoints/persona";
 import DocsRequirements from "@/app/(Registro)/DocsRequirements";
+import FotoColegiado from "@/app/(Registro)/FotoColegiado";
 import InfoColegiado from "@/app/(Registro)/InfoColg";
 import InfoContacto from "@/app/(Registro)/InfoCont";
 import InfoLaboral from "@/app/(Registro)/InfoLab";
@@ -19,22 +19,22 @@ export default function RegistroColegiados({
   onClose,
   onRegistroExitoso,
 }) {
-
-
-  // Estado para seguimiento de pasos
   const [pasoActual, setPasoActual] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [exonerarPagos, setExonerarPagos] = useState(false);
   const [pagarLuego, setPagarLuego] = useState(false);
   const [tasaBcv, setTasaBcv] = useState(0);
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(null);
   const [costoInscripcion, setCostoInscripcion] = useState(0);
   const [metodoPago, setMetodoPago] = useState([]);
+
   const initialState = {
     tipo_profesion: "",
+    documentType: "cedula",
     nationality: "",
     identityCard: "",
+    idType: "V",
     firstName: "",
     secondName: "",
     firstLastName: "",
@@ -51,6 +51,7 @@ export default function RegistroColegiados({
     address: "",
     city: "",
     state: "",
+    municipio: "",
     collegeNumber: "",
     professionalField: "",
     institutionName: "",
@@ -65,20 +66,37 @@ export default function RegistroColegiados({
     mainRegistrationNumber: "",
     mainRegistrationDate: "",
     mppsRegistrationNumber: "",
-    mppsRegistrationDate: "",
     titleIssuanceDate: "",
-    state: "",
     ci: null,
     rif: null,
     titulo: null,
     mpps: null,
-    documentos: {}
+    foto_colegiado: null,
+    fondo_negro_credencial: null,
+    notas_curso: null,
+    fondo_negro_titulo_bachiller: null,
+    documentos: {},
+    workStatus: "",
+    institutionType: "",
+    cargo: "",
+    selectedEstado: "",
+    selectedMunicipio: "",
+    laboralRegistros: [
+      {
+        id: 1,
+        institutionType: "",
+        institutionName: "",
+        institutionAddress: "",
+        institutionPhone: "",
+        cargo: "",
+        selectedEstado: "",
+        selectedMunicipio: "",
+      },
+    ],
   };
 
-  // Estado para los datos del formulario
   const [formData, setFormData] = useState(initialState);
 
-  // Función para actualizar datos del formulario
   const handleInputChange = (data) => {
     if (data && data.isPersonalInfoValid !== undefined) {
       const { isPersonalInfoValid, ...rest } = data;
@@ -90,23 +108,26 @@ export default function RegistroColegiados({
     }));
   };
 
-  // Función para manejar cambios en documentos
   const handleDocumentosChange = (docs) => {
-    // Actualizar directamente los campos individuales para archivos
-    if (docs.ci) {
-      setFormData(prev => ({ ...prev, ci: docs.ci }));
-    }
-    if (docs.rif) {
-      setFormData(prev => ({ ...prev, rif: docs.rif }));
-    }
-    if (docs.titulo) {
-      setFormData(prev => ({ ...prev, titulo: docs.titulo }));
-    }
-    if (docs.mpps) {
-      setFormData(prev => ({ ...prev, mpps: docs.mpps }));
-    }
+    if (docs.ci) setFormData((prev) => ({ ...prev, ci: docs.ci }));
+    if (docs.rif) setFormData((prev) => ({ ...prev, rif: docs.rif }));
+    if (docs.titulo) setFormData((prev) => ({ ...prev, titulo: docs.titulo }));
+    if (docs.mpps) setFormData((prev) => ({ ...prev, mpps: docs.mpps }));
+    if (docs.foto_colegiado)
+      setFormData((prev) => ({ ...prev, foto_colegiado: docs.foto_colegiado }));
+    if (docs.fondo_negro_credencial)
+      setFormData((prev) => ({
+        ...prev,
+        fondo_negro_credencial: docs.fondo_negro_credencial,
+      }));
+    if (docs.notas_curso)
+      setFormData((prev) => ({ ...prev, notas_curso: docs.notas_curso }));
+    if (docs.fondo_negro_titulo_bachiller)
+      setFormData((prev) => ({
+        ...prev,
+        fondo_negro_titulo_bachiller: docs.fondo_negro_titulo_bachiller,
+      }));
 
-    // También mantener la estructura de documentos para coherencia
     setFormData((prev) => ({
       ...prev,
       documentos: {
@@ -116,77 +137,45 @@ export default function RegistroColegiados({
     }));
   };
 
-  // Marcamos un paso como completado
   const marcarPasoCompletado = (paso) => {
     if (!completedSteps.includes(paso)) {
       setCompletedSteps((prev) => [...prev, paso]);
     }
   };
 
-  // Función para avanzar al siguiente paso sin validaciones
   const avanzarPaso = async () => {
-    if (pasoActual == 1) {
-      /*Validar formulario y handleIdentityCardDuplicateVerification()*/
-    }
-    // Marcamos el paso actual como completado
     marcarPasoCompletado(pasoActual);
 
-    // Si estamos en el paso 5 (documentos), pasamos directamente a pagos (paso 6)
-    if (pasoActual === 5) {
-      setPasoActual(6);
-    } else if (pasoActual < 5) {
-      // Para los pasos 1-4, avanzamos normalmente
+    if (pasoActual === 6) {
+      setPasoActual(7);
+    } else if (pasoActual < 6) {
       setPasoActual(pasoActual + 1);
     }
   };
 
-  // Función para retroceder al paso anterior
   const retrocederPaso = () => {
     setPasoActual(Math.max(1, pasoActual - 1));
   };
 
-  // Función para reiniciar el formulario y comenzar un nuevo registro
   const iniciarNuevoRegistro = () => {
-    // Reiniciamos todos los estados
     setPasoActual(1);
     setCompletedSteps([]);
     setExonerarPagos(false);
     setPagarLuego(false);
+    setError(null);
     setFormData(initialState);
   };
 
-  // Función para validar Número de identificación Duplicado
   const handleIdentityCardDuplicateVerification = async () => {
     const queryParams = new URLSearchParams({
-      "tipo_identificacion": formData.documentType,
-      "inicial": formData.idType,
-      "identificacion": formData.identityCard,
+      tipo_identificacion: formData.documentType,
+      inicial: formData.idType,
+      identificacion: formData.identityCard,
     }).toString();
     const res = await fetchExistencePersona(`check-existence`, queryParams);
-    return res.exists
-  }
-
-  // Manejar cambio de exonerar pagos
-  const handleExonerarPagosChange = (e) => {
-    const isChecked = e.target.checked;
-    setExonerarPagos(isChecked);
-
-    // Si se activa exonerar pagos, desactivamos pagar luego
-    if (isChecked) {
-      setPagarLuego(false);
-    }
+    return res.exists;
   };
 
-  // Manejar cambio de pagar luego
-  const handlePagarLuegoChange = (e) => {
-    const isChecked = e.target.checked;
-    setPagarLuego(isChecked);
-
-    // Si se activa pagar luego, desactivamos exonerar pagos
-    if (isChecked) {
-      setExonerarPagos(false);
-    }
-  };
   const handlePaymentComplete = async ({
     paymentDate = null,
     referenceNumber = null,
@@ -195,98 +184,197 @@ export default function RegistroColegiados({
     metodo_de_pago = null,
   }) => {
     setIsSubmitting(true);
-    const Form = new FormData();
-    Form.append("tipo_profesion", formData.tipo_profesion);
-    Form.append(
-      "persona",
-      JSON.stringify({
-        direccion: {
-          referencia: formData.address,
-          estado: 1,
-        },
-        nombre: formData.firstName,
-        primer_apellido: formData.firstLastName,
-        segundo_apellido: formData.secondLastName,
-        segundo_nombre: formData.secondName,
-        genero: formData.gender,
-        nacionalidad: formData.nationality,
-        identificacion: `${formData.idType}-${formData.identityCard}`,
-        correo: formData.email,
-        telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
-        telefono_de_habitacion: formData.homePhone,
-        fecha_de_nacimiento: formData.birthDate,
-        estado_civil: formData.maritalStatus,
-      })
-    );
-    Form.append("instituto_bachillerato", formData.graduateInstitute);
-    Form.append("universidad", formData.universityTitle);
-    Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
-    if (formData.tipo_profesion === "odontologo") {
-      Form.append("num_registro_principal", formData.mainRegistrationNumber);
-      Form.append("fecha_registro_principal", formData.mainRegistrationDate);
-    }
-    Form.append("num_mpps", formData.mppsRegistrationNumber);
-    Form.append("fecha_mpps", formData.mppsRegistrationDate);
-    Form.append(
-      "instituciones",
-      JSON.stringify(
-        formData.laboralRegistros.map((registro) => ({
-          nombre: registro.institutionName,
-          cargo: registro.cargo,
-          direccion: registro.institutionAddress,
-          telefono: registro.institutionPhone,
-          tipo_institucion: registro.institutionType,
-        })) || []
-      )
-    );
-    Form.append("file_ci", formData.ci);
-    Form.append("file_rif", formData.rif);
-    Form.append("file_fondo_negro", formData.titulo);
-    Form.append("file_mpps", formData.mpps);
-    Form.append("comprobante", paymentFile);
-    if (
-      formData.tipo_profesion === "tecnico" ||
-      formData.tipo_profesion === "higienista"
-    ) {
-      Form.append("fondo_negro_credencial", formData.fondo_negro_credencial);
-      Form.append("notas_curso", formData.notas_curso);
-      Form.append(
-        "fondo_negro_titulo_bachiller",
-        formData.fondo_negro_titulo_bachiller
-      );
-    }
 
-    (!pagarLuego && !exonerarPagos)
-      ? Form.append(
-        "pago",
-        JSON.stringify({
+    try {
+      if (!formData.tipo_profesion) {
+        throw new Error("Tipo de profesión es requerido");
+      }
+
+      if (!formData.firstName || !formData.firstLastName) {
+        throw new Error("Nombre y apellido son requeridos");
+      }
+
+      if (!formData.email || !formData.phoneNumber) {
+        throw new Error("Email y teléfono son requeridos");
+      }
+
+      if (!formData.universityTitle || formData.universityTitle.trim() === "") {
+        throw new Error("Universidad es requerida");
+      }
+
+      const Form = new FormData();
+      Form.append("tipo_profesion", formData.tipo_profesion);
+
+      // Formatear teléfono móvil (máximo 13 caracteres)
+      const countryCode = formData.countryCode || "+58";
+      const phoneNumber = formData.phoneNumber || "";
+      let telefonoMovil = `${countryCode} ${phoneNumber}`.trim();
+
+      if (telefonoMovil.length > 13) {
+        telefonoMovil = `${countryCode}${phoneNumber}`;
+        if (telefonoMovil.length > 13) {
+          telefonoMovil = telefonoMovil.substring(0, 13);
+        }
+      }
+
+      const personaData = {
+        direccion: {
+          referencia: formData.address || "",
+          estado: Number(formData.state) || 1,
+          municipio: Number(formData.municipio) || 1,
+        },
+        nombre: formData.firstName || "",
+        primer_apellido: formData.firstLastName || "",
+        segundo_apellido: formData.secondLastName || "",
+        segundo_nombre: formData.secondName || "",
+        genero: formData.gender || "",
+        nacionalidad:
+          formData.documentType === "cedula" ? "venezolana" : "extranjera",
+        identificacion:
+          formData.documentType === "cedula"
+            ? `${formData.idType || "V"}${formData.identityCard || ""}`
+            : formData.identityCard || "",
+        correo: formData.email || "",
+        telefono_movil: telefonoMovil,
+        telefono_de_habitacion: formData.homePhone || "",
+        fecha_de_nacimiento: formData.birthDate || "",
+        estado_civil: formData.maritalStatus || "",
+      };
+
+      Form.append("persona", JSON.stringify(personaData));
+      Form.append("instituto_bachillerato", formData.graduateInstitute || "");
+      Form.append("universidad", formData.universityTitle || "");
+      Form.append("fecha_egreso_universidad", formData.titleIssuanceDate || "");
+
+      if (formData.tipo_profesion === "odontologo") {
+        Form.append(
+          "num_registro_principal",
+          formData.mainRegistrationNumber || ""
+        );
+      }
+      Form.append("num_mpps", formData.mppsRegistrationNumber || "");
+
+      const instituciones =
+        formData.workStatus === "noLabora"
+          ? []
+          : formData.laboralRegistros &&
+            Array.isArray(formData.laboralRegistros)
+            ? formData.laboralRegistros
+              .filter(
+                (registro) =>
+                  registro.institutionName &&
+                  registro.institutionName.trim() !== ""
+              )
+              .map((registro) => ({
+                nombre: registro.institutionName || "",
+                cargo: registro.cargo || "",
+                direccion: {
+                  estado: Number(registro.selectedEstado) || 1,
+                  municipio: Number(registro.selectedMunicipio) || 1,
+                  referencia: registro.institutionAddress || "",
+                },
+                telefono: registro.institutionPhone || "",
+                tipo_institucion: registro.institutionType || "CDP",
+              }))
+            : [];
+
+      Form.append("instituciones", JSON.stringify(instituciones));
+
+      if (formData.ci) Form.append("file_ci", formData.ci);
+      if (formData.rif) Form.append("file_rif", formData.rif);
+      if (formData.titulo) Form.append("file_fondo_negro", formData.titulo);
+      if (formData.mpps) Form.append("file_mpps", formData.mpps);
+      if (formData.foto_colegiado)
+        Form.append("file_foto_colegiado", formData.foto_colegiado);
+
+      if (
+        formData.tipo_profesion === "tecnico" ||
+        formData.tipo_profesion === "higienista"
+      ) {
+        if (formData.fondo_negro_credencial) {
+          Form.append(
+            "fondo_negro_credencial",
+            formData.fondo_negro_credencial
+          );
+        }
+        if (formData.notas_curso) {
+          Form.append("notas_curso", formData.notas_curso);
+        }
+        if (formData.fondo_negro_titulo_bachiller) {
+          Form.append(
+            "fondo_negro_titulo_bachiller",
+            formData.fondo_negro_titulo_bachiller
+          );
+        }
+      }
+
+      if (!pagarLuego && !exonerarPagos && paymentFile && metodo_de_pago) {
+        const pagoData = {
           fecha_pago: paymentDate,
           metodo_de_pago: metodo_de_pago.id,
           num_referencia: referenceNumber,
           monto: totalAmount,
-        })
-      )
-      : Form.append("pago", null);
-    exonerarPagos && Form.append("pago_exonerado", true)
-    try {
+        };
+        Form.append("pago", JSON.stringify(pagoData));
+        Form.append("comprobante", paymentFile);
+      } else {
+        Form.append("pago", "null");
+      }
+
+      if (exonerarPagos) {
+        Form.append("pago_exonerado", "true");
+      }
+
       const response = await api.post("usuario/register/", Form, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-      if (response.status === 201) {
-        setPasoActual(7);
-        onRegistroExitoso();
-        setIsSubmitting(false);
 
+      if (response.status === 201) {
+        setPasoActual(8);
+        onRegistroExitoso();
       }
     } catch (error) {
-      console.error(
-        "Error al enviar los datos:",
-        error.response?.data || error
-      );
-      setIsSubmitting(false);
+      let errorMessage = "Error al registrar el colegiado.";
 
+      if (error.response?.data) {
+        if (typeof error.response.data === "string") {
+          errorMessage = error.response.data;
+        } else if (typeof error.response.data === "object") {
+          const errorDetails = [];
+          Object.entries(error.response.data).forEach(([key, value]) => {
+            if (key === "persona" && typeof value === "object") {
+              Object.entries(value).forEach(([personaKey, personaValue]) => {
+                if (Array.isArray(personaValue)) {
+                  errorDetails.push(
+                    `${personaKey}: ${personaValue.join(", ")}`
+                  );
+                }
+              });
+            } else if (key === "universidad" && typeof value === "object") {
+              Object.entries(value).forEach(([uniKey, uniValue]) => {
+                if (Array.isArray(uniValue)) {
+                  errorDetails.push(
+                    `Universidad ${uniKey}: ${uniValue.join(", ")}`
+                  );
+                }
+              });
+            } else if (Array.isArray(value)) {
+              errorDetails.push(`${key}: ${value.join(", ")}`);
+            } else {
+              errorDetails.push(`${key}: ${value}`);
+            }
+          });
+          if (errorDetails.length > 0) {
+            errorMessage = errorDetails.join("; ");
+          }
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -310,12 +398,12 @@ export default function RegistroColegiados({
         );
       }
     };
+
     if (formData.tipo_profesion.length > 0) {
       LoadData();
     }
   }, [formData.tipo_profesion]);
 
-  // Renderizar paso actual
   const renderPasoActual = () => {
     switch (pasoActual) {
       case 1:
@@ -324,7 +412,11 @@ export default function RegistroColegiados({
         );
       case 2:
         return (
-          <InfoContacto formData={formData} onInputChange={handleInputChange} isAdmin={true} />
+          <InfoContacto
+            formData={formData}
+            onInputChange={handleInputChange}
+            isAdmin={true}
+          />
         );
       case 3:
         return (
@@ -346,6 +438,13 @@ export default function RegistroColegiados({
         );
       case 6:
         return (
+          <FotoColegiado
+            formData={formData}
+            onInputChange={handleInputChange}
+          />
+        );
+      case 7:
+        return (
           <div className="space-y-6">
             {!exonerarPagos && !pagarLuego && (
               <PagosColg
@@ -359,15 +458,11 @@ export default function RegistroColegiados({
 
             <div className="w-full max-w-md mx-auto mt-6">
               <div className="flex justify-center">
-                {/* Exonerar (solo visible si no está seleccionado pagar luego) */}
                 {!pagarLuego && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setExonerarPagos(!exonerarPagos)
-                    }}
-                    className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300
-          ${exonerarPagos
+                    onClick={() => setExonerarPagos(!exonerarPagos)}
+                    className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300 ${exonerarPagos
                         ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
                         : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/20"
                       }`}
@@ -375,18 +470,15 @@ export default function RegistroColegiados({
                     Exonerar
                   </button>
                 )}
-                {/* Separador */}
-                {!pagarLuego && !exonerarPagos && <span className="px-2"></span>}
+                {!pagarLuego && !exonerarPagos && (
+                  <span className="px-2"></span>
+                )}
 
-                {/* Pagar luego (solo visible si no está seleccionado exonerar) */}
                 {!exonerarPagos && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setPagarLuego(!pagarLuego)
-                    }}
-                    className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300
-          ${pagarLuego
+                    onClick={() => setPagarLuego(!pagarLuego)}
+                    className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300 ${pagarLuego
                         ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
                         : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/20"
                       }`}
@@ -396,7 +488,6 @@ export default function RegistroColegiados({
                 )}
               </div>
 
-              {/* Mensaje informativo opcional */}
               {(pagarLuego || exonerarPagos) && (
                 <div className="mt-4 text-center text-sm">
                   {pagarLuego && (
@@ -414,7 +505,7 @@ export default function RegistroColegiados({
             </div>
           </div>
         );
-      case 7:
+      case 8:
         return (
           <div className="text-center py-8">
             <div className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full flex items-center justify-center mx-auto mb-6">
@@ -433,7 +524,8 @@ export default function RegistroColegiados({
               )}
               {exonerarPagos && (
                 <span className="block mt-2 text-green-600 font-medium">
-                  Nota: El colegiado ha sido exonerado del pago por administración.
+                  Nota: El colegiado ha sido exonerado del pago por
+                  administración.
                 </span>
               )}
             </p>
@@ -451,18 +543,17 @@ export default function RegistroColegiados({
     }
   };
 
-  // Títulos de los pasos (completos)
   const titulosPasos = [
     "Información Personal",
     "Información de Contacto",
     "Información Profesional",
     "Información Laboral",
     "Documentos Requeridos",
+    "Foto tipo Carnet",
     "Pagos",
     "Confirmación",
   ];
 
-  // Títulos para mostrar en el indicador de pasos (divididos en dos líneas excepto para documentos)
   const getTituloIndicador = (paso) => {
     switch (paso) {
       case 1:
@@ -495,22 +586,27 @@ export default function RegistroColegiados({
         );
       case 5:
         return <span className="text-xs">Documentos</span>;
+      case 6:
+        return (
+          <div className="flex flex-col items-center text-center">
+            <span className="text-xs leading-tight">Foto</span>
+            <span className="text-xs leading-tight">Carnet</span>
+          </div>
+        );
       default:
         return null;
     }
   };
 
-  // Determinar si mostrar el encabezado con los pasos (no se muestra en la pantalla de pagos o confirmación)
-  const mostrarEncabezadoPasos = pasoActual <= 5;
+  const mostrarEncabezadoPasos = pasoActual <= 6;
 
   return (
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-auto">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto">
-        {/* Header con Título y Botón de Cerrar */}
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-semibold text-[#41023B]">
             Registrar nuevo colegiado
-            {pasoActual <= 6 && (
+            {pasoActual <= 7 && (
               <span className="ml-2 text-sm text-gray-500">
                 {pasoActual &&
                   `• Paso ${pasoActual}: ${titulosPasos[pasoActual - 1]}`}
@@ -525,17 +621,40 @@ export default function RegistroColegiados({
           </button>
         </div>
 
-        {/* Indicador de pasos - Solo visible hasta el paso 5 */}
+        {error && (
+          <div className="mx-6 mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <X className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+              </div>
+              <div className="ml-auto pl-3">
+                <div className="-mx-1.5 -my-1.5">
+                  <button
+                    onClick={() => setError(null)}
+                    className="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {mostrarEncabezadoPasos && (
           <div className="px-6 pt-6">
             <div className="flex items-center justify-between mb-6">
-              {/* Pasos de 1 a 5 */}
-              {[1, 2, 3, 4, 5].map((paso, index) => (
+              {[1, 2, 3, 4, 5, 6].map((paso, index) => (
                 <React.Fragment key={paso}>
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-10 h-10 flex items-center justify-center rounded-full 
-                    ${completedSteps.includes(paso)
+                      className={`w-10 h-10 flex items-center justify-center rounded-full ${completedSteps.includes(paso)
                           ? "bg-[#41023B] text-white"
                           : pasoActual === paso
                             ? "bg-[#D7008A] text-white"
@@ -548,17 +667,16 @@ export default function RegistroColegiados({
                         paso
                       )}
                     </div>
-                    {/* Aquí usamos la función para mostrar el título dividido */}
                     <div className="mt-1 min-h-10">
                       {getTituloIndicador(paso)}
                     </div>
                   </div>
 
-                  {index < 4 && (
+                  {index < 5 && (
                     <div
                       className={`h-1 flex-1 mx-1 ${completedSteps.includes(paso)
-                        ? "bg-[#41023B]"
-                        : "bg-gray-200"
+                          ? "bg-[#41023B]"
+                          : "bg-gray-200"
                         }`}
                     ></div>
                   )}
@@ -568,11 +686,9 @@ export default function RegistroColegiados({
           </div>
         )}
 
-        {/* Contenido del paso actual */}
         <div className="p-6">{renderPasoActual()}</div>
 
-        {/* Botones de navegación */}
-        {pasoActual !== 7 && pasoActual !== 6 && (
+        {pasoActual !== 8 && pasoActual !== 7 && (
           <div className="flex justify-between p-6 border-t bg-gray-50">
             {pasoActual > 1 ? (
               <button
@@ -587,7 +703,7 @@ export default function RegistroColegiados({
               <div></div>
             )}
 
-            {pasoActual < 5 ? (
+            {pasoActual < 6 ? (
               <button
                 type="button"
                 onClick={avanzarPaso}
@@ -597,7 +713,7 @@ export default function RegistroColegiados({
                 <ArrowRight size={16} />
               </button>
             ) : (
-              pasoActual === 5 && (
+              pasoActual === 6 && (
                 <button
                   type="button"
                   onClick={avanzarPaso}
@@ -611,43 +727,53 @@ export default function RegistroColegiados({
           </div>
         )}
 
-        {/* Botón para la sección de pagos cuando hay exoneración o pago posterior */}
-        {pasoActual === 6 && (exonerarPagos || pagarLuego) && (
-          <div className="flex justify-center p-6 border-t bg-gray-100">
+        {pasoActual === 7 && (
+          <div className="flex justify-between p-6 border-t bg-gray-50">
             <button
               type="button"
-              onClick={handlePaymentComplete}
-              disabled={isSubmitting}
-              className="px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
+              onClick={retrocederPaso}
+              className="flex items-center gap-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              {isSubmitting ? (
-                <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Procesando...
-                </span>
-              ) : (
-                "Completar Solicitud de Registro"
-              )}
+              <ArrowLeft size={16} />
+              Atras
             </button>
+
+            {(exonerarPagos || pagarLuego) && (
+              <button
+                type="button"
+                onClick={handlePaymentComplete}
+                disabled={isSubmitting}
+                className="px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Procesando...
+                  </span>
+                ) : (
+                  "Completar Solicitud de Registro"
+                )}
+              </button>
+            )}
           </div>
         )}
       </div>

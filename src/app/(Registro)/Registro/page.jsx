@@ -57,6 +57,7 @@ const steps = [
     requiredFields: [
       "graduateInstitute",
       "universityTitle",
+      "mppsRegistrationNumber",
       "titleIssuanceDate",
       "tipo_profesion",
     ],
@@ -125,7 +126,7 @@ export default function RegistrationForm(props) {
     graduateInstitute: props?.instituto_bachillerato || "",
     universityTitle: props?.universidad || "",
     mainRegistrationNumber: props?.num_registro_principal || "",
-    mainRegistrationDate: props?.fecha_registro_principal || "",
+    mppsRegistrationNumber: props?.num_mpps || "",
     titleIssuanceDate: props?.fecha_egreso_universidad || "",
 
     // Archivos requeridos
@@ -531,7 +532,7 @@ export default function RegistrationForm(props) {
                 ? `${formData.idType}${formData.identityCard}`
                 : formData.identityCard,
             correo: formData.email,
-            telefono_movil: `${formData.countryCode} ${formData.phoneNumber}`,
+            telefono_movil: `${formData.countryCode}${formData.phoneNumber}`,
             telefono_de_habitacion: formData.homePhone,
             fecha_de_nacimiento: formData.birthDate,
             estado_civil: formData.maritalStatus,
@@ -545,11 +546,8 @@ export default function RegistrationForm(props) {
             "num_registro_principal",
             formData.mainRegistrationNumber
           );
-          Form.append(
-            "fecha_registro_principal",
-            formData.mainRegistrationDate
-          );
         }
+        Form.append("num_mpps", formData.mppsRegistrationNumber);
         Form.append(
           "instituciones",
           JSON.stringify(
@@ -828,7 +826,7 @@ export default function RegistrationForm(props) {
                         ? "¡Gracias por completar su registro y pago!"
                         : showEmailVerification
                           ? "Verifique su correo electrónico para continuar con el proceso de registro"
-                          : "Complete el formulario en 5 sencillos pasos para unirse a nuestra comunidad profesional"}
+                          : "Complete el formulario en 6 sencillos pasos para unirse a nuestra comunidad profesional"}
                   </p>
                 </motion.div>
               </div>

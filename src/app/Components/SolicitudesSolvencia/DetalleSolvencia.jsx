@@ -21,7 +21,7 @@ import { useEffect, useState } from "react";
 import ConfirmacionModal from "./ConfirmacionModal";
 import RechazoModal from "./RechazoModal";
 import ExoneracionModal from "./ExoneracionModal";
-import {patchDataSolicitud, postDataSolicitud} from "@/api/endpoints/solicitud"
+import {patchDataSolicitud, postDataSolicitud, fetchSolicitudes} from "@/api/endpoints/solicitud"
 import { useSolicitudesStore } from "@/store/SolicitudesStore"
 import { colegiado } from "@/app/Models/PanelControl/Solicitudes/SolicitudesColegiadosData";
 
@@ -42,25 +42,21 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   const [mesVencimiento, setMesVencimiento] = useState("");
   const [anioVencimiento, setAnioVencimiento] = useState("");
   const [costoNuevo, setCostoNuevo] = useState("");
+  const [metodosDePago, setMetodoDePago] = useState([]);
+  const [fechaVencimiento, setFechaVencimiento] = useState(getEndOfTrimester(getTrimester()));
 
-  // Arrays para selects de fecha
-  const dias = Array.from({ length: 31 }, (_, i) => i + 1);
-  const meses = [
-    { valor: 1, nombre: "Enero" },
-    { valor: 2, nombre: "Febrero" },
-    { valor: 3, nombre: "Marzo" },
-    { valor: 4, nombre: "Abril" },
-    { valor: 5, nombre: "Mayo" },
-    { valor: 6, nombre: "Junio" },
-    { valor: 7, nombre: "Julio" },
-    { valor: 8, nombre: "Agosto" },
-    { valor: 9, nombre: "Septiembre" },
-    { valor: 10, nombre: "Octubre" },
-    { valor: 11, nombre: "Noviembre" },
-    { valor: 12, nombre: "Diciembre" }
-  ];
-  const anioActual = new Date().getFullYear();
-  const anios = Array.from({ length: 10 }, (_, i) => anioActual + i);
+  const getMetodosDePago = async () => {
+      try {
+        const metodos = await fetchSolicitudes("metodo-de-pago");
+        setMetodoDePago(metodos.data);
+        console.log(metodos.data)
+      } catch (error) {
+        console.log(`Ha ocurrido un error: ${error}`)
+      }
+    }
+
+  const fechaActual = new Date();
+  const anioActual = fechaActual.getFullYear();
 
   const fetchSolicitudesDeSolvencia = useSolicitudesStore((state) => state.fetchSolicitudesDeSolvencia);
 
@@ -89,12 +85,27 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
     return endDate;
   }
 
+  const formatDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const fechasDeVencimiento = [
+      { trimestre: 1, fecha: getEndOfTrimester(1) },
+      { trimestre: 2, fecha: getEndOfTrimester(2) },
+      { trimestre: 3, fecha: getEndOfTrimester(3) },
+      { trimestre: 4, fecha: getEndOfTrimester(4) },
+  ];
+
   // Obtener datos de la solvencia
   useEffect(() => {
     if (solvencias && solvenciaId) {
       const solvenciaEncontrada = solvencias.find(s => s.idSolicitudSolvencia === solvenciaId);
       if (solvenciaEncontrada) {
         setSolvencia(solvenciaEncontrada);
+        getMetodosDePago();
 
         // Si tiene fecha de vencimiento, establecerla en los campos separados
         if (solvenciaEncontrada.fechaExpSolvencia) {
@@ -175,10 +186,12 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   // Función para exonerar el pago
   const handleExonerarPago = (motivo) => {
     try {
+
       const solvenciaActualizada = {
         solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
         motivo_exoneracion: motivo,
-        colegiado_id: solvencia.idColegiado
+        colegiado_id: solvencia.idColegiado,
+        fecha_exp: fechaVencimiento
       };
 
       postDataSolicitud('exonerar_solicitud_solvencia', solvenciaActualizada);
@@ -199,12 +212,11 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         return;
       }
 
-
-      const fechaActual = new Date().toLocaleDateString();
       const solvenciaActualizada = {
         solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
         colegiado_id: solvencia.idColegiado,
         costo: solvencia.costoRegularSolicitud,
+        fecha_exp: fechaVencimiento
       };
 
       postDataSolicitud('aprobar_solicitud_solvencia', solvenciaActualizada);
@@ -251,6 +263,10 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       setAlertaExito(null);
     }, 5000);
   };
+
+  const handleSeleccionarFecha = (e) => {
+    setFechaVencimiento(e.target.value);
+  }
 
   // Renderizado principal
   if (isLoading) {
@@ -565,9 +581,21 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                         Fecha de vencimiento
                       </h3>
                       <div className="mb-4">
-                        {/* NUEVO: Selects para día, mes y año */}
+                        <div className="grid grid-cols-1 gap-3">
+                          <div>
+                            <select name="fechaVencimientoRevisando" id="fechaVencimientoRevisando" className="w-full px-3 py-2 border border-gray-300 rounded-md
+                              focus:ring-[#C40180] focus:border-[#C40180]"
+                              onChange={(e) => handleSeleccionarFecha(e)}>
+                                <option value="" disabled>Seleccione una fecha</option>
+                                {fechasDeVencimiento.map(({trimestre, fecha}) => (
+                                  <option key={trimestre} value={fecha} disabled={fechaActual > fecha}>{formatDate(fecha)}</option>
+                                ))}
+                            </select>
+                          </div>
+                        </div>
+                        {/*
                         <div className="grid grid-cols-3 gap-3">
-                          {/* Select para día */}
+
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Día</label>
                             <select
@@ -583,7 +611,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                             </select>
                           </div>
 
-                          {/* Select para mes */}
+
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Mes</label>
                             <select
@@ -599,7 +627,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                             </select>
                           </div>
 
-                          {/* Select para año */}
+
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Año</label>
                             <select
@@ -614,7 +642,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                               ))}
                             </select>
                           </div>
-                        </div>
+                        </div>*/}
                         <p className="mt-2 text-sm text-gray-500">
                           La solvencia será válida hasta esta fecha
                         </p>

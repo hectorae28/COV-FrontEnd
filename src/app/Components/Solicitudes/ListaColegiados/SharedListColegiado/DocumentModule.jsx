@@ -18,7 +18,7 @@ export function DocumentSection({
   documentos = [],
   onViewDocument,
   updateDocumento,
-  onDocumentStatusChange,
+  onValidationChange, // ✅ Cambio de nombre del prop
   readonly = false,
   filter = doc => !doc.id?.includes('comprobante_pago'),
   isColegiado = false,
@@ -262,106 +262,44 @@ export function DocumentSection({
     }
   };
 
-  // Función optimizada de subida con actualización inmediata
+  // Solo maneja subida, NO validación
   const handleUpload = async () => {
-    if (!selectedFile) {
-      setError("Por favor seleccione un archivo para subir.");
-      return;
+  if (!selectedFile) {
+    setError("Por favor seleccione un archivo para subir.");
+    return;
+  }
+
+  setIsUploading(true);
+  setError("");
+
+  try {
+    if (updateDocumento) {
+      const formData = new FormData();
+      formData.append(`${documentoParaSubir.id}`, selectedFile);
+      formData.append(`${documentoParaSubir.id}_validate`, "null");
+      formData.append(`${documentoParaSubir.id}_motivo_rechazo`, "");
+
+      const response = await updateDocumento(formData);
+
+      if (response?.data) {
+        setLocalPendienteData(prevData => ({
+          ...prevData,
+          ...response.data
+        }));
+
+        setUploadSuccess(true);
+        setUploadedDocumentName(documentoParaSubir.nombre);
+        setTimeout(() => setUploadSuccess(false), 5000);
+      }
     }
-
-    setIsUploading(true);
-    setError("");
-
-    // Crear URL temporal para mostrar inmediatamente
-    const tempUrl = URL.createObjectURL(selectedFile);
-
-    // Actualizar estado local inmediatamente (optimistic update)
-    const optimisticUpdate = {
-      ...localPendienteData,
-      [`${documentoParaSubir.id}_url`]: tempUrl,
-      [`${documentoParaSubir.id}_status`]: 'uploading'
-    };
-
-    setLocalPendienteData(optimisticUpdate);
-
-    // Notificar cambio optimista al componente padre
-    if (onDocumentStatusChange) {
-      onDocumentStatusChange({
-        ...documentoParaSubir,
-        url: tempUrl,
-        archivo: selectedFile.name,
-        status: 'uploading',
-        isOptimistic: true,
-        tempUrl: tempUrl
-      });
-    }
-
-    // Cerrar modal inmediatamente para mejor UX
+  } catch (error) {
+    setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.");
+  } finally {
+    setIsUploading(false);
     setDocumentoParaSubir(null);
     setSelectedFile(null);
-
-    try {
-      if (updateDocumento) {
-        const formData = new FormData();
-        formData.append(`${documentoParaSubir.id}`, selectedFile);
-
-        const response = await updateDocumento(formData);
-
-        if (response?.data) {
-          const realUrl = response.data[`${documentoParaSubir.id}_url`];
-
-          // Actualizar con datos reales del servidor
-          setLocalPendienteData(prevData => ({
-            ...prevData,
-            ...response.data
-          }));
-
-          // Notificar actualización real al padre
-          if (onDocumentStatusChange) {
-            onDocumentStatusChange({
-              ...documentoParaSubir,
-              url: realUrl,
-              archivo: selectedFile.name,
-              status: 'pending',
-              isOptimistic: false,
-              fullData: response.data,
-              tempUrl: tempUrl
-            });
-          }
-
-          // Mostrar mensaje de éxito
-          setUploadSuccess(true);
-          setUploadedDocumentName(documentoParaSubir.nombre);
-          setTimeout(() => setUploadSuccess(false), 5000);
-        }
-      }
-    } catch (error) {
-      // Revertir cambios optimistas en caso de error
-      setLocalPendienteData(prevData => {
-        const revertedData = { ...prevData };
-        delete revertedData[`${documentoParaSubir.id}_url`];
-        delete revertedData[`${documentoParaSubir.id}_status`];
-        return revertedData;
-      });
-
-      // Limpiar URL temporal
-      URL.revokeObjectURL(tempUrl);
-
-      // Notificar error al padre
-      if (onDocumentStatusChange) {
-        onDocumentStatusChange({
-          ...documentoParaSubir,
-          status: 'error',
-          error: error.message,
-          isOptimistic: false
-        });
-      }
-
-      setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  }
+};
 
   // Adaptadores para modal de edición
   const mapDocumentosToDocsRequirements = useCallback(() => {
@@ -516,7 +454,7 @@ export function DocumentSection({
               documento={documento}
               onView={() => onViewDocument(documento)}
               onReplace={() => handleReemplazarDocumento(documento)}
-              onStatusChange={onDocumentStatusChange}
+              onValidationChange={onValidationChange} // ✅ Cambio de nombre
               isColegiado={isColegiado}
             />
           ))
@@ -646,8 +584,8 @@ export function DocumentSection({
   );
 }
 
-// Componente de tarjeta individual optimizado
-function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiado = false }) {
+// ✅ Componente de tarjeta individual corregido
+function DocumentCard({ documento, onView, onReplace, onValidationChange, isColegiado = false }) {
   const tieneArchivo = documento.url !== null;
   const isExonerado = documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isReadOnly = documento.status === 'approved' && documento.isReadOnly;
@@ -725,11 +663,12 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
               </div>
             )}
 
+            {/* ✅ VerificationSwitch solo para validación */}
             {tieneArchivo && !isUploading && (
               <div className="document-verification-switch">
                 <VerificationSwitch
                   item={documento}
-                  onChange={onStatusChange}
+                  onChange={onValidationChange} // ✅ Solo esta función maneja validación
                   type="documento"
                   readOnly={documento.isReadOnly}
                 />
@@ -792,7 +731,6 @@ export function DocumentViewer({ documento, onClose, isAPDF }) {
   const isExonerado = documento && documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isImage = documento?.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(documento.url);
   const isPDF = documento?.url && /\.pdf$/i.test(documento.url);
-  console.log({documento,isExonerado,isImage,isPDF,isAPDF})
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -1077,8 +1015,8 @@ export function DocumentViewer({ documento, onClose, isAPDF }) {
             <div className="text-center">
               <FileText size={64} className="text-gray-400 mx-auto mb-4" />
               <p className="text-lg mb-2">Vista previa no disponible</p>
-              <a
-                href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
+              
+              <a  href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A0016A] transition-colors"
