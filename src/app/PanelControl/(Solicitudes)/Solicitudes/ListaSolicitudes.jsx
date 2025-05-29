@@ -378,14 +378,6 @@ export default function ListaSolicitudes({ props }) {
                           <div className="text-sm text-gray-900">
                             {solicitud.colegiadoNombre}
                           </div>
-                          <button
-                            className="cursor-grab text-xs text-[#C40180] hover:underline mt-1"
-                            onClick={(e) =>
-                              abrirModalParaColegiado(e, solicitud.colegiadoId)
-                            }
-                          >
-                            + Nueva solicitud
-                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                           <div className="text-sm text-gray-500">

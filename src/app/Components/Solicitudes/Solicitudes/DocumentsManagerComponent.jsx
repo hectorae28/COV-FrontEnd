@@ -74,7 +74,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
 
     // Mapear los documentos requeridos al formato esperado por el componente
     const documentosFormateados = solicitud.documentosRequeridos.map((docNombre, index) => {
-        const campoBackend = buscarCampoBackend(docNombre);
+        const campoBackend = buscarCampoBackend(docNombre).replace('file_', '');
         
         // Get validation status from solicitud data
         let validateField = null;
@@ -110,9 +110,9 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                 // Buscar con diferentes patrones de nombres
                 const possibleKeys = [
                     `${campoBackend}_validate`,
-                    `file_${campoBackend}_validate`
+                    `file_${campoBackend}_validate`,
+                    campoBackend === 'fotos_carnet' ? 'fotos_carnet_validate' : null
                 ];
-                
                 for (const key of possibleKeys) {
                     if (especialArchivos[key] !== undefined) {
                         validateField = especialArchivos[key];
@@ -156,8 +156,8 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
             nombre: docNombre,
             descripcion: "Documento requerido para la solicitud",
             requerido: true,
-            url: campoBackend && documentosAdjuntosLimpios[campoBackend]
-                ? documentosAdjuntosLimpios[campoBackend]
+            url: campoBackend && documentosAdjuntosLimpios[`file_${campoBackend}`]
+                ? documentosAdjuntosLimpios[`file_${campoBackend}`]
                 : null,
             status: status,
             rejectionReason: motivoRechazoField || '',
@@ -233,8 +233,8 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
         try {
             if (updateDocumento) {
                 const Form = new FormData();
-                Form.append(`${documentoParaSubir.id}`, selectedFile)
-
+                Form.append(`file_${documentoParaSubir.id}`, selectedFile)
+                Form.append(`file_${documentoParaSubir.id}_validate`, null)
                 // Actualizar el documento
                 updateDocumento(Form)
             }
@@ -251,10 +251,9 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
     }
 
     // Componente de tarjeta de documento reutilizable
-    const DocumentCard = ({ documento }) => {
+    const DocumentCard = ({ documento, isAdmin }) => {
         const tieneArchivo = !documento.requerido || (documento.requerido && documento.url !== null)
-        const isReadOnly = documento.status === 'approved' && documento.isReadOnly;
-        const updateDocumentoSolicitud = useSolicitudesStore(state => state.updateDocumentoSolicitud)
+        const isReadOnly = (documento.status === 'approved' && documento.isReadOnly) || !isAdmin;
         // Función para ver el documento
         const handleVerDoc = () => {
             if (onVerDocumento && documento.url) {
@@ -354,7 +353,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {documentosFormateados && documentosFormateados.length > 0 ? (
                     documentosFormateados.map((documento, index) => (
-                        <DocumentCard key={index} documento={documento} />
+                        <DocumentCard key={index} documento={documento} isAdmin={isAdmin} />
                     ))
                 ) : (
                     <div className="col-span-2 bg-gray-50 p-8 rounded-lg flex flex-col items-center justify-center">

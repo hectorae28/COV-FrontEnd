@@ -1,7 +1,9 @@
-import { ShoppingCart, CreditCard } from "lucide-react"
+import { postDataSolicitud } from "@/api/endpoints/solicitud"
+import { ShoppingCart, CreditCard, Trash2 } from "lucide-react"
+import api from "@/api/api"
+import { useSolicitudesStore } from "@/store/SolicitudesStore"
 
-const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados }) => {
-  console.log({pagosAprobados,solicitud,totales})
+const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados, pagosSolicitud }) => {
   const { 
     totalOriginal, 
     totalExonerado, 
@@ -9,6 +11,18 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados })
     totalPagado, 
     todoExonerado 
   } = totales
+  const { getSolicitudById } = useSolicitudesStore()
+  const handleEliminarServicio = async (item) => {
+    await api.post(`solicitudes/solicitud/${solicitud.id}/delete-sub-solicitudes/`, {
+      sub_solicitudes: [
+        {
+          id: item.id,
+          tipo_solicitud: item.tipo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        }
+      ]
+    })
+   await getSolicitudById(solicitud.id)
+  }
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-5">
       <h2 className="text-base font-medium text-gray-900 mb-3 flex items-center">
@@ -29,10 +43,21 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados })
               <div className="col-span-8">
                 <span className="font-medium">{item.nombre}</span> <span className="text-xs text-gray-500">{item.institucion}</span>
               </div>
-              <div className="col-span-4 text-right">
+              <div className="col-span-4 text-right flex items-center justify-end gap-2">
                 <span className={item.exonerado ? 'line-through text-gray-400' : 'text-[#C40180] font-medium'}>
                   ${item.costo.toFixed(2)}
                 </span>
+                {
+                  pagosSolicitud.length==0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleEliminarServicio(item)} 
+                      className="cursor-pointer text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )
+                }
               </div>
             </div>
           ))}
