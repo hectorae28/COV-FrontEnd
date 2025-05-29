@@ -1,10 +1,10 @@
 const institucionesList = [
   {
-    code: "ISP",
+    code: "ISPU",
     name: "Instituciones del Sector Público"
   },
   {
-    code: "ISP",
+    code: "ISPV",
     name: "Instituciones del Sector Privado"
   },
 ]

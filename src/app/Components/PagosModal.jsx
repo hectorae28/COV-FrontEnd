@@ -133,7 +133,7 @@ export default function PagosColg({ props }) {
     const value = e.target.value;
     if (!value) {
       setMontoEnBs("");
-      setPaymentAmount("0.00");     
+      setPaymentAmount("0.00");
       return;
     }
 
@@ -457,31 +457,31 @@ export default function PagosColg({ props }) {
             <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
               {metodoDePago.filter(metodo => metodo.es_visible_colegiado)
                 .map((metodo, index) => (
-                <button
-                  key={index}
-                  className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
-                    ? "bg-red-50 border-red-300 text-red-700"
-                    : "bg-blue-50 border-blue-300 text-blue-700"
-                    } ${paymentMethod?.nombre === metodo.datos_adicionales.slug
-                      ? 'ring-2 ring-offset-2 ring-[#D7008A]'
-                      : ''
-                    }`}
-                  onClick={() => handleSelectPaymentMethod(metodo)}
-                >
-                  <img
-                    src={
-                      metodo.logo_url
-                        ? metodo.logo_url.startsWith("/")
-                          ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
-                          : metodo.logo_url
-                        : "/placeholder.svg"
-                    }
-                    alt={metodo.nombre}
-                    className="w-7 h-7"
-                  />
-                  <span className="font-medium">{metodo.nombre}</span>
-                </button>
-              ))}
+                  <button
+                    key={index}
+                    className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
+                      ? "bg-red-50 border-red-300 text-red-700"
+                      : "bg-blue-50 border-blue-300 text-blue-700"
+                      } ${paymentMethod?.nombre === metodo.datos_adicionales.slug
+                        ? 'ring-2 ring-offset-2 ring-[#D7008A]'
+                        : ''
+                      }`}
+                    onClick={() => handleSelectPaymentMethod(metodo)}
+                  >
+                    <img
+                      src={
+                        metodo.logo_url
+                          ? metodo.logo_url.startsWith("/")
+                            ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodo.logo_url}`
+                            : metodo.logo_url
+                          : "/placeholder.svg"
+                      }
+                      alt={metodo.nombre}
+                      className="w-7 h-7"
+                    />
+                    <span className="font-medium">{metodo.nombre}</span>
+                  </button>
+                ))}
             </div>
           )}
 

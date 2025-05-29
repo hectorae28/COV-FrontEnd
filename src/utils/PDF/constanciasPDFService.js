@@ -229,7 +229,7 @@ const getConstanciaInscripcionContent = (data) => {
                 {text: 'Presidente', fontSize: 12, alignment: 'center', bold: true},
                 {text: 'M.P.P.S. No. 18.520', fontSize: 12, alignment: 'center', bold: true},
                 {text: 'C.O.V. No. 18.990', fontSize: 12, alignment: 'center', bold: true},
-                {text: 'Identity Card No. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
+                {text: 'C.I. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
               ],
               alignment: 'right'
             },
@@ -550,7 +550,7 @@ const getConstanciaLibreEjercicioContent = (data) => {
 							{text: 'Presidente', fontSize: 12, alignment: 'center', bold: true},
 							{text: 'M.P.P.S. No. 18.520', fontSize: 12, alignment: 'center', bold: true},
 							{text: 'C.O.V. No. 18.990', fontSize: 12, alignment: 'center', bold: true},
-							{text: 'Identity Card No. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
+							{text: 'C.I. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
 						],
 						alignment: 'right'
 					},
@@ -688,7 +688,7 @@ const getConstanciaDeontologiaOdontologicaContent = (data) => {
                                 {text: 'Presidente', fontSize: 12, alignment: 'center', bold: true},
                                 {text: 'M.P.P.S. No. 18.520', fontSize: 12, alignment: 'center', bold: true},
                                 {text: 'C.O.V. No. 18.990', fontSize: 12, alignment: 'center', bold: true},
-                                {text: 'Identity Card No. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
+                                {text: 'C.I. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
                             ],
                             alignment: 'right'
                         },

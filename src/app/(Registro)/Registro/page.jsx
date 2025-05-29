@@ -68,7 +68,7 @@ const steps = [
     description: "Tu experiencia y situación laboral actual",
     icon: Building,
     component: InfoLaboralWithDireccionForm,
-    requiredFields: ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType"],
+    requiredFields: ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "constancia_trabajo"],
   },
   {
     id: 5,
@@ -301,7 +301,7 @@ export default function RegistrationForm(props) {
       // Validar que tenga al menos un registro laboral válido
       if (!formData.laboralRegistros || formData.laboralRegistros.length === 0) {
         // Marcar errores en campos básicos para mostrar mensajes
-        const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio"];
+        const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio", "constancia_trabajo"];
         requiredLabFields.forEach(field => {
           errors[field] = true;
         });
@@ -309,7 +309,7 @@ export default function RegistrationForm(props) {
       } else {
         // Validar cada registro laboral
         formData.laboralRegistros.forEach((registro, index) => {
-          const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio"];
+          const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio", "constancia_trabajo"];
 
           requiredLabFields.forEach(field => {
             if (!registro[field] || (typeof registro[field] === "string" && registro[field].trim() === "")) {
@@ -569,6 +569,16 @@ export default function RegistrationForm(props) {
         Form.append("file_fondo_negro", formData.titulo || null);
         Form.append("file_mpps", formData.mpps || null);
         Form.append("file_foto_colegiado", formData.foto_colegiado || null);
+        
+        // Agregar las constancias de trabajo
+        if (formData.laboralRegistros && formData.laboralRegistros.length > 0) {
+          formData.laboralRegistros.forEach((registro, index) => {
+            if (registro.constancia_trabajo) {
+              Form.append(`constancia_trabajo_${index}`, registro.constancia_trabajo);
+            }
+          });
+        }
+        
         if (
           formData.tipo_profesion === "tecnico" ||
           formData.tipo_profesion === "higienista"
@@ -639,9 +649,9 @@ export default function RegistrationForm(props) {
     totalAmount = null,
     metodo_de_pago = null,
   }) => {
+    const PaymentForm = new FormData()
     if (!pagarLuego) {
-      const Form = new FormData()
-      Form.append(
+      PaymentForm.append(
         "pago",
         JSON.stringify({
           fecha_pago: paymentDate,
@@ -650,7 +660,7 @@ export default function RegistrationForm(props) {
           monto: totalAmount,
         }),
       )
-      Form.append("comprobante", paymentFile)
+      PaymentForm.append("comprobante", paymentFile)
       setIsSubmitting(true)
     }
     try {
@@ -658,7 +668,7 @@ export default function RegistrationForm(props) {
       if (!pagarLuego) {
         res = await patchDataUsuario(
           `register/${recaudoCreado.id}`,
-          Form,
+          PaymentForm,
         );
         if (res?.status === 200) {
           setError(null)

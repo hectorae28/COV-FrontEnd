@@ -1,10 +1,11 @@
+import EstadoData from "@/Shared/EstadoData";
 import institucionesList from "@/Shared/InstitucionesData";
 import { motion } from "framer-motion";
-import { Briefcase, BriefcaseBusiness, Phone, Plus, Trash2, ChevronRight } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, ChevronRight, Eye, FileText, Phone, Plus, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import DireccionForm from "./DireccionForm";
 
-// CAMBIO: Función correcta que permite mayúsculas seguidas
+// Mayúsculas seguidas
 const capitalizeWords = (text) => {
   if (!text) return "";
   return text
@@ -15,7 +16,7 @@ const capitalizeWords = (text) => {
     .join(" ");
 };
 
-// Función original para nombres y cargos (primera letra mayúscula)
+// Primera letra mayúscula
 const capitalizarPalabras = (texto) => {
   if (!texto) return "";
   return texto
@@ -49,32 +50,93 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
 
   const [registros, setRegistros] = useState(
     formData.laboralRegistros && formData.laboralRegistros.length > 0
-      ? formData.laboralRegistros.map(registro => ({
-        ...registro,
-        institutionName: capitalizarPalabras(registro.institutionName || ""),
-        // CAMBIO: Usar capitalizeWords para direcciones (permite mayúsculas seguidas)
-        institutionAddress: capitalizeWords(registro.institutionAddress || ""),
-        cargo: capitalizarPalabras(registro.cargo || ""),
-        selectedEstado: registro.selectedEstado || "",
-        selectedMunicipio: registro.selectedMunicipio || ""
-      }))
+      ? formData.laboralRegistros.map(registro => {
+        // Manejar diferentes estructuras de institutionAddress
+        const getAddressData = (address) => {
+          if (!address) return { referencia: "", estado: "", municipio: "" };
+
+          // Si es un objeto con propiedades
+          if (typeof address === 'object' && address.referencia !== undefined) {
+            return {
+              referencia: address.referencia || "",
+              estado: address.estado || "",
+              municipio: address.municipio || ""
+            };
+          }
+
+          // Si es una string
+          if (typeof address === 'string') {
+            return {
+              referencia: address,
+              estado: "",
+              municipio: ""
+            };
+          }
+
+          return { referencia: "", estado: "", municipio: "" };
+        };
+
+        const addressData = getAddressData(registro.institutionAddress);
+
+        return {
+          ...registro,
+          institutionName: capitalizarPalabras(registro.institutionName || ""),
+          institutionAddress: capitalizeWords(addressData.referencia || registro.institutionAddress || ""),
+          cargo: capitalizarPalabras(registro.cargo || ""),
+          selectedEstado: registro.selectedEstado || addressData.estado || "",
+          selectedMunicipio: registro.selectedMunicipio || addressData.municipio || "",
+          NameEstado: registro.NameEstado || "",
+          NameMunicipio: registro.NameMunicipio || "",
+          constancia_trabajo: registro.constancia_trabajo || null
+        };
+      })
       : [
         {
           id: 1,
           id_direccion: formData.id_direccion,
           institutionType: formData.institutionType || "",
           institutionName: capitalizarPalabras(formData.institutionName || ""),
-          // CAMBIO: Usar capitalizeWords para direcciones
-          institutionAddress: capitalizeWords(formData.institutionAddress || ""),
+          institutionAddress: (() => {
+            // Manejar institutionAddress del formData principal
+            if (!formData.institutionAddress) return "";
+
+            if (typeof formData.institutionAddress === 'object' && formData.institutionAddress.referencia !== undefined) {
+              return capitalizeWords(formData.institutionAddress.referencia || "");
+            }
+
+            if (typeof formData.institutionAddress === 'string') {
+              return capitalizeWords(formData.institutionAddress);
+            }
+
+            return "";
+          })(),
           institutionPhone: formData.institutionPhone || "",
           cargo: capitalizarPalabras(formData.cargo || ""),
-          selectedEstado: formData.selectedEstado || "",
+          selectedEstado: (() => {
+            // Priorizar selectedEstado directo, luego institutionAddress.estado
+            if (formData.selectedEstado) return formData.selectedEstado;
+            if (formData.institutionAddress && typeof formData.institutionAddress === 'object') {
+              return formData.institutionAddress.estado || "";
+            }
+            return "";
+          })(),
           NameEstado: formData.NameEstado || "",
-          selectedMunicipio: formData.selectedMunicipio || "",
+          selectedMunicipio: (() => {
+            // Priorizar selectedMunicipio directo, luego institutionAddress.municipio
+            if (formData.selectedMunicipio) return formData.selectedMunicipio;
+            if (formData.institutionAddress && typeof formData.institutionAddress === 'object') {
+              return formData.institutionAddress.municipio || "";
+            }
+            return "";
+          })(),
           NameMunicipio: formData.NameMunicipio || "",
+          constancia_trabajo: formData.constancia_trabajo || null
         }
       ]
   );
+
+  // Estados para manejar municipios disponibles para cada registro
+  const [municipiosDisponibles, setMunicipiosDisponibles] = useState({});
 
   // Actualizar el estado local cuando cambian las props
   useEffect(() => {
@@ -82,19 +144,69 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
 
     // Actualizar registros si cambian en las props
     if (formData.laboralRegistros && formData.laboralRegistros.length > 0) {
-      setRegistros(formData.laboralRegistros.map(registro => ({
-        ...registro,
-        institutionName: capitalizarPalabras(registro.institutionName || ""),
-        // CAMBIO: Usar capitalizeWords para direcciones
-        institutionAddress: capitalizeWords(registro.institutionAddress || ""),
-        cargo: capitalizarPalabras(registro.cargo || ""),
-        selectedEstado: registro.selectedEstado || "",
-        NameEstado: registro.NameEstado || "",
-        selectedMunicipio: registro.selectedMunicipio || "",
-        NameMunicipio: registro.NameMunicipio || ""
-      })));
+      setRegistros(formData.laboralRegistros.map(registro => {
+        // Manejar diferentes estructuras de institutionAddress
+        const getAddressData = (address) => {
+          if (!address) return { referencia: "", estado: "", municipio: "" };
+
+          // Si es un objeto con propiedades
+          if (typeof address === 'object' && address.referencia !== undefined) {
+            return {
+              referencia: address.referencia || "",
+              estado: address.estado || "",
+              municipio: address.municipio || ""
+            };
+          }
+
+          // Si es una string
+          if (typeof address === 'string') {
+            return {
+              referencia: address,
+              estado: "",
+              municipio: ""
+            };
+          }
+
+          return { referencia: "", estado: "", municipio: "" };
+        };
+
+        const addressData = getAddressData(registro.institutionAddress);
+
+        return {
+          ...registro,
+          institutionName: capitalizarPalabras(registro.institutionName || ""),
+          institutionAddress: capitalizeWords(addressData.referencia || registro.institutionAddress || ""),
+          cargo: capitalizarPalabras(registro.cargo || ""),
+          selectedEstado: registro.selectedEstado || addressData.estado || "",
+          selectedMunicipio: registro.selectedMunicipio || addressData.municipio || "",
+          NameEstado: registro.NameEstado || "",
+          NameMunicipio: registro.NameMunicipio || "",
+          constancia_trabajo: registro.constancia_trabajo || null
+        };
+      }));
     }
   }, [formData]);
+
+  // Actualizar municipios disponibles cuando cambia el estado seleccionado
+  useEffect(() => {
+    const nuevosMunicipiosDisponibles = {};
+    registros.forEach(registro => {
+      if (registro.selectedEstado) {
+        const estadoValue = typeof registro.selectedEstado === 'string'
+          ? registro.selectedEstado
+          : String(registro.selectedEstado);
+        const estadoKey = estadoValue.toLowerCase();
+
+        if (EstadoData[estadoKey]) {
+          // Ordenar municipios alfabéticamente y capitalizar cada palabra
+          nuevosMunicipiosDisponibles[registro.id] = EstadoData[estadoKey]
+            .sort()
+            .map(municipio => capitalizarPalabras(municipio));
+        }
+      }
+    });
+    setMunicipiosDisponibles(nuevosMunicipiosDisponibles);
+  }, [registros]);
 
   // Actualizar workStatus cuando cambie en formData
   useEffect(() => {
@@ -107,7 +219,7 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
   const handleWorkStatusChange = (value) => {
     setWorkStatus(value);
     setShowInitialSelection(false);
-    
+
     if (value === "noLabora") {
       const updatedData = {
         workStatus: value,
@@ -209,6 +321,42 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
     }
   };
 
+  // Función para manejar la subida de archivos de constancia de trabajo
+  const handleConstanciaChange = (index, file) => {
+    if (file) {
+      // Validar tamaño del archivo (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("El archivo no puede ser mayor a 5MB");
+        return;
+      }
+
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        alert("Solo se permiten archivos JPG, PNG o PDF");
+        return;
+      }
+
+      handleRegistroChange(index, 'constancia_trabajo', file);
+    }
+  };
+
+  // Función para abrir el archivo en una nueva pestaña
+  const openFilePreview = (file) => {
+    if (file) {
+      if (typeof file === 'string') {
+        // Si es una URL (archivo ya subido)
+        window.open(file, '_blank');
+      } else {
+        // Si es un objeto File
+        const url = URL.createObjectURL(file);
+        window.open(url, '_blank');
+        // Limpiar la URL después de un tiempo para liberar memoria
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+    }
+  };
+
   // Agregar un nuevo registro laboral
   const agregarRegistro = () => {
     const nuevoId = registros.length > 0 ? Math.max(...registros.map(r => r.id)) + 1 : 1;
@@ -216,13 +364,17 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       ...registros,
       {
         id: nuevoId,
+        id_direccion: null,
         institutionType: "",
         institutionName: "",
         institutionAddress: "",
         institutionPhone: "",
         cargo: "",
         selectedEstado: "",
-        selectedMunicipio: ""
+        selectedMunicipio: "",
+        NameEstado: "",
+        NameMunicipio: "",
+        constancia_trabajo: null
       }
     ];
     setRegistros(nuevosRegistros);
@@ -257,7 +409,10 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
           institutionPhone: nuevosRegistros[0].institutionPhone,
           cargo: nuevosRegistros[0].cargo,
           selectedEstado: nuevosRegistros[0].selectedEstado,
-          selectedMunicipio: nuevosRegistros[0].selectedMunicipio
+          selectedMunicipio: nuevosRegistros[0].selectedMunicipio,
+          NameEstado: nuevosRegistros[0].NameEstado,
+          NameMunicipio: nuevosRegistros[0].NameMunicipio,
+          constancia_trabajo: nuevosRegistros[0].constancia_trabajo
         });
       }
 
@@ -294,7 +449,7 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
 
     // Validación adicional: verificar si el campo está vacío
     // Esto ayuda a mostrar errores inmediatamente mientras el usuario escribe
-    if (!registro[fieldName] || registro[fieldName].toString().trim() === "") {
+    if (!registro[fieldName] || (typeof registro[fieldName] === 'string' && registro[fieldName].trim() === "")) {
       // Solo mostrar error si ya se intentó enviar el formulario
       return attemptedNext || validationErrors[fieldName];
     }
@@ -309,16 +464,29 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       const newErrors = {};
 
       registros.forEach((registro, index) => {
-        const requiredFields = ["institutionName", "institutionType", "institutionAddress", "selectedEstado", "selectedMunicipio", "cargo", "institutionPhone"];
+        const requiredFields = ["institutionName", "institutionType", "institutionAddress", "selectedEstado", "selectedMunicipio", "cargo", "institutionPhone", "constancia_trabajo"];
 
         requiredFields.forEach(field => {
-          if (!registro[field] || registro[field].toString().trim() === "") {
-            if (index === 0) {
-              newErrors[field] = true;
-            } else {
-              newErrors[`${field}_${registro.id}`] = true;
+          // Validación especial para archivos
+          if (field === "constancia_trabajo") {
+            if (!registro[field]) {
+              if (index === 0) {
+                newErrors[field] = true;
+              } else {
+                newErrors[`${field}_${registro.id}`] = true;
+              }
+              hasErrors = true;
             }
-            hasErrors = true;
+          } else {
+            // Validación normal para otros campos
+            if (!registro[field] || (typeof registro[field] === 'string' && registro[field].trim() === "")) {
+              if (index === 0) {
+                newErrors[field] = true;
+              } else {
+                newErrors[`${field}_${registro.id}`] = true;
+              }
+              hasErrors = true;
+            }
           }
         });
       });
@@ -367,13 +535,13 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
           <div className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-6">
             <BriefcaseBusiness className="w-10 h-10 text-white" />
           </div>
-          
+
           <h2 className="text-2xl font-bold text-[#41023B] mb-4">
             Situación Laboral Actual
           </h2>
-          
+
           <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
-            Para continuar con su proceso de colegiación, necesitamos conocer su situación laboral actual. 
+            Para continuar con su proceso de colegiación, necesitamos conocer su situación laboral actual.
             Por favor, seleccione la opción que mejor describa su estado:
           </p>
         </div>
@@ -452,7 +620,7 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
             {workStatus === "labora" ? "Actualmente laborando" : "No laborando actualmente"}
           </span>
         </div>
-        
+
         {/* Botón para cambiar selección */}
         <button
           type="button"
@@ -589,6 +757,80 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                 </div>
               </div>
 
+              {/* Campo de Constancia de Trabajo - Ancho completo */}
+              <div className="w-full mt-4">
+                <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
+                  Constancia de Trabajo
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <label className={`cursor-pointer flex-1 px-4 py-3 border-2 border-dashed ${isFieldEmpty(registro, "constancia_trabajo")
+                        ? "border-red-500 bg-red-50"
+                        : registro.constancia_trabajo
+                          ? "border-green-500 bg-green-50"
+                          : "border-gray-300 bg-gray-50"
+                      } rounded-xl hover:bg-gray-100 transition-colors`}>
+                      <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        onChange={(e) => handleConstanciaChange(index, e.target.files[0])}
+                        className="hidden"
+                      />
+                      <div className="flex items-center justify-center gap-2">
+                        <Upload size={20} className={
+                          registro.constancia_trabajo
+                            ? "text-green-600"
+                            : "text-gray-400"
+                        } />
+                        <span className={`text-sm font-medium ${registro.constancia_trabajo
+                            ? "text-green-700"
+                            : "text-gray-600"
+                          }`}>
+                          {registro.constancia_trabajo
+                            ? (typeof registro.constancia_trabajo === 'string'
+                              ? "Constancia subida"
+                              : registro.constancia_trabajo.name)
+                            : "Subir constancia de trabajo"
+                          }
+                        </span>
+                      </div>
+                    </label>
+
+                    {registro.constancia_trabajo && (
+                      <button
+                        type="button"
+                        onClick={() => openFilePreview(registro.constancia_trabajo)}
+                        className="px-3 py-3 bg-[#D7008A] text-white rounded-xl hover:bg-[#B8006F] transition-colors flex items-center gap-1"
+                        title="Ver documento"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  {registro.constancia_trabajo && (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <FileText size={16} />
+                      <span>
+                        {typeof registro.constancia_trabajo === 'string'
+                          ? "Documento cargado correctamente"
+                          : `${registro.constancia_trabajo.name} (${(registro.constancia_trabajo.size / 1024 / 1024).toFixed(2)} MB)`
+                        }
+                      </span>
+                    </div>
+                  )}
+
+                  {isFieldEmpty(registro, "constancia_trabajo") && (
+                    <p className="text-xs text-red-500">Este campo es obligatorio</p>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Suba la constancia de trabajo de esta institución. Formatos permitidos: JPG, PNG, PDF (máx. 5MB)
+                  </p>
+                </div>
+              </div>
+
               <DireccionForm
                 formData={registro}
                 onInputChange={(updates) => handleDireccionChange(index, updates)}
@@ -604,6 +846,7 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                 title="Dirección de Institución"
                 addressPlaceholder="Calle, Avenida, Edificio, Piso, Oficina"
                 attemptedNext={attemptedNext}
+                municipiosDisponibles={municipiosDisponibles[registro.id] || []}
               />
             </div>
           ))}

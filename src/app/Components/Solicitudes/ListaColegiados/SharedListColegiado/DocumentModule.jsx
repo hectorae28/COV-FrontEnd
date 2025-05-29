@@ -18,7 +18,7 @@ export function DocumentSection({
   documentos = [],
   onViewDocument,
   updateDocumento,
-  onDocumentStatusChange,
+  onValidationChange,
   readonly = false,
   filter = doc => !doc.id?.includes('comprobante_pago'),
   isColegiado = false,
@@ -34,16 +34,14 @@ export function DocumentSection({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedDocumentName, setUploadedDocumentName] = useState("");
 
-  // Estados para manejo optimista
+  // ✅ Estado local simple para mostrar cambios inmediatos
   const [localPendienteData, setLocalPendienteData] = useState(pendienteData);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const fileInputRef = useRef(null);
 
-  // Sincronizar datos cuando cambien los props
+  // ✅ Sincronizar datos cuando cambien los props (simple)
   useEffect(() => {
     setLocalPendienteData(pendienteData);
-    setRefreshTrigger(prev => prev + 1);
   }, [pendienteData]);
 
   // Función para cargar documentos de pendientes
@@ -262,7 +260,7 @@ export function DocumentSection({
     }
   };
 
-  // Función optimizada de subida con actualización inmediata
+  // ✅ Subida de documentos con actualización local simple
   const handleUpload = async () => {
     if (!selectedFile) {
       setError("Por favor seleccione un archivo para subir.");
@@ -272,92 +270,61 @@ export function DocumentSection({
     setIsUploading(true);
     setError("");
 
-    // Crear URL temporal para mostrar inmediatamente
-    const tempUrl = URL.createObjectURL(selectedFile);
-
-    // Actualizar estado local inmediatamente (optimistic update)
-    const optimisticUpdate = {
-      ...localPendienteData,
-      [`${documentoParaSubir.id}_url`]: tempUrl,
-      [`${documentoParaSubir.id}_status`]: 'uploading'
-    };
-
-    setLocalPendienteData(optimisticUpdate);
-
-    // Notificar cambio optimista al componente padre
-    if (onDocumentStatusChange) {
-      onDocumentStatusChange({
-        ...documentoParaSubir,
-        url: tempUrl,
-        archivo: selectedFile.name,
-        status: 'uploading',
-        isOptimistic: true,
-        tempUrl: tempUrl
-      });
-    }
-
-    // Cerrar modal inmediatamente para mejor UX
-    setDocumentoParaSubir(null);
-    setSelectedFile(null);
-
     try {
+      // ✅ 1. Actualización local inmediata - solo visual
+      const tempUrl = URL.createObjectURL(selectedFile);
+      
+      // Actualizar los datos locales inmediatamente
+      // ✅ IMPORTANTE: Al reemplazar archivo, resetear estado de validación
+      setLocalPendienteData(prevData => ({
+        ...prevData,
+        [`${documentoParaSubir.id}_url`]: tempUrl,
+        [`${documentoParaSubir.id}_archivo`]: selectedFile.name,
+        [`${documentoParaSubir.id}_validate`]: null, // ✅ Resetear a pending
+        [`${documentoParaSubir.id}_motivo_rechazo`]: "" // ✅ Limpiar motivo de rechazo
+      }));
+
+      // ✅ 2. Mostrar éxito inmediatamente
+      setUploadSuccess(true);
+      setUploadedDocumentName(documentoParaSubir.nombre);
+      setTimeout(() => setUploadSuccess(false), 5000);
+
+      // ✅ 3. Cerrar modal inmediatamente
+      setDocumentoParaSubir(null);
+      setSelectedFile(null);
+
+      // ✅ 4. Subir al servidor en segundo plano
       if (updateDocumento) {
         const formData = new FormData();
         formData.append(`${documentoParaSubir.id}`, selectedFile);
+        formData.append(`${documentoParaSubir.id}_validate`, "null"); // ✅ Resetear validación en servidor
+        formData.append(`${documentoParaSubir.id}_motivo_rechazo`, ""); // ✅ Limpiar motivo en servidor
 
         const response = await updateDocumento(formData);
 
+        // ✅ 5. Actualizar con datos reales del servidor
         if (response?.data) {
-          const realUrl = response.data[`${documentoParaSubir.id}_url`];
-
-          // Actualizar con datos reales del servidor
+          URL.revokeObjectURL(tempUrl); // Limpiar URL temporal
+          
           setLocalPendienteData(prevData => ({
             ...prevData,
             ...response.data
           }));
-
-          // Notificar actualización real al padre
-          if (onDocumentStatusChange) {
-            onDocumentStatusChange({
-              ...documentoParaSubir,
-              url: realUrl,
-              archivo: selectedFile.name,
-              status: 'pending',
-              isOptimistic: false,
-              fullData: response.data,
-              tempUrl: tempUrl
-            });
-          }
-
-          // Mostrar mensaje de éxito
-          setUploadSuccess(true);
-          setUploadedDocumentName(documentoParaSubir.nombre);
-          setTimeout(() => setUploadSuccess(false), 5000);
         }
       }
     } catch (error) {
-      // Revertir cambios optimistas en caso de error
+      // ✅ 6. Revertir cambios locales si falla
       setLocalPendienteData(prevData => {
-        const revertedData = { ...prevData };
-        delete revertedData[`${documentoParaSubir.id}_url`];
-        delete revertedData[`${documentoParaSubir.id}_status`];
-        return revertedData;
+        const newData = { ...prevData };
+        delete newData[`${documentoParaSubir.id}_url`];
+        delete newData[`${documentoParaSubir.id}_archivo`];
+        // No necesitamos revertir el estado de validación porque si falló, 
+        // mantenemos el estado anterior
+        return newData;
       });
 
-      // Limpiar URL temporal
-      URL.revokeObjectURL(tempUrl);
-
-      // Notificar error al padre
-      if (onDocumentStatusChange) {
-        onDocumentStatusChange({
-          ...documentoParaSubir,
-          status: 'error',
-          error: error.message,
-          isOptimistic: false
-        });
-      }
-
       setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.");
+      setUploadSuccess(false);
     } finally {
       setIsUploading(false);
     }
@@ -512,11 +479,22 @@ export function DocumentSection({
         {normalizedDocs.length > 0 ? (
           normalizedDocs.map((documento) => (
             <DocumentCard
-              key={`${documento.id}`}
+              key={`${documento.id}-${Math.random()}`}
               documento={documento}
               onView={() => onViewDocument(documento)}
               onReplace={() => handleReemplazarDocumento(documento)}
-              onStatusChange={onDocumentStatusChange}
+              onValidationChange={(updatedDoc) => {
+                setLocalPendienteData(prevData => ({
+                  ...prevData,
+                  [`${updatedDoc.id}_validate`]: updatedDoc.status === 'pending' ? null : 
+                    updatedDoc.status === 'approved' ? true : false,
+                  [`${updatedDoc.id}_motivo_rechazo`]: updatedDoc.rejectionReason || ''
+                }));
+                
+                if (onValidationChange) {
+                  onValidationChange(updatedDoc);
+                }
+              }}
               isColegiado={isColegiado}
             />
           ))
@@ -646,8 +624,8 @@ export function DocumentSection({
   );
 }
 
-// Componente de tarjeta individual optimizado
-function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiado = false }) {
+// Componente de tarjeta individual corregido
+function DocumentCard({ documento, onView, onReplace, onValidationChange, isColegiado = false }) {
   const tieneArchivo = documento.url !== null;
   const isExonerado = documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isReadOnly = documento.status === 'approved' && documento.isReadOnly;
@@ -725,11 +703,12 @@ function DocumentCard({ documento, onView, onReplace, onStatusChange, isColegiad
               </div>
             )}
 
+            {/* ✅ VerificationSwitch solo para validación */}
             {tieneArchivo && !isUploading && (
               <div className="document-verification-switch">
                 <VerificationSwitch
                   item={documento}
-                  onChange={onStatusChange}
+                  onChange={onValidationChange}
                   type="documento"
                   readOnly={documento.isReadOnly}
                 />
@@ -792,7 +771,6 @@ export function DocumentViewer({ documento, onClose, isAPDF }) {
   const isExonerado = documento && documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isImage = documento?.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(documento.url);
   const isPDF = documento?.url && /\.pdf$/i.test(documento.url);
-  console.log({documento,isExonerado,isImage,isPDF,isAPDF})
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -1067,36 +1045,36 @@ export function DocumentViewer({ documento, onClose, isAPDF }) {
                 draggable={false}
               />
             </div>
-          ) : documento.isAPDF ? 
-          (<iframe
-        src={`${documento.url}`}
-        className="w-full h-full border-0"
-        title={documento.nombre}
-      /> ):documento.url ? (
-            // Para otros tipos de archivo
-            <div className="text-center">
-              <FileText size={64} className="text-gray-400 mx-auto mb-4" />
-              <p className="text-lg mb-2">Vista previa no disponible</p>
-              <a
-                href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A0016A] transition-colors"
-              >
-                <svg width="16" height="16" className="mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7,10 12,15 17,10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Descargar archivo
-              </a>
-            </div>
-            ) :  (
-            <div className="text-center text-gray-500">
-              <p className="text-xl mb-2">No hay vista previa disponible</p>
-              <p>No se puede mostrar este documento.</p>
-            </div>
-          )}
+          ) : documento.isAPDF ?
+            (<iframe
+              src={`${documento.url}`}
+              className="w-full h-full border-0"
+              title={documento.nombre}
+            />) : documento.url ? (
+              // Para otros tipos de archivo
+              <div className="text-center">
+                <FileText size={64} className="text-gray-400 mx-auto mb-4" />
+                <p className="text-lg mb-2">Vista previa no disponible</p>
+
+                <a href={`${process.env.NEXT_PUBLIC_BACK_HOST}${documento.url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 bg-[#C40180] text-white rounded-md hover:bg-[#A0016A] transition-colors"
+                >
+                  <svg width="16" height="16" className="mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7,10 12,15 17,10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Descargar archivo
+                </a>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500">
+                <p className="text-xl mb-2">No hay vista previa disponible</p>
+                <p>No se puede mostrar este documento.</p>
+              </div>
+            )}
         </div>
 
         {/* Footer con atajos de teclado */}

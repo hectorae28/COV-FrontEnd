@@ -2,7 +2,7 @@
 
 import InfoLaboralWithDireccionForm from "@/app/(Registro)/InfoLabWithDireccionForm";
 import { motion } from "framer-motion";
-import { Briefcase, MapPin, Pencil, Phone } from "lucide-react";
+import { Briefcase, Eye, FileText, MapPin, Pencil, Phone } from "lucide-react";
 import { useState } from "react";
 
 import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
@@ -56,6 +56,13 @@ export default function InstitutionsSection({
     }
   };
 
+  // Función para abrir documentos en nueva pestaña
+  const openDocument = (documentUrl) => {
+    if (documentUrl) {
+      window.open(documentUrl, '_blank');
+    }
+  };
+
   // Extraer los valores iniciales para el formulario de edición
   const getInitialFormData = () => {
     const workStatus = instituciones && instituciones.length > 0 ? "labora" : "noLabora";
@@ -75,7 +82,8 @@ export default function InstitutionsSection({
         selectedMunicipio: inst.direccion.municipio || "",
         NameMunicipio: inst.direccion.municipio_nombre || "",
         verification_status: inst.verification_status || undefined,
-        rejection_reason: inst.rejection_reason || ''
+        rejection_reason: inst.rejection_reason || '',
+        constancia_trabajo: inst.constancia_trabajo || null
       }))
       : [];
 
@@ -125,7 +133,8 @@ export default function InstitutionsSection({
         selectedEstado: reg.selectedEstado,
         selectedMunicipio: reg.selectedMunicipio,
         verificado: reg.verification_status || undefined,
-        motivo_rechazo: reg.rejection_reason || ''
+        motivo_rechazo: reg.rejection_reason || '',
+        constancia_trabajo: reg.constancia_trabajo || null
       }));
 
       setInstituciones(updatedInstituciones);
@@ -279,6 +288,34 @@ export default function InstitutionsSection({
                     {formatearDireccion(institucion)}
                   </p>
                 </div>
+              </div>
+
+              {/* 5ta línea: Constancia de Trabajo */}
+              <div className="mb-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                  Constancia de Trabajo
+                </p>
+                {institucion.constancia_trabajo ? (
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-[#C40180]" />
+                    <span className="font-medium text-gray-800 flex-1">
+                      Constancia subida
+                    </span>
+                    <button
+                      onClick={() => openDocument(institucion.constancia_trabajo)}
+                      className="px-3 py-1 bg-[#C40180] text-white rounded-md hover:bg-[#A0016B] transition-colors flex items-center gap-1 text-sm"
+                      title="Ver constancia de trabajo"
+                    >
+                      <Eye size={14} />
+                      Ver
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <FileText size={16} className="text-gray-400" />
+                    <span className="italic">No se ha subido constancia</span>
+                  </div>
+                )}
               </div>
 
               {/* Switch de verificación para admin */}

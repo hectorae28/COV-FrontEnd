@@ -3,8 +3,7 @@
 import { create } from "zustand";
 import { fetchSolicitudes } from "@/api/endpoints/solicitud";
 import { postDataSolicitud, patchDataSolicitud } from "@/api/endpoints/solicitud";
-import { request } from "node:http";
-import { format } from "node:path";
+import transformBackendData from "@/utils/formatDataSolicitudes";
 
 export const TIPOS_SOLICITUD = {
   Carnet: {
@@ -144,6 +143,7 @@ export const useSolicitudesStore = create((set, get) => ({
   solicitudesAbiertasPagination: {},
   solicitudesCerradas: [],
   solicitudesCerradasPagination: {},
+  solicitudSeleccionada: null,
   pagosSolicitud: [],
   solicitudesDeSolvencia: [],
   solicitudesDeSolvenciaPagination: {},
@@ -250,6 +250,7 @@ export const useSolicitudesStore = create((set, get) => ({
     try {
       const res = await fetchSolicitudes(`solicitud_unida/${id}`);
       await get().getPagosSolicitud(id);
+      set({ solicitudSeleccionada: transformBackendData(res.data) });
       return res.data;
     } catch (error) {
       set({ error: error.message || "Error al obtener detalles de la solicitud" });
@@ -311,6 +312,7 @@ export const useSolicitudesStore = create((set, get) => ({
         `solicitud/${id}`,
         updatedData,
       );
+      await get().getSolicitudById(id);
       return res.data;
     } catch (error) {
       set({

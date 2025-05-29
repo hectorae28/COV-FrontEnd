@@ -223,6 +223,7 @@ const useDataListaColegiados = create((set, get) => ({
 
     return res.data;
   },
+
   updateColegiadoPendienteWithToken: async (id, updatedData, docs) => {
     if (docs) {
       const formData = new FormData();
