@@ -233,8 +233,13 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
         try {
             if (updateDocumento) {
                 const Form = new FormData();
-                Form.append(`file_${documentoParaSubir.id}`, selectedFile)
-                Form.append(`file_${documentoParaSubir.id}_validate`, null)
+                if(documentoParaSubir.id === "foto"){
+                    Form.append(`foto`, selectedFile)
+                    Form.append(`foto_validate`, null)
+                }else{
+                    Form.append(`file_${documentoParaSubir.id}`, selectedFile)
+                    Form.append(`file_${documentoParaSubir.id}_validate`, null)
+                }
                 // Actualizar el documento
                 updateDocumento(Form)
             }
@@ -318,14 +323,15 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                                     <Eye size={18} />
                                 </span>
                             )}
-
-                            <button
-                                onClick={() => handleReemplazarDocumento(documento)}
-                                className={`${tieneArchivo ? "cursor-pointer text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} cursor-pointer p-2 rounded-full transition-colors`}
-                                title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
-                            >
-                                {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
-                            </button>
+                            {!isReadOnly&&(
+                                <button
+                                    onClick={() => handleReemplazarDocumento(documento)}
+                                    className={`${tieneArchivo ? "cursor-pointer text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"} cursor-pointer p-2 rounded-full transition-colors`}
+                                    title={tieneArchivo ? "Reemplazar documento" : "Subir documento"}
+                                >
+                                    {tieneArchivo ? <RefreshCcw size={18} /> : <Upload size={18} />}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

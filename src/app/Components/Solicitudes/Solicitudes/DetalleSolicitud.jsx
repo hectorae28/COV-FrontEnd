@@ -164,7 +164,6 @@ export default function DetalleSolicitud({ props }) {
   };
 
   const estadoValidacionDocumentos = solicitud?.isAllDocumentosValidados;
-  console.log({estadoValidacionDocumentos})
   
 
   // Función para aprobar la solicitud
@@ -182,7 +181,6 @@ export default function DetalleSolicitud({ props }) {
       };
 
       actualizarSolicitud(solicitudActualizada);
-      setSolicitud(solicitudActualizada);
       setMostrarConfirmacion(false);
       mostrarAlerta("exito", "La solicitud ha sido aprobada correctamente");
     } catch (error) {
@@ -419,7 +417,7 @@ export default function DetalleSolicitud({ props }) {
       let validateFieldName, motivoFieldName;
       
       // Caso especial para foto de carnet
-      if (updatedDocument.id === 'file_foto') {
+      if (updatedDocument.id === 'foto') {
         validateFieldName = 'foto_validate';
         motivoFieldName = 'foto_motivo_rechazo';
       } else if (updatedDocument.id.startsWith('file_')) {
