@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle, ChevronLeft, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -8,8 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import AcademicInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
 import ContactInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ContactInfoSection";
 import {
-  DocumentSection,
-  DocumentViewer,
+    DocumentSection,
+    DocumentViewer,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import InstitutionsSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
 import PaymentReceiptSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PaymentReceiptSection";
@@ -29,16 +28,15 @@ import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolic
 
 // Modales para pendientes
 import {
-  ApprovalModal,
-  ExonerationModal,
-  RejectModal,
-  ReportIllegalityModal,
-  TitleConfirmationModal,
+    ApprovalModal,
+    ExonerationModal,
+    RejectModal,
+    ReportIllegalityModal,
+    TitleConfirmationModal,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ModalSystem";
 
 // Otros imports necesarios
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
-import PagosColg from "@/app/Components/PagosModal";
 import useDataListaColegiados from "@/store/ListaColegiadosData";
 
 export default function DetalleInfo({
@@ -572,25 +570,46 @@ export default function DetalleInfo({
       console.log("📝 Tipo de recaudos:", recaudos ? "Con token" : "Sin token");
       console.log("🆔 Entity ID:", entityId);
       
+      // Log para verificar el contenido del FormData si es FormData
+      if (formData instanceof FormData) {
+        for (let pair of formData.entries()) {
+          console.log(`📋 FormData ${pair[0]}:`, pair[1]);
+        }
+      } else {
+        console.log(`📋 JSON Data:`, formData);
+      }
+      
       let response;
       if (!recaudos) {
         console.log("📤 Enviando via updateColegiadoPendiente...");
-        response = await updateColegiadoPendiente(entityId, formData, true);
+        response = await updateColegiadoPendiente(entityId, formData, formData instanceof FormData);
       } else {
         console.log("📤 Enviando via updateColegiadoPendienteWithToken...");
-        response = await updateColegiadoPendienteWithToken(entityId, formData, true);
+        response = await updateColegiadoPendienteWithToken(entityId, formData, formData instanceof FormData);
       }
 
       console.log("✅ Respuesta recibida en DetalleInfo:", response);
 
       if (response && response.data) {
         console.log("🔄 Actualizando entityData con respuesta del servidor...");
+        console.log("📊 Datos del backend recibidos:", response.data);
+        
         setEntityData(prevData => ({ ...prevData, ...response.data }));
-        // setDocumentUpdateTrigger(prev => prev + 1); // Comentado temporalmente para evitar re-render de documentos
         
         // Actualizar también los datos del comprobante local
         console.log("🔄 Actualizando comprobanteData...");
         loadComprobanteData(response.data);
+        
+        console.log("✅ DetalleInfo: Comprobante actualizado exitosamente");
+        
+        // Recargar datos completos para asegurar sincronización
+        setTimeout(() => {
+          console.log("🔄 Recargando datos completos...");
+          loadData();
+        }, 1000);
+        
+      } else {
+        console.warn("⚠️ DetalleInfo: Respuesta del backend sin datos");
       }
 
       return response;
@@ -929,7 +948,6 @@ export default function DetalleInfo({
 
           {/* ✅ DocumentSection simplificado */}
           <DocumentSection
-            key={`docs-${entityId}-${documentUpdateTrigger}`}
             documentos={[]}
             onViewDocument={handleVerDocumento}
             updateDocumento={updateDocumento}
@@ -941,7 +959,7 @@ export default function DetalleInfo({
           />
 
           {/* Sección de comprobante de pago optimizada */}
-          {isAdmin && !entityData.pago_exonerado && (
+          {!entityData.pago_exonerado && (
             <PaymentReceiptSection
               comprobanteData={comprobanteData}
               onUploadComprobante={handleUploadComprobante}
@@ -949,26 +967,14 @@ export default function DetalleInfo({
               onStatusChange={handleComprobanteStatusChange}
               readOnly={entityData?.status === "anulado"}
               isAdmin={isAdmin}
+              costoInscripcion={costoInscripcion}
+              metodoPago={metodoPago}
+              tasaBCV={tasaBcv}
+              entityData={entityData}
             />
           )}
 
-          {/* Sección de pagos para pendientes */}
-          {!isAdmin && entityData.pago == null && pagosPendientes && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-100"
-            >
-              <PagosColg
-                props={{
-                  costo: costoInscripcion,
-                  allowMultiplePayments: false,
-                  handlePago: handlePaymentComplete,
-                }}
-              />
-            </motion.div>
-          )}
+          {/* Nota: La sección de pagos para pendientes ahora está integrada en PaymentReceiptSection */}
         </>
       ) : (
         // Vista para colegiados - Con tabs

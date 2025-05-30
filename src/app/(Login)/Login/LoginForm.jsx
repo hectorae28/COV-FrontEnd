@@ -7,8 +7,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount, onForgotCredentials }) {
-  const searchParams = useSearchParams();
-  const [error, setError] = useState(searchParams.get("error"));
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);

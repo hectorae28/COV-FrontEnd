@@ -1,10 +1,11 @@
 "use client";
 
-import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
 import PagosColg from "@/app/Components/PagosModal";
 import { motion } from "framer-motion";
 import {
-    AlertCircle, Calendar, CheckCircle, CreditCard, DollarSign, RefreshCcw, XCircle, Hash
+    AlertCircle, Calendar, CheckCircle, CreditCard, DollarSign,
+    Hash,
+    RefreshCcw, XCircle
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import VerificationSwitch from "../VerificationSwitch";
@@ -16,12 +17,13 @@ export default function PaymentReceiptSection({
     onViewComprobante,
     onStatusChange,
     readOnly = false,
-    isAdmin = false
+    isAdmin = false,
+    costoInscripcion = 50,
+    metodoPago = [],
+    tasaBCV = 0,
+    entityData = null // Agregar entityData para detectar pagos existentes
 }) {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [costoInscripcion, setCostoInscripcion] = useState(50);
-    const [metodoPago, setMetodoPago] = useState([]);
-    const [tasaBCV, setTasaBCV] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const [localComprobanteData, setLocalComprobanteData] = useState(comprobanteData);
@@ -31,82 +33,156 @@ export default function PaymentReceiptSection({
     const [comprobanteParaVer, setComprobanteParaVer] = useState(null);
 
     useEffect(() => {
-        setLocalComprobanteData(comprobanteData);
-    }, [comprobanteData]);
+        // Si recibimos datos del comprobante desde el padre, usarlos directamente
+        // Esto permite que los datos persistan al recargar la página
+        if (comprobanteData) {
+            console.log("📝 PaymentReceiptSection: Recibiendo comprobanteData desde DetalleInfo:", comprobanteData);
+            setLocalComprobanteData(comprobanteData);
+        } else if (entityData?.pago) {
+            // Si no hay comprobanteData pero SÍ hay pago en entityData, crear estructura temporal
+            console.log("📝 PaymentReceiptSection: Detectado pago sin comprobante, creando estructura temporal");
+            const pagoSinComprobante = {
+                id: "comprobante_pago",
+                nombre: "Comprobante de pago",
+                archivo: "comprobante_pendiente.pdf",
+                url: null, // No hay URL de comprobante aún
+                status: 'pending',
+                rejectionReason: "",
+                paymentDetails: {
+                    fecha_pago: entityData.pago.fecha_pago,
+                    numero_referencia: entityData.pago.num_referencia,
+                    monto: entityData.pago.monto,
+                    metodo_pago: entityData.pago.metodo_de_pago?.nombre || "Método de pago",
+                    metodo_pago_slug: entityData.pago.metodo_de_pago?.datos_adicionales?.slug || "unknown",
+                    tasa_bcv: entityData.pago.tasa_bcv_del_dia || entityData.pago.tasa_bcv
+                }
+            };
+            setLocalComprobanteData(pagoSinComprobante);
+        } else {
+            console.log("📝 PaymentReceiptSection: No hay comprobanteData ni pago disponible");
+            setLocalComprobanteData(null);
+        }
+    }, [comprobanteData, entityData]);
 
     const currentComprobanteData = localComprobanteData || comprobanteData;
     const hasComprobante = !!(currentComprobanteData?.url || currentComprobanteData?.archivo);
+    const hasPayment = !!(entityData?.pago || currentComprobanteData?.paymentDetails); // Detectar si ya hay pago
     const isApproved = currentComprobanteData?.status === 'approved';
     const isRejected = currentComprobanteData?.status === 'rechazado';
 
-    useEffect(() => {
-        const loadInitialData = async () => {
-            try {
-                const tasa = await fetchDataSolicitudes("tasa-bcv");
-                setTasaBCV(tasa.data.rate);
-
-                const metodos = await fetchDataSolicitudes("metodo-de-pago");
-                const metodosActivos = metodos.data.filter(metodo => metodo.activo === true);
-                setMetodoPago(metodosActivos);
-
-                const costo = await fetchDataSolicitudes(
-                    "costo",
-                    `?search=Inscripcion+Odontologo&es_vigente=true`
-                );
-                if (costo.data && costo.data.length > 0) {
-                    setCostoInscripcion(Number(costo.data[0].monto_usd));
-                }
-            } catch (error) {
-                console.error("Error cargando datos:", error);
-            }
-        };
-        loadInitialData();
-    }, []);
+    // Ya no necesitamos cargar datos internamente, los recibimos como props
 
     // Subida de comprobante desde PagosColg
     const handlePaymentComplete = async (paymentData) => {
-    let optimisticComprobante = null;
-
-    try {
-        setIsProcessing(true);
-
-        const tempUrl = URL.createObjectURL(paymentData.paymentFile);
-
-        optimisticComprobante = {
-            id: "comprobante_pago",
-            nombre: "Comprobante de pago",
-            archivo: paymentData.paymentFile?.name || "comprobante_pago.pdf",
-            url: tempUrl,
-            status: 'pending', // ✅ directamente a pending (ya que no hay backend)
-            isOptimistic: false,
-            tempUrl: tempUrl,
-            paymentDetails: {
-                fecha_pago: paymentData.paymentDate,
-                numero_referencia: paymentData.referenceNumber,
-                monto: paymentData.totalAmount,
-                metodo_pago: paymentData.metodo_de_pago?.nombre,
-                metodo_pago_slug: paymentData.metodo_de_pago?.datos_adicionales?.slug,
-                tasa_bcv: paymentData.tasa_bcv_del_dia
+        try {
+            setIsProcessing(true);
+            
+            console.log("📤 PaymentReceiptSection: Iniciando proceso de pago...");
+            console.log("📝 PaymentData recibido:", paymentData);
+            
+            // Paso 1: Enviar los datos del pago (como JSON, igual que en DetalleInfo)
+            const pagoData = {
+                pago: {
+                    fecha_pago: paymentData.paymentDate,
+                    num_referencia: paymentData.referenceNumber,
+                    monto: paymentData.totalAmount,
+                    metodo_de_pago: paymentData.metodo_de_pago?.id,
+                    tasa_bcv_del_dia: paymentData.tasa_bcv_del_dia
+                }
+            };
+            
+            console.log("📤 Paso 1: Enviando datos del pago...", pagoData);
+            const response1 = await onUploadComprobante(pagoData);
+            console.log("✅ Respuesta Paso 1:", response1);
+            
+            // Verificar que el archivo existe antes del Paso 2
+            if (!paymentData.paymentFile) {
+                console.error("❌ No hay archivo de comprobante para enviar");
+                throw new Error("No se seleccionó archivo de comprobante");
             }
-        };
-
-        setLocalComprobanteData(optimisticComprobante);
-        setShowPaymentModal(false);
-
-        // 🔇 Simulación de carga local, sin llamada a API
-        // const response = await onUploadComprobante(formData);
-
-    } catch (error) {
-        setLocalComprobanteData(null);
-        if (optimisticComprobante?.tempUrl) {
-            URL.revokeObjectURL(optimisticComprobante.tempUrl);
+            
+            console.log("📁 Archivo a enviar:", {
+                name: paymentData.paymentFile.name,
+                size: paymentData.paymentFile.size,
+                type: paymentData.paymentFile.type
+            });
+            
+            // Paso 2: Enviar el comprobante como FormData separadamente
+            const Form = new FormData();
+            Form.append("comprobante", paymentData.paymentFile);
+            
+            console.log("📤 Paso 2: Enviando comprobante...");
+            console.log("📋 FormData creado:");
+            for (let pair of Form.entries()) {
+                console.log(`   ${pair[0]}:`, pair[1]);
+            }
+            
+            const response2 = await onUploadComprobante(Form);
+            console.log("✅ Respuesta Paso 2:", response2);
+            
+            // Usar la respuesta del segundo paso para actualizar la UI
+            const finalResponse = response2 || response1;
+            console.log("✅ PaymentReceiptSection: Respuesta final del backend:", finalResponse);
+            
+            // Si hay respuesta exitosa, actualizar estado local
+            if (finalResponse && finalResponse.data) {
+                // Cargar los datos del comprobante desde la respuesta del backend
+                const updatedComprobanteData = extractComprobanteFromBackendData(finalResponse.data);
+                console.log("🔄 Datos del comprobante extraídos:", updatedComprobanteData);
+                setLocalComprobanteData(updatedComprobanteData);
+            }
+            
+            setShowPaymentModal(false);
+            
+        } catch (error) {
+            console.error("❌ Error en handlePaymentComplete:", error);
+            console.error("📋 Error stack:", error.stack);
+            alert("Error al enviar el comprobante. Por favor intente nuevamente.");
+        } finally {
+            setIsProcessing(false);
         }
-        alert("Error al simular el pago.");
-    } finally {
-        setIsProcessing(false);
-    }
-};
+    };
 
+    // Función para extraer datos del comprobante desde la respuesta del backend
+    const extractComprobanteFromBackendData = (backendData) => {
+        const comprobanteUrl = 
+            backendData.comprobante_url ||
+            backendData.comprobante ||
+            backendData.pago?.comprobante_url ||
+            backendData.pago?.comprobante ||
+            backendData.file_comprobante_url;
+
+        if (comprobanteUrl) {
+            return {
+                id: "comprobante_pago",
+                nombre: "Comprobante de pago",
+                archivo: typeof comprobanteUrl === "string" 
+                    ? comprobanteUrl.split("/").pop() 
+                    : "comprobante_pago.pdf",
+                url: comprobanteUrl,
+                status: backendData.comprobante_validate === null 
+                    ? "pending" 
+                    : backendData.comprobante_validate === true 
+                        ? "approved" 
+                        : backendData.comprobante_validate === false 
+                            ? "rechazado" 
+                            : "pending",
+                rejectionReason: backendData.comprobante_motivo_rechazo || "",
+                paymentDetails: backendData.pago ? {
+                    fecha_pago: backendData.pago.fecha_pago,
+                    numero_referencia: backendData.pago.num_referencia,
+                    monto: backendData.pago.monto,
+                    metodo_pago: backendData.pago.metodo_de_pago?.nombre || 
+                                backendData.pago.metodo_pago?.nombre,
+                    metodo_pago_slug: backendData.pago.metodo_de_pago?.datos_adicionales?.slug || 
+                                     backendData.pago.metodo_pago?.datos_adicionales?.slug,
+                    tasa_bcv: backendData.pago.tasa_bcv_del_dia || backendData.pago.tasa_bcv
+                } : null
+            };
+        }
+        
+        return null;
+    };
 
     // Visor avanzado
     const handleViewComprobante = (comprobante) => {
@@ -148,7 +224,7 @@ export default function PaymentReceiptSection({
                 </div>
 
                 <div>
-                    {hasComprobante ? (
+                    {hasComprobante || hasPayment ? (
                         <div className={getCardClasses()}>
                             <div className="p-4 flex justify-between items-start">
                                 <div
@@ -164,40 +240,63 @@ export default function PaymentReceiptSection({
                                             ? "bg-red-100"
                                             : hasComprobante
                                                 ? "bg-[#F9E6F3]"
-                                                : "bg-red-100"
+                                                : hasPayment
+                                                    ? "bg-yellow-100"
+                                                    : "bg-red-100"
                                         } p-2 rounded-md mr-3`}>
                                         {isApproved ? (
                                             <CheckCircle className="text-green-500" size={20} />
                                         ) : isRejected ? (
                                             <XCircle className="text-red-500" size={20} />
-                                        ) : (
+                                        ) : hasComprobante ? (
                                             <AlertCircle className="text-[#C40180]" size={20} />
+                                        ) : hasPayment ? (
+                                            <AlertCircle className="text-yellow-500" size={20} />
+                                        ) : (
+                                            <AlertCircle className="text-red-500" size={20} />
                                         )}
                                     </div>
                                     <div>
                                         <h3 className="font-medium text-gray-900 flex items-center">
-                                            {currentComprobanteData?.nombre || "Comprobante de pago"}
+                                            {hasComprobante 
+                                                ? (currentComprobanteData?.nombre || "Comprobante de pago")
+                                                : hasPayment 
+                                                    ? "Pago registrado - Pendiente de comprobante"
+                                                    : "Sin comprobante"
+                                            }
                                         </h3>
                                         <p className="text-xs text-gray-500">
-                                            {currentComprobanteData?.archivo || "comprobante_pago.pdf"}
+                                            {hasComprobante 
+                                                ? (currentComprobanteData?.archivo || "comprobante_pago.pdf")
+                                                : hasPayment
+                                                    ? "Comprobante pendiente de subir"
+                                                    : "No se ha subido comprobante"
+                                            }
                                         </p>
                                         <div className="flex items-center mt-1">
-                                            <span className={`text-xs px-2 py-1 rounded-full ${isApproved ? 'bg-green-100 text-green-800' :
+                                            <span className={`text-xs px-2 py-1 rounded-full ${
+                                                isApproved ? 'bg-green-100 text-green-800' :
                                                 isRejected ? 'bg-red-100 text-red-800' :
-                                                    'bg-yellow-100 text-yellow-800'
-                                                }`}>
-                                                {isApproved ? 'Aprobado' : isRejected ? 'Rechazado' : 'Pendiente de revisión'}
+                                                hasComprobante ? 'bg-yellow-100 text-yellow-800' :
+                                                hasPayment ? 'bg-blue-100 text-blue-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }`}>
+                                                {isApproved ? 'Aprobado' : 
+                                                 isRejected ? 'Rechazado' : 
+                                                 hasComprobante ? 'Pendiente de revisión' :
+                                                 hasPayment ? 'Pago registrado - Falta comprobante' :
+                                                 'Sin pago registrado'}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
-                                {/* Franja de botones: NO abre visor */}
+                                {/* Franja de botones */}
                                 <div className="flex flex-col items-end space-y-2 ml-4">
-                                    {!readOnly && !isApproved && (
+                                    {!readOnly && (!hasComprobante || !isApproved) && (
                                         <button
                                             onClick={e => { e.stopPropagation(); setShowPaymentModal(true); }}
                                             className="text-orange-600 hover:bg-orange-50 p-2 rounded-full transition-colors"
-                                            title="Actualizar comprobante"
+                                            title={hasPayment ? "Subir comprobante" : "Realizar pago"}
                                         >
                                             <RefreshCcw size={18} />
                                         </button>

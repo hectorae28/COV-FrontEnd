@@ -34,18 +34,38 @@ export function DocumentSection({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedDocumentName, setUploadedDocumentName] = useState("");
 
-  // ✅ Estado local simple para mostrar cambios inmediatos
+  // Estado local simple para mostrar cambios inmediatos
   const [localPendienteData, setLocalPendienteData] = useState(pendienteData);
+
+  // Estado separado para cambios locales específicos
+  const [localDocumentChanges, setLocalDocumentChanges] = useState({});
 
   const fileInputRef = useRef(null);
 
-  // ✅ Sincronizar datos cuando cambien los props (simple)
+  // Sincronizar datos cuando cambien los props (simple)
   useEffect(() => {
     setLocalPendienteData(pendienteData);
+
+    // Limpiar solo los cambios locales que ya están reflejados en el servidor
+    if (pendienteData) {
+      setLocalDocumentChanges(prevChanges => {
+        const newChanges = { ...prevChanges };
+
+        // Para cada cambio local, verificar si ya está en los datos del servidor
+        Object.keys(prevChanges).forEach(changeKey => {
+          // Si el valor del servidor coincide con el cambio local, eliminarlo
+          if (pendienteData[changeKey] === prevChanges[changeKey]) {
+            delete newChanges[changeKey];
+          }
+        });
+
+        return newChanges;
+      });
+    }
   }, [pendienteData]);
 
   // Función para cargar documentos de pendientes
-  const loadPendienteDocuments = useCallback((data) => {
+  const loadPendienteDocuments = useCallback((data, localChanges = {}) => {
     if (!data) return [];
 
     const documentosMetadata = {
@@ -92,6 +112,11 @@ export function DocumentSection({
       return partes[partes.length - 1];
     };
 
+    // Obtener valor considerando cambios locales
+    const getFieldValue = (fieldName, defaultValue = null) => {
+      return localChanges.hasOwnProperty(fieldName) ? localChanges[fieldName] : (data[fieldName] ?? defaultValue);
+    };
+
     const tipoProfesion = data.tipo_profesion || 'odontologo';
     const documentosParaMostrar = tipoProfesion === 'odontologo'
       ? ['file_ci', 'file_rif', 'file_fondo_negro', 'file_mpps']
@@ -102,78 +127,78 @@ export function DocumentSection({
         id: "file_ci",
         nombre: documentosMetadata.file_ci.nombre,
         descripcion: documentosMetadata.file_ci.descripcion,
-        archivo: obtenerNombreArchivo(data.file_ci_url),
+        archivo: obtenerNombreArchivo(getFieldValue('file_ci_url')),
         requerido: documentosMetadata.file_ci.requerido,
-        url: data.file_ci_url,
-        status: data.file_ci_validate === null ? 'pending' : data.file_ci_validate ? 'approved' : 'rechazado',
+        url: getFieldValue('file_ci_url'),
+        status: getFieldValue('file_ci_validate') === null ? 'pending' : getFieldValue('file_ci_validate') ? 'approved' : 'rechazado',
         isReadOnly: data.file_ci_status === 'approved' && data.status === 'rechazado',
-        rejectionReason: data.file_ci_motivo_rechazo || ''
+        rejectionReason: getFieldValue('file_ci_motivo_rechazo', '')
       },
       {
         id: "file_rif",
         nombre: documentosMetadata.file_rif.nombre,
         descripcion: documentosMetadata.file_rif.descripcion,
-        archivo: obtenerNombreArchivo(data.file_rif_url),
+        archivo: obtenerNombreArchivo(getFieldValue('file_rif_url')),
         requerido: documentosMetadata.file_rif.requerido,
-        url: data.file_rif_url,
-        status: data.file_rif_validate === null ? 'pending' : data.file_rif_validate ? 'approved' : 'rechazado',
+        url: getFieldValue('file_rif_url'),
+        status: getFieldValue('file_rif_validate') === null ? 'pending' : getFieldValue('file_rif_validate') ? 'approved' : 'rechazado',
         isReadOnly: data.file_rif_status === 'approved' && data.status === 'rechazado',
-        rejectionReason: data.file_rif_motivo_rechazo || ''
+        rejectionReason: getFieldValue('file_rif_motivo_rechazo', '')
       },
       {
         id: "file_fondo_negro",
         nombre: documentosMetadata.file_fondo_negro.nombre,
         descripcion: documentosMetadata.file_fondo_negro.descripcion,
-        archivo: obtenerNombreArchivo(data.file_fondo_negro_url),
+        archivo: obtenerNombreArchivo(getFieldValue('file_fondo_negro_url')),
         requerido: documentosMetadata.file_fondo_negro.requerido,
-        url: data.file_fondo_negro_url,
-        status: data.file_fondo_negro_validate === null ? 'pending' : data.file_fondo_negro_validate ? 'approved' : 'rechazado',
+        url: getFieldValue('file_fondo_negro_url'),
+        status: getFieldValue('file_fondo_negro_validate') === null ? 'pending' : getFieldValue('file_fondo_negro_validate') ? 'approved' : 'rechazado',
         isReadOnly: data.file_fondo_negro_status === 'approved' && data.status === 'rechazado',
-        rejectionReason: data.file_fondo_negro_motivo_rechazo || ''
+        rejectionReason: getFieldValue('file_fondo_negro_motivo_rechazo', '')
       },
       {
         id: "file_mpps",
         nombre: documentosMetadata.file_mpps.nombre,
         descripcion: documentosMetadata.file_mpps.descripcion,
-        archivo: obtenerNombreArchivo(data.file_mpps_url),
+        archivo: obtenerNombreArchivo(getFieldValue('file_mpps_url')),
         requerido: documentosMetadata.file_mpps.requerido,
-        url: data.file_mpps_url,
-        status: data.file_mpps_validate === null ? 'pending' : data.file_mpps_validate ? 'approved' : 'rechazado',
+        url: getFieldValue('file_mpps_url'),
+        status: getFieldValue('file_mpps_validate') === null ? 'pending' : getFieldValue('file_mpps_validate') ? 'approved' : 'rechazado',
         isReadOnly: data.file_mpps_status === 'approved' && data.status === 'rechazado',
-        rejectionReason: data.file_mpps_motivo_rechazo || ''
+        rejectionReason: getFieldValue('file_mpps_motivo_rechazo', '')
       },
       {
         id: "fondo_negro_credencial",
         nombre: documentosMetadata.fondo_negro_credencial.nombre,
         descripcion: documentosMetadata.fondo_negro_credencial.descripcion,
-        archivo: obtenerNombreArchivo(data.fondo_negro_credencial_url),
+        archivo: obtenerNombreArchivo(getFieldValue('fondo_negro_credencial_url')),
         requerido: documentosMetadata.fondo_negro_credencial.requerido(tipoProfesion),
-        url: data.fondo_negro_credencial_url,
-        status: data.fondo_negro_credencial_validate === null ? 'pending' : data.fondo_negro_credencial_validate ? 'approved' : 'rechazado',
+        url: getFieldValue('fondo_negro_credencial_url'),
+        status: getFieldValue('fondo_negro_credencial_validate') === null ? 'pending' : getFieldValue('fondo_negro_credencial_validate') ? 'approved' : 'rechazado',
         isReadOnly: data.fondo_negro_credencial_status === 'approved' && data.status === 'rechazado',
-        rejectionReason: data.fondo_negro_credencial_motivo_rechazo || ''
+        rejectionReason: getFieldValue('fondo_negro_credencial_motivo_rechazo', '')
       },
       {
         id: "notas_curso",
         nombre: documentosMetadata.notas_curso.nombre,
         descripcion: documentosMetadata.notas_curso.descripcion,
-        archivo: obtenerNombreArchivo(data.notas_curso_url),
+        archivo: obtenerNombreArchivo(getFieldValue('notas_curso_url')),
         requerido: documentosMetadata.notas_curso.requerido(tipoProfesion),
-        url: data.notas_curso_url,
-        status: data.notas_curso_validate === null ? 'pending' : data.notas_curso_validate ? 'approved' : 'rechazado',
+        url: getFieldValue('notas_curso_url'),
+        status: getFieldValue('notas_curso_validate') === null ? 'pending' : getFieldValue('notas_curso_validate') ? 'approved' : 'rechazado',
         isReadOnly: data.notas_curso_status === 'approved' && data.status === 'rechazado',
-        rejectionReason: data.notas_curso_motivo_rechazo || ''
+        rejectionReason: getFieldValue('notas_curso_motivo_rechazo', '')
       },
       {
         id: "fondo_negro_titulo_bachiller",
         nombre: documentosMetadata.fondo_negro_titulo_bachiller.nombre,
         descripcion: documentosMetadata.fondo_negro_titulo_bachiller.descripcion,
-        archivo: obtenerNombreArchivo(data.fondo_negro_titulo_bachiller_url),
+        archivo: obtenerNombreArchivo(getFieldValue('fondo_negro_titulo_bachiller_url')),
         requerido: documentosMetadata.fondo_negro_titulo_bachiller.requerido(tipoProfesion),
-        url: data.fondo_negro_titulo_bachiller_url,
-        status: data.fondo_negro_titulo_bachiller_validate === null ? 'pending' : data.fondo_negro_titulo_bachiller_validate ? 'approved' : 'rechazado',
+        url: getFieldValue('fondo_negro_titulo_bachiller_url'),
+        status: getFieldValue('fondo_negro_titulo_bachiller_validate') === null ? 'pending' : getFieldValue('fondo_negro_titulo_bachiller_validate') ? 'approved' : 'rechazado',
         isReadOnly: data.fondo_negro_titulo_bachiller_status === 'approved' && data.status === 'rechazado',
-        rejectionReason: data.fondo_negro_titulo_bachiller_motivo_rechazo || ''
+        rejectionReason: getFieldValue('fondo_negro_titulo_bachiller_motivo_rechazo', '')
       }
     ];
 
@@ -184,7 +209,7 @@ export function DocumentSection({
 
   // Determinar documentos a mostrar
   const documentosToUse = localPendienteData
-    ? loadPendienteDocuments(localPendienteData).filter(filter)
+    ? loadPendienteDocuments(localPendienteData, localDocumentChanges).filter(filter)
     : (Array.isArray(documentos) ? documentos : []).filter(filter);
 
   // Normalizar estructura de documentos
@@ -260,7 +285,7 @@ export function DocumentSection({
     }
   };
 
-  // ✅ Subida de documentos con actualización local simple
+  // Subida de documentos con actualización local simple
   const handleUpload = async () => {
     if (!selectedFile) {
       setError("Por favor seleccione un archivo para subir.");
@@ -271,56 +296,68 @@ export function DocumentSection({
     setError("");
 
     try {
-      // ✅ 1. Actualización local inmediata - solo visual
+      //  Actualización local inmediata - solo visual
       const tempUrl = URL.createObjectURL(selectedFile);
-      
-      // Actualizar los datos locales inmediatamente
-      // ✅ IMPORTANTE: Al reemplazar archivo, resetear estado de validación
-      setLocalPendienteData(prevData => ({
-        ...prevData,
+
+      // Actualizar cambios locales específicos
+      setLocalDocumentChanges(prevChanges => ({
+        ...prevChanges,
         [`${documentoParaSubir.id}_url`]: tempUrl,
         [`${documentoParaSubir.id}_archivo`]: selectedFile.name,
-        [`${documentoParaSubir.id}_validate`]: null, // ✅ Resetear a pending
-        [`${documentoParaSubir.id}_motivo_rechazo`]: "" // ✅ Limpiar motivo de rechazo
+        [`${documentoParaSubir.id}_validate`]: null,
+        [`${documentoParaSubir.id}_motivo_rechazo`]: ""
       }));
 
-      // ✅ 2. Mostrar éxito inmediatamente
+      // Mostrar éxito inmediatamente
       setUploadSuccess(true);
       setUploadedDocumentName(documentoParaSubir.nombre);
       setTimeout(() => setUploadSuccess(false), 5000);
 
-      // ✅ 3. Cerrar modal inmediatamente
+      // Cerrar modal inmediatamente
       setDocumentoParaSubir(null);
       setSelectedFile(null);
 
-      // ✅ 4. Subir al servidor en segundo plano
+      // Subir al servidor en segundo plano
       if (updateDocumento) {
         const formData = new FormData();
         formData.append(`${documentoParaSubir.id}`, selectedFile);
-        formData.append(`${documentoParaSubir.id}_validate`, "null"); // ✅ Resetear validación en servidor
-        formData.append(`${documentoParaSubir.id}_motivo_rechazo`, ""); // ✅ Limpiar motivo en servidor
+        formData.append(`${documentoParaSubir.id}_validate`, "null");
+        formData.append(`${documentoParaSubir.id}_motivo_rechazo`, "");
 
         const response = await updateDocumento(formData);
 
-        // ✅ 5. Actualizar con datos reales del servidor
+        // Actualizar con datos reales del servidor cuando lleguen
         if (response?.data) {
           URL.revokeObjectURL(tempUrl); // Limpiar URL temporal
-          
+
+          // Actualizar datos principales
           setLocalPendienteData(prevData => ({
             ...prevData,
             ...response.data
           }));
+
+          // Limpiar cambios locales que ya están en el servidor
+          setLocalDocumentChanges(prevChanges => {
+            const newChanges = { ...prevChanges };
+            // Remover solo los campos que se actualizaron desde el servidor
+            Object.keys(response.data).forEach(key => {
+              if (key.startsWith(documentoParaSubir.id)) {
+                delete newChanges[key];
+              }
+            });
+            return newChanges;
+          });
         }
       }
     } catch (error) {
-      // ✅ 6. Revertir cambios locales si falla
-      setLocalPendienteData(prevData => {
-        const newData = { ...prevData };
-        delete newData[`${documentoParaSubir.id}_url`];
-        delete newData[`${documentoParaSubir.id}_archivo`];
-        // No necesitamos revertir el estado de validación porque si falló, 
-        // mantenemos el estado anterior
-        return newData;
+      // Revertir cambios locales si falla
+      setLocalDocumentChanges(prevChanges => {
+        const newChanges = { ...prevChanges };
+        delete newChanges[`${documentoParaSubir.id}_url`];
+        delete newChanges[`${documentoParaSubir.id}_archivo`];
+        delete newChanges[`${documentoParaSubir.id}_validate`];
+        delete newChanges[`${documentoParaSubir.id}_motivo_rechazo`];
+        return newChanges;
       });
 
       setError("Ocurrió un error al subir el documento. Por favor intente nuevamente.");
@@ -484,13 +521,16 @@ export function DocumentSection({
               onView={() => onViewDocument(documento)}
               onReplace={() => handleReemplazarDocumento(documento)}
               onValidationChange={(updatedDoc) => {
-                setLocalPendienteData(prevData => ({
-                  ...prevData,
-                  [`${updatedDoc.id}_validate`]: updatedDoc.status === 'pending' ? null : 
+                // ✅ NUEVA SOLUCIÓN: Solo actualizar los campos de validación sin tocar archivos
+                setLocalDocumentChanges(prevChanges => ({
+                  ...prevChanges,
+                  [`${updatedDoc.id}_validate`]: updatedDoc.status === 'pending' ? null :
                     updatedDoc.status === 'approved' ? true : false,
                   [`${updatedDoc.id}_motivo_rechazo`]: updatedDoc.rejectionReason || ''
                 }));
-                
+
+                // ✅ CRÍTICO: Llamar inmediatamente al onValidationChange del padre
+                // Esto asegura que los cambios se reflejen inmediatamente en el estado principal
                 if (onValidationChange) {
                   onValidationChange(updatedDoc);
                 }
@@ -703,7 +743,7 @@ function DocumentCard({ documento, onView, onReplace, onValidationChange, isCole
               </div>
             )}
 
-            {/* ✅ VerificationSwitch solo para validación */}
+            {/* VerificationSwitch solo para validación */}
             {tieneArchivo && !isUploading && (
               <div className="document-verification-switch">
                 <VerificationSwitch
