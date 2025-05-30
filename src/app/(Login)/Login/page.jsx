@@ -1,6 +1,8 @@
 "use client";
 
 import ClaimAccountForm from "@/app/(Login)/Login/AccessNewUser";
+import AdminRoleSelector from "@/app/(Login)/Login/AdminRoleSelector";
+import AdminTwoFactorAuth from "@/app/(Login)/Login/AdminTwoFactorAuth";
 import ForgotCredentialsSelector from "@/app/(Login)/Login/ForgotCredentialsSelector";
 import LoginForm from "@/app/(Login)/Login/LoginForm";
 import Alert from "@/app/Components/Alert";
@@ -18,6 +20,7 @@ export default function LoginScreen() {
   const [currentView, setCurrentView] = useState("login");
   const [showContact, setShowContact] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "info" });
+  const [adminEmail, setAdminEmail] = useState("");
 
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -33,6 +36,36 @@ export default function LoginScreen() {
     } else {
       setMessage({ text: "", type: "info" });
     }
+  }, []);
+
+  // Función para manejar cuando se detecta el admin
+  const handleAdminDetected = useCallback((email) => {
+    setAdminEmail(email);
+    setCurrentView("admin-2fa");
+  }, []);
+
+  // Función para manejar la verificación exitosa del 2FA
+  const handleTwoFactorSuccess = useCallback(() => {
+    setCurrentView("admin-role-selector");
+  }, []);
+
+  // Función para manejar la selección de rol del admin
+  const handleAdminRoleSelect = useCallback((role) => {
+    if (role === "admin") {
+      setMessage({ text: "Ingresaste como administrador", type: "success" });
+      // router.push("/Admin"); // Comentado por ahora
+    } else if (role === "colegiado") {
+      setMessage({ text: "Ingresaste como colegiado", type: "success" });
+      // router.push("/Colegiado"); // Comentado por ahora
+    }
+    setCurrentView("login");
+  }, []);
+
+  // Función para volver al login desde el 2FA
+  const handleBackToLoginFromAdmin = useCallback(() => {
+    setCurrentView("login");
+    setAdminEmail("");
+    setMessage({ text: "", type: "info" });
   }, []);
 
   // Manejo inteligente del viewport en móvil
@@ -80,6 +113,10 @@ export default function LoginScreen() {
         return "Recuperar Credenciales";
       case "claim-account":
         return "Registrar Pago";
+      case "admin-2fa":
+        return "Verificación de 2FA";
+      case "admin-role-selector":
+        return "Selecciona tu rol";
       default:
         return "Bienvenido";
     }
@@ -93,6 +130,10 @@ export default function LoginScreen() {
         return "¿Olvidaste tu contraseña, correo o usuario? Te ayudamos a recuperarlo";
       case "claim-account":
         return "Ingrese su correo electrónico para reenviarle el enlace de pago. Asegúrese de introducir la misma dirección utilizada anteriormente.";
+      case "admin-2fa":
+        return "Por favor, ingrese el código de verificación enviado a su correo electrónico.";
+      case "admin-role-selector":
+        return "Por favor, seleccione su rol.";
       default:
         return "Acceso para odontólogos adscritos al COV";
     }
@@ -203,6 +244,7 @@ export default function LoginScreen() {
                   onForgotCredentials={() => setCurrentView("forgot-credentials")}
                   onRegister={() => router.replace("/Registro")}
                   onClaimAccount={() => setCurrentView("claim-account")}
+                  onAdminDetected={handleAdminDetected}
                   callbackUrl="/Colegiado"
                 />
               )}
@@ -222,6 +264,20 @@ export default function LoginScreen() {
                     setCurrentView("login");
                     handleMessageUpdate(messageData);
                   }}
+                />
+              )}
+
+              {currentView === "admin-2fa" && (
+                <AdminTwoFactorAuth
+                  email={adminEmail}
+                  onVerificationSuccess={handleTwoFactorSuccess}
+                  onGoBack={handleBackToLoginFromAdmin}
+                />
+              )}
+
+              {currentView === "admin-role-selector" && (
+                <AdminRoleSelector
+                  onRoleSelect={handleAdminRoleSelect}
                 />
               )}
 
