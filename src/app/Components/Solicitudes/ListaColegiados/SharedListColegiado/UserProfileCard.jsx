@@ -1,10 +1,10 @@
 import SessionInfo from "@/Components/SessionInfo";
 import { motion } from "framer-motion";
 import {
-  AlertTriangle, Calendar, CheckCircle, Clock, CreditCard,
-  GraduationCap, Mail, Phone,
-  PlusCircle,
-  User, UserX, XCircle
+    AlertTriangle, Calendar, CheckCircle, Clock, CreditCard,
+    GraduationCap, Mail, Phone,
+    PlusCircle,
+    User, UserX, XCircle
 } from "lucide-react";
 
 export default function UserProfileCard({
@@ -16,8 +16,8 @@ export default function UserProfileCard({
   onMostrarRechazo,
   onMostrarExoneracion,
   onMostrarReporteIrregularidad,
-  isAdmin = false,
-  allDocumentsApproved = false
+  documentsApproved = false,
+  paymentApproved = false
 }) {
   if (!data) {
     return (
@@ -166,7 +166,7 @@ export default function UserProfileCard({
                 </>
               )}
 
-              {variant === "pending" && isAdmin && (
+              {variant === "pending" && (
                 <>
                   {isRechazada ? (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
@@ -277,55 +277,60 @@ export default function UserProfileCard({
           </div>
 
           {/* Información del creador */}
-          {isAdmin && (
-            <div className="mt-4">
-              {variant === "pending" && data.user_admin_create_username && (
-                <div className="bg-gray-50 p-2 rounded-md">
-                  <SessionInfo
-                    creador={{
-                      username: data.user_admin_create_username,
-                      fecha: data.created_at
-                    }}
-                    variant="compact"
-                  />
-                </div>
-              )}
-              {variant === "registered" && data.recaudos?.user_admin_create_username && (
-                <div className="bg-gray-50 p-2 rounded-md">
-                  <SessionInfo
-                    creador={{
-                      username: data.recaudos.user_admin_create_username,
-                      fecha: data.recaudos.created_at
-                    }}
-                    variant="compact"
-                  />
-                </div>
-              )}
-            </div>
-          )}
+          <div className="mt-4">
+            {variant === "pending" && data.user_admin_create_username && (
+              <div className="bg-gray-50 p-2 rounded-md">
+                <SessionInfo
+                  creador={{
+                    username: data.user_admin_create_username,
+                    fecha: data.created_at
+                  }}
+                  variant="compact"
+                />
+              </div>
+            )}
+            {variant === "registered" && data.recaudos?.user_admin_create_username && (
+              <div className="bg-gray-50 p-2 rounded-md">
+                <SessionInfo
+                  creador={{
+                    username: data.recaudos.user_admin_create_username,
+                    fecha: data.recaudos.created_at
+                  }}
+                  variant="compact"
+                />
+              </div>
+            )}
+          </div>
 
           {/* Botones de acción para administradores */}
-          {isAdmin && variant === "pending" && !isDenegada && (
+          {variant === "pending" && !isDenegada && (
             <div className="mt-6 flex flex-wrap gap-3">
               {/* Botón de Aprobar */}
-              <button
-                onClick={onMostrarConfirmacion}
-                disabled={!allDocumentsApproved || pagosPendientes}
-                className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${allDocumentsApproved && !pagosPendientes
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-                title={
-                  !allDocumentsApproved
-                    ? "Debe aprobar todos los documentos y el comprobante de pago primero"
-                    : pagosPendientes
-                      ? "Debe completar o exonerar los pagos primero"
-                      : "Aprobar solicitud"
-                }
-              >
-                <CheckCircle size={16} className="mr-1" />
-                Aprobar
-              </button>
+              {(() => {
+                const buttonEnabled = documentsApproved && paymentApproved && !pagosPendientes;
+                return (
+                  <button
+                    onClick={onMostrarConfirmacion}
+                    disabled={!buttonEnabled}
+                    className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${buttonEnabled
+                      ? "bg-green-600 text-white hover:bg-green-700"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                    title={
+                      !documentsApproved
+                        ? "Debe aprobar todos los documentos requeridos primero"
+                        : !paymentApproved
+                          ? "Debe completar o exonerar los pagos primero"
+                          : pagosPendientes
+                            ? "Debe resolver los pagos pendientes"
+                            : "Aprobar solicitud"
+                    }
+                  >
+                    <CheckCircle size={16} className="mr-1" />
+                    Aprobar
+                  </button>
+                );
+              })()}
 
               {/* Botón de Rechazar - NO se muestra si ya está rechazada */}
               {!isRechazada && (
@@ -372,7 +377,7 @@ export default function UserProfileCard({
           )}
 
           {/* Botones de acción para colegiados registrados */}
-          {isAdmin && variant === "registered" && (
+          {variant === "registered" && (
             <div className="mt-6 flex flex-wrap gap-3">
               {/* Botón de Nueva Solicitud */}
               <button

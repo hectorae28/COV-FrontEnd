@@ -12,7 +12,6 @@ import { useEffect, useState } from "react"
 import api from "@/api/api"
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage"
 import Alert from "@/app/Components/Alert"
-import { Form } from "antd"
 import Head from "next/head"
 import PagosColg from "../../Components/PagosModal"
 import DocsRequirements from "../DocsRequirements"
@@ -88,9 +87,15 @@ const steps = [
   },
 ]
 
-export default function RegistrationForm(props) {
+export default function RegistrationForm({
+  onRegistroExitoso,
+  isAdmin = false,
+  isModal = false,
+  ...props
+}) {
   const [currentStep, setCurrentStep] = useState(1)
   const [pagarLuego, setPagarLuego] = useState(false)
+  const [exonerarPagos, setExonerarPagos] = useState(false)
   const [showEmailVerification, setShowEmailVerification] = useState(false)
   const [isResendingCode, setIsResendingCode] = useState(false)
   const [verifiedEmails, setVerifiedEmails] = useState([])
@@ -500,7 +505,6 @@ export default function RegistrationForm(props) {
 
     // Activar la bandera para mostrar errores de validación SOLO cuando intentamos proceder a pagos
     setAttemptedNext(true);
-    console.log({ formData })
 
     // Validar el paso actual
     const isValid = validateStep(currentStep);
@@ -569,7 +573,7 @@ export default function RegistrationForm(props) {
         Form.append("file_fondo_negro", formData.titulo || null);
         Form.append("file_mpps", formData.mpps || null);
         Form.append("file_foto_colegiado", formData.foto_colegiado || null);
-        
+
         // Agregar las constancias de trabajo
         if (formData.laboralRegistros && formData.laboralRegistros.length > 0) {
           formData.laboralRegistros.forEach((registro, index) => {
@@ -578,7 +582,7 @@ export default function RegistrationForm(props) {
             }
           });
         }
-        
+
         if (
           formData.tipo_profesion === "tecnico" ||
           formData.tipo_profesion === "higienista"
@@ -650,7 +654,7 @@ export default function RegistrationForm(props) {
     metodo_de_pago = null,
   }) => {
     const PaymentForm = new FormData()
-    if (!pagarLuego) {
+    if (!pagarLuego && !exonerarPagos) {
       PaymentForm.append(
         "pago",
         JSON.stringify({
@@ -665,7 +669,7 @@ export default function RegistrationForm(props) {
     }
     try {
       let res
-      if (!pagarLuego) {
+      if (!pagarLuego && !exonerarPagos) {
         res = await patchDataUsuario(
           `register/${recaudoCreado.id}`,
           PaymentForm,
@@ -680,6 +684,10 @@ export default function RegistrationForm(props) {
           setShowPaymentScreen(false)
           setIsComplete(true)
           setIsSubmitting(false)
+          // Llamar callback si está disponible
+          if (onRegistroExitoso) {
+            onRegistroExitoso()
+          }
           return
         }
       } else {
@@ -691,6 +699,10 @@ export default function RegistrationForm(props) {
         setShowPaymentScreen(false)
         setIsComplete(true)
         setIsSubmitting(false)
+        // Llamar callback si está disponible
+        if (onRegistroExitoso) {
+          onRegistroExitoso()
+        }
       }
     } catch (error) {
       setError("Ocurrió un error al cargar los datos, verifique su conexión a internet")
@@ -761,38 +773,40 @@ export default function RegistrationForm(props) {
       </Head>
       <div className="select-none cursor-default relative w-full min-h-screen overflow-hidden mx-auto my-auto">
         {/* Header navigation - Improved responsiveness */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="absolute top-4 right-0 left-0 z-20 px-4 sm:px-6 flex justify-between items-center"
-        >
-          {/* Botón Página Principal con Link */}
-          <Link href="/">
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="w-auto px-3 py-1 sm:px-4 sm:py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-xs sm:text-sm text-white rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-1 sm:gap-2"
-            >
-              <span>Página Principal</span>
-            </motion.button>
-          </Link>
-
-          {/* Enlace Iniciar Sesión */}
-          <div className="flex items-center">
-            <Link
-              href="/Login"
-              className="text-xs sm:text-sm text-gray-400 transition-colors duration-100 flex items-center group"
-            >
-              <span className="relative font-medium">
-                ¿Ya tienes una cuenta?
-                <span className="text-white hover:text-[#D7008A] text-sm sm:text-base ml-1 sm:ml-2 font-semibold group-hover:underline">
-                  Iniciar sesión
-                </span>
-              </span>
+        {!isModal && (
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="absolute top-4 right-0 left-0 z-20 px-4 sm:px-6 flex justify-between items-center"
+          >
+            {/* Botón Página Principal con Link */}
+            <Link href="/">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="w-auto px-3 py-1 sm:px-4 sm:py-2 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-xs sm:text-sm text-white rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-1 sm:gap-2"
+              >
+                <span>Página Principal</span>
+              </motion.button>
             </Link>
-          </div>
-        </motion.div>
+
+            {/* Enlace Iniciar Sesión */}
+            <div className="flex items-center">
+              <Link
+                href="/Login"
+                className="text-xs sm:text-sm text-gray-400 transition-colors duration-100 flex items-center group"
+              >
+                <span className="relative font-medium">
+                  ¿Ya tienes una cuenta?
+                  <span className="text-white hover:text-[#D7008A] text-sm sm:text-base ml-1 sm:ml-2 font-semibold group-hover:underline">
+                    Iniciar sesión
+                  </span>
+                </span>
+              </Link>
+            </div>
+          </motion.div>
+        )}
 
         <div className="relative z-10 flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-22">
           <div className="w-full max-w-full">
@@ -916,6 +930,13 @@ export default function RegistrationForm(props) {
                             </p>
                           </div>
                         )}
+                        {exonerarPagos && (
+                          <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-200">
+                            <p className="text-green-800 font-medium">
+                              El colegiado ha sido registrado exitosamente y exonerado del pago por administración.
+                            </p>
+                          </div>
+                        )}
                       </motion.div>
                     ) : showPaymentScreen ? (
                       <motion.div
@@ -938,7 +959,7 @@ export default function RegistrationForm(props) {
                             </span>
                           </button>
                         </div>
-                        {!pagarLuego && (
+                        {!pagarLuego && !exonerarPagos && (
                           <PagosColg props={{
                             costo: costoInscripcion,
                             allowMultiplePayments: false,
@@ -949,17 +970,33 @@ export default function RegistrationForm(props) {
                         {/* Sección de "Pagar luego" con el mismo estilo que RegistrarColegiadoModal */}
                         <div className="w-full max-w-md mx-auto mt-6">
                           <div className="flex justify-center gap-4">
+                            {/* Exonerar - Solo para administradores en modal */}
+                            {isAdmin && isModal && !pagarLuego && (
+                              <button
+                                type="button"
+                                onClick={() => setExonerarPagos(!exonerarPagos)}
+                                className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300 ${exonerarPagos
+                                    ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
+                                    : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/20"
+                                  }`}
+                              >
+                                Exonerar
+                              </button>
+                            )}
+
                             {/* Pagar Luego */}
-                            <button
-                              type="button"
-                              onClick={() => setPagarLuego(!pagarLuego)}
-                              className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-30 ${pagarLuego
-                                ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
-                                : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/10"
-                                }`}
-                            >
-                              Pagar luego
-                            </button>
+                            {!exonerarPagos && (
+                              <button
+                                type="button"
+                                onClick={() => setPagarLuego(!pagarLuego)}
+                                className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300 ${pagarLuego
+                                  ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
+                                  : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/10"
+                                  }`}
+                              >
+                                Pagar luego
+                              </button>
+                            )}
                           </div>
 
                           {/* Mensaje informativo */}
@@ -968,9 +1005,14 @@ export default function RegistrationForm(props) {
                               El usuario podrá completar el pago más adelante.
                             </div>
                           )}
+                          {exonerarPagos && (
+                            <div className="mt-4 text-center text-sm text-[#41023B] font-medium">
+                              El usuario será registrado como solvente sin pago.
+                            </div>
+                          )}
                         </div>
                         <div className="flex justify-center p-6 gap-6">
-                          {pagarLuego && (
+                          {(pagarLuego || exonerarPagos) && (
                             <button
                               type="button"
                               onClick={handlePago}
@@ -1002,7 +1044,7 @@ export default function RegistrationForm(props) {
                                   Procesando...
                                 </span>
                               ) : (
-                                "Enviar Solicitud de Registro"
+                                "Completar Registro"
                               )}
                             </button>
                           )}
@@ -1120,8 +1162,8 @@ export default function RegistrationForm(props) {
             </div>
           </div>
         </div>
-        <BackgroundAnimation />
-        <div className="absolute inset-0 bg-white/13 backdrop-blur-md" />
+        {!isModal && <BackgroundAnimation />}
+        {!isModal && <div className="absolute inset-0 bg-white/13 backdrop-blur-md" />}
       </div>
     </>
   )

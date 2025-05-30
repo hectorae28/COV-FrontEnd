@@ -766,10 +766,10 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <label className={`cursor-pointer flex-1 px-4 py-3 border-2 border-dashed ${isFieldEmpty(registro, "constancia_trabajo")
-                        ? "border-red-500 bg-red-50"
-                        : registro.constancia_trabajo
-                          ? "border-green-500 bg-green-50"
-                          : "border-gray-300 bg-gray-50"
+                      ? "border-red-500 bg-red-50"
+                      : registro.constancia_trabajo
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-300 bg-gray-50"
                       } rounded-xl hover:bg-gray-100 transition-colors`}>
                       <input
                         type="file"
@@ -784,8 +784,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                             : "text-gray-400"
                         } />
                         <span className={`text-sm font-medium ${registro.constancia_trabajo
-                            ? "text-green-700"
-                            : "text-gray-600"
+                          ? "text-green-700"
+                          : "text-gray-600"
                           }`}>
                           {registro.constancia_trabajo
                             ? (typeof registro.constancia_trabajo === 'string'

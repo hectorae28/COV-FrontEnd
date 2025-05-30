@@ -19,7 +19,7 @@ export default function VerificationSwitch({
     const [customReason, setCustomReason] = useState("");
     const [useCustomReason, setUseCustomReason] = useState(false);
 
-    // ✅ COMPATIBILIDAD MEJORADA: Manejo de diferentes estructuras de datos
+    // COMPATIBILIDAD MEJORADA: Manejo de diferentes estructuras de datos
     const getStatus = () => {
         // Para documentos
         if (item.status !== undefined) return item.status;
@@ -99,7 +99,7 @@ export default function VerificationSwitch({
         }
     };
 
-    // ✅ FUNCIÓN PRINCIPAL: Confirmar aprobación
+    // FUNCIÓN PRINCIPAL: Confirmar aprobación
     const confirmApproval = () => {
         const updatedItem = {
             ...item,
@@ -113,12 +113,12 @@ export default function VerificationSwitch({
             rejection_reason: ""
         };
 
-        // ✅ LLAMAR AL CALLBACK con el item actualizado y el índice si existe
+        // LLAMAR AL CALLBACK con el item actualizado y el índice si existe
         onChange(updatedItem, index);
         setIsApprovalOpen(false);
     };
 
-    // ✅ FUNCIÓN PRINCIPAL: Confirmar rechazo
+    // FUNCIÓN PRINCIPAL: Confirmar rechazo
     const submitRejection = () => {
         const reason = useCustomReason ? customReason : rejectionPreset;
         if (!reason.trim()) {
@@ -138,7 +138,7 @@ export default function VerificationSwitch({
             rejection_reason: reason
         };
 
-        // ✅ LLAMAR AL CALLBACK con el item actualizado y el índice si existe
+        // LLAMAR AL CALLBACK con el item actualizado y el índice si existe
         onChange(updatedItem, index);
 
         // Limpiar estado del modal
@@ -150,15 +150,15 @@ export default function VerificationSwitch({
 
     return (
         <div className="relative">
-            {/* ✅ INTERFAZ PRINCIPAL: Botones de estado */}
+            {/* INTERFAZ PRINCIPAL: Botones de estado */}
             <div className="flex items-center space-x-2">
                 {/* Botón de aprobar */}
                 <button
                     onClick={(e) => handleStatusChange("approved", e)}
                     disabled={isApproved || readOnly}
                     className={`p-2 rounded-md transition-all ${isApproved
-                            ? "bg-green-200 text-green-800 ring-2 ring-green-500"
-                            : "bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600"
+                        ? "bg-green-200 text-green-800 ring-2 ring-green-500"
+                        : "bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600"
                         } ${isApproved || readOnly ? "opacity-80 cursor-not-allowed" : "cursor-pointer"}`}
                     title="Aprobar"
                 >
@@ -170,8 +170,8 @@ export default function VerificationSwitch({
                     onClick={(e) => handleStatusChange("rechazado", e)}
                     disabled={isApproved || readOnly}
                     className={`p-2 rounded-md transition-all ${isRejected
-                            ? "bg-red-100 text-red-700 ring-2 ring-red-500"
-                            : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                        ? "bg-red-100 text-red-700 ring-2 ring-red-500"
+                        : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600"
                         } ${isApproved || readOnly ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                     title="Rechazar"
                 >
@@ -181,24 +181,24 @@ export default function VerificationSwitch({
                 {/* Estado actual */}
                 <span
                     className={`text-sm font-medium ${isApproved
-                            ? "text-green-700"
-                            : isRejected
-                                ? "text-red-700"
-                                : "text-gray-600"
+                        ? "text-green-700"
+                        : isRejected
+                            ? "text-red-700"
+                            : "text-gray-600"
                         }`}
                 >
                     {isApproved ? labels.aprobado : isRejected ? labels.rechazado : labels.pendiente}
                 </span>
             </div>
 
-            {/* ✅ MOSTRAR MOTIVO DE RECHAZO */}
+            {/* MOSTRAR MOTIVO DE RECHAZO */}
             {isRejected && rejectionReason && (
                 <div className="mt-2 text-xs text-red-700 bg-red-50 p-2 rounded-md border border-red-200">
                     <strong>Motivo de rechazo:</strong> {rejectionReason}
                 </div>
             )}
 
-            {/* ✅ MODAL DE CONFIRMACIÓN DE APROBACIÓN */}
+            {/* MODAL DE CONFIRMACIÓN DE APROBACIÓN */}
             {isApprovalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
@@ -208,12 +208,6 @@ export default function VerificationSwitch({
                         </h3>
                         <div className="mb-4 text-gray-700">
                             ¿Está seguro de que desea aprobar este {type}?
-                            {type === "documento" && (
-                                <span className="block mt-2 text-sm text-amber-600 font-medium">
-                                    ⚠️ Esta acción es <strong>irreversible</strong>.
-                                    Una vez aprobado, no podrá ser modificado.
-                                </span>
-                            )}
                         </div>
                         <div className="flex justify-end gap-3 mt-6">
                             <button
@@ -233,7 +227,7 @@ export default function VerificationSwitch({
                 </div>
             )}
 
-            {/* ✅ MODAL DE MOTIVO DE RECHAZO */}
+            {/* MODAL DE MOTIVO DE RECHAZO */}
             {isRejectionOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">

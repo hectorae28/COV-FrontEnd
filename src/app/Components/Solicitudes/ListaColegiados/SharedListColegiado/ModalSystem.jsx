@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import {
-  AlertOctagon, AlertTriangle, CheckCircle, ChevronLeft,
-  ChevronRight,
-  Upload, X, XCircle
+    AlertOctagon, AlertTriangle, CheckCircle, ChevronLeft,
+    ChevronRight,
+    Upload, X, XCircle
 } from "lucide-react";
 import { useState } from "react";
 
@@ -78,7 +78,7 @@ export function ApprovalModal({
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-lg shadow-xl w-full max-w-xl overflow-hidden"
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden"
       >
         {/* Encabezado */}
         <div className="bg-green-50 p-4 border-b border-green-100">
@@ -287,7 +287,9 @@ export function RejectModal({
   handleDenegarSolicitud,
   onClose,
   isRechazada,
-  documentosRechazados = []
+  documentosRechazados = [],
+  institucionesRechazadas = [],
+  pagosRechazados = []
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionType, setActionType] = useState(null);
@@ -311,6 +313,9 @@ export function RejectModal({
   const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
   const [motivoPersonalizado, setMotivoPersonalizado] = useState("");
   const [usarMotivoPersonalizado, setUsarMotivoPersonalizado] = useState(false);
+
+  // Calcular total de incidencias rechazadas
+  const totalIncidenciasRechazadas = documentosRechazados.length + institucionesRechazadas.length + pagosRechazados.length;
 
   // Actualizar el motivo final cuando cambia la selección o el texto personalizado
   const actualizarMotivoFinal = (tipo, valor) => {
@@ -353,7 +358,7 @@ export function RejectModal({
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-lg shadow-xl w-full max-w-xl overflow-hidden"
+        className="bg-white rounded-lg shadow-xl w-full max-w-3xl overflow-hidden max-h-[90vh] flex flex-col"
       >
         <div className="bg-red-50 p-4 border-b border-red-100">
           <div className="flex items-center justify-center mb-2 text-red-600">
@@ -363,7 +368,8 @@ export function RejectModal({
             {isRechazada ? "Anular solicitud" : "Rechazar solicitud"}
           </h3>
         </div>
-        <div className="p-6">
+        
+        <div className="flex-1 overflow-y-auto p-6">
           <p className="text-center text-gray-600 mb-4">
             Está a punto de {isRechazada ? "anular" : "rechazar"} la solicitud de{" "}
             <span className="font-medium text-gray-900">{nombreCompleto}</span>.
@@ -381,18 +387,87 @@ export function RejectModal({
             </div>
           )}
 
-          {/* Resumen de documentos rechazados */}
-          {documentosRechazados.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm font-medium text-red-700 mb-2">Documentos rechazados:</p>
-              <div className="bg-red-50 p-3 rounded-md border border-red-100 max-h-40 overflow-y-auto">
-                {documentosRechazados.map((doc, index) => (
-                  <div key={index} className="mb-2 pb-2 border-b border-red-100 last:border-0">
-                    <p className="font-medium text-red-800 text-sm">{doc.nombre}</p>
-                    <p className="text-xs text-red-700">{doc.rejectionReason || doc.motivo}</p>
-                  </div>
-                ))}
+          {/* Resumen de incidencias rechazadas */}
+          {totalIncidenciasRechazadas > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center mb-3">
+                <AlertTriangle size={20} className="text-red-600 mr-2" />
+                <h4 className="text-sm font-medium text-red-700">
+                  Incidencias rechazadas encontradas ({totalIncidenciasRechazadas})
+                </h4>
               </div>
+              
+              <div className="bg-red-50 p-4 rounded-md border border-red-100 max-h-64 overflow-y-auto space-y-4">
+                {/* Documentos rechazados */}
+                {documentosRechazados.length > 0 && (
+                  <div>
+                    <h5 className="font-medium text-red-800 text-sm mb-2 flex items-center">
+                      📄 Documentos rechazados ({documentosRechazados.length})
+                    </h5>
+                    <div className="space-y-2">
+                      {documentosRechazados.map((doc, index) => (
+                        <div key={`doc-${index}`} className="bg-white p-2 rounded border border-red-200">
+                          <p className="font-medium text-red-800 text-sm">{doc.nombre}</p>
+                          <p className="text-xs text-red-700">
+                            <strong>Motivo:</strong> {doc.rejectionReason || doc.motivo || "Sin motivo especificado"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Instituciones rechazadas */}
+                {institucionesRechazadas.length > 0 && (
+                  <div>
+                    <h5 className="font-medium text-red-800 text-sm mb-2 flex items-center">
+                      🏢 Instituciones rechazadas ({institucionesRechazadas.length})
+                    </h5>
+                    <div className="space-y-2">
+                      {institucionesRechazadas.map((inst, index) => (
+                        <div key={`inst-${index}`} className="bg-white p-2 rounded border border-red-200">
+                          <p className="font-medium text-red-800 text-sm">
+                            {inst.nombre || inst.institutionName || "Institución sin nombre"}
+                          </p>
+                          <p className="text-xs text-red-700">
+                            <strong>Motivo:</strong> {inst.motivo_rechazo || inst.rejectionReason || "Sin motivo especificado"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pagos rechazados */}
+                {pagosRechazados.length > 0 && (
+                  <div>
+                    <h5 className="font-medium text-red-800 text-sm mb-2 flex items-center">
+                      💳 Comprobantes de pago rechazados ({pagosRechazados.length})
+                    </h5>
+                    <div className="space-y-2">
+                      {pagosRechazados.map((pago, index) => (
+                        <div key={`pago-${index}`} className="bg-white p-2 rounded border border-red-200">
+                          <p className="font-medium text-red-800 text-sm">
+                            {pago.nombre || "Comprobante de pago"}
+                          </p>
+                          <p className="text-xs text-red-700">
+                            <strong>Motivo:</strong> {pago.motivo_rechazo || pago.rejectionReason || "Sin motivo especificado"}
+                          </p>
+                          {pago.monto && (
+                            <p className="text-xs text-gray-600">
+                              <strong>Monto:</strong> {pago.metodo_pago_slug === 'bdv' ? 'Bs ' : '$ '}{pago.monto}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <p className="text-xs text-red-600 mt-2 bg-red-100 p-2 rounded">
+                <strong>Nota:</strong> Estas incidencias rechazadas serán incluidas automáticamente en el motivo de rechazo enviado al solicitante.
+              </p>
             </div>
           )}
 
@@ -445,11 +520,13 @@ export function RejectModal({
 
           <p className="text-xs text-gray-500 mt-1 mb-4">
             Este motivo será enviado al solicitante por correo electrónico y quedará registrado en el sistema.
-            {documentosRechazados.length > 0 && (
-              " Además, se incluirán los motivos de rechazo de cada documento rechazado."
+            {totalIncidenciasRechazadas > 0 && (
+              " Además, se incluirán automáticamente los motivos de rechazo de cada incidencia rechazada."
             )}
           </p>
+        </div>
 
+        <div className="border-t border-gray-200 p-4">
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <button
               onClick={onClose}

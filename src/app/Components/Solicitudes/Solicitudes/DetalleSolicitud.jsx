@@ -168,6 +168,18 @@ export default function DetalleSolicitud({ props }) {
 
   // Función para aprobar la solicitud
   const handleAprobarSolicitud = async () => {
+    const solicitudActualizada = new Array()
+
+    Object.keys(solicitud.detallesSolicitud).forEach(item => {
+      solicitudActualizada.push({
+        "tipo_solicitud": item,
+        "accion": "revisar"
+      })
+    })
+
+    console.log({solicitudActualizada,estadoValidacionDocumentos})
+    const response = await api.post(`/solicitudes/solicitud/${solicitud.id}/cambiar-status/`, {solicitudes:solicitudActualizada})
+    console.log({response})
     try {
       // Simular llamada a API
       await new Promise((resolve) => setTimeout(resolve, 800));
@@ -522,11 +534,12 @@ export default function DetalleSolicitud({ props }) {
 
       {/* Encabezado de solicitud */}
       <SolicitudHeader
-        solicitud={solicitud}
+        solicitud={{...solicitud,pagosSolicitud}}
         totales={totales}
         onAprobar={() => setMostrarConfirmacion(true)}
         onRechazar={() => setMostrarRechazo(true)}
         isAdmin={isAdmin}
+        estadoValidacionDocumentos={estadoValidacionDocumentos}
       />
 
       {/* Documentos requeridos - esta sección es para verificación y siempre debe estar visible */}
@@ -537,15 +550,6 @@ export default function DetalleSolicitud({ props }) {
         onDocumentStatusChange={handleDocumentStatusChange}
         isAdmin={isAdmin}
       />
-        {/* <DocumentSection
-        documentos={solicitud}
-        onViewDocument={handleVerDocumento}
-        updateDocumento={updateDocumento}
-        onDocumentStatusChange={handleDocumentStatusChange}
-        title="Documentos requeridos"
-        subtitle="Documentación obligatoria del solicitante"
-        recaudosId={pendienteId}
-      /> */}
 
       {/* Documentos generados por el sistema - Visible cuando hay constancias o carnets aprobados */}
       {solicitud.itemsSolicitud && solicitud.itemsSolicitud.some(item => 
@@ -555,17 +559,6 @@ export default function DetalleSolicitud({ props }) {
           <h2 className="text-base font-medium text-gray-900 mb-3 flex items-center">
             <FileCheck size={18} className="mr-2 text-blue-600" />
             Documentos generados por el sistema
-            <button 
-              onClick={() => {
-                console.log("Debug - solicitud completa:", solicitud);
-                console.log("Debug - itemsSolicitud:", solicitud.itemsSolicitud);
-                console.log("Debug - documentosSistema:", documentosSistema);
-                cargarDocumentosSistema();
-              }}
-              className="ml-2 text-xs bg-gray-200 px-2 py-1 rounded"
-            >
-              Debug
-            </button>
           </h2>
           
           {loadingDocumentos ? (

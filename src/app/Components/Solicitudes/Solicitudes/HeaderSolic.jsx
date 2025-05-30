@@ -8,7 +8,7 @@ import {
     Shield
 } from "lucide-react"
 
-const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar, isAdmin=false }) => {
+const SolicitudHeader = ({ solicitud, totales,isAdmin=false }) => {
     const {
         totalExonerado,
         totalPagado,
@@ -17,8 +17,7 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar, isAdmin=fa
         todoExonerado,
         todoPagado
     } = totales
-    const isEspecialidad = solicitud.itemsSolicitud.some(item => item.tipo === 'Especialización')
-
+    console.log({solicitud})
     return (
         <div className="select-none cursor-default bg-white rounded-lg shadow-md p-4 mb-5">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -142,29 +141,6 @@ const SolicitudHeader = ({ solicitud, totales, onAprobar, onRechazar, isAdmin=fa
                                     <span className="font-medium text-green-700">Pagado completamente</span>
                                 </div>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Botones de status/acción */}
-                    <div className="mt-4 flex flex-wrap gap-2 md:justify-end">
-                        {solicitud.estado === 'Pendiente' && isAdmin && isEspecialidad && (
-                            <>
-                                <button
-                                    onClick={onAprobar}
-                                    className="cursor-pointer bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-green-700 text-sm transition-colors"
-                                >
-                                    <CheckCircle size={16} />
-                                    <span>Aprobar</span>
-                                </button>
-
-                                <button
-                                    onClick={onRechazar}
-                                    className="cursor-pointer bg-red-600 text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-red-700 text-sm transition-colors"
-                                >
-                                    <XCircle size={16} />
-                                    <span>Rechazar</span>
-                                </button>
-                            </>
                         )}
                     </div>
                 </div>

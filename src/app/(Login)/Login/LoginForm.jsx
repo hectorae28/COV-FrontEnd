@@ -6,8 +6,8 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
-export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount }) {
-  const [error, setError] = useState(null);
+export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount, onForgotCredentials, onAdminDetected }) {
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
@@ -16,13 +16,26 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    
     try {
       const Form = new FormData(formRef.current);
+      const email = Form.get("email");
+      const password = Form.get("password");
+
+      // Verificar si es el usuario admin local
+      if (email === "admin@example.com" && password === "password") {
+        setIsLoading(false);
+        onAdminDetected(email);
+        return;
+      }
+
+      // Continuar con el login normal
       const result = await signIn("credentials", {
-        username: Form.get("email"),
-        password: Form.get("password"),
+        username: email,
+        password: password,
         redirect: false,
       });
+      
       if (result.error) {
         switch (result.error) {
           case "Account is locked":
@@ -102,19 +115,19 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
         )}
       </motion.button>
 
-      {/* Forgot password link */}
+      {/* Forgot credentials link */}
       <div className="text-center mt-4">
         <motion.a
           href="#"
           className="text-[#D7008A] hover:underline text-sm inline-block px-4 py-2"
           onClick={(e) => {
             e.preventDefault();
-            onForgotPassword();
+            onForgotCredentials();
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          ¿Olvidaste tu contraseña?
+          ¿Olvidaste tus credenciales?
         </motion.a>
       </div>
 
