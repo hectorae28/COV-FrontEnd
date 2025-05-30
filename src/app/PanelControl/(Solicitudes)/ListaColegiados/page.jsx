@@ -1,11 +1,12 @@
 "use client";
 import DetalleInfo from "@/app/Components/Solicitudes/ListaColegiados/DetalleInfo";
-import RegistroColegiados from "@/app/Components/Solicitudes/ListaColegiados/RegistrarColegiadoModal";
+import RegistroModal from "@/app/Components/Solicitudes/ListaColegiados/RegistroModal";
 import { estados } from "@/Shared/UniversidadData";
 import useDataListaColegiados from "@/store/ListaColegiadosData";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from 'react-dom'
 
 // Componentes
 import DataTable from "./DataTable";
@@ -491,13 +492,14 @@ export default function ListaColegiadosPage() {
       />
 
       {/* Modal para registrar nuevo colegiado */}
-      {showRegistro && (
-        <RegistroColegiados
-          isAdmin={true}
-          onClose={() => setShowRegistro(false)}
-          onRegistroExitoso={handleRegistroExitoso}
-        />
-      )}
+      {showRegistro && createPortal(
+  <RegistroModal
+    isAdmin={true}
+    onClose={() => setShowRegistro(false)}
+    onRegistroExitoso={handleRegistroExitoso}
+  />,
+  document.body
+)}
     </div>
   );
 }

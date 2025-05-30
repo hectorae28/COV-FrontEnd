@@ -6,7 +6,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount }) {
+export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount, onForgotCredentials }) {
   const searchParams = useSearchParams();
   const [error, setError] = useState(searchParams.get("error"));
   const [isLoading, setIsLoading] = useState(false);
@@ -107,19 +107,19 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
         )}
       </motion.button>
 
-      {/* Forgot password link */}
+      {/* Forgot credentials link */}
       <div className="text-center mt-4">
         <motion.a
           href="#"
           className="text-[#D7008A] hover:underline text-sm inline-block px-4 py-2"
           onClick={(e) => {
             e.preventDefault();
-            onForgotPassword();
+            onForgotCredentials();
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          ¿Olvidaste tu contraseña?
+          ¿Olvidaste tus credenciales?
         </motion.a>
       </div>
 

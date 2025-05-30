@@ -1,10 +1,10 @@
 "use client";
 
 import ClaimAccountForm from "@/app/(Login)/Login/AccessNewUser";
-import BackgroundAnimation from "@/Components/Home/BackgroundAnimation";
-import ForgotPasswordForm from "@/app/(Login)/Login/ForgotPasswordForm";
+import ForgotCredentialsSelector from "@/app/(Login)/Login/ForgotCredentialsSelector";
 import LoginForm from "@/app/(Login)/Login/LoginForm";
 import Alert from "@/app/Components/Alert";
+import BackgroundAnimation from "@/Components/Home/BackgroundAnimation";
 import { motion } from "framer-motion";
 import { Clock, MapPin, Phone } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -76,8 +76,8 @@ export default function LoginScreen() {
     switch (currentView) {
       case "login":
         return "Bienvenido";
-      case "forgot-password":
-        return "Recuperar Contraseña";
+      case "forgot-credentials":
+        return "Recuperar Credenciales";
       case "claim-account":
         return "Registrar Pago";
       default:
@@ -89,8 +89,8 @@ export default function LoginScreen() {
     switch (currentView) {
       case "login":
         return "Acceso para odontólogos adscritos al COV";
-      case "forgot-password":
-        return "Ingresa tu correo para recuperar tu contraseña";
+      case "forgot-credentials":
+        return "¿Olvidaste tu contraseña, correo o usuario? Te ayudamos a recuperarlo";
       case "claim-account":
         return "Ingrese su correo electrónico para reenviarle el enlace de pago. Asegúrese de introducir la misma dirección utilizada anteriormente.";
       default:
@@ -200,15 +200,15 @@ export default function LoginScreen() {
               {/* Forms */}
               {currentView === "login" && (
                 <LoginForm
-                  onForgotPassword={() => setCurrentView("forgot-password")}
+                  onForgotCredentials={() => setCurrentView("forgot-credentials")}
                   onRegister={() => router.replace("/Registro")}
                   onClaimAccount={() => setCurrentView("claim-account")}
                   callbackUrl="/Colegiado"
                 />
               )}
 
-              {currentView === "forgot-password" && (
-                <ForgotPasswordForm
+              {currentView === "forgot-credentials" && (
+                <ForgotCredentialsSelector
                   onBackToLogin={(messageData) => {
                     setCurrentView("login");
                     handleMessageUpdate(messageData);

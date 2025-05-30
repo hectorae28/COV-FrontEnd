@@ -452,7 +452,7 @@ const startCamera = async () => {
                   </div>
                   
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <motion.button
+                    {/* <motion.button
                       type="button"
                       onClick={startCamera}
                       className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#B8007A] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-200"
@@ -461,7 +461,7 @@ const startCamera = async () => {
                     >
                       <Camera className="w-5 h-5" />
                       Tomar Foto
-                    </motion.button>
+                    </motion.button> */}
                     
                     <motion.button
                       type="button"
