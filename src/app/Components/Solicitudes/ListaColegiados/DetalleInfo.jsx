@@ -7,8 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import AcademicInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/AcademicInfoSection";
 import ContactInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ContactInfoSection";
 import {
-    DocumentSection,
-    DocumentViewer,
+  DocumentSection,
+  DocumentViewer,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import InstitutionsSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
 import PaymentReceiptSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PaymentReceiptSection";
@@ -28,11 +28,11 @@ import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolic
 
 // Modales para pendientes
 import {
-    ApprovalModal,
-    ExonerationModal,
-    RejectModal,
-    ReportIllegalityModal,
-    TitleConfirmationModal,
+  ApprovalModal,
+  ExonerationModal,
+  RejectModal,
+  ReportIllegalityModal,
+  TitleConfirmationModal,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/ModalSystem";
 
 // Otros imports necesarios
@@ -361,13 +361,17 @@ export default function DetalleInfo({
             : "comprobante_pago.pdf",
         url: url,
         status:
-          pendienteData.comprobante_validate === null
-            ? "pending"
-            : pendienteData.comprobante_validate === true
-              ? "approved"
-              : pendienteData.comprobante_validate === false
-                ? "rechazado"
-                : "pending",
+          pendienteData.comprobante_validate === "aprobado"
+            ? "approved"
+            : pendienteData.comprobante_validate === "rechazado"
+              ? "rechazado"
+              : pendienteData.comprobante_validate === "revisando"
+                ? "pending"
+                : pendienteData.status === "aprobado"
+                  ? "approved"
+                  : pendienteData.status === "rechazado"
+                    ? "rechazado"
+                    : "pending",
         rejectionReason: pendienteData.comprobante_motivo_rechazo || "",
         // Agregar detalles del pago si están disponibles
         paymentDetails: pendienteData.pago ? {
@@ -566,57 +570,27 @@ export default function DetalleInfo({
   // Función para manejar el upload del comprobante
   const handleUploadComprobante = async (formData) => {
     try {
-      console.log("🔄 DetalleInfo: Recibiendo FormData para subir comprobante");
-      console.log("📝 Tipo de recaudos:", recaudos ? "Con token" : "Sin token");
-      console.log("🆔 Entity ID:", entityId);
-      
-      // Log para verificar el contenido del FormData si es FormData
-      if (formData instanceof FormData) {
-        for (let pair of formData.entries()) {
-          console.log(`📋 FormData ${pair[0]}:`, pair[1]);
-        }
-      } else {
-        console.log(`📋 JSON Data:`, formData);
-      }
-      
       let response;
       if (!recaudos) {
-        console.log("📤 Enviando via updateColegiadoPendiente...");
         response = await updateColegiadoPendiente(entityId, formData, formData instanceof FormData);
       } else {
-        console.log("📤 Enviando via updateColegiadoPendienteWithToken...");
         response = await updateColegiadoPendienteWithToken(entityId, formData, formData instanceof FormData);
       }
 
-      console.log("✅ Respuesta recibida en DetalleInfo:", response);
-
       if (response && response.data) {
-        console.log("🔄 Actualizando entityData con respuesta del servidor...");
-        console.log("📊 Datos del backend recibidos:", response.data);
-        
         setEntityData(prevData => ({ ...prevData, ...response.data }));
         
         // Actualizar también los datos del comprobante local
-        console.log("🔄 Actualizando comprobanteData...");
         loadComprobanteData(response.data);
-        
-        console.log("✅ DetalleInfo: Comprobante actualizado exitosamente");
         
         // Recargar datos completos para asegurar sincronización
         setTimeout(() => {
-          console.log("🔄 Recargando datos completos...");
           loadData();
         }, 1000);
-        
-      } else {
-        console.warn("⚠️ DetalleInfo: Respuesta del backend sin datos");
       }
 
       return response;
     } catch (error) {
-      console.error("❌ Error en handleUploadComprobante:", error);
-      console.error("📋 Error details:", error.response?.data);
-      console.error("🔢 Error status:", error.response?.status);
       throw error;
     }
   };
@@ -630,8 +604,8 @@ export default function DetalleInfo({
     }));
 
     const updateData = {
-      comprobante_validate: updatedComprobante.status === "pending" ? null :
-        updatedComprobante.status === "approved" ? true : false,
+      comprobante_validate: updatedComprobante.status === "pending" ? "revisando" :
+        updatedComprobante.status === "approved" ? "aprobado" : "rechazado",
     };
 
     if (updatedComprobante.rejectionReason) {
