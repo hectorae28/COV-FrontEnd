@@ -279,13 +279,10 @@ export const useSolicitudesStore = create((set, get) => ({
     }
   },
 
-  updateSolicitudStatus: async (id, nuevoEstado, observaciones = "") => {
+  updateSolicitudStatus: async (id, solicitudActualizada, observaciones = "") => {
     set({ loading: true });
     try {
-      const response = await patchDataSolicitud(`solicitud/${id}`, {
-        estado: nuevoEstado,
-        observaciones: observaciones
-      });
+      const res = await postDataSolicitud(`solicitud/${id}/cambiar-status/`, {solicitudes:solicitudActualizada})
 
       set(state => ({
         solicitudes: state.solicitudes.map(sol =>

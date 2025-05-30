@@ -258,7 +258,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
     // Componente de tarjeta de documento reutilizable
     const DocumentCard = ({ documento, isAdmin }) => {
         const tieneArchivo = !documento.requerido || (documento.requerido && documento.url !== null)
-        const isReadOnly = (documento.status === 'approved' && documento.isReadOnly) || !isAdmin;
+        const isReadOnly = (documento.status === 'approved' && documento.isReadOnly) ;
         // Función para ver el documento
         const handleVerDoc = () => {
             if (onVerDocumento && documento.url) {
@@ -303,7 +303,7 @@ export default function DocumentosSection({ solicitud, onVerDocumento, updateDoc
                                     <VerificationSwitch
                                         item={documento}
                                         onChange={onDocumentStatusChange}
-                                        readOnly={isReadOnly}
+                                        readOnly={isReadOnly || !isAdmin}
                                     />
                                 </div>
                             )}
