@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { fetchSolicitudes } from "@/api/endpoints/solicitud";
 import { postDataSolicitud, patchDataSolicitud } from "@/api/endpoints/solicitud";
+import transformBackendData from "@/utils/formatDataSolicitudes";
 
 export const TIPOS_SOLICITUD = {
   Carnet: {
@@ -108,6 +109,32 @@ export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
 
   return form;
 };
+
+export const formatSolicitudSolvencia = (solicitud) => {
+  return {
+          idColegiado: solicitud.id,
+          idSolicitudSolvencia: solicitud.solicitudes_solvencia.lista[0].id,
+          nombreColegiado: solicitud.nombre,
+          statusSolvencia: solicitud.solvencia_status,
+          statusSolicitud: solicitud.solicitudes_solvencia.lista[0].status,
+          fechaSolicitud: solicitud.solicitudes_solvencia.lista[0].fecha_solicitud,
+          costoRegularSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_regular,
+          costoEspecialSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
+          fechaExpSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
+          modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
+          adminCreador: solicitud.solicitudes_solvencia.lista[0].user_admin_create,
+          fechaRechazo: solicitud.solicitudes_solvencia.lista[0].fecha_rechazo,
+          adminActualizador: solicitud.solicitudes_solvencia.lista[0].user_admin_update,
+          fechaAprobacion: solicitud.solicitudes_solvencia.lista[0].fecha_aprobacion,
+          fechaExoneracion: solicitud.solicitudes_solvencia.lista[0].fecha_exoneracion,
+          motivoExoneracion: solicitud.solicitudes_solvencia.lista[0].motivo_exoneracion,
+          creador: {
+            nombreCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.nombre_creador,
+            idCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.id_creador,
+            isAdmin: solicitud.solicitudes_solvencia.lista[0].detalles.creador.is_admin,
+          }
+        }
+}
 export const useSolicitudesStore = create((set, get) => ({
   solicitudes: [],
   solicitudesPagination: {},
@@ -115,6 +142,7 @@ export const useSolicitudesStore = create((set, get) => ({
   solicitudesAbiertasPagination: {},
   solicitudesCerradas: [],
   solicitudesCerradasPagination: {},
+  solicitudSeleccionada: null,
   pagosSolicitud: [],
   solicitudesDeSolvencia: [],
   solicitudesDeSolvenciaPagination: {},
@@ -221,6 +249,7 @@ export const useSolicitudesStore = create((set, get) => ({
     try {
       const res = await fetchSolicitudes(`solicitud_unida/${id}`);
       await get().getPagosSolicitud(id);
+      set({ solicitudSeleccionada: transformBackendData(res.data) });
       return res.data;
     } catch (error) {
       set({ error: error.message || "Error al obtener detalles de la solicitud" });
@@ -282,6 +311,7 @@ export const useSolicitudesStore = create((set, get) => ({
         `solicitud/${id}`,
         updatedData,
       );
+      await get().getSolicitudById(id);
       return res.data;
     } catch (error) {
       set({
@@ -354,30 +384,7 @@ export const useSolicitudesStore = create((set, get) => ({
       const res = await fetchSolicitudes("list_solicitud_solvencias", params);
       const solicitudesOrdenadas = [];
       res.data.results.forEach((solicitud) => {
-        solicitudesOrdenadas.push({
-          idColegiado: solicitud.id,
-          idSolicitudSolvencia: solicitud.solicitudes_solvencia.lista[0].id,
-          nombreColegiado: solicitud.nombre,
-          statusSolvencia: solicitud.solvencia_status,
-          statusSolicitud: solicitud.solicitudes_solvencia.lista[0].status,
-          fechaSolicitud: solicitud.solicitudes_solvencia.lista[0].fecha_solicitud,
-          costoRegularSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_regular,
-          costoEspecialSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
-          fechaExpSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
-          modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
-          adminCreador: solicitud.solicitudes_solvencia.lista[0].user_admin_create,
-          fechaRechazo: solicitud.solicitudes_solvencia.lista[0].fecha_rechazo,
-          motivoRechazo: solicitud.solicitudes_solvencia.lista[0].motivo_rechazo,
-          adminActualizador: solicitud.solicitudes_solvencia.lista[0].user_admin_update,
-          fechaAprobacion: solicitud.solicitudes_solvencia.lista[0].fecha_aprobacion,
-          fechaExoneracion: solicitud.solicitudes_solvencia.lista[0].fecha_exoneracion,
-          motivoExoneracion: solicitud.solicitudes_solvencia.lista[0].motivo_exoneracion,
-          creador: {
-            nombreCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.nombre_creador,
-            idCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.id_creador,
-            isAdmin: solicitud.solicitudes_solvencia.lista[0].detalles.creador.is_admin,
-          }
-        });
+        solicitudesOrdenadas.push(formatSolicitudSolvencia(solicitud));
       });
       set({
         solicitudesDeSolvencia: solicitudesOrdenadas,
@@ -396,5 +403,11 @@ export const useSolicitudesStore = create((set, get) => ({
   setSolicitudesDeSolvencia: (solicitudes) => {
     set({ solicitudesDeSolvencia: solicitudes });
   },
+
+  getSolicitudSolvencia: (id) => {
+    return get().solicitudesDeSolvencia.find(sol => sol.idSolicitudSolvencia === id);
+  },
+
+  
 }));
 

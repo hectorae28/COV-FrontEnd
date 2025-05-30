@@ -3,8 +3,8 @@ import Alert from "@/app/Components/Alert";
 import { motion } from "framer-motion";
 import { Lock, Mail } from "lucide-react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount, onForgotCredentials }) {
   const searchParams = useSearchParams();
@@ -12,10 +12,6 @@ export default function LoginForm({ onForgotPassword, onRegister, onClaimAccount
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
-
-  useEffect(() => {
-    setError(searchParams.get("error"));
-  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault();

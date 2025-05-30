@@ -229,7 +229,7 @@ const getConstanciaInscripcionContent = (data) => {
                 {text: 'Presidente', fontSize: 12, alignment: 'center', bold: true},
                 {text: 'M.P.P.S. No. 18.520', fontSize: 12, alignment: 'center', bold: true},
                 {text: 'C.O.V. No. 18.990', fontSize: 12, alignment: 'center', bold: true},
-                {text: 'Identity Card No. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
+                {text: 'C.I. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
               ],
               alignment: 'right'
             },
@@ -550,7 +550,7 @@ const getConstanciaLibreEjercicioContent = (data) => {
 							{text: 'Presidente', fontSize: 12, alignment: 'center', bold: true},
 							{text: 'M.P.P.S. No. 18.520', fontSize: 12, alignment: 'center', bold: true},
 							{text: 'C.O.V. No. 18.990', fontSize: 12, alignment: 'center', bold: true},
-							{text: 'Identity Card No. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
+							{text: 'C.I. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
 						],
 						alignment: 'right'
 					},
@@ -688,7 +688,7 @@ const getConstanciaDeontologiaOdontologicaContent = (data) => {
                                 {text: 'Presidente', fontSize: 12, alignment: 'center', bold: true},
                                 {text: 'M.P.P.S. No. 18.520', fontSize: 12, alignment: 'center', bold: true},
                                 {text: 'C.O.V. No. 18.990', fontSize: 12, alignment: 'center', bold: true},
-                                {text: 'Identity Card No. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
+                                {text: 'C.I. 13.303.357', fontSize: 12, alignment: 'center', bold: true}
                             ],
                             alignment: 'right'
                         },
@@ -1024,9 +1024,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: 'http://localhost:3000/escudo.png',
-          firma_presidente: 'http://localhost:3000/firmaPablo.png',
-          sello_cov: 'http://localhost:3000/sello_colegio.png'
+          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
+          firma_presidente: `${process.env.NEXT_REDIRECT}firmaPablo.png`,
+          sello_cov: `${process.env.NEXT_REDIRECT}sello_colegio.png`
         }
       };
       break;
@@ -1039,9 +1039,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: 'http://localhost:3000/escudo.png',
-          firma_presidente: 'http://localhost:3000/firmaPablo.png',
-          sello_cov: 'http://localhost:3000/sello_colegio.png'
+          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
+          firma_presidente: `${process.env.NEXT_REDIRECT}firmaPablo.png`,
+          sello_cov: `${process.env.NEXT_REDIRECT}sello_colegio.png`
         }
       };
       break;
@@ -1054,9 +1054,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: 'http://localhost:3000/escudo.png',
-          firma_presidente: 'http://localhost:3000/firmaPablo.png',
-          sello_cov: 'http://localhost:3000/sello_colegio.png'
+          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
+          firma_presidente: `${process.env.NEXT_REDIRECT}firmaPablo.png`,
+          sello_cov: `${process.env.NEXT_REDIRECT}sello_colegio.png`
         }
       };
       break;
@@ -1129,10 +1129,10 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
           font: 'Roboto'
         },
         images: {
-          escudo: 'http://localhost:3000/escudo.png',
-          escudoBW: 'http://localhost:3000/escudo_bw.png',
-          escudo_borde: 'http://localhost:3000/escudo_borde.png',
-          carnet_foto: `${process.env.NEXT_PUBLIC_BACK_HOST}${data.foto_url}` || 'http://localhost:3000/carnet.png'
+          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
+          escudoBW: `${process.env.NEXT_REDIRECT}escudo_bw.png`,
+          escudo_borde: `${process.env.NEXT_REDIRECT}escudo_borde.png`,
+          carnet_foto: `${process.env.NEXT_REDIRECT}${data.foto_url}` || `${process.env.NEXT_REDIRECT}carnet.png`
         },
         patterns: {
           stripe45d: {

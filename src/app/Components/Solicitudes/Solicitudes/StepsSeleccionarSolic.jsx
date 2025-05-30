@@ -11,7 +11,6 @@ export default function SeleccionarSolicitudesStep({
   onClose,
   mostrarSeleccionColegiado = true,
   colegiadoPreseleccionado = null,
-  creadorInfo,
   tipoSolicitudPreseleccionado = null,
   isAdmin = false
 }) {
@@ -20,8 +19,9 @@ export default function SeleccionarSolicitudesStep({
   const colegiados = useDataListaColegiados((state) => state.colegiados)
   const fetchColegiados = useDataListaColegiados((state) => state.fetchColegiados)
   const getColegiado = useDataListaColegiados((state) => state.getColegiado)
+  console.log({colegiadoPreseleccionado})
   const [formData, setFormData] = useState({
-    colegiadoId: colegiadoPreseleccionado ? colegiadoPreseleccionado.id : "",
+    colegiadoId: colegiadoPreseleccionado ? colegiadoPreseleccionado.colegiado_id : "",
     urgente: false,
     descripcion: "",
   })
@@ -72,7 +72,7 @@ export default function SeleccionarSolicitudesStep({
     if (colegiadoPreseleccionado) {
       setFormData((prev) => ({
         ...prev,
-        colegiadoId: colegiadoPreseleccionado.id,
+        colegiadoId: colegiadoPreseleccionado.colegiado_id,
       }));
     }
   }, [colegiadoPreseleccionado]);
@@ -82,7 +82,7 @@ export default function SeleccionarSolicitudesStep({
     if (colegiadoPreseleccionado || formData.colegiadoId) {
       setBloqueadoPorUsuario(false);
       // Cargar instituciones del colegiado
-      const colegiadoId = colegiadoPreseleccionado?.id || formData.colegiadoId;
+      const colegiadoId = colegiadoPreseleccionado?.colegiado_id || formData.colegiadoId;
       cargarInstitucionesColegiado(colegiadoId);
     } else if (mostrarSeleccionColegiado) {
       setBloqueadoPorUsuario(true);
@@ -561,36 +561,20 @@ export default function SeleccionarSolicitudesStep({
       if (!colegiadoSeleccionado) {
         throw new Error("No se pudo identificar al colegiado seleccionado");
       }
-      console.log(colegiadoSeleccionado, "colegiadoSeleccionado")
       // Crear objeto de nueva solicitud
       const nuevaSolicitud = {
-        id: `sol-${Date.now()}`,
         tipo: tipoMostrar,
-        colegiadoId: colegiadoSeleccionado.colegiado_id,
+        colegiadoId: formData.colegiadoId,
         colegiadoNombre:
           (colegiadoSeleccionado.recaudos?.persona?.nombre) ||
           colegiadoSeleccionado.firstname ||
           "Colegiado",
         fecha: new Date().toLocaleDateString(),
-        estado: todoExonerado ? "Exonerada" : "Pendiente",
         descripcion: formData.descripcion || "",
-        referencia: `REF-${Date.now().toString().slice(-6)}`,
         costo: totalCarrito,
         documentosRequeridos: todosDocumentosRequeridos,
         documentosAdjuntos: documentosAdjuntos,
         itemsSolicitud: itemsCarrito,
-        comprobantePago: null,
-        estadoPago: todoExonerado ? "Exonerado" : "Pendiente de verificación",
-        fechaCompletado: new Date().toLocaleDateString(),
-        // Información del creador
-        creador: {
-          username: creadorInfo?.name || "Usuario",
-          email: creadorInfo?.email || "usuario@ejemplo.com",
-          esAdmin:
-            creadorInfo?.role === "admin" || creadorInfo?.isAdmin || false,
-          fecha: new Date().toISOString(),
-          tipo: "creado",
-        },
       };
       // Pasar la solicitud creada al componente padre
       onFinalizarSolicitud(nuevaSolicitud);

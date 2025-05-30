@@ -40,11 +40,13 @@ export default function DetalleSolicitud({ props }) {
   const addPagosSolicitud = useSolicitudesStore(
     (state) => state.addPagosSolicitud
   );
+  const updateDocumentoSolicitud = useSolicitudesStore(state => state.updateDocumentoSolicitud)
 
-  const [solicitud, setSolicitud] = useState(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [alertaExito, setAlertaExito] = useState(null);
   const pagosSolicitud = useSolicitudesStore((state) => state.pagosSolicitud);
+  const solicitud = useSolicitudesStore((state) => state.solicitudSeleccionada);
 
   // Estados de modales
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -60,7 +62,6 @@ export default function DetalleSolicitud({ props }) {
 
   const loadSolicitudById = async () => {
     const solicitud = await getSolicitudById(id);
-    setSolicitud(transformBackendData(solicitud));
     setIsLoading(false);
 
     // Verificar si todas las solicitudes hijas están aprobadas
@@ -72,7 +73,7 @@ export default function DetalleSolicitud({ props }) {
 
   useEffect(() => {
     loadSolicitudById();
-  }, [id,]);
+  }, [id]);
 
   useEffect(() => {
     if (solicitud && solicitud.itemsSolicitud) {
@@ -133,6 +134,38 @@ export default function DetalleSolicitud({ props }) {
   };
 
   const totales = calcularTotales(solicitud);
+
+  // Función para verificar que todos los documentos estén validados (todos los campos *_validate sean true)
+  const verificarDocumentosValidados = (solicitudData) => {
+    console.log({solicitudData})
+    if (!solicitudData) return false;
+
+    // Obtener todas las propiedades de la solicitud que terminan en '_validate'
+    const camposValidacion = Object.keys(solicitudData).filter(key => key.endsWith('_validate'));
+    
+    // Usar reduce para verificar que todos los campos de validación sean true
+    const todosValidados = camposValidacion.reduce((acumulador, campo) => {
+      const valorCampo = solicitudData[campo];
+      // Solo consideramos válido si el campo es explícitamente true
+      return acumulador && valorCampo === true;
+    }, true); // Inicializamos en true, si no hay campos de validación, retorna true
+
+    // También verificar si hay campos de validación (para evitar casos donde no hay documentos)
+    const hayDocumentosParaValidar = camposValidacion.length > 0;
+    return {
+      todosValidados,
+      hayDocumentosParaValidar,
+      camposValidacion,
+      estadoValidacion: camposValidacion.reduce((estado, campo) => {
+        estado[campo] = solicitudData[campo];
+        return estado;
+      }, {})
+    };
+  };
+
+  const estadoValidacionDocumentos = solicitud?.isAllDocumentosValidados;
+  
+
   // Función para aprobar la solicitud
   const handleAprobarSolicitud = async () => {
     try {
@@ -148,7 +181,6 @@ export default function DetalleSolicitud({ props }) {
       };
 
       actualizarSolicitud(solicitudActualizada);
-      setSolicitud(solicitudActualizada);
       setMostrarConfirmacion(false);
       mostrarAlerta("exito", "La solicitud ha sido aprobada correctamente");
     } catch (error) {
@@ -291,8 +323,7 @@ export default function DetalleSolicitud({ props }) {
     try {
       if (documento.tipoDocumento === 'carnet') {
         // Para carnets, extraer el ID real del SolicitudCarnet del formato compuesto
-        const carnetId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
-        const datosResponse = await api.get(`/solicitudes/solicitud_carnet/${carnetId}/datos/`);
+        const datosResponse = await api.get(`/solicitudes/solicitud_carnet/${documento.id}/datos/`);
         const datosCarnet = datosResponse.data;
         
         // Generar PDF de carnet usando la función correspondiente
@@ -301,9 +332,8 @@ export default function DetalleSolicitud({ props }) {
         setDocumentoSeleccionado({ url: pdfUrl, nombre: documento.nombre, isAPDF: true });
       } else {
         // Para constancias, extraer el ID real del SolicitudConstancia del formato compuesto
-        const constanciaId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
         
-        const datosResponse = await api.get(`/solicitudes/solicitud_constancia/${constanciaId}/datos/`);
+        const datosResponse = await api.get(`/solicitudes/solicitud_constancia/${documento.id}/datos/`);
         const datosCompletos = datosResponse.data;
         
         // Limpiar el tipo de constancia para el PDF
@@ -325,12 +355,10 @@ export default function DetalleSolicitud({ props }) {
   // Función para descargar PDF de constancia o carnet
   const handleDescargarDocumento = async (documento) => {
     try {
-      console.log("Descargando PDF para:", documento);
       
       if (documento.tipoDocumento === 'carnet') {
         // Para carnets, extraer el ID real del SolicitudCarnet del formato compuesto
-        const carnetId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
-        const datosResponse = await api.get(`/solicitudes/solicitud_carnet/${carnetId}/datos/`);
+        const datosResponse = await api.get(`/solicitudes/solicitud_carnet/${documento.id}/datos/`);
         const datosCarnet = datosResponse.data;
         
         // Generar PDF de carnet usando la función correspondiente
@@ -339,8 +367,7 @@ export default function DetalleSolicitud({ props }) {
         mostrarAlerta("exito", "Documento descargado correctamente");
       } else {
         // Para constancias, extraer el ID real del SolicitudConstancia del formato compuesto
-        const constanciaId = documento.id.includes('-') ? documento.id.split('-')[1] : documento.id;
-        const datosResponse = await api.get(`/solicitudes/solicitud_constancia/${constanciaId}/datos/`);
+        const datosResponse = await api.get(`/solicitudes/solicitud_constancia/${documento.id}/datos/`);
         const datosCompletos = datosResponse.data;
         
         // Limpiar el tipo de constancia para el PDF
@@ -374,8 +401,8 @@ export default function DetalleSolicitud({ props }) {
 
   const handleUpdateDocumento = async (formData) => {
     try {
-      if (updateDocumento) {
-        await updateDocumento(formData);
+      if (updateDocumentoSolicitud) {
+        await updateDocumentoSolicitud(id,formData);
         await loadSolicitudById();
       }
     } catch (error) {
@@ -390,7 +417,7 @@ export default function DetalleSolicitud({ props }) {
       let validateFieldName, motivoFieldName;
       
       // Caso especial para foto de carnet
-      if (updatedDocument.id === 'file_foto') {
+      if (updatedDocument.id === 'foto') {
         validateFieldName = 'foto_validate';
         motivoFieldName = 'foto_motivo_rechazo';
       } else if (updatedDocument.id.startsWith('file_')) {

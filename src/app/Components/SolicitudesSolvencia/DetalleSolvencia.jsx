@@ -23,7 +23,6 @@ import RechazoModal from "./RechazoModal";
 import ExoneracionModal from "./ExoneracionModal";
 import {patchDataSolicitud, postDataSolicitud, fetchSolicitudes} from "@/api/endpoints/solicitud"
 import { useSolicitudesStore } from "@/store/SolicitudesStore"
-import { colegiado } from "@/app/Models/PanelControl/Solicitudes/SolicitudesColegiadosData";
 
 export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, actualizarSolvencia }) {
   // Estados principales
@@ -49,7 +48,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       try {
         const metodos = await fetchSolicitudes("metodo-de-pago");
         setMetodoDePago(metodos.data);
-        console.log(metodos.data)
       } catch (error) {
         console.log(`Ha ocurrido un error: ${error}`)
       }
@@ -89,7 +87,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${year}-${month}-${day}`;
   };
 
   const fechasDeVencimiento = [
@@ -177,6 +175,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       patchDataSolicitud('asignar_costo_solicitud_solvencia', solvenciaActualizada);
       fetchSolicitudesDeSolvencia();
       mostrarAlerta("exito", "Se ha asignado el costo correctamente");
+      onVolver();
     } catch (error) {
       console.error("Error al asignar costo:", error);
       mostrarAlerta("alerta", "Ocurrió un error al procesar la solicitud");
@@ -198,6 +197,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       setMostrarExoneracion(false);
       fetchSolicitudesDeSolvencia();
       mostrarAlerta("exito", "La solvencia ha sido exonerada de pago");
+      onVolver();
     } catch (error) {
       console.error("Error al exonerar pago:", error);
       mostrarAlerta("alerta", "Ocurrió un error al procesar la exoneración");
@@ -216,13 +216,14 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
         colegiado_id: solvencia.idColegiado,
         costo: solvencia.costoRegularSolicitud,
-        fecha_exp: fechaVencimiento
+        fecha_exp: formatDate(fechaVencimiento)
       };
 
       postDataSolicitud('aprobar_solicitud_solvencia', solvenciaActualizada);
       setMostrarConfirmacion(false);
       fetchSolicitudesDeSolvencia();
       mostrarAlerta("exito", "La solvencia ha sido aprobada correctamente");
+      onVolver();
     } catch (error) {
       console.error("Error al aprobar solvencia:", error);
     }
@@ -246,6 +247,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       setMostrarRechazo(false);
       fetchSolicitudesDeSolvencia();
       mostrarAlerta("alerta", "La solvencia ha sido rechazada");
+      onVolver();
     } catch (error) {
       console.error("Error al rechazar solvencia:", error);
     }
@@ -265,7 +267,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   };
 
   const handleSeleccionarFecha = (e) => {
-    setFechaVencimiento(e.target.value);
+    setFechaVencimiento(new Date(e.target.value));
   }
 
   // Renderizado principal
@@ -593,56 +595,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                             </select>
                           </div>
                         </div>
-                        {/*
-                        <div className="grid grid-cols-3 gap-3">
-
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Día</label>
-                            <select
-                              value={diaVencimiento}
-                              onChange={(e) => setDiaVencimiento(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md
-                              focus:ring-[#C40180] focus:border-[#C40180]"
-                            >
-                              <option value="">Día</option>
-                              {dias.map(dia => (
-                                <option key={dia} value={dia}>{dia}</option>
-                              ))}
-                            </select>
-                          </div>
-
-
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Mes</label>
-                            <select
-                              value={mesVencimiento}
-                              onChange={(e) => setMesVencimiento(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md
-                              focus:ring-[#C40180] focus:border-[#C40180]"
-                            >
-                              <option value="">Mes</option>
-                              {meses.map(mes => (
-                                <option key={mes.valor} value={mes.valor}>{mes.nombre}</option>
-                              ))}
-                            </select>
-                          </div>
-
-
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Año</label>
-                            <select
-                              value={anioVencimiento}
-                              onChange={(e) => setAnioVencimiento(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md
-                              focus:ring-[#C40180] focus:border-[#C40180]"
-                            >
-                              <option value="">Año</option>
-                              {anios.map(anio => (
-                                <option key={anio} value={anio}>{anio}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>*/}
                         <p className="mt-2 text-sm text-gray-500">
                           La solvencia será válida hasta esta fecha
                         </p>
@@ -681,17 +633,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                         Rechazar
                       </button>
                     </div>
-                  </div>
-                )}
-
-                {/* Información adicional - Motivo de rechazo */}
-                {solvencia.statusSolicitud === "rechazado" && solvencia.motivoRechazo && (
-                  <div className="bg-red-50 p-6 rounded-xl border border-red-200">
-                    <h3 className="text-lg font-medium text-red-800 mb-3 flex items-center">
-                      <X className="mr-2" size={20} />
-                      Motivo del Rechazo
-                    </h3>
-                    <p className="text-red-700">{solvencia.motivoRechazo}</p>
                   </div>
                 )}
               </div>
