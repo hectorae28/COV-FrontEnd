@@ -168,6 +168,18 @@ export default function DetalleSolicitud({ props }) {
 
   // Función para aprobar la solicitud
   const handleAprobarSolicitud = async () => {
+    const solicitudActualizada = new Array()
+
+    Object.keys(solicitud.detallesSolicitud).forEach(item => {
+      solicitudActualizada.push({
+        "tipo_solicitud": item,
+        "accion": "revisar"
+      })
+    })
+
+    console.log({solicitudActualizada,estadoValidacionDocumentos})
+    const response = await api.post(`/solicitudes/solicitud/${solicitud.id}/cambiar-status/`, {solicitudes:solicitudActualizada})
+    console.log({response})
     try {
       // Simular llamada a API
       await new Promise((resolve) => setTimeout(resolve, 800));
@@ -522,11 +534,12 @@ export default function DetalleSolicitud({ props }) {
 
       {/* Encabezado de solicitud */}
       <SolicitudHeader
-        solicitud={solicitud}
+        solicitud={{...solicitud,pagosSolicitud}}
         totales={totales}
         onAprobar={() => setMostrarConfirmacion(true)}
         onRechazar={() => setMostrarRechazo(true)}
         isAdmin={isAdmin}
+        estadoValidacionDocumentos={estadoValidacionDocumentos}
       />
 
       {/* Documentos requeridos - esta sección es para verificación y siempre debe estar visible */}
