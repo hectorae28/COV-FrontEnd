@@ -505,7 +505,6 @@ export default function RegistrationForm({
 
     // Activar la bandera para mostrar errores de validación SOLO cuando intentamos proceder a pagos
     setAttemptedNext(true);
-    console.log({ formData })
 
     // Validar el paso actual
     const isValid = validateStep(currentStep);
@@ -670,7 +669,6 @@ export default function RegistrationForm({
     }
     try {
       let res
-      console.log({ PaymentForm })
       if (!pagarLuego && !exonerarPagos) {
         res = await patchDataUsuario(
           `register/${recaudoCreado.id}`,

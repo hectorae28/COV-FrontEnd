@@ -5,6 +5,7 @@ let pdfFonts;
 // Fallback con importación estática
 let staticPdfMake;
 let staticPdfFonts;
+var ENV = process.env.NEXT_PUBLIC_REDIRECT;
 
 if (typeof window !== 'undefined') {
   try {
@@ -343,99 +344,6 @@ const getConstanciaContinuidadLaboralContent = (data) => {
 
 const getConstanciaLibreEjercicioContent = (data) => {
   const fechaExpedicion = formatDate(new Date());
-  
-//   return [
-//     {
-//       table: {
-//         widths: [10, 50, '*'],
-//         body: [
-//           [
-//             { text: ''},
-//             { image: 'escudo', width: 60 },
-//             {  
-//               stack: [
-//                 { 
-//                   text: 'COLEGIO DE ODONTOLOGOS DE VENEZUELA',
-//                   fontSize: 18.5,
-//                   alignment: 'center',
-//                   bold: true
-//                 },
-//                 { 
-//                   text: 'RIF J-00041277-4',
-//                   fontSize: 10,
-//                   alignment: 'center',
-//                   bold: true
-//                 }
-//               ]
-//             }
-//           ],
-//           [
-//             { text: ''},
-//             {
-//               columns: [
-//                 { text: 'Nº ', fontSize: 12, alignment: 'center', fillColor: '#522D8A', width: 'auto', marginRight: 5},
-//                 { text: data.codigo_documento, fontSize: 12, alignment: 'left', decoration: ['underline'], width: 'auto'}
-//               ]
-//             },
-//             { text: ''},
-//           ]
-//         ]
-//       },
-//       layout: 'noBorders',
-//       margin: [30, 40, 30, 0]
-//     },
-//     {
-//       columns: [
-//         { text: '', width: '*'},
-//         { 
-//           text: 'Constancia de Libre Ejercicio',
-//           fontSize: 21.5,
-//           alignment: 'center',
-//           bold: true,
-//           width: 'auto',
-//           marginTop: 20
-//         },
-//         { text: '', width: '*'},
-//       ],
-//       marginTop: 10,
-//     },
-//     {
-//       text: [
-//         {
-//           text: '        El suscrito Presidente del Colegio de Odontologos de Venezuela, por medio de la presente hace constar que el ciudadano(a) '
-//         },
-//         { text: `${data.colegiado_nombre} ${data.colegiado_primer_apellido} ${data.colegiado_segundo_apellido || ''}`.trim(), bold: true },
-//         ', titular de la ',
-//         { text: `C.I. ${data.colegiado_identificacion}`, bold: true },
-//         ', inscrito en esta institución como ',
-//         { text: 'ODONTOLOGO', bold: true },
-//         ', bajo el número de ',
-//         { text: `COV. ${data.colegiado_numero}`, bold: true },
-//         ', se encuentra habilitado para el libre ejercicio de la profesión odontológica en todo el territorio nacional.'
-//       ],
-//       lineHeight: 2,
-//       fontSize: 11,
-//       alignment: 'justify',
-//       margin: [60, 40, 60, 0]
-//     },
-//     {
-//       text: [
-//         {
-//           text: '        Constancia que se expide a petición de la parte interesada, en Caracas a los '
-//         },
-//         { text: fechaExpedicion.day, bold: true },
-//         ' días del mes ',
-//         { text: fechaExpedicion.month, bold: true },
-//         ' del año ',
-//         { text: fechaExpedicion.year.toString(), bold: true },
-//         '.'
-//       ],
-//       lineHeight: 2,
-//       fontSize: 11,
-//       alignment: 'justify',
-//       margin: [60, 10, 60, 0]
-//     }
-//   ];
   return [
     {
         table: {
@@ -1013,6 +921,7 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
   let content = [];
   let fileName = '';
   let docDefinition = {};
+  console.log(ENV);
   
   switch(tipoConstancia) {
     case 'inscripcion_cov':
@@ -1024,9 +933,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
-          firma_presidente: `${process.env.NEXT_REDIRECT}firmaPablo.png`,
-          sello_cov: `${process.env.NEXT_REDIRECT}sello_colegio.png`
+          escudo: `${ENV}escudo.png`,
+          firma_presidente: `${ENV}firmaPablo.png`,
+          sello_cov: `${ENV}sello_colegio.png`
         }
       };
       break;
@@ -1039,9 +948,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
-          firma_presidente: `${process.env.NEXT_REDIRECT}firmaPablo.png`,
-          sello_cov: `${process.env.NEXT_REDIRECT}sello_colegio.png`
+          escudo: `${ENV}escudo.png`,
+          firma_presidente: `${ENV}firmaPablo.png`,
+          sello_cov: `${ENV}sello_colegio.png`
         }
       };
       break;
@@ -1054,9 +963,9 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
         pageSize: 'LETTER',
         pageMargins: [0, 0, 0, 80],
         images: {
-          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
-          firma_presidente: `${process.env.NEXT_REDIRECT}firmaPablo.png`,
-          sello_cov: `${process.env.NEXT_REDIRECT}sello_colegio.png`
+          escudo: `${ENV}escudo.png`,
+          firma_presidente: `${ENV}firmaPablo.png`,
+          sello_cov: `${ENV}sello_colegio.png`
         }
       };
       break;
@@ -1129,10 +1038,10 @@ export const generateConstanciaPDF = (data, tipoConstancia) => {
           font: 'Roboto'
         },
         images: {
-          escudo: `${process.env.NEXT_REDIRECT}escudo.png`,
-          escudoBW: `${process.env.NEXT_REDIRECT}escudo_bw.png`,
-          escudo_borde: `${process.env.NEXT_REDIRECT}escudo_borde.png`,
-          carnet_foto: `${process.env.NEXT_REDIRECT}${data.foto_url}` || `${process.env.NEXT_REDIRECT}carnet.png`
+          escudo: `${ENV}escudo.png`,
+          escudoBW: `${ENV}escudo_bw.png`,
+          escudo_borde: `${ENV}escudo_borde.png`,
+          carnet_foto: `${process.env.NEXT_PUBLIC_BACK_HOST}${data.foto_url}` || `${ENV}carnet.png`
         },
         patterns: {
           stripe45d: {

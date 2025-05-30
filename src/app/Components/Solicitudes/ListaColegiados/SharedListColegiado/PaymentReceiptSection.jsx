@@ -82,18 +82,16 @@ export default function PaymentReceiptSection({
             
             // Paso 1: Enviar los datos del pago (como JSON, igual que en DetalleInfo)
             const pagoData = {
-                pago: {
                     fecha_pago: paymentData.paymentDate,
                     num_referencia: paymentData.referenceNumber,
                     monto: paymentData.totalAmount,
                     metodo_de_pago: paymentData.metodo_de_pago?.id,
                     tasa_bcv_del_dia: paymentData.tasa_bcv_del_dia
                 }
-            };
             
-            console.log("📤 Paso 1: Enviando datos del pago...", pagoData);
-            const response1 = await onUploadComprobante(pagoData);
-            console.log("✅ Respuesta Paso 1:", response1);
+            // console.log("📤 Paso 1: Enviando datos del pago...", pagoData);
+            // const response1 = await onUploadComprobante(pagoData);
+            // console.log("✅ Respuesta Paso 1:", response1);
             
             // Verificar que el archivo existe antes del Paso 2
             if (!paymentData.paymentFile) {
@@ -110,6 +108,7 @@ export default function PaymentReceiptSection({
             // Paso 2: Enviar el comprobante como FormData separadamente
             const Form = new FormData();
             Form.append("comprobante", paymentData.paymentFile);
+            Form.append("pago", JSON.stringify(pagoData));
             
             console.log("📤 Paso 2: Enviando comprobante...");
             console.log("📋 FormData creado:");
