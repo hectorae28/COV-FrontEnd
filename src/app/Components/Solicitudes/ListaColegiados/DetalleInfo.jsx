@@ -106,6 +106,10 @@ export default function DetalleInfo({
   // Estado para forzar actualizaciones
   const [documentUpdateTrigger, setDocumentUpdateTrigger] = useState(0);
 
+  // 🔧 NUEVOS ESTADOS: Validaciones desde componentes especializados
+  const [documentsApproved, setDocumentsApproved] = useState(false);
+  const [paymentApproved, setPaymentApproved] = useState(false);
+
   // Funciones del store
   const {
     getColegiado,
@@ -117,124 +121,21 @@ export default function DetalleInfo({
     approveRegistration,
   } = useDataListaColegiados();
 
-  // 🔧 FUNCIÓN CRÍTICA: Validación de documentos aprobados
-  const allDocumentsApproved = useCallback(() => {
-    const currentData = entityData;
+  // 📊 HANDLERS para recibir estados de componentes especializados
+  const handleDocumentsStatusChange = useCallback((allApproved) => {
+    setDocumentsApproved(allApproved);
+  }, []);
 
-    if (!currentData) {
-      return false;
+  const handlePaymentStatusChange = useCallback((approved) => {
+    setPaymentApproved(approved);
+  }, []);
+
+  // 🔧 MANEJAR PAGO EXONERADO: Si el pago está exonerado, se considera aprobado
+  useEffect(() => {
+    if (entityData?.pago_exonerado) {
+      setPaymentApproved(true);
     }
-
-    const tipoProfesion = currentData.tipo_profesion || "odontologo";
-
-    // Documentos requeridos según tipo
-    const documentosRequeridosBase = [
-      "file_ci",
-      "file_rif",
-      "file_fondo_negro",
-      "file_mpps",
-    ];
-
-    const documentosAdicionales = [
-      "fondo_negro_credencial",
-      "notas_curso",
-      "fondo_negro_titulo_bachiller",
-    ];
-
-    let documentosRequeridos;
-    if (tipoProfesion === "odontologo") {
-      documentosRequeridos = documentosRequeridosBase;
-    } else {
-      documentosRequeridos = [
-        ...documentosRequeridosBase,
-        ...documentosAdicionales,
-      ];
-    }
-
-    // Verificar cada documento individualmente
-    let documentosAprobados = 0;
-
-    documentosRequeridos.forEach((docId) => {
-      const validateField = `${docId}_validate`;
-      const urlField = `${docId}_url`;
-
-      const hasFile = !!currentData[urlField];
-      const isApproved = currentData[validateField] === true;
-
-      if (hasFile && isApproved) {
-        documentosAprobados++;
-      }
-    });
-
-    const docsApproved = documentosAprobados === documentosRequeridos.length;
-
-    // Verificar comprobante de pago si no está exonerado
-    if (!currentData.pago_exonerado) {
-      const comprobanteHasFile = !!comprobanteData?.url;
-      const comprobanteApproved = comprobanteData?.status === "approved";
-
-      return docsApproved && comprobanteHasFile && comprobanteApproved;
-    }
-
-    return docsApproved;
-  }, [entityData, comprobanteData]);
-
-  // 🔧 FUNCIÓN CRÍTICA: Validación de documentos subidos
-  const allDocumentsUploaded = useCallback(() => {
-    const currentData = entityData;
-
-    if (!currentData) {
-      return false;
-    }
-
-    const tipoProfesion = currentData.tipo_profesion || "odontologo";
-
-    // Documentos requeridos según tipo
-    const documentosRequeridosBase = [
-      "file_ci",
-      "file_rif",
-      "file_fondo_negro",
-      "file_mpps",
-    ];
-
-    const documentosAdicionales = [
-      "fondo_negro_credencial",
-      "notas_curso",
-      "fondo_negro_titulo_bachiller",
-    ];
-
-    let documentosRequeridos;
-    if (tipoProfesion === "odontologo") {
-      documentosRequeridos = documentosRequeridosBase;
-    } else {
-      documentosRequeridos = [
-        ...documentosRequeridosBase,
-        ...documentosAdicionales,
-      ];
-    }
-
-    // Verificar cada documento - SOLO si tiene archivo subido
-    let documentosSubidos = 0;
-
-    documentosRequeridos.forEach((docId) => {
-      const urlField = `${docId}_url`;
-      const hasFile = !!currentData[urlField];
-
-      if (hasFile) {
-        documentosSubidos++;
-      }
-    });
-
-    const docsUploaded = documentosSubidos === documentosRequeridos.length;
-
-    // Verificar comprobante de pago si no está exonerado
-    if (!currentData.pago_exonerado) {
-      const comprobanteHasFile = !!comprobanteData?.url;
-      return docsUploaded && comprobanteHasFile;
-    }
-
-    return docsUploaded;
-  }, [entityData, comprobanteData]);
+  }, [entityData?.pago_exonerado]);
 
   // Función unificada para actualizar datos
   const updateData = async (id, datosActualizados) => {
@@ -378,10 +279,10 @@ export default function DetalleInfo({
           fecha_pago: pendienteData.pago.fecha_pago,
           numero_referencia: pendienteData.pago.num_referencia,
           monto: pendienteData.pago.monto,
-          metodo_pago: pendienteData.pago.metodo_de_pago?.nombre || 
-                      pendienteData.pago.metodo_pago?.nombre,
-          metodo_pago_slug: pendienteData.pago.metodo_de_pago?.datos_adicionales?.slug || 
-                           pendienteData.pago.metodo_pago?.datos_adicionales?.slug,
+          metodo_pago: pendienteData.pago.metodo_de_pago?.nombre ||
+            pendienteData.pago.metodo_pago?.nombre,
+          metodo_pago_slug: pendienteData.pago.metodo_de_pago?.datos_adicionales?.slug ||
+            pendienteData.pago.metodo_pago?.datos_adicionales?.slug,
           tasa_bcv: pendienteData.pago.tasa_bcv_del_dia || pendienteData.pago.tasa_bcv
         } : null
       };
@@ -517,7 +418,7 @@ export default function DetalleInfo({
       if (response && response.data) {
         setEntityData(prevData => ({ ...prevData, ...response.data }));
         // setDocumentUpdateTrigger(prev => prev + 1); // Comentado temporalmente para evitar re-render de documentos
-        
+
         // Actualizar también los datos del comprobante local
         console.log("🔄 Actualizando comprobanteData...");
         loadComprobanteData(response.data);
@@ -579,10 +480,10 @@ export default function DetalleInfo({
 
       if (response && response.data) {
         setEntityData(prevData => ({ ...prevData, ...response.data }));
-        
+
         // Actualizar también los datos del comprobante local
         loadComprobanteData(response.data);
-        
+
         // Recargar datos completos para asegurar sincronización
         setTimeout(() => {
           loadData();
@@ -796,11 +697,56 @@ export default function DetalleInfo({
     );
   }
 
-  const nombreCompleto = `${entityData.persona?.nombre || entityData.recaudos?.persona?.nombre || ""
-    } ${entityData.persona?.segundo_nombre || entityData.recaudos?.persona?.segundo_nombre || ""
-    } ${entityData.persona?.primer_apellido || entityData.recaudos?.persona?.primer_apellido || ""
-    } ${entityData.persona?.segundo_apellido || entityData.recaudos?.persona?.segundo_apellido || ""
-    }`.trim();
+  const nombreCompleto = [
+    entityData.persona?.nombre || entityData.recaudos?.persona?.nombre,
+    entityData.persona?.segundo_nombre || entityData.recaudos?.persona?.segundo_nombre,
+    entityData.persona?.primer_apellido || entityData.recaudos?.persona?.primer_apellido,
+    entityData.persona?.segundo_apellido || entityData.recaudos?.persona?.segundo_apellido
+  ].filter(Boolean).join(" ") || "Sin nombre";
+
+  // 🔧 FUNCIÓN PARA EXTRAER INCIDENCIAS RECHAZADAS
+  
+  // Extraer documentos rechazados
+  const getDocumentosRechazados = () => {
+    if (!documentos || !Array.isArray(documentos)) return [];
+    
+    return documentos.filter(doc => doc.status === "rechazado").map(doc => ({
+      nombre: doc.nombre || "Documento",
+      rejectionReason: doc.rejectionReason || doc.motivo_rechazo || "Sin motivo especificado",
+      tipo: "documento"
+    }));
+  };
+
+  // Extraer instituciones rechazadas
+  const getInstitucionesRechazadas = () => {
+    if (!instituciones || !Array.isArray(instituciones)) return [];
+    
+    return instituciones.filter(inst => inst.verificado === false).map(inst => ({
+      nombre: inst.nombre || inst.institutionName || "Institución sin nombre",
+      motivo_rechazo: inst.motivo_rechazo || "Sin motivo especificado",
+      tipo: "institucion"
+    }));
+  };
+
+  // Extraer pagos rechazados  
+  const getPagosRechazados = () => {
+    if (!entityData || !entityData.pago) return [];
+    
+    const pago = entityData.pago;
+    
+    // Verificar si el pago está rechazado
+    const isRechazado = pago.status === "rechazado" || pago.status === false;
+    
+    if (!isRechazado) return [];
+    
+    return [{
+      nombre: "Comprobante de pago",
+      motivo_rechazo: pago.motivo_rechazo || "Sin motivo especificado",
+      monto: pago.monto,
+      metodo_pago_slug: pago.metodo_de_pago?.datos_adicionales?.slug,
+      tipo: "pago"
+    }];
+  };
 
   return (
     <div className={`w-full px-4 md:px-10 py-10 md:py-28 ${isAdmin ? "bg-gray-50" : ""}`}>
@@ -843,8 +789,8 @@ export default function DetalleInfo({
         onMostrarRechazo={() => setMostrarRechazo(true)}
         onMostrarExoneracion={() => setMostrarExoneracion(true)}
         onMostrarReporteIrregularidad={handleReportarIrregularidad}
-        isAdmin={isAdmin}
-        allDocumentsApproved={allDocumentsApproved()}
+        documentsApproved={documentsApproved}
+        paymentApproved={paymentApproved}
       />
 
       {/* Estado de solvencia para colegiados */}
@@ -930,6 +876,7 @@ export default function DetalleInfo({
             isColegiado={isColegiado}
             pendienteData={entityData}
             isAdmin={isAdmin}
+            onDocumentsStatusChange={handleDocumentsStatusChange}
           />
 
           {/* Sección de comprobante de pago optimizada */}
@@ -945,6 +892,7 @@ export default function DetalleInfo({
               metodoPago={metodoPago}
               tasaBCV={tasaBcv}
               entityData={entityData}
+              onPaymentStatusChange={handlePaymentStatusChange}
             />
           )}
 
@@ -1120,6 +1068,7 @@ export default function DetalleInfo({
                 title="Documentos"
                 subtitle="Documentación del colegiado"
                 isColegiado={isColegiado}
+                onDocumentsStatusChange={handleDocumentsStatusChange}
               />
             )}
 
@@ -1143,7 +1092,7 @@ export default function DetalleInfo({
               pasoModal={pasoModal}
               setPasoModal={setPasoModal}
               handleAprobarSolicitud={handleAprobarSolicitud}
-              documentosCompletos={allDocumentsApproved()}
+              documentosCompletos={documentsApproved && paymentApproved}
               onClose={() => setMostrarConfirmacion(false)}
               pendiente={entityData}
             />
@@ -1158,9 +1107,9 @@ export default function DetalleInfo({
               handleDenegarSolicitud={handleDenegarSolicitud}
               onClose={() => setMostrarRechazo(false)}
               isRechazada={entityData?.status === "rechazado"}
-              documentosRechazados={documentos.filter(
-                (doc) => doc.status === "rechazado"
-              )}
+              documentosRechazados={getDocumentosRechazados()}
+              institucionesRechazadas={getInstitucionesRechazadas()}
+              pagosRechazados={getPagosRechazados()}
             />
           )}
 

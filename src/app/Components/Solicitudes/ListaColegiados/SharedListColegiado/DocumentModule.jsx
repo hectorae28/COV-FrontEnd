@@ -22,7 +22,8 @@ export function DocumentSection({
   readonly = false,
   filter = doc => !doc.id?.includes('comprobante_pago'),
   isColegiado = false,
-  pendienteData = null
+  pendienteData = null,
+  onDocumentsStatusChange
 }) {
   // Estados para el modal de edición y subida
   const [showModal, setShowModal] = useState(false);
@@ -41,6 +42,71 @@ export function DocumentSection({
   const [localDocumentChanges, setLocalDocumentChanges] = useState({});
 
   const fileInputRef = useRef(null);
+
+  // 🔧 FUNCIÓN CRÍTICA: Validación de documentos aprobados
+  const calculateAllDocumentsApproved = useCallback(() => {
+    if (!localPendienteData) return false;
+
+    const tipoProfesion = localPendienteData.tipo_profesion || "odontologo";
+
+    // Documentos requeridos según tipo
+    const documentosRequeridosBase = [
+      "file_ci",
+      "file_rif",
+      "file_fondo_negro",
+      "file_mpps",
+    ];
+
+    const documentosAdicionales = [
+      "fondo_negro_credencial",
+      "notas_curso",
+      "fondo_negro_titulo_bachiller",
+    ];
+
+    let documentosRequeridos;
+    if (tipoProfesion === "odontologo") {
+      documentosRequeridos = documentosRequeridosBase;
+    } else {
+      documentosRequeridos = [
+        ...documentosRequeridosBase,
+        ...documentosAdicionales,
+      ];
+    }
+
+    // Función para obtener valor considerando cambios locales
+    const getFieldValue = (fieldName, defaultValue = null) => {
+      return localDocumentChanges.hasOwnProperty(fieldName) 
+        ? localDocumentChanges[fieldName] 
+        : (localPendienteData[fieldName] ?? defaultValue);
+    };
+
+    // Verificar cada documento individualmente
+    let documentosAprobados = 0;
+
+    documentosRequeridos.forEach((docId) => {
+      const validateField = `${docId}_validate`;
+      const urlField = `${docId}_url`;
+
+      const hasFile = !!getFieldValue(urlField);
+      const isApproved = getFieldValue(validateField) === true;
+
+      if (hasFile && isApproved) {
+        documentosAprobados++;
+      }
+    });
+
+    const allApproved = documentosAprobados === documentosRequeridos.length;
+    
+    return allApproved;
+  }, [localPendienteData, localDocumentChanges]);
+
+  // 🔔 NOTIFICAR CAMBIOS EN EL ESTADO DE DOCUMENTOS
+  useEffect(() => {
+    if (onDocumentsStatusChange && localPendienteData) {
+      const allApproved = calculateAllDocumentsApproved();
+      onDocumentsStatusChange(allApproved);
+    }
+  }, [calculateAllDocumentsApproved, onDocumentsStatusChange, localPendienteData, localDocumentChanges]);
 
   // Sincronizar datos cuando cambien los props (simple)
   useEffect(() => {
