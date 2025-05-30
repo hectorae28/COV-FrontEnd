@@ -88,11 +88,13 @@ const steps = [
 ]
 
 export default function RegistrationForm({
-  onRegistroExitoso,
-  isAdmin = false,
-  isModal = false,
   ...props
 }) {
+  const {  
+    onRegistroExitoso,
+    isAdmin = false,
+    isModal = false,
+  } = props
   const [currentStep, setCurrentStep] = useState(1)
   const [pagarLuego, setPagarLuego] = useState(false)
   const [exonerarPagos, setExonerarPagos] = useState(false)
