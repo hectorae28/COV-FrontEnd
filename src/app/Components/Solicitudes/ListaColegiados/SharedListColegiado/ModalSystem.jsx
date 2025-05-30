@@ -294,6 +294,14 @@ export function RejectModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionType, setActionType] = useState(null);
 
+  // 🔍 DEBUGGING: Log de las incidencias recibidas
+  console.log("🔔 RejectModal - Props recibidas:", {
+    documentosRechazados,
+    institucionesRechazadas, 
+    pagosRechazados,
+    totalIncidencias: documentosRechazados.length + institucionesRechazadas.length + pagosRechazados.length
+  });
+
   // Lista de motivos predefinidos para rechazos o denegaciones
   const motivosPredefinidos = [
     "Administración",

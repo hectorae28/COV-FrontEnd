@@ -708,44 +708,169 @@ export default function DetalleInfo({
   
   // Extraer documentos rechazados
   const getDocumentosRechazados = () => {
-    if (!documentos || !Array.isArray(documentos)) return [];
+    console.log("🔍 Revisando documentos rechazados...");
+    console.log("EntityData para documentos:", entityData);
     
-    return documentos.filter(doc => doc.status === "rechazado").map(doc => ({
-      nombre: doc.nombre || "Documento",
-      rejectionReason: doc.rejectionReason || doc.motivo_rechazo || "Sin motivo especificado",
-      tipo: "documento"
-    }));
+    // Para pendientes, los documentos están en entityData directamente
+    if (tipo === "pendiente" && entityData) {
+      const documentosRechazados = [];
+      
+      // Lista de documentos a verificar
+      const documentosAVerificar = [
+        { key: 'file_ci', nombre: 'Cédula de identidad' },
+        { key: 'file_rif', nombre: 'RIF' },
+        { key: 'file_fondo_negro', nombre: 'Título universitario fondo negro' },
+        { key: 'file_mpps', nombre: 'Registro MPPS' },
+        { key: 'fondo_negro_credencial', nombre: 'Credencial fondo negro' },
+        { key: 'notas_curso', nombre: 'Notas del curso' },
+        { key: 'fondo_negro_titulo_bachiller', nombre: 'Título bachiller fondo negro' }
+      ];
+      
+      documentosAVerificar.forEach(doc => {
+        const validateField = `${doc.key}_validate`;
+        const urlField = `${doc.key}_url`;
+        const motivoField = `${doc.key}_motivo_rechazo`;
+        
+        const hasFile = !!entityData[urlField];
+        const isRejected = entityData[validateField] === false || entityData[validateField] === "rechazado";
+        
+        console.log(`Documento ${doc.key}:`, {
+          hasFile,
+          validateValue: entityData[validateField],
+          isRejected,
+          motivo: entityData[motivoField]
+        });
+        
+        if (hasFile && isRejected) {
+          documentosRechazados.push({
+            nombre: doc.nombre,
+            rejectionReason: entityData[motivoField] || "Sin motivo especificado",
+            tipo: "documento"
+          });
+        }
+      });
+      
+      console.log("✅ Documentos rechazados encontrados:", documentosRechazados);
+      return documentosRechazados;
+    }
+    
+    // Para colegiados registrados, usar el array de documentos
+    if (documentos && Array.isArray(documentos)) {
+      const rechazados = documentos.filter(doc => doc.status === "rechazado").map(doc => ({
+        nombre: doc.nombre || "Documento",
+        rejectionReason: doc.rejectionReason || doc.motivo_rechazo || "Sin motivo especificado",
+        tipo: "documento"
+      }));
+      
+      console.log("✅ Documentos rechazados (colegiados):", rechazados);
+      return rechazados;
+    }
+    
+    console.log("❌ No se encontraron documentos rechazados");
+    return [];
   };
 
   // Extraer instituciones rechazadas
   const getInstitucionesRechazadas = () => {
-    if (!instituciones || !Array.isArray(instituciones)) return [];
+    console.log("🔍 Revisando instituciones rechazadas...");
+    console.log("Instituciones:", instituciones);
     
-    return instituciones.filter(inst => inst.verificado === false).map(inst => ({
+    if (!instituciones || !Array.isArray(instituciones)) {
+      console.log("❌ No hay instituciones para revisar");
+      return [];
+    }
+    
+    const rechazadas = instituciones.filter(inst => {
+      // Verificar diferentes campos que pueden indicar rechazo
+      const isRejected = inst.verificado === false || 
+                        inst.verification_status === false || 
+                        inst.verification_status === "rechazado";
+      
+      console.log(`Institución ${inst.nombre || inst.institutionName}:`, {
+        verificado: inst.verificado,
+        verification_status: inst.verification_status,
+        isRejected: isRejected,
+        motivo: inst.motivo_rechazo || inst.rejection_reason
+      });
+      
+      return isRejected;
+    }).map(inst => ({
       nombre: inst.nombre || inst.institutionName || "Institución sin nombre",
-      motivo_rechazo: inst.motivo_rechazo || "Sin motivo especificado",
+      motivo_rechazo: inst.motivo_rechazo || inst.rejection_reason || "Sin motivo especificado",
       tipo: "institucion"
     }));
+    
+    console.log("✅ Instituciones rechazadas encontradas:", rechazadas);
+    return rechazadas;
   };
 
   // Extraer pagos rechazados  
   const getPagosRechazados = () => {
-    if (!entityData || !entityData.pago) return [];
+    console.log("🔍 Revisando pagos rechazados...");
+    console.log("EntityData pago:", entityData?.pago);
+    console.log("ComprobanteData:", comprobanteData);
     
-    const pago = entityData.pago;
+    const pagosRechazados = [];
     
-    // Verificar si el pago está rechazado
-    const isRechazado = pago.status === "rechazado" || pago.status === false;
+    // Verificar pago en entityData
+    if (entityData?.pago) {
+      const pago = entityData.pago;
+      const isRechazado = pago.status === "rechazado" || 
+                         pago.status === false ||
+                         pago.status === "false";
+      
+      console.log("Pago en entityData:", {
+        status: pago.status,
+        isRechazado: isRechazado,
+        motivo: pago.motivo_rechazo
+      });
+      
+      if (isRechazado) {
+        pagosRechazados.push({
+          nombre: "Comprobante de pago",
+          motivo_rechazo: pago.motivo_rechazo || "Sin motivo especificado",
+          monto: pago.monto,
+          metodo_pago_slug: pago.metodo_de_pago?.datos_adicionales?.slug,
+          tipo: "pago"
+        });
+      }
+    }
     
-    if (!isRechazado) return [];
+    // También verificar en comprobanteData
+    if (comprobanteData && comprobanteData.status === "rechazado") {
+      console.log("Comprobante rechazado encontrado en comprobanteData");
+      pagosRechazados.push({
+        nombre: "Comprobante de pago",
+        motivo_rechazo: comprobanteData.rejectionReason || "Sin motivo especificado",
+        monto: comprobanteData.paymentDetails?.monto,
+        metodo_pago_slug: comprobanteData.paymentDetails?.metodo_pago_slug,
+        tipo: "pago"
+      });
+    }
     
-    return [{
-      nombre: "Comprobante de pago",
-      motivo_rechazo: pago.motivo_rechazo || "Sin motivo especificado",
-      monto: pago.monto,
-      metodo_pago_slug: pago.metodo_de_pago?.datos_adicionales?.slug,
-      tipo: "pago"
-    }];
+    // Verificar campos de validación de comprobante en entityData
+    if (entityData) {
+      const comprobanteValidate = entityData.comprobante_validate;
+      const isComprobanteRechazado = comprobanteValidate === false || 
+                                    comprobanteValidate === "rechazado";
+      
+      console.log("Comprobante validate:", {
+        comprobante_validate: comprobanteValidate,
+        isRechazado: isComprobanteRechazado,
+        motivo: entityData.comprobante_motivo_rechazo
+      });
+      
+      if (isComprobanteRechazado && entityData.comprobante_url) {
+        pagosRechazados.push({
+          nombre: "Comprobante de pago",
+          motivo_rechazo: entityData.comprobante_motivo_rechazo || "Sin motivo especificado",
+          tipo: "pago"
+        });
+      }
+    }
+    
+    console.log("✅ Pagos rechazados encontrados:", pagosRechazados);
+    return pagosRechazados;
   };
 
   return (
