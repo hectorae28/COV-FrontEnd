@@ -18,19 +18,20 @@ export default function PaymentReceiptSection({
     isAdmin = false,
     costoInscripcion = 50,
     metodoPago = [],
-    tasaBCV = 0
+    tasaBCV = 0,
+    onPaymentStatusChange
 }) {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    
+
     // Estados para cambios locales inmediatos
     const [localPaymentData, setLocalPaymentData] = useState(entityData);
     const [localPaymentChanges, setLocalPaymentChanges] = useState({});
-    
+
     // Estados para el visor de comprobantes
     const [showComprobanteViewer, setShowComprobanteViewer] = useState(false);
     const [comprobanteParaVer, setComprobanteParaVer] = useState(null);
-    
+
     // Estados para notificaciones
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [uploadedPaymentInfo, setUploadedPaymentInfo] = useState("");
@@ -40,7 +41,7 @@ export default function PaymentReceiptSection({
     // Sincronizar datos cuando cambien los props
     useEffect(() => {
         setLocalPaymentData(entityData);
-        
+
         // Limpiar cambios locales que ya están reflejados en el servidor
         if (entityData) {
             setLocalPaymentChanges(prevChanges => {
@@ -57,8 +58,8 @@ export default function PaymentReceiptSection({
 
     // Función para obtener valor considerando cambios locales
     const getFieldValue = useCallback((fieldName, defaultValue = null) => {
-        return localPaymentChanges.hasOwnProperty(fieldName) 
-            ? localPaymentChanges[fieldName] 
+        return localPaymentChanges.hasOwnProperty(fieldName)
+            ? localPaymentChanges[fieldName]
             : (localPaymentData?.[fieldName] ?? defaultValue);
     }, [localPaymentChanges, localPaymentData]);
 
@@ -71,15 +72,16 @@ export default function PaymentReceiptSection({
         if (!comprobanteUrl) return null;
 
         // Mapear status del backend a estados del componente
-        let status = "pending"; // Default
+        let status = "pending"; // Default para revisión
         const backendStatus = pagoData.status;
-        
+
         if (backendStatus === "aprobado") {
             status = "approved";
         } else if (backendStatus === "rechazado") {
             status = "rechazado";
         } else {
-            status = "pending"; // "revisión" o cualquier otro valor
+            // Cualquier otro estado (incluyendo "revisando", "revision", null, etc.) va a pending
+            status = "pending";
         }
 
         return {
@@ -106,6 +108,50 @@ export default function PaymentReceiptSection({
     const isApproved = comprobanteData?.status === 'approved';
     const isRejected = comprobanteData?.status === 'rechazado';
 
+    // 🔧 FUNCIÓN CRÍTICA: Validación de estado de pago
+    const calculatePaymentApproved = useCallback(() => {
+        // Función para obtener valor considerando cambios locales
+        const getFieldValue = (fieldName, defaultValue = null) => {
+            return localPaymentChanges.hasOwnProperty(fieldName)
+                ? localPaymentChanges[fieldName]
+                : (localPaymentData?.[fieldName] ?? defaultValue);
+        };
+
+        // Si está exonerado de pago, está aprobado automáticamente
+        const isExonerado = getFieldValue('pago_exonerado');
+        if (isExonerado) {
+            return true;
+        }
+
+        // Verificar que existe comprobante y está aprobado
+        const pagoData = getFieldValue('pago');
+        if (!pagoData) {
+            return false;
+        }
+
+        const comprobanteHasFile = !!(
+            pagoData.comprobante_url ||
+            pagoData.comprobante
+        );
+        
+        const comprobanteApproved = (
+            pagoData.status === "aprobado" ||
+            pagoData.status === true
+        );
+
+        const result = comprobanteHasFile && comprobanteApproved;
+
+        return result;
+    }, [localPaymentData, localPaymentChanges]);
+
+    // 🔔 NOTIFICAR CAMBIOS EN EL ESTADO DE PAGO
+    useEffect(() => {
+        if (onPaymentStatusChange) {
+            const paymentApproved = calculatePaymentApproved();
+            onPaymentStatusChange(paymentApproved);
+        }
+    }, [calculatePaymentApproved, onPaymentStatusChange, localPaymentData, localPaymentChanges]);
+
     // Manejo de subida de comprobantes con actualización local
     const handlePaymentComplete = async (paymentData) => {
         try {
@@ -115,11 +161,11 @@ export default function PaymentReceiptSection({
             if (!paymentData.metodo_de_pago?.id) {
                 throw new Error("Debe seleccionar un método de pago válido");
             }
-            
+
             if (!paymentData.referenceNumber || paymentData.referenceNumber.trim() === "") {
                 throw new Error("El número de referencia es obligatorio");
             }
-            
+
             if (!paymentData.paymentFile) {
                 throw new Error("No se seleccionó archivo de comprobante");
             }
@@ -133,23 +179,25 @@ export default function PaymentReceiptSection({
                 tasa_bcv_del_dia: paymentData.tasa_bcv_del_dia
             };
 
-            // Crear FormData exactamente como en la implementación original
+            // Crear FormData - ASEGURAR que siempre vaya como "revisando"
             const formData = new FormData();
             formData.append("comprobante", paymentData.paymentFile);
             formData.append("pago", JSON.stringify(pagoData));
+            // CRÍTICO: Siempre enviar como "revisando" para que requiera aprobación admin
             formData.append("comprobante_validate", "revisando");
             formData.append("status", "revisando");
 
-            // Crear datos temporales para mostrar cambio inmediato
+            // Crear datos temporales - TAMBIÉN asegurar que sea "revisando"
             const tempUrl = URL.createObjectURL(paymentData.paymentFile);
             const tempPaymentData = {
                 monto: paymentData.totalAmount,
                 fecha_pago: paymentData.paymentDate,
                 num_referencia: paymentData.referenceNumber,
                 metodo_de_pago: paymentData.metodo_de_pago,
-                status: "revision", // Nuevo comprobante va a revisión
+                status: "revisando", // CAMBIO: usar "revisando" en lugar de "revision"
                 comprobante_url: tempUrl,
-                tasa_bcv_del_dia: paymentData.tasa_bcv_del_dia
+                tasa_bcv_del_dia: paymentData.tasa_bcv_del_dia,
+                motivo_rechazo: "" // Limpiar cualquier motivo de rechazo anterior
             };
 
             // Actualización local inmediata
@@ -172,12 +220,12 @@ export default function PaymentReceiptSection({
             // Actualizar con datos reales del servidor
             if (response?.data) {
                 URL.revokeObjectURL(tempUrl); // Limpiar URL temporal
-                
+
                 setLocalPaymentData(prevData => ({
                     ...prevData,
                     ...response.data
                 }));
-                
+
                 // Limpiar cambios locales
                 setLocalPaymentChanges(prevChanges => {
                     const newChanges = { ...prevChanges };
@@ -187,19 +235,19 @@ export default function PaymentReceiptSection({
             }
         } catch (error) {
             console.error("Error al subir comprobante:", error);
-            
+
             // Revertir cambios locales si falla
             setLocalPaymentChanges(prevChanges => {
                 const newChanges = { ...prevChanges };
                 delete newChanges.pago;
                 return newChanges;
             });
-            
+
             setUploadSuccess(false);
-            
+
             // Manejo específico de errores
-            if (error.code === 'ECONNABORTED' || 
-                error.message.includes('timeout') || 
+            if (error.code === 'ECONNABORTED' ||
+                error.message.includes('timeout') ||
                 error.name === 'AxiosError' && error.message.includes('timeout')) {
                 alert("⏰ El servidor está tardando más de lo esperado.\n\n✅ Tu comprobante puede haberse subido correctamente.\n\n🔄 Refresca la página para verificar o intenta nuevamente en unos minutos.");
             } else if (error.response?.status >= 500) {
@@ -358,10 +406,10 @@ export default function PaymentReceiptSection({
                                         </p>
                                         <div className="flex items-center mt-1">
                                             <span className={`text-xs px-2 py-1 rounded-full ${isApproved ? 'bg-green-100 text-green-800' :
-                                                    isRejected ? 'bg-red-100 text-red-800' :
-                                                        hasComprobante ? 'bg-yellow-100 text-yellow-800' :
-                                                            hasPayment ? 'bg-blue-100 text-blue-800' :
-                                                                'bg-gray-100 text-gray-800'
+                                                isRejected ? 'bg-red-100 text-red-800' :
+                                                    hasComprobante ? 'bg-yellow-100 text-yellow-800' :
+                                                        hasPayment ? 'bg-blue-100 text-blue-800' :
+                                                            'bg-gray-100 text-gray-800'
                                                 }`}>
                                                 {isApproved ? 'Aprobado' :
                                                     isRejected ? 'Rechazado' :
