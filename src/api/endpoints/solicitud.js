@@ -97,9 +97,19 @@ export const pagoSolvenciaEspecial = async (detallesPagoSolvencia) => {
     }
 }
 
-export const solicitarSolvenciaEspecial = async (detallesSolvenciaEspecial) => {
+export const solicitarSolvencia = async (detallesSolvenciaEspecial) => {
     try {
-        const data = api.post('solicitudes/solicitar_costo_solvencia/', detallesSolvenciaEspecial)
+        const data = api.post('solicitudes/solicitar_solvencia/', detallesSolvenciaEspecial)
+        return data;
+    } catch (error) {
+        console.error("Ha ocurrido un error: ", error);
+        throw error;
+    }
+}
+
+export const solicitarPagosSolvencia = async (detallesSolvenciaEspecial) => {
+    try {
+        const data = api.get('solicitudes/solicitar_pagos_solvencia/')
         return data;
     } catch (error) {
         console.error("Ha ocurrido un error: ", error);

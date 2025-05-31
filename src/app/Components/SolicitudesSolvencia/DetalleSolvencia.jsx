@@ -551,8 +551,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                           className={`flex-1 inline-flex items-center justify-center px-4 py-2.5 
                             ${!costoNuevo || parseFloat(costoNuevo) <= 0
                               ? 'bg-gray-300 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-[#D7008A] to-[#41023B]' +
-                              'hover:from-blue-700 hover:to-blue-800'}
+                              : 'bg-gradient-to-r from-[#D7008A] to-[#41023B] hover:from-blue-700 hover:to-blue-800'}
                             text-white rounded-lg transition-colors text-base font-medium`}
                         >
                           <DollarSign className="mr-2" size={20} />

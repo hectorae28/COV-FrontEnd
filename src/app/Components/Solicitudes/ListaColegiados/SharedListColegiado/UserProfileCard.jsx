@@ -114,7 +114,7 @@ export default function UserProfileCard({
       return persona.identificacion || "No especificada";
     } else {
       // Para colegiados registrados
-      const nacionalidad = persona.nacionalidad || "V";
+      const nacionalidad = persona.nacionalidad || "";
       const identificacion = persona.identificacion || "";
 
       // Si no tiene formato, construirlo

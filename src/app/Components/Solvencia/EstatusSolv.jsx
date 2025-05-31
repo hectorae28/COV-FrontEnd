@@ -3,7 +3,7 @@
 import { Calendar, AlertCircle, CheckCircle } from "lucide-react";
 import { Warning } from "@mui/icons-material";
 import useColegiadoUserStore from "@/store/colegiadoUserStore";
-import { solicitarSolvenciaEspecial } from "@/api/endpoints/solicitud";
+import { solicitarSolvencia, solicitarPagosSolvencia } from "@/api/endpoints/solicitud";
 import { fetchMe } from "@/api/endpoints/colegiado";
 
 export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSoon }) {
@@ -37,12 +37,21 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
 
   const puedeMostrarBoton = mostraBoton();
 
-  const handleSolicitarMontoEspecial = async () => {
+  const handleSolicitarSolvencia = async () => {
     try {
-      const pagoResult = await solicitarSolvenciaEspecial({user_id: colegiadoUser.id});
-      const colegiadoResult = await fetchMe();
-      setColegiadoUser(colegiadoResult.data);
-      return [undefined, pagoResult]
+      if(colegiadoUser.requiere_solvencia_esp && colegiadoUser.puede_pedir_costo_especial){
+        const pagoResult = await solicitarSolvencia({user_id: colegiadoUser.id});
+        const colegiadoResult = await fetchMe();
+        setColegiadoUser(colegiadoResult.data);
+        return [undefined, pagoResult]
+      }else{
+        if(colegiadoUser.solicitud_solvencia_activa){
+          const pagosResult = await solicitarPagosSolvencia({user_id: colegiadoUser.id});
+        }else{
+          const pagoResult = await solicitarSolvencia({user_id: colegiadoUser.id});
+        }
+        onPayClick();
+      }
     } catch(error) {
       return [error, undefined];
     }
@@ -55,7 +64,7 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
       return (
         <button
           className="bg-gradient-to-b from-[#41023B] to-[#D7008A] text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition-colors"
-          onClick={() => handleSolicitarMontoEspecial()}
+          onClick={() => handleSolicitarSolvencia()}
         >
           Solicitar costo de solvencia
         </button>
@@ -64,10 +73,10 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
 
     return (
       <button
-        onClick={onPayClick}
+        onClick={() => handleSolicitarSolvencia()}
         className="bg-gradient-to-b from-[#41023B] to-[#D7008A] text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition-colors"
       >
-        {colegiadoUser.solvencia_status ? "Renovar Solvencia" : "Realizar Pago"}
+        {colegiadoUser.solicitud_solvencia_activa ? 'Completar Pago' : colegiadoUser.solvencia_status ? "Renovar Solvencia" : "Realizar Pago"}
       </button>
     )
   }

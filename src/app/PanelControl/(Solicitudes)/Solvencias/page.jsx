@@ -217,6 +217,7 @@ const conteoSolvencias = useMemo(() => ({
             matchesFechas = fechaSolvencia >= inicio && fechaSolvencia <= fin;
           }
         }*/
+        console.log(solvencia,matchesTab,matchesSearch);
 
         return matchesSearch && matchesTab;
       })
@@ -400,6 +401,59 @@ const conteoSolvencias = useMemo(() => ({
       {/* Tabs para filtrar por estado */}
       <div className="mb-6">
         <div className="border-b border-gray-200">
+          <nav className="-mb-px flex flex-wrap">
+            <button
+              onClick={() => setTabActual("revision")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "revision"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              En revisión
+              {conteoSolvencias.revision > 0 && (
+                <span className="ml-2 bg-yellow-400 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.revision}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setTabActual("costo_especial")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "costo_especial"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center">
+                <span>Solicitud de Costo</span>
+                {conteoSolvencias.solicitudCosto > 0 && (
+                  <span className={`ml-2 ${
+                    tabActual === "costo_especial"
+                      ? "bg-[#C40180] text-white"
+                      : "bg-red-500 text-white"
+                  } text-xs px-2 py-0.5 rounded-full`}>
+                    {conteoSolvencias.solicitudCosto}
+                  </span>
+                )}
+              </div>
+            </button>
+            <button
+              onClick={() => setTabActual("todas")}
+              className={`cursor-pointer whitespace-nowrap py-3 px-4 font-medium text-sm border-b-2 ${
+                tabActual === "todas"
+                  ? "border-[#C40180] text-[#C40180]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Todas
+              {conteoSolvencias.todas > 0 && (
+                <span className="ml-2 bg-blue-100 text-balck-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {conteoSolvencias.todas}
+                </span>
+              )}
+            </button>
+          </nav>
         </div>
       </div>
       
@@ -429,15 +483,11 @@ const conteoSolvencias = useMemo(() => ({
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 {tabActual === "revision" && <Clock className="h-8 w-8 text-yellow-500" />}
-                {tabActual === "aprobadas" && <CheckCircle className="h-8 w-8 text-green-500" />}
-                {tabActual === "rechazadas" && <XCircle className="h-8 w-8 text-red-500" />}
                 {tabActual === "costo_especial" && <CreditCard className="h-8 w-8 text-indigo-500" />}
                 {tabActual === "todas" && <Search className="h-8 w-8 text-gray-400" />}
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                {tabActual === "revision" && "No hay solvencias en revisión"}
-                {tabActual === "aprobadas" && "No hay solvencias aprobadas"}
-                {tabActual === "rechazadas" && "No hay solvencias rechazadas"}
+                {tabActual === "revision" && "No hay solvencias pendientes por revisión"}
                 {tabActual === "costo_especial" && "No hay solicitudes pendientes de costo"}
                 {tabActual === "todas" && "No se encontraron solvencias"}
                 {filtroCosto !== "todas" && tabActual === "todas" && (
@@ -499,7 +549,7 @@ const conteoSolvencias = useMemo(() => ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
-                        <div className="text-sm text-gray-500">{solvencia.fechaExpSolvencia || "No establecida"}</div>
+                        <div className="text-sm text-gray-500">{solvencia.fechaExpSolvencia || "-"}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex flex-col items-center">
@@ -511,10 +561,10 @@ const conteoSolvencias = useMemo(() => ({
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
                             }`}>
-                            {solvencia.statusSolicitud === 'revisando' && <Clock size={12} />}
-                            {solvencia.statusSolicitud === 'aprobado' && <CheckCircle size={12} />}
-                            {solvencia.statusSolicitud === 'rechazado' && <XCircle size={12} />}
-                            {solvencia.statusSolicitud}
+                            {solvencia.statusSolicitud === 'revisando' && (<><Clock size={12} /> Pendiente</>)}
+                            {solvencia.statusSolicitud === 'aprobado' && (<><CheckCircle size={12} />Aprovado</>)}
+                            {solvencia.statusSolicitud === 'rechazado' && (<><XCircle size={12} />Rechazado</>)}
+                            {solvencia.statusSolicitud === "costo_especial" && (<><CreditCard size={12} />Costo Especial</>)}
                           </span>
                         </div>
                       </td>
