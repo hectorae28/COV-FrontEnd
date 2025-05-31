@@ -464,29 +464,17 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       const newErrors = {};
 
       registros.forEach((registro, index) => {
-        const requiredFields = ["institutionName", "institutionType", "institutionAddress", "selectedEstado", "selectedMunicipio", "cargo", "institutionPhone", "constancia_trabajo"];
+        const requiredFields = ["institutionName", "institutionType", "institutionAddress", "selectedEstado", "selectedMunicipio", "cargo", "institutionPhone"];
 
         requiredFields.forEach(field => {
-          // Validación especial para archivos
-          if (field === "constancia_trabajo") {
-            if (!registro[field]) {
-              if (index === 0) {
-                newErrors[field] = true;
-              } else {
-                newErrors[`${field}_${registro.id}`] = true;
-              }
-              hasErrors = true;
+          // Validación normal para campos
+          if (!registro[field] || (typeof registro[field] === 'string' && registro[field].trim() === "")) {
+            if (index === 0) {
+              newErrors[field] = true;
+            } else {
+              newErrors[`${field}_${registro.id}`] = true;
             }
-          } else {
-            // Validación normal para otros campos
-            if (!registro[field] || (typeof registro[field] === 'string' && registro[field].trim() === "")) {
-              if (index === 0) {
-                newErrors[field] = true;
-              } else {
-                newErrors[`${field}_${registro.id}`] = true;
-              }
-              hasErrors = true;
-            }
+            hasErrors = true;
           }
         });
       });
@@ -761,13 +749,11 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
               <div className="w-full mt-4">
                 <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                   Constancia de Trabajo
-                  <span className="text-red-500 ml-1">*</span>
+                  <span className="text-gray-500 ml-1 text-xs">(Opcional)</span>
                 </label>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <label className={`cursor-pointer flex-1 px-4 py-3 border-2 border-dashed ${isFieldEmpty(registro, "constancia_trabajo")
-                      ? "border-red-500 bg-red-50"
-                      : registro.constancia_trabajo
+                    <label className={`cursor-pointer flex-1 px-4 py-3 border-2 border-dashed ${registro.constancia_trabajo
                         ? "border-green-500 bg-green-50"
                         : "border-gray-300 bg-gray-50"
                       } rounded-xl hover:bg-gray-100 transition-colors`}>
@@ -821,12 +807,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                     </div>
                   )}
 
-                  {isFieldEmpty(registro, "constancia_trabajo") && (
-                    <p className="text-xs text-red-500">Este campo es obligatorio</p>
-                  )}
-
                   <p className="text-xs text-gray-500">
-                    Suba la constancia de trabajo de esta institución. Formatos permitidos: JPG, PNG, PDF (máx. 5MB)
+                    Suba la constancia de trabajo de esta institución (opcional). Formatos permitidos: JPG, PNG, PDF (máx. 5MB)
                   </p>
                 </div>
               </div>

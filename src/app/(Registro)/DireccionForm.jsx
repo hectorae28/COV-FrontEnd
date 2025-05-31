@@ -114,10 +114,8 @@ export default function DireccionForm({
 
   const currentFormData = isEditMode && localFormData ? localFormData : formData;
   const state = currentFormData[fieldMapping.state];
-  
   const estadoSeleccionado = estados.find(e => e.id === state);
-  const nombreEstado = estadoSeleccionado ? estadoSeleccionado.nombre : "";
-  const isDistritoCapital = nombreEstado && nombreEstado.toLowerCase() === "distrito capital";
+  const isDistritoCapital = state === "10";
   const municipioLabel = isDistritoCapital ? "Parroquia" : "Municipio";
 
   return (

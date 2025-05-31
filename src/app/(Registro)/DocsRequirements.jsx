@@ -49,11 +49,11 @@ export default function DocsRequirements({
   // Determinar la etiqueta correcta para el fondo negro del título según la profesión
   const getTituloLabel = () => {
     if (formData.tipo_profesion === "odontologo") {
-      return "Foto del Título";
+      return "Título Universitario";
     } else if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
-      return "Foto del Título";
+      return "Título Universitario";
     } else {
-      return "Foto del Título";
+      return "Título Universitario";
     }
   };
 

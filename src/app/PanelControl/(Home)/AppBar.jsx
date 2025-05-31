@@ -1,5 +1,5 @@
 "use client";
-import { AccountBalance, Assessment, Assignment, Celebration, ChevronRight, ContactPage, DescriptionRounded, ExpandMore, Forum, Group, Handshake, Home, House, Message, Newspaper, NoteAdd, Notifications, PersonRounded, PriceChange, RequestQuote, Settings, Web } from "@mui/icons-material";
+import { AccountBalance, Assessment, Celebration, ChevronRight, ContactPage, DescriptionRounded, ExpandMore, Forum, Group, Handshake, Home, House, Message, Newspaper, NoteAdd, Notifications, PersonRounded, PriceChange, RequestQuote, Settings, Web } from "@mui/icons-material";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -81,16 +81,32 @@ const menuItems = [
     }
   },
   {
+    key: "Colegiados",
+    config: {
+      title: "Colegiados",
+      icon: <Group className="h-5 w-5" />,
+      path: "/PanelControl/ListaColegiados",
+      isDirectNav: true
+    }
+  },
+  {
     key: "Solicitudes",
     config: {
       title: "Solicitudes",
       icon: <DescriptionRounded className="h-5 w-5" />,
       routes: [
-        { path: "/PanelControl/ListaColegiados", title: "Lista de Colegiados", icon: <Assignment className="h-5 w-5" /> },
         { path: "/PanelControl/Solicitudes", title: "Solicitudes", icon: <NoteAdd className="h-5 w-5" /> },
-        { path: "/PanelControl/Solvencias", title: "Solvencias", icon: <PriceChange className="h-5 w-5" /> },
-        { path: "/PanelControl/Pagos", title: "Pagos", icon: <RequestQuote className="h-5 w-5" /> },
+        { path: "/PanelControl/Solvencias", title: "Solvencias Especiales", icon: <PriceChange className="h-5 w-5" /> },
       ],
+    }
+  },
+  {
+    key: "Pagos",
+    config: {
+      title: "Pagos",
+      icon: <RequestQuote className="h-5 w-5" />,
+      path: "/PanelControl/Pagos",
+      isDirectNav: true
     }
   },
   {
@@ -195,6 +211,20 @@ export default function AppBar({ setSelectedTitle, setSidebarOpen }) {
       setSelectedTitle({
         title: "Estadisticas",
         icon: <Assessment className="h-5 w-5" />,
+      });
+      return;
+    }
+    if (pathname === "/PanelControl/ListaColegiados") {
+      setSelectedTitle({
+        title: "Colegiados",
+        icon: <Group className="h-5 w-5" />,
+      });
+      return;
+    }
+    if (pathname === "/PanelControl/Pagos") {
+      setSelectedTitle({
+        title: "Pagos",
+        icon: <RequestQuote className="h-5 w-5" />,
       });
       return;
     }

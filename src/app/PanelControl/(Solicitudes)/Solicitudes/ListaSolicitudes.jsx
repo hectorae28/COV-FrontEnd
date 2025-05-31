@@ -161,7 +161,7 @@ export default function ListaSolicitudes({ props }) {
         </div>
       </div>
 
-      {/* Tabs para filtrar por estado */}
+      {/* Tabs para filtrar por estado
       <div className="mb-6">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex overflow-x-auto">
@@ -212,7 +212,7 @@ export default function ListaSolicitudes({ props }) {
             </button>
           </nav>
         </div>
-      </div>
+      </div> */}
 
       {/* Filtros de costo - mostrar en todos los tabs */}
       <div className="mb-6">
@@ -253,6 +253,36 @@ export default function ListaSolicitudes({ props }) {
             onClick={() => setFiltroCosto("sinCosto")}
           >
             Exonerada
+          </button>
+          <button
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
+                tabActual === "todas"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+            onClick={() => setTabActual("todas")}
+          >
+            Todas
+          </button>
+          <button
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
+                tabActual === "cerradas"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+            onClick={() => setTabActual("cerradas")}
+          >
+            Aprobadas
+          </button>
+          <button
+            className={`cursor-pointer px-3 py-1 rounded-full text-xs font-medium ${
+              tabActual === "abierta"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+            onClick={() => setTabActual("abierta")}
+          >
+            Pendientes
           </button>
         </div>
       </div>

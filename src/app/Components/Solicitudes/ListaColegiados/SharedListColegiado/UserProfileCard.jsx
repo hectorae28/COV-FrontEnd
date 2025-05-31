@@ -1,10 +1,10 @@
 import SessionInfo from "@/Components/SessionInfo";
 import { motion } from "framer-motion";
 import {
-    AlertTriangle, Calendar, CheckCircle, Clock, CreditCard,
-    GraduationCap, Mail, Phone,
-    PlusCircle,
-    User, UserX, XCircle
+  AlertTriangle, Calendar, CheckCircle, Clock, CreditCard,
+  GraduationCap, Mail, Phone,
+  PlusCircle,
+  User, UserX, XCircle
 } from "lucide-react";
 
 export default function UserProfileCard({

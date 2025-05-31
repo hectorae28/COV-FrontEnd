@@ -4,7 +4,7 @@ import { fetchExistencePersona } from "@/api/endpoints/persona"
 import BackgroundAnimation from "@/app/Components/Home/BackgroundAnimation"
 import confetti from "canvas-confetti"
 import { AnimatePresence, motion } from "framer-motion"
-import { Building, Camera, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User } from "lucide-react"
+import { Building, Camera, Check, ChevronLeft, ChevronRight, FilePlus, GraduationCap, Mail, Phone, User, UserCheck, UserPlus } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -22,7 +22,8 @@ import InfoContacto from "../InfoCont"
 import InfoLaboralWithDireccionForm from "../InfoLab"
 import InfoPersonal from "../InfoPers"
 
-const steps = [
+// Definir todos los pasos posibles
+const allSteps = [
   {
     id: 1,
     title: "Información Personal",
@@ -67,7 +68,7 @@ const steps = [
     description: "Tu experiencia y situación laboral actual",
     icon: Building,
     component: InfoLaboralWithDireccionForm,
-    requiredFields: ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "constancia_trabajo"],
+    requiredFields: ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType"],
   },
   {
     id: 5,
@@ -90,11 +91,16 @@ const steps = [
 export default function RegistrationForm({
   ...props
 }) {
-  const {  
+  const {
     onRegistroExitoso,
     isAdmin = false,
     isModal = false,
   } = props
+
+  // Estados para tipo de registro
+  const [tipoRegistro, setTipoRegistro] = useState("")
+  const [showTipoSelection, setShowTipoSelection] = useState(true)
+
   const [currentStep, setCurrentStep] = useState(1)
   const [pagarLuego, setPagarLuego] = useState(false)
   const [exonerarPagos, setExonerarPagos] = useState(false)
@@ -103,12 +109,48 @@ export default function RegistrationForm({
   const [verifiedEmails, setVerifiedEmails] = useState([])
   const [recaudoCreado, setRecaudoCreado] = useState({})
 
+  // Función para obtener los pasos filtrados según el tipo de registro
+  const getFilteredSteps = () => {
+    if (!tipoRegistro) return allSteps
+
+    if (tipoRegistro === "viejo") {
+      // Colegiado viejo: remover paso 6 (Foto)
+      return allSteps.filter(step => step.id !== 6)
+    } else if (tipoRegistro === "nuevo") {
+      // Colegiado nuevo: remover paso 4 (Situación Laboral)
+      return allSteps.filter(step => step.id !== 4)
+    }
+
+    return allSteps
+  }
+
+  // Obtener pasos filtrados
+  const steps = getFilteredSteps()
+
+  // Función para remapear el currentStep al índice correcto en los pasos filtrados
+  const getCurrentStepIndex = () => {
+    return steps.findIndex(step => step.id === getCurrentStepId())
+  }
+
+  // Función para obtener el ID del paso actual basado en la posición
+  const getCurrentStepId = () => {
+    if (currentStep <= steps.length) {
+      return steps[currentStep - 1]?.id
+    }
+    return steps[steps.length - 1]?.id
+  }
+
+  // Función para obtener el paso actual
+  const getCurrentStep = () => {
+    return steps.find(step => step.id === getCurrentStepId())
+  }
+
   const initialState = {
     // Para tipo_profesion
     tipo_profesion: props?.tipo_profesion || "",
 
     // Persona data
-    documentType: props?.persona?.documentType || "", // Nuevo campo para tipo de documento (vacío por defecto)
+    documentType: props?.persona?.documentType || "",
     identityCard: props?.persona?.identificacion?.substring(0, 1) || "",
     idType: props?.persona?.identificacion?.substring(1) || "V",
     firstName: props?.persona?.nombre || "",
@@ -119,7 +161,7 @@ export default function RegistrationForm({
     gender: props?.persona?.genero || "",
     maritalStatus: props?.persona?.estado_civil || "",
     email: props?.persona?.correo || "",
-    emailVerified: false, // Nuevo campo para rastrear si el correo electrónico se ha verificado
+    emailVerified: false,
     countryCode: props?.persona?.telefono_movil?.split(" ")[0] || "+58",
     phoneNumber: props?.persona?.telefono_movil?.split(" ")[1] || "",
     homePhone: props?.persona?.telefono_de_habitacion || "",
@@ -127,7 +169,7 @@ export default function RegistrationForm({
     // Dirección
     address: props?.persona?.direccion?.referencia || "",
     city: props?.ciudad || "",
-    state: "", // || "",
+    state: "",
 
     // Información académica
     graduateInstitute: props?.instituto_bachillerato || "",
@@ -150,7 +192,7 @@ export default function RegistrationForm({
     // Foto del colegiado
     foto_colegiado: props?.file_foto_colegiado_url || null,
 
-    // Datos laborales (que se recorren como un array)
+    // Datos laborales
     laboralRegistros:
       props?.instituciones?.map((inst) => ({
         institutionName: inst.nombre || "",
@@ -160,6 +202,7 @@ export default function RegistrationForm({
         institutionType: inst.tipo_institucion || "CDP",
       })) || [],
   }
+
   const [formData, setFormData] = useState(initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
@@ -173,20 +216,39 @@ export default function RegistrationForm({
   const [attemptedNext, setAttemptedNext] = useState(false)
   const [isCreated, setIsCreated] = useState(false)
 
+  // Función para manejar la selección del tipo de registro
+  const handleTipoRegistroChange = (tipo) => {
+    setTipoRegistro(tipo)
+    setShowTipoSelection(false)
+    setCurrentStep(1) // Reiniciar al primer paso
+
+    // Configurar valores según tipo de registro
+    if (tipo === "viejo") {
+      setFormData(prev => ({
+        ...prev,
+        tipoRegistro: "viejo"
+        // Removido: workStatus: "labora" - dejar que el usuario seleccione
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        tipoRegistro: "nuevo"
+      }))
+    }
+  }
+
   // Guardar el email original cuando se carga el componente o cuando cambia el email
   useEffect(() => {
-    // Si el correo está verificado y no está en la lista de correos verificados, añadirlo
     if (formData.emailVerified && formData.email && !verifiedEmails.includes(formData.email)) {
       setVerifiedEmails((prev) => [...prev, formData.email])
     }
   }, [formData.email, formData.emailVerified, verifiedEmails])
 
   useEffect(() => {
-    // Only validate when attempted next is true
     if (attemptedNext) {
       validateStep(currentStep)
     }
-  }, [formData, currentStep, attemptedNext])
+  }, [formData, currentStep, attemptedNext, tipoRegistro])
 
   useEffect(() => {
     const LoadData = async () => {
@@ -210,19 +272,13 @@ export default function RegistrationForm({
   }, [formData.tipo_profesion])
 
   const handleInputChange = (updates) => {
-    // Evitamos procesar actualizaciones isPersonalInfoValid
-    // Esta propiedad causaba bucles de renderizado
     if (updates && updates.isPersonalInfoValid !== undefined) {
       const { isPersonalInfoValid, ...rest } = updates
       updates = rest
     }
 
-    // Si hay un cambio de email, verificar si necesita nueva verificación
     if (updates && updates.email !== undefined) {
-      // Verificar si el nuevo correo ya ha sido verificado anteriormente
       const isAlreadyVerified = verifiedEmails.includes(updates.email)
-
-      // Actualizar el estado de verificación según corresponda
       updates.emailVerified = isAlreadyVerified
     }
 
@@ -231,7 +287,6 @@ export default function RegistrationForm({
       ...updates,
     }))
 
-    // Clear validation errors for fields being updated
     if (updates) {
       const updatedFields = Object.keys(updates)
       const newValidationErrors = { ...validationErrors }
@@ -247,99 +302,87 @@ export default function RegistrationForm({
   }
 
   const validateStep = (stepIndex) => {
-    console.log({ formData })
-    const step = steps[stepIndex - 1]
+    const step = getCurrentStep()
+    if (!step) return true
+
     const errors = {}
     let isValid = true
 
-    // Si es el paso 5 (Documentos), agregar campos adicionales según tipo_profesion
-    if (stepIndex === 5) {
-      // Crear una copia de los campos requeridos base
-      let fieldsToValidate = [...step.requiredFields];
+    // Validación especial para documentos (paso 5)
+    const stepId = step.id
+    if (stepId === 5) {
+      let fieldsToValidate = [...step.requiredFields]
 
-      // Agregar campos adicionales para técnicos e higienistas
       if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
         fieldsToValidate = [
           ...fieldsToValidate,
           "fondo_negro_titulo_bachiller",
           "fondo_negro_credencial",
           "notas_curso",
-        ];
+        ]
       }
 
-      // Validar todos los campos requeridos
       fieldsToValidate.forEach((field) => {
         if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
-          errors[field] = true;
-          isValid = false;
+          errors[field] = true
+          isValid = false
         }
-      });
+      })
 
-      // Establecer errores de validación si estamos validando activamente
       if (attemptedNext) {
-        setValidationErrors(errors);
+        setValidationErrors(errors)
       }
-
-      return isValid;
+      return isValid
     }
 
-    // Validación para el paso 6 (Foto del Carnet)
-    if (stepIndex === 6) {
-      // Validar que se haya subido la foto
+    // Validación para foto (paso 6) - solo si está incluido
+    if (stepId === 6) {
       if (!formData.foto_colegiado) {
-        errors["foto_colegiado"] = true;
-        isValid = false;
+        errors["foto_colegiado"] = true
+        isValid = false
       }
 
-      // Establecer errores de validación si estamos validando activamente
       if (attemptedNext) {
-        setValidationErrors(errors);
+        setValidationErrors(errors)
       }
-
-      return isValid;
+      return isValid
     }
 
-    // NUEVO: Validación especial para el paso 4 (Información Laboral)
-    if (stepIndex === 4) {
+    // Validación para situación laboral (paso 4) - solo si está incluido
+    if (stepId === 4) {
       if (formData.workStatus === "noLabora") {
-        return true; // Si no labora, es válido
+        return true
       }
 
-      // Validar que tenga al menos un registro laboral válido
       if (!formData.laboralRegistros || formData.laboralRegistros.length === 0) {
-        // Marcar errores en campos básicos para mostrar mensajes
-        const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio", "constancia_trabajo"];
+        const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio"]
         requiredLabFields.forEach(field => {
-          errors[field] = true;
-        });
-        isValid = false;
+          errors[field] = true
+        })
+        isValid = false
       } else {
-        // Validar cada registro laboral
         formData.laboralRegistros.forEach((registro, index) => {
-          const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio", "constancia_trabajo"];
+          const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio"]
 
           requiredLabFields.forEach(field => {
             if (!registro[field] || (typeof registro[field] === "string" && registro[field].trim() === "")) {
-              // Para el primer registro, usar los nombres de campo del formData principal
               if (index === 0) {
-                errors[field] = true;
+                errors[field] = true
               }
-              // Para registros adicionales, marcar error en el registro específico
-              errors[`${field}_${registro.id}`] = true;
-              isValid = false;
+              errors[`${field}_${registro.id}`] = true
+              isValid = false
             }
-          });
-        });
+          })
+        })
       }
 
-      // Establecer errores de validación si estamos validando activamente
       if (attemptedNext) {
-        setValidationErrors(errors);
+        setValidationErrors(errors)
       }
-      return isValid;
+      return isValid
     }
 
-    // Para los demás pasos, mantener la validación estándar
+    // Validación estándar para otros pasos
     if (step.requiredFields && step.requiredFields.length > 0) {
       step.requiredFields.forEach((field) => {
         if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
@@ -350,26 +393,26 @@ export default function RegistrationForm({
     }
 
     // Validación específica para cédula (solo en el paso 1)
-    if (stepIndex === 1 && formData.documentType === "cedula" && formData.identityCard) {
-      // Verificar que la cédula tenga entre 7 y 8 dígitos
+    if (stepId === 1 && formData.documentType === "cedula" && formData.identityCard) {
       if (formData.identityCard.length < 7 || formData.identityCard.length > 8) {
         errors["identityCard"] = true
         isValid = false
       }
     }
 
-    // Solo establecer errores de validación si estamos validando activamente
     if (attemptedNext) {
       setValidationErrors(errors)
     }
-    console.log({ isValid })
+
     return isValid
   }
 
   const nextStep = async () => {
     if (currentStep < steps.length) {
-      if (currentStep == 1) {
-        const isStepValid = validateStep(currentStep);
+      const currentStepId = getCurrentStepId()
+
+      if (currentStepId === 1) {
+        const isStepValid = validateStep(currentStep)
         if (isStepValid) {
           const exists = await handleIdentityCardDuplicateVerification()
           const errors = {}
@@ -384,29 +427,22 @@ export default function RegistrationForm({
         }
       }
 
-      // Para el paso 2 (Información de Contacto), verificar si el correo ya está verificado
-      if (currentStep === 2) {
-        // Validar primero el paso actual
+      // Para el paso 2 (Información de Contacto), verificar correo
+      if (currentStepId === 2) {
         const isStepValid = validateStep(currentStep)
 
         if (isStepValid) {
-          // Si el correo no está verificado, mostrar la pantalla de verificación
           if (!formData.emailVerified) {
             setShowEmailVerification(true)
-            // Reiniciar attemptedNext para la próxima vez
             setAttemptedNext(false)
-            return // Detener aquí, no avanzar al siguiente paso todavía
+            return
           }
 
-          // Si el correo ya está verificado, proceder normalmente
           setCurrentStep(currentStep + 1)
           window.scrollTo(0, 0)
           setAttemptedNext(false)
         } else {
-          // Mostrar errores de validación
           setAttemptedNext(true)
-
-          // Scroll al primer error
           setTimeout(() => {
             const firstErrorElement = document.querySelector(".border-red-500")
             if (firstErrorElement) {
@@ -417,19 +453,15 @@ export default function RegistrationForm({
         return
       }
 
-      // Para regular step navigation, only validate the current step without showing errors yet
+      // Navegación regular
       const isValid = validateStep(currentStep)
 
       if (isValid) {
         setCurrentStep(currentStep + 1)
         window.scrollTo(0, 0)
-        // Keep attemptedNext as false during normal navigation
         setAttemptedNext(false)
       } else {
-        // Only show validation errors if trying to move to next step and fields are invalid
         setAttemptedNext(true)
-
-        // Scroll to first error
         setTimeout(() => {
           const firstErrorElement = document.querySelector(".border-red-500")
           if (firstErrorElement) {
@@ -442,14 +474,16 @@ export default function RegistrationForm({
 
   const prevStep = () => {
     if (showEmailVerification) {
-      // Si estamos en la pantalla de verificación, volver al paso 2
       setShowEmailVerification(false)
-      // Resetear attempted next
       setAttemptedNext(false)
     } else if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
       window.scrollTo(0, 0)
-      // Reset attempted next when going back
+      setAttemptedNext(false)
+    } else if (currentStep === 1) {
+      // Si estamos en el primer paso, volver a la selección de tipo
+      setShowTipoSelection(true)
+      setTipoRegistro("")
       setAttemptedNext(false)
     }
   }
@@ -460,63 +494,45 @@ export default function RegistrationForm({
       "tipo_identificacion": formData.documentType,
       "inicial": formData.idType,
       "identificacion": formData.identityCard,
-    }).toString();
-    const res = await fetchExistencePersona(`check-existence`, queryParams);
+    }).toString()
+    const res = await fetchExistencePersona(`check-existence`, queryParams)
     return res.exists
   }
 
-  // Función para iniciar el proceso de verificación de correo
   const handleRequestEmailVerification = (email) => {
     if (!email) return
     setShowEmailVerification(true)
   }
 
-  // Función para manejar el reenvío del código
   const handleResendVerificationCode = async () => {
     setIsResendingCode(true)
-
-    // Simulación de reenvío (aquí irían las llamadas a la API real)
     const res = await postDataUsuario(`send-verification-email`, {
       "email": formData.email,
     })
     setIsResendingCode(false)
-
-    // Aquí puedes implementar la llamada real a tu API para reenviar el código
   }
 
-  // Función que se ejecuta cuando la verificación de correo es exitosa
   const handleEmailVerificationSuccess = () => {
-    // Actualizar formData para marcar el correo como verificado
     handleInputChange({ emailVerified: true })
 
-    // Añadir el correo a la lista de correos verificados
     if (!verifiedEmails.includes(formData.email)) {
       setVerifiedEmails((prev) => [...prev, formData.email])
     }
 
-    // Ocultar la pantalla de verificación
     setShowEmailVerification(false)
-
-    // Avanzar al paso 3
-    setCurrentStep(3)
+    setCurrentStep(currentStep + 1)
     window.scrollTo(0, 0)
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Activar la bandera para mostrar errores de validación SOLO cuando intentamos proceder a pagos
-    setAttemptedNext(true);
-
-    // Validar el paso actual
-    const isValid = validateStep(currentStep);
-
+    e.preventDefault()
+    setAttemptedNext(true)
+    const isValid = validateStep(currentStep)
 
     if (isValid) {
-      // Si todos los campos están completos, proceder
       if (isIntentionalSubmit) {
-        const Form = new FormData();
-        Form.append("tipo_profesion", formData.tipo_profesion);
+        const Form = new FormData()
+        Form.append("tipo_profesion", formData.tipo_profesion)
         Form.append(
           "persona",
           JSON.stringify({
@@ -530,7 +546,6 @@ export default function RegistrationForm({
             segundo_apellido: formData.secondLastName,
             segundo_nombre: formData.secondName,
             genero: formData.gender,
-            // Ajustar para manejar pasaporte o cédula
             nacionalidad:
               formData.documentType === "cedula" ? "venezolana" : "extranjera",
             identificacion:
@@ -543,75 +558,77 @@ export default function RegistrationForm({
             fecha_de_nacimiento: formData.birthDate,
             estado_civil: formData.maritalStatus,
           })
-        );
-        Form.append("instituto_bachillerato", formData.graduateInstitute);
-        Form.append("universidad", formData.universityTitle);
-        Form.append("fecha_egreso_universidad", formData.titleIssuanceDate);
+        )
+        Form.append("instituto_bachillerato", formData.graduateInstitute)
+        Form.append("universidad", formData.universityTitle)
+        Form.append("fecha_egreso_universidad", formData.titleIssuanceDate)
+
         if (formData.tipo_profesion === "odontologo") {
-          Form.append(
-            "num_registro_principal",
-            formData.mainRegistrationNumber
-          );
+          Form.append("num_registro_principal", formData.mainRegistrationNumber)
         }
-        Form.append("num_mpps", formData.mppsRegistrationNumber);
-        Form.append(
-          "instituciones",
-          JSON.stringify(
-            formData.laboralRegistros.map((registro) => ({
-              nombre: registro.institutionName,
-              cargo: registro.cargo,
-              direccion: {
-                estado: Number(registro.selectedEstado),
-                municipio: Number(registro.selectedMunicipio),
-                referencia: registro.institutionAddress
-              },
-              telefono: registro.institutionPhone,
-              tipo_institucion: registro.institutionType,
-            })) || []
+
+        Form.append("num_mpps", formData.mppsRegistrationNumber)
+
+        // Solo agregar datos laborales si no es colegiado nuevo (que no tiene paso laboral)
+        if (tipoRegistro !== "nuevo") {
+          Form.append(
+            "instituciones",
+            JSON.stringify(
+              formData.laboralRegistros.map((registro) => ({
+                nombre: registro.institutionName,
+                cargo: registro.cargo,
+                direccion: {
+                  estado: Number(registro.selectedEstado),
+                  municipio: Number(registro.selectedMunicipio),
+                  referencia: registro.institutionAddress
+                },
+                telefono: registro.institutionPhone,
+                tipo_institucion: registro.institutionType,
+              })) || []
+            )
           )
-        );
-        Form.append("file_ci", formData.ci || null);
-        Form.append("file_rif", formData.rif || null);
-        Form.append("file_fondo_negro", formData.titulo || null);
-        Form.append("file_mpps", formData.mpps || null);
-        Form.append("file_foto_colegiado", formData.foto_colegiado || null);
 
-        // Agregar las constancias de trabajo
-        if (formData.laboralRegistros && formData.laboralRegistros.length > 0) {
-          formData.laboralRegistros.forEach((registro, index) => {
-            if (registro.constancia_trabajo) {
-              Form.append(`constancia_trabajo_${index}`, registro.constancia_trabajo);
-            }
-          });
+          // Agregar constancias de trabajo
+          if (formData.laboralRegistros && formData.laboralRegistros.length > 0) {
+            formData.laboralRegistros.forEach((registro, index) => {
+              if (registro.constancia_trabajo) {
+                Form.append(`constancia_trabajo_${index}`, registro.constancia_trabajo)
+              }
+            })
+          }
+        } else {
+          // Para colegiados nuevos, enviar array vacío
+          Form.append("instituciones", JSON.stringify([]))
         }
 
-        if (
-          formData.tipo_profesion === "tecnico" ||
-          formData.tipo_profesion === "higienista"
-        ) {
-          Form.append(
-            "fondo_negro_credencial",
-            formData.fondo_negro_credencial
-          );
-          Form.append("notas_curso", formData.notas_curso);
-          Form.append(
-            "fondo_negro_titulo_bachiller",
-            formData.fondo_negro_titulo_bachiller
-          );
+        Form.append("file_ci", formData.ci || null)
+        Form.append("file_rif", formData.rif || null)
+        Form.append("file_fondo_negro", formData.titulo || null)
+        Form.append("file_mpps", formData.mpps || null)
+
+        // Solo agregar foto si no es colegiado viejo (que no tiene paso de foto)
+        if (tipoRegistro !== "viejo") {
+          Form.append("file_foto_colegiado", formData.foto_colegiado || null)
         }
+
+        if (formData.tipo_profesion === "tecnico" || formData.tipo_profesion === "higienista") {
+          Form.append("fondo_negro_credencial", formData.fondo_negro_credencial)
+          Form.append("notas_curso", formData.notas_curso)
+          Form.append("fondo_negro_titulo_bachiller", formData.fondo_negro_titulo_bachiller)
+        }
+
         try {
           if (!isCreated) {
-            setIsSubmitting(true);
-            console.log({ Form })
+            setIsSubmitting(true)
             const response = await api.post("usuario/register/", Form, {
               headers: {
                 "Content-Type": "multipart/form-data",
               },
-            });
+            })
             if (response.status === 201) {
-              setShowPaymentScreen(true);
-              setIsComplete(false);
-              setRecaudoCreado(response.data);
+              setShowPaymentScreen(true)
+              setIsComplete(false)
+              setRecaudoCreado(response.data)
               setIsSubmitting(false)
               setIsCreated(true)
             }
@@ -620,33 +637,30 @@ export default function RegistrationForm({
               headers: {
                 "Content-Type": "multipart/form-data",
               },
-            });
+            })
             if (response.status === 200) {
-              setShowPaymentScreen(true);
+              setShowPaymentScreen(true)
               setIsSubmitting(false)
             }
           }
         } catch (error) {
           setError("Ocurrió un error al cargar los datos, verifique su conexión a internet")
         } finally {
-          setIsSubmitting(false);
+          setIsSubmitting(false)
         }
-        // No necesitamos reiniciar attemptedNext aquí ya que queremos mantener
-        // los mensajes de error visibles si el usuario vuelve desde la pantalla de pagos
       }
     } else {
-      // Si hay errores, hacer scroll al primer error
       setTimeout(() => {
-        const firstErrorElement = document.querySelector(".border-red-500");
+        const firstErrorElement = document.querySelector(".border-red-500")
         if (firstErrorElement) {
           firstErrorElement.scrollIntoView({
             behavior: "smooth",
             block: "center",
-          });
+          })
         }
-      }, 100);
+      }, 100)
     }
-  };
+  }
 
   const handlePago = async ({
     paymentDate = null,
@@ -672,10 +686,7 @@ export default function RegistrationForm({
     try {
       let res
       if (!pagarLuego && !exonerarPagos) {
-        res = await patchDataUsuario(
-          `register/${recaudoCreado.id}`,
-          PaymentForm,
-        );
+        res = await patchDataUsuario(`register/${recaudoCreado.id}`, PaymentForm)
         if (res?.status === 200) {
           setError(null)
           confetti({
@@ -686,7 +697,6 @@ export default function RegistrationForm({
           setShowPaymentScreen(false)
           setIsComplete(true)
           setIsSubmitting(false)
-          // Llamar callback si está disponible
           if (onRegistroExitoso) {
             onRegistroExitoso()
           }
@@ -701,17 +711,99 @@ export default function RegistrationForm({
         setShowPaymentScreen(false)
         setIsComplete(true)
         setIsSubmitting(false)
-        // Llamar callback si está disponible
         if (onRegistroExitoso) {
           onRegistroExitoso()
         }
       }
     } catch (error) {
       setError("Ocurrió un error al cargar los datos, verifique su conexión a internet")
-
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Pantalla de selección del tipo de registro
+  const renderTipoSelectionScreen = () => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-8 py-8" // Agregado py-8 para espaciado vertical
+      >
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-6">
+            <UserCheck className="w-10 h-10 text-white" />
+          </div>
+
+          <h2 className="text-2xl font-bold text-[#41023B] mb-4">
+            Tipo de Registro
+          </h2>
+
+          <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+            Para comenzar con su proceso de colegiación, necesitamos conocer su situación actual.
+            Por favor, seleccione la opción que mejor describa su estado:
+          </p>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Opción: Colegiado Nuevo */}
+            <motion.button
+              type="button"
+              onClick={() => handleTipoRegistroChange("nuevo")}
+              className="group relative p-8 bg-white border-2 border-gray-200 rounded-xl hover:border-[#D7008A] hover:shadow-lg transition-all duration-300"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
+                  <UserPlus className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#41023B] mb-2">
+                  Nuevo Colegiado
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Soy un profesional que desea colegiarse por primera vez
+                </p>
+                <div className="mt-4 flex items-center justify-center text-[#D7008A] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium mr-2">Continuar</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </motion.button>
+
+            {/* Opción: Colegiado Viejo */}
+            <motion.button
+              type="button"
+              onClick={() => handleTipoRegistroChange("viejo")}
+              className="group relative p-8 bg-white border-2 border-gray-200 rounded-xl hover:border-[#D7008A] hover:shadow-lg transition-all duration-300"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-4 group-hover:bg-gray-200 transition-colors">
+                  <UserCheck className="w-8 h-8 text-gray-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#41023B] mb-2">
+                  Colegiado
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Ya estoy colegiado y deseo renovar o actualizar mi registro
+                </p>
+                <div className="mt-4 flex items-center justify-center text-[#D7008A] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium mr-2">Continuar</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Espaciador adicional para simular el footer */}
+        <div className="h-16"></div>
+      </motion.div>
+    )
   }
 
   // Determinar qué componente mostrar
@@ -728,7 +820,8 @@ export default function RegistrationForm({
       )
     }
 
-    const CurrentStepComponent = steps.find((step) => step.id === currentStep)?.component
+    const currentStepObj = getCurrentStep()
+    const CurrentStepComponent = currentStepObj?.component
 
     if (CurrentStepComponent === InfoContacto) {
       return (
@@ -756,13 +849,7 @@ export default function RegistrationForm({
     )
   }
 
-  const CurrentIcon = steps[currentStep - 1]?.icon
-
-  const [documentosRequeridos, setDocumentosRequeridos] = useState({
-    required: [],
-    uploaded: [],
-    approved: []
-  });
+  const CurrentIcon = getCurrentStep()?.icon
 
   return (
     <>
@@ -774,7 +861,7 @@ export default function RegistrationForm({
         />
       </Head>
       <div className="select-none cursor-default relative w-full min-h-screen overflow-hidden mx-auto my-auto">
-        {/* Header navigation - Improved responsiveness */}
+        {/* Header navigation */}
         {!isModal && (
           <motion.div
             initial={{ y: -20, opacity: 0 }}
@@ -782,7 +869,6 @@ export default function RegistrationForm({
             transition={{ duration: 0.5 }}
             className="absolute top-4 right-0 left-0 z-20 px-4 sm:px-6 flex justify-between items-center"
           >
-            {/* Botón Página Principal con Link */}
             <Link href="/">
               <motion.button
                 whileHover={{ scale: 1.03 }}
@@ -793,7 +879,6 @@ export default function RegistrationForm({
               </motion.button>
             </Link>
 
-            {/* Enlace Iniciar Sesión */}
             <div className="flex items-center">
               <Link
                 href="/Login"
@@ -812,7 +897,6 @@ export default function RegistrationForm({
 
         <div className="relative z-10 flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-22">
           <div className="w-full max-w-full">
-            {/* Responsive Row Layout */}
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-22">
               {/* Logo and Title Column */}
               <div className="w-full lg:w-4/12 flex flex-col items-center justify-center text-center mt-6">
@@ -843,7 +927,9 @@ export default function RegistrationForm({
                         ? "Registro Exitoso"
                         : showEmailVerification
                           ? "Verificación de Correo Electrónico"
-                          : "Registro de Nuevos Colegiados"}
+                          : showTipoSelection
+                            ? "Registro de Colegiados"
+                            : "Registro de Nuevos Colegiados"}
                   </h1>
                   <p className="mt-3 text-white text-lg max-w-3xl mx-auto">
                     {showPaymentScreen
@@ -852,14 +938,17 @@ export default function RegistrationForm({
                         ? "¡Gracias por completar su registro y pago!"
                         : showEmailVerification
                           ? "Verifique su correo electrónico para continuar con el proceso de registro"
-                          : "Complete el formulario en 6 sencillos pasos para unirse a nuestra comunidad profesional"}
+                          : showTipoSelection
+                            ? "Seleccione su tipo de registro para comenzar el proceso de colegiación"
+                            : `Complete el formulario en ${steps.length} sencillos pasos para unirse a nuestra comunidad profesional`}
                   </p>
                 </motion.div>
               </div>
-              {/* Form Column - Wider on larger screens */}
+
+              {/* Form Column */}
               <div className="w-full lg:w-8/12 lg:mt-8">
                 <div className="relative">
-                  {!isComplete && !showPaymentScreen && !showEmailVerification && (
+                  {!isComplete && !showPaymentScreen && !showEmailVerification && !showTipoSelection && (
                     <div className="mb-8">
                       <div className="flex justify-between mb-4 relative">
                         <div className="absolute top-6 left-0 w-full h-0.5 bg-gray-400"></div>
@@ -872,10 +961,10 @@ export default function RegistrationForm({
                             )}%`,
                           }}
                         ></div>
-                        {steps.map((step) => {
+                        {steps.map((step, index) => {
                           const StepIcon = step.icon
-                          const isCompleted = step.id < currentStep
-                          const isCurrent = step.id === currentStep
+                          const isCompleted = index + 1 < currentStep
+                          const isCurrent = index + 1 === currentStep
                           return (
                             <div key={step.id} className="flex flex-col items-center group z-10">
                               <div className="relative">
@@ -906,8 +995,10 @@ export default function RegistrationForm({
                       </div>
                     </div>
                   )}
+
                   <div className="relative overflow-hidden rounded-2xl shadow-lg bg-white pt-10 px-8">
                     {error && <Alert type="alert">{error.detail}</Alert>}
+
                     {isComplete ? (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -924,7 +1015,6 @@ export default function RegistrationForm({
                           pondremos en contacto con usted.
                         </p>
 
-                        {/* Mensaje condicional si seleccionó pagar luego */}
                         {pagarLuego && (
                           <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
                             <p className="text-yellow-800 font-medium">
@@ -947,7 +1037,6 @@ export default function RegistrationForm({
                         transition={{ duration: 0.5 }}
                         className="relative z-10"
                       >
-                        {/* Botón de regresar en la esquina superior izquierda */}
                         <div className="absolute top-4 left-4">
                           <button
                             type="button"
@@ -969,24 +1058,22 @@ export default function RegistrationForm({
                           }}
                           />
                         )}
-                        {/* Sección de "Pagar luego" con el mismo estilo que RegistrarColegiadoModal */}
+
                         <div className="w-full max-w-md mx-auto mt-6">
                           <div className="flex justify-center gap-4">
-                            {/* Exonerar - Solo para administradores en modal */}
                             {isAdmin && isModal && !pagarLuego && (
                               <button
                                 type="button"
                                 onClick={() => setExonerarPagos(!exonerarPagos)}
                                 className={`flex-1 px-6 py-2 rounded-full text-sm font-semibold border transition-all duration-300 ${exonerarPagos
-                                    ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
-                                    : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/20"
+                                  ? "bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white border-white shadow-md"
+                                  : "bg-white text-[#41023B] border-[#41023B] hover:bg-[#41023B]/20"
                                   }`}
                               >
                                 Exonerar
                               </button>
                             )}
 
-                            {/* Pagar Luego */}
                             {!exonerarPagos && (
                               <button
                                 type="button"
@@ -1001,7 +1088,6 @@ export default function RegistrationForm({
                             )}
                           </div>
 
-                          {/* Mensaje informativo */}
                           {pagarLuego && (
                             <div className="mt-4 text-center text-sm text-[#41023B] font-medium">
                               El usuario podrá completar el pago más adelante.
@@ -1052,6 +1138,8 @@ export default function RegistrationForm({
                           )}
                         </div>
                       </motion.div>
+                    ) : showTipoSelection ? (
+                      renderTipoSelectionScreen()
                     ) : (
                       <form onSubmit={handleSubmit} className="relative z-10">
                         <div className="py-6">
@@ -1065,12 +1153,12 @@ export default function RegistrationForm({
                             </div>
                             <div>
                               <h2 className="sm:text-xl font-bold text-[#41023B]">
-                                {showEmailVerification ? "Verificación de Correo" : steps[currentStep - 1].title}
+                                {showEmailVerification ? "Verificación de Correo" : getCurrentStep()?.title}
                               </h2>
                               <p className="text-gray-700 text-sm">
                                 {showEmailVerification
                                   ? "Ingrese el código enviado a su correo"
-                                  : steps[currentStep - 1].description}
+                                  : getCurrentStep()?.description}
                               </p>
                             </div>
                           </div>
@@ -1090,8 +1178,9 @@ export default function RegistrationForm({
                             </motion.div>
                           </AnimatePresence>
                         </div>
+
                         <div className="p-6 border-t border-gray-300 flex justify-between">
-                          {currentStep > 1 || showEmailVerification ? (
+                          {(currentStep > 1 || showEmailVerification) ? (
                             <motion.button
                               type="button"
                               onClick={prevStep}
@@ -1103,8 +1192,21 @@ export default function RegistrationForm({
                               Anterior
                             </motion.button>
                           ) : (
-                            <div></div>
+                            <motion.button
+                              type="button"
+                              onClick={() => {
+                                setShowTipoSelection(true)
+                                setTipoRegistro("")
+                              }}
+                              className="cursor-pointer flex items-center px-5 py-2.5 bg-white text-[#41023B] border border-gray-700 rounded-xl text-base font-medium shadow-sm hover:shadow-md hover:bg-[#41023B] hover:text-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#41023B] focus:ring-opacity-50"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <ChevronLeft className="w-5 h-5 mr-2" />
+                              Cambiar Tipo
+                            </motion.button>
                           )}
+
                           {!showEmailVerification &&
                             (currentStep < steps.length ? (
                               <motion.button

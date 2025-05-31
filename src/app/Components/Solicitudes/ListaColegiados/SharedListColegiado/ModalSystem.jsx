@@ -638,7 +638,7 @@ export function ExonerationModal({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-xl w-full max-w-xl"
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl"
       >
         <div className="flex justify-between items-center p-4 border-b">
           <h3 className="text-lg font-medium text-[#41023B]">Exonerar pagos</h3>
@@ -766,7 +766,7 @@ export function TitleConfirmationModal({
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden"
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden"
       >
         <div className="bg-green-50 p-4 border-b border-green-100">
           <div className="flex items-center justify-center mb-2 text-green-600">
@@ -852,7 +852,7 @@ export function ReportIllegalityModal({ isOpen, onClose, onSubmit, colegiadoInfo
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-xl">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
         <div className="bg-red-50 p-4 border-b border-red-100 flex items-center">
           <AlertTriangle size={24} className="text-red-600 mr-3" />
           <h3 className="text-xl font-semibold text-gray-900">Reportar Irregularidad</h3>

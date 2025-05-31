@@ -568,8 +568,8 @@ export default function DetalleSolicitud({ props }) {
             </div>
           ) : documentosSistema.length > 0 ? (
             <div className="space-y-3">
-              {documentosSistema.map((documento) => (
-                <div key={documento.id} className="border rounded-lg p-3 flex justify-between items-center bg-gray-50">
+              {documentosSistema.map((documento,index) => (
+                <div key={index} className="border rounded-lg p-3 flex justify-between items-center bg-gray-50">
                   <div className="flex items-center">
                     <FileText size={18} className="text-blue-500 mr-2" />
                     <div>

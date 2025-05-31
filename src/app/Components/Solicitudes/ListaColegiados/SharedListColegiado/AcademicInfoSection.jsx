@@ -102,7 +102,7 @@ export default function AcademicInfoSection({
       <div className="flex items-center justify-between mb-5 border-b pb-3">
         <div className="flex items-center">
           <Award size={20} className="text-[#C40180] mr-2" />
-          <h2 className="text-lg font-semibold text-gray-900">Información académica y profesional</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Información Académica y Profesional</h2>
         </div>
 
         {!readOnly && (
