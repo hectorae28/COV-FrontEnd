@@ -1,10 +1,10 @@
 import SessionInfo from "@/Components/SessionInfo";
 import { motion } from "framer-motion";
 import {
-    AlertTriangle, Calendar, CheckCircle, Clock, CreditCard,
-    GraduationCap, Mail, Phone,
-    PlusCircle,
-    User, UserX, XCircle
+  AlertTriangle, Calendar, CheckCircle, Clock, CreditCard,
+  GraduationCap, Mail, Phone,
+  PlusCircle,
+  User, UserX, XCircle
 } from "lucide-react";
 
 export default function UserProfileCard({
@@ -114,7 +114,7 @@ export default function UserProfileCard({
       return persona.identificacion || "No especificada";
     } else {
       // Para colegiados registrados
-      const nacionalidad = persona.nacionalidad || "V";
+      const nacionalidad = persona.nacionalidad || "";
       const identificacion = persona.identificacion || "";
 
       // Si no tiene formato, construirlo

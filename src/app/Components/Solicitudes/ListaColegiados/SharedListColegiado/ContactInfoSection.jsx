@@ -130,7 +130,7 @@ export default function ContactInfoSection({
       <div className="flex items-center justify-between mb-5 border-b pb-3">
         <div className="flex items-center">
           <Mail size={20} className="text-[#C40180] mr-2" />
-          <h2 className="text-lg font-semibold text-gray-900">Información de contacto</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Información de Contacto</h2>
         </div>
 
         {!readOnly && (
@@ -220,7 +220,7 @@ export default function ContactInfoSection({
       <Modal
         isOpen={showModal}
         onClose={handleCloseModal}
-        title="Editar información de contacto"
+        title="Editar Información de Contacto"
         maxWidth="max-w-3xl"
       >
         {localFormData && (

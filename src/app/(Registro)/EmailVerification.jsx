@@ -1,7 +1,7 @@
 "use client";
 import { postDataUsuario } from "@/api/endpoints/colegiado";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, MailCheck, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, MailCheck, RefreshCw, UserCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function EmailVerification({
@@ -17,9 +17,14 @@ export default function EmailVerification({
     const [error, setError] = useState("");
     const [timeLeft, setTimeLeft] = useState(null);
     const [canResend, setCanResend] = useState(null);
+    const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
+    const [isCheckingEmail, setIsCheckingEmail] = useState(true);
 
     const inputRefs = useRef([]);
+
     const handleSendEmailCode = async () => {
+        const startTime = Date.now();
+
         try {
             const res = await postDataUsuario(`send-verification-email`, {
                 "email": email
@@ -27,23 +32,35 @@ export default function EmailVerification({
             if (res.status === 200) {
                 setCanResend(false);
                 setTimeLeft(60);
+                setEmailAlreadyExists(false);
             }
         } catch (err) {
             if (err.status === 409) {
-                setError("El correo electrónica ya se encuentra registrado")
+                setEmailAlreadyExists(true);
+                setError("El correo electrónico ya se encuentra registrado en nuestro sistema")
             } else {
                 setError("Error al enviar el código. Por favor, intente nuevamente.")
             }
         }
+
+        // Tiempo mínimo de 1 segundo
+        const elapsed = Date.now() - startTime;
+        const minLoadingTime = 1000; // 1 segundo mínimo
+        const remainingTime = Math.max(minLoadingTime - elapsed, 0);
+
+        setTimeout(() => {
+            setIsCheckingEmail(false);
+        }, remainingTime);
     }
+
     useEffect(() => {
         if (!hasSentEmail.current) {
             handleSendEmailCode();
-            hasSentEmail.current = true; // Mark as sent
+            hasSentEmail.current = true;
         }
     }, [])
 
-    // Timer para resentir código
+    // Timer para reenviar código
     useEffect(() => {
         if (timeLeft > 0 && !canResend) {
             const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -55,34 +72,26 @@ export default function EmailVerification({
 
     // Enfoque automático en el primer input al montar
     useEffect(() => {
-        if (inputRefs.current[0]) {
+        if (inputRefs.current[0] && !emailAlreadyExists && !isCheckingEmail) {
             setTimeout(() => {
                 inputRefs.current[0].focus();
             }, 100);
         }
-    }, []);
+    }, [emailAlreadyExists, isCheckingEmail]);
 
-    // Manejar entrada de código con diferentes métodos
     const handleCodeChange = (index, value) => {
-        // Validar que solo sean números
         if (value && !/^[0-9]+$/.test(value)) return;
 
         const newCode = [...verificationCode];
 
-        // Para manejar pegar texto
         if (value.length > 1) {
-            // Si se pega un código completo
             const pastedCode = value.replace(/\D/g, '').split('').slice(0, 6);
-
-            // Llenar el formulario con los dígitos pegados
             const updatedCode = [...verificationCode];
             pastedCode.forEach((digit, idx) => {
                 if (idx < 6) updatedCode[idx] = digit;
             });
 
             setVerificationCode(updatedCode);
-
-            // Enfocar el último campo completado o el siguiente
             const nextIndex = Math.min(5, index + pastedCode.length);
             if (inputRefs.current[nextIndex]) {
                 inputRefs.current[nextIndex].focus();
@@ -90,23 +99,19 @@ export default function EmailVerification({
             return;
         }
 
-        // Para entrada normal de un solo caracter
         newCode[index] = value;
         setVerificationCode(newCode);
 
-        // Si se ingresó un dígito, pasar al siguiente campo
         if (value && index < 5) {
             inputRefs.current[index + 1].focus();
         }
     };
 
     const handleKeyDown = (index, e) => {
-        // Si presiona retroceso y está vacío, ir al anterior
         if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
             inputRefs.current[index - 1].focus();
         }
 
-        // Permite usar las flechas izquierda y derecha para navegar
         if (e.key === 'ArrowLeft' && index > 0) {
             inputRefs.current[index - 1].focus();
         }
@@ -118,7 +123,6 @@ export default function EmailVerification({
 
     const handleVerify = async () => {
         const code = verificationCode.join('');
-        // Validar que todos los campos estén completos
         if (code.length !== 6) {
             setError("Por favor, ingrese el código completo de 6 dígitos");
             return;
@@ -137,9 +141,11 @@ export default function EmailVerification({
             }
         } catch (err) {
             if (err.status === 409) {
-                setError("El correo electrónica ya se encuentra registrado")
+                setEmailAlreadyExists(true);
+                setError("El correo electrónico ya se encuentra registrado en nuestro sistema")
+            } else {
+                setError("Error al verificar el código. Por favor, intente nuevamente.");
             }
-            setError("Error al verificar el código. Por favor, intente nuevamente.");
         } finally {
             setIsVerifying(false);
         }
@@ -155,7 +161,6 @@ export default function EmailVerification({
             setVerificationCode(Array(6).fill(""));
             setError("");
 
-            // Volver a enfocar el primer campo
             setTimeout(() => {
                 if (inputRefs.current[0]) {
                     inputRefs.current[0].focus();
@@ -166,6 +171,155 @@ export default function EmailVerification({
         }
     };
 
+    // Pantalla de carga inicial (con 1 segundo mínimo)
+    if (isCheckingEmail) {
+        return (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+            >
+                <div className="text-center mb-8">
+                    <div className="w-16 h-16 bg-[#D7008A]/10 rounded-full mx-auto flex items-center justify-center mb-4">
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                            <MailCheck className="w-8 h-8 text-[#D7008A]" />
+                        </motion.div>
+                    </div>
+                    <h2 className="text-xl font-bold text-[#41023B]">Verificando Correo Electrónico</h2>
+                    <p className="text-gray-600 mt-2">
+                        Verificando disponibilidad del correo:<br />
+                        <span className="font-medium text-[#D7008A]">{email}</span>
+                    </p>
+                </div>
+
+                <div className="flex justify-center">
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <div className="w-2 h-2 bg-[#D7008A] rounded-full animate-pulse"></div>
+                        <span>Procesando...</span>
+                    </div>
+                </div>
+
+                {/* Botón para regresar durante la verificación */}
+                <div className="flex justify-center pt-4">
+                    <button
+                        type="button"
+                        onClick={onGoBack}
+                        className="flex items-center px-4 py-2 bg-white text-[#41023B] border border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+                    >
+                        <ChevronLeft className="w-4 h-4 mr-1" />
+                        Modificar Correo
+                    </button>
+                </div>
+            </motion.div>
+        );
+    }
+
+    // Pantalla elegante para correo ya registrado
+    if (emailAlreadyExists) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="space-y-8"
+            >
+                <div className="text-center">
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                        className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-6 shadow-lg"
+                    >
+                        <UserCheck className="w-10 h-10 text-white" />
+                    </motion.div>
+
+                    <motion.h2
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-2xl font-bold text-[#41023B] mb-3"
+                    >
+                        Correo Ya Registrado
+                    </motion.h2>
+
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="space-y-2"
+                    >
+                        <p className="text-gray-600">
+                            El correo electrónico
+                        </p>
+                        <div className="bg-[#41023B]/20 rounded-xl p-4 border border-[#41023B]">
+                            <span className="font-semibold text-[#41023B] text-lg">{email}</span>
+                        </div>
+                        <p className="text-gray-600">
+                            ya está asociado a una cuenta existente en nuestro sistema.
+                        </p>
+                    </motion.div>
+                </div>
+
+                {/* Opciones elegantes */}
+                <motion.div
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="space-y-4"
+                >
+                    {/* Botones de acción */}
+                    <div className="space-y-4">
+                        {/* Botón principal para cambiar correo */}
+                        <div className="flex justify-center">
+                            <motion.button
+                                type="button"
+                                onClick={onGoBack}
+                                className="flex items-center px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <ChevronLeft className="w-5 h-5 mr-2" />
+                                Cambiar Correo Electrónico
+                            </motion.button>
+                        </div>
+
+                        {/* Enlace para iniciar sesión */}
+                        <div className="text-center">
+                            <p className="text-sm text-gray-600 mb-2">
+                                ¿Ya tienes una cuenta con este correo?
+                            </p>
+
+                            <a href="/Login"
+                                className="inline-flex items-center text-[#D7008A] hover:text-[#41023B] font-medium text-sm transition-colors duration-200"
+                            >
+                                Iniciar Sesión en su Cuenta
+                                <ChevronRight className="w-4 h-4 ml-1" />
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Información adicional sutil */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                        className="text-center pt-4"
+                    >
+                        <div className="inline-flex items-center space-x-2 text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded-full">
+                            <UserCheck className="w-4 h-4" />
+                            <span>Cada correo puede estar asociado a una sola cuenta</span>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            </motion.div>
+        );
+    }
+
+    // Pantalla normal de verificación de código (sin cambios)
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -227,7 +381,7 @@ export default function EmailVerification({
                         </div>
                     </div>
 
-                    {error && (
+                    {error && !emailAlreadyExists && (
                         <p className="mt-2 text-sm text-red-500">{error}</p>
                     )}
 

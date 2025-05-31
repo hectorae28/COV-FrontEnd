@@ -112,7 +112,7 @@ export default function PersonalInfoSection({
         <div className="pt-6 mb-8">
           <div className="flex items-center mb-5 border-b pb-3">
             <Clock size={20} className="text-[#C40180] mr-2" />
-            <h2 className="text-lg font-semibold text-gray-900">Información del registro</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Información del Registro</h2>
           </div>
 
           <div className="bg-purple-50 p-4 rounded-md">
@@ -127,7 +127,7 @@ export default function PersonalInfoSection({
       <div className="flex items-center justify-between mb-5 border-b pb-3">
         <div className="flex items-center">
           <User size={20} className="text-[#C40180] mr-2" />
-          <h2 className="text-lg font-semibold text-gray-900">Información personal</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Información Personal</h2>
         </div>
 
         {!readOnly && (
