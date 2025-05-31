@@ -1,7 +1,7 @@
 import EstadoData from "@/Shared/EstadoData";
 import institucionesList from "@/Shared/InstitucionesData";
 import { motion } from "framer-motion";
-import { Briefcase, BriefcaseBusiness, Eye, FileText, Phone, Plus, Trash2, Upload } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, ChevronRight, Eye, FileText, Phone, Plus, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import DireccionForm from "./DireccionForm";
 
@@ -16,11 +16,10 @@ const capitalizeWords = (text) => {
     .join(" ");
 };
 
+// Primera letra mayúscula
 const capitalizarPalabras = (texto) => {
   if (!texto) return "";
-  // Convertir a string en caso de que sea un objeto o número
-  const textoStr = typeof texto === 'string' ? texto : String(texto);
-  return textoStr
+  return texto
     .split(' ')
     .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
     .join(' ');
@@ -44,9 +43,10 @@ const formatearTelefonoLocal = (value) => {
   return digits;
 };
 
-export default function InfoLaboralWithDireccionForm({ formData, onInputChange, validationErrors, isEditMode = false, onSave }) {
-  const [workStatus, setWorkStatus] = useState(formData.workStatus || "labora");
+export default function InfoLaboralWithDireccionForm({ formData, onInputChange, validationErrors, attemptedNext, isEditMode = false, onSave }) {
+  const [workStatus, setWorkStatus] = useState(formData.workStatus || "");
   const [localFormData, setLocalFormData] = useState(formData);
+  const [showInitialSelection, setShowInitialSelection] = useState(!formData.workStatus);
 
   const [registros, setRegistros] = useState(
     formData.laboralRegistros && formData.laboralRegistros.length > 0
@@ -80,29 +80,32 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
 
         return {
           ...registro,
-          institutionName: capitalizeWords(registro.institutionName || ""),
-          institutionAddress: capitalizarPalabras(addressData.referencia || ""),
+          institutionName: capitalizarPalabras(registro.institutionName || ""),
+          institutionAddress: capitalizeWords(addressData.referencia || registro.institutionAddress || ""),
           cargo: capitalizarPalabras(registro.cargo || ""),
           selectedEstado: registro.selectedEstado || addressData.estado || "",
           selectedMunicipio: registro.selectedMunicipio || addressData.municipio || "",
+          NameEstado: registro.NameEstado || "",
+          NameMunicipio: registro.NameMunicipio || "",
           constancia_trabajo: registro.constancia_trabajo || null
         };
       })
       : [
         {
           id: 1,
+          id_direccion: formData.id_direccion,
           institutionType: formData.institutionType || "",
-          institutionName: capitalizeWords(formData.institutionName || ""),
+          institutionName: capitalizarPalabras(formData.institutionName || ""),
           institutionAddress: (() => {
             // Manejar institutionAddress del formData principal
             if (!formData.institutionAddress) return "";
 
             if (typeof formData.institutionAddress === 'object' && formData.institutionAddress.referencia !== undefined) {
-              return capitalizarPalabras(formData.institutionAddress.referencia || "");
+              return capitalizeWords(formData.institutionAddress.referencia || "");
             }
 
             if (typeof formData.institutionAddress === 'string') {
-              return capitalizarPalabras(formData.institutionAddress);
+              return capitalizeWords(formData.institutionAddress);
             }
 
             return "";
@@ -117,6 +120,7 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
             }
             return "";
           })(),
+          NameEstado: formData.NameEstado || "",
           selectedMunicipio: (() => {
             // Priorizar selectedMunicipio directo, luego institutionAddress.municipio
             if (formData.selectedMunicipio) return formData.selectedMunicipio;
@@ -125,6 +129,7 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
             }
             return "";
           })(),
+          NameMunicipio: formData.NameMunicipio || "",
           constancia_trabajo: formData.constancia_trabajo || null
         }
       ]
@@ -169,11 +174,13 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
 
         return {
           ...registro,
-          institutionName: capitalizeWords(registro.institutionName || ""),
-          institutionAddress: capitalizarPalabras(addressData.referencia || ""),
+          institutionName: capitalizarPalabras(registro.institutionName || ""),
+          institutionAddress: capitalizeWords(addressData.referencia || registro.institutionAddress || ""),
           cargo: capitalizarPalabras(registro.cargo || ""),
           selectedEstado: registro.selectedEstado || addressData.estado || "",
           selectedMunicipio: registro.selectedMunicipio || addressData.municipio || "",
+          NameEstado: registro.NameEstado || "",
+          NameMunicipio: registro.NameMunicipio || "",
           constancia_trabajo: registro.constancia_trabajo || null
         };
       }));
@@ -205,11 +212,14 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
   useEffect(() => {
     if (formData.workStatus !== undefined) {
       setWorkStatus(formData.workStatus);
+      setShowInitialSelection(!formData.workStatus);
     }
   }, [formData.workStatus]);
 
   const handleWorkStatusChange = (value) => {
     setWorkStatus(value);
+    setShowInitialSelection(false);
+
     if (value === "noLabora") {
       const updatedData = {
         workStatus: value,
@@ -251,14 +261,12 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
     const nuevosRegistros = [...registros];
     const registro = nuevosRegistros[index];
 
-    if (field === "institutionName") {
-      value = capitalizeWords(value);
-    } else if (field === "cargo") {
+    if (field === "institutionName" || field === "cargo") {
       value = capitalizarPalabras(value);
     } else if (field === "institutionPhone") {
       value = formatearTelefonoLocal(value);
     } else if (field === "selectedEstado") {
-      // Al cambiar el estado, resetear el municipio
+      // Al cambiar el estado, resetear la ciudad
       registro.selectedMunicipio = "";
     }
 
@@ -276,6 +284,38 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
         ...prev,
         ...updatedData
       }));
+    } else {
+      onInputChange(updatedData);
+    }
+  };
+
+  const handleDireccionChange = (index, updates) => {
+    const nuevosRegistros = [...registros];
+    const registro = { ...nuevosRegistros[index] };
+
+    // Aplicar las actualizaciones
+    Object.keys(updates).forEach(key => {
+      if (key === "institutionAddress") {
+        registro[key] = capitalizeWords(updates[key]);
+      } else {
+        registro[key] = updates[key];
+      }
+    });
+
+    nuevosRegistros[index] = registro;
+    setRegistros(nuevosRegistros);
+
+    const updatedData = { laboralRegistros: nuevosRegistros };
+
+    // Si es el primer registro, también actualizar los campos principales
+    if (index === 0) {
+      Object.keys(updates).forEach(key => {
+        updatedData[key] = registro[key];
+      });
+    }
+
+    if (isEditMode) {
+      setLocalFormData(prev => ({ ...prev, ...updatedData }));
     } else {
       onInputChange(updatedData);
     }
@@ -317,40 +357,14 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
     }
   };
 
-  const handleDireccionChange = (index, updates) => {
-    const nuevosRegistros = [...registros];
-    const registro = nuevosRegistros[index];
-
-    Object.keys(updates).forEach(key => {
-      registro[key] = updates[key];
-    });
-
-    setRegistros(nuevosRegistros);
-
-    const updatedData = { laboralRegistros: nuevosRegistros };
-
-    if (index === 0) {
-      Object.assign(updatedData, updates);
-    }
-
-    if (isEditMode) {
-      setLocalFormData(prev => ({
-        ...prev,
-        ...updatedData
-      }));
-    } else {
-      onInputChange(updatedData);
-    }
-  };
-
   // Agregar un nuevo registro laboral
   const agregarRegistro = () => {
-
     const nuevoId = registros.length > 0 ? Math.max(...registros.map(r => r.id)) + 1 : 1;
     const nuevosRegistros = [
       ...registros,
       {
         id: nuevoId,
+        id_direccion: null,
         institutionType: "",
         institutionName: "",
         institutionAddress: "",
@@ -358,6 +372,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
         cargo: "",
         selectedEstado: "",
         selectedMunicipio: "",
+        NameEstado: "",
+        NameMunicipio: "",
         constancia_trabajo: null
       }
     ];
@@ -394,6 +410,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
           cargo: nuevosRegistros[0].cargo,
           selectedEstado: nuevosRegistros[0].selectedEstado,
           selectedMunicipio: nuevosRegistros[0].selectedMunicipio,
+          NameEstado: nuevosRegistros[0].NameEstado,
+          NameMunicipio: nuevosRegistros[0].NameMunicipio,
           constancia_trabajo: nuevosRegistros[0].constancia_trabajo
         });
       }
@@ -409,31 +427,64 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
     }
   };
 
+  // ARREGLAR: Validación mejorada para múltiples registros
   const isFieldEmpty = (registro, fieldName) => {
     if (workStatus === "noLabora") {
       return false;
     }
     if (!validationErrors) return false;
-    if (registro.id === 1) {
+
+    const registroIndex = registros.findIndex(r => r.id === registro.id);
+
+    // Para el primer registro, usar validationErrors del formulario principal
+    if (registroIndex === 0) {
       return validationErrors[fieldName];
     }
-    // Para registros adicionales, verificar errores con el ID específico
-    return validationErrors[`${fieldName}_${registro.id}`] || false;
+
+    // Para registros adicionales, verificar si hay error específico para este registro
+    const errorKey = `${fieldName}_${registro.id}`;
+    if (validationErrors[errorKey]) {
+      return true;
+    }
+
+    // Validación adicional: verificar si el campo está vacío
+    // Esto ayuda a mostrar errores inmediatamente mientras el usuario escribe
+    if (!registro[fieldName] || (typeof registro[fieldName] === 'string' && registro[fieldName].trim() === "")) {
+      // Solo mostrar error si ya se intentó enviar el formulario
+      return attemptedNext || validationErrors[fieldName];
+    }
+
+    return false;
   };
 
   const handleSaveClick = () => {
-    // Validar que haya al menos una institución con datos válidos
     if (workStatus === "labora" && registros.length > 0) {
-      const hasValidInstitution = registros.some(reg =>
-        reg.institutionName && reg.institutionType && reg.institutionAddress
-      );
+      // Validar cada registro
+      let hasErrors = false;
+      const newErrors = {};
 
-      if (!hasValidInstitution) {
-        alert("Debe completar los datos de al menos una institución");
+      registros.forEach((registro, index) => {
+        const requiredFields = ["institutionName", "institutionType", "institutionAddress", "selectedEstado", "selectedMunicipio", "cargo", "institutionPhone"];
+
+        requiredFields.forEach(field => {
+          // Validación normal para campos
+          if (!registro[field] || (typeof registro[field] === 'string' && registro[field].trim() === "")) {
+            if (index === 0) {
+              newErrors[field] = true;
+            } else {
+              newErrors[`${field}_${registro.id}`] = true;
+            }
+            hasErrors = true;
+          }
+        });
+      });
+
+      if (hasErrors) {
+        // Si hay errores, actualizar validationErrors (esto requeriría un callback del padre)
+        console.error("Debe completar todos los campos requeridos para cada institución");
         return;
       }
 
-      // Actualizar datos en el formulario principal
       const updatedData = {
         workStatus: workStatus,
         laboralRegistros: registros
@@ -445,7 +496,6 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
         onInputChange(updatedData);
       }
     } else if (workStatus === "noLabora") {
-      // Si no labora, enviar estado con valores por defecto
       const updatedData = {
         workStatus: "noLabora",
         laboralRegistros: []
@@ -459,6 +509,90 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
     }
   };
 
+  // Pantalla inicial de selección
+  if (showInitialSelection) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-8"
+      >
+        {/* Mensaje principal */}
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-6">
+            <BriefcaseBusiness className="w-10 h-10 text-white" />
+          </div>
+
+          <h2 className="text-2xl font-bold text-[#41023B] mb-4">
+            Situación Laboral Actual
+          </h2>
+
+          <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+            Para continuar con su proceso de colegiación, necesitamos conocer su situación laboral actual.
+            Por favor, seleccione la opción que mejor describa su estado:
+          </p>
+        </div>
+
+        {/* Opciones de selección */}
+        <div className="max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Opción: Laborando */}
+            <motion.button
+              type="button"
+              onClick={() => handleWorkStatusChange("labora")}
+              className="group relative p-8 bg-white border-2 border-gray-200 rounded-xl hover:border-[#D7008A] hover:shadow-lg transition-all duration-300"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-[#D7008A] to-[#41023B] rounded-full mx-auto flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
+                  <BriefcaseBusiness className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#41023B] mb-2">
+                  Actualmente Laborando
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Estoy ejerciendo mi profesión en una o más instituciones
+                </p>
+                <div className="mt-4 flex items-center justify-center text-[#D7008A] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium mr-2">Continuar</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </motion.button>
+
+            {/* Opción: No Laborando */}
+            <motion.button
+              type="button"
+              onClick={() => handleWorkStatusChange("noLabora")}
+              className="group relative p-8 bg-white border-2 border-gray-200 rounded-xl hover:border-[#D7008A] hover:shadow-lg transition-all duration-300"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-4 group-hover:bg-gray-200 transition-colors">
+                  <Briefcase className="w-8 h-8 text-gray-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#41023B] mb-2">
+                  No Laborando Actualmente
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  No estoy ejerciendo mi profesión en este momento
+                </p>
+                <div className="mt-4 flex items-center justify-center text-[#D7008A] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium mr-2">Continuar</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Formulario principal (se muestra después de seleccionar)
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -467,31 +601,22 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
       className="space-y-8"
     >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 className="text-xl font-semibold text-[#41023B] mb-4 sm:mb-0"></h2>
-        <div className="bg-gray-100 rounded-lg p-1 flex w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => handleWorkStatusChange("labora")}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex-1 sm:flex-auto ${workStatus === "labora"
-              ? "bg-white text-[#D7008A] shadow-sm"
-              : "text-gray-600 hover:bg-gray-200"
-              }`}
-          >
-            <BriefcaseBusiness size={18} />
-            <span>Laborando</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleWorkStatusChange("noLabora")}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex-1 sm:flex-auto ${workStatus === "noLabora"
-              ? "bg-white text-[#D7008A] shadow-sm"
-              : "text-gray-600 hover:bg-gray-200"
-              }`}
-          >
-            <Briefcase size={18} />
-            <span>No Laborando</span>
-          </button>
+        {/* Mostrar estado seleccionado */}
+        <div className="flex items-center mb-4 sm:mb-0">
+          <div className={`w-3 h-3 rounded-full mr-3 ${workStatus === "labora" ? "bg-green-500" : "bg-gray-500"}`}></div>
+          <span className="text-lg font-medium text-[#41023B]">
+            {workStatus === "labora" ? "Actualmente laborando" : "No laborando actualmente"}
+          </span>
         </div>
+
+        {/* Botón para cambiar selección */}
+        <button
+          type="button"
+          onClick={() => setShowInitialSelection(true)}
+          className="text-sm text-[#D7008A] hover:text-[#41023B] font-medium underline"
+        >
+          Cambiar selección
+        </button>
       </div>
 
       {workStatus === "labora" && (
@@ -515,6 +640,7 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                   </button>
                 )}
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
@@ -616,9 +742,6 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                   {isFieldEmpty(registro, "institutionPhone") && (
                     <p className="mt-1 text-xs text-red-500">Este campo es obligatorio</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
-                    Ingrese código de área y número. Ej: 0212 123 4567
-                  </p>
                 </div>
               </div>
 
@@ -626,15 +749,13 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
               <div className="w-full mt-4">
                 <label className="block mb-2 text-sm font-medium text-[#41023B] flex items-center">
                   Constancia de Trabajo
-                  <span className="text-red-500 ml-1">*</span>
+                  <span className="text-gray-500 ml-1 text-xs">(Opcional)</span>
                 </label>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <label className={`cursor-pointer flex-1 px-4 py-3 border-2 border-dashed ${isFieldEmpty(registro, "constancia_trabajo")
-                        ? "border-red-500 bg-red-50"
-                        : registro.constancia_trabajo
-                          ? "border-green-500 bg-green-50"
-                          : "border-gray-300 bg-gray-50"
+                    <label className={`cursor-pointer flex-1 px-4 py-3 border-2 border-dashed ${registro.constancia_trabajo
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-300 bg-gray-50"
                       } rounded-xl hover:bg-gray-100 transition-colors`}>
                       <input
                         type="file"
@@ -649,8 +770,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                             : "text-gray-400"
                         } />
                         <span className={`text-sm font-medium ${registro.constancia_trabajo
-                            ? "text-green-700"
-                            : "text-gray-600"
+                          ? "text-green-700"
+                          : "text-gray-600"
                           }`}>
                           {registro.constancia_trabajo
                             ? (typeof registro.constancia_trabajo === 'string'
@@ -686,12 +807,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                     </div>
                   )}
 
-                  {isFieldEmpty(registro, "constancia_trabajo") && (
-                    <p className="text-xs text-red-500">Este campo es obligatorio</p>
-                  )}
-
                   <p className="text-xs text-gray-500">
-                    Suba la constancia de trabajo de esta institución. Formatos permitidos: JPG, PNG, PDF (máx. 5MB)
+                    Suba la constancia de trabajo de esta institución (opcional). Formatos permitidos: JPG, PNG, PDF (máx. 5MB)
                   </p>
                 </div>
               </div>
@@ -701,6 +818,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                 onInputChange={(updates) => handleDireccionChange(index, updates)}
                 isFieldEmpty={(fieldName) => isFieldEmpty(registro, fieldName)}
                 isEditMode={false}
+                localFormData={localFormData}
+                setLocalFormData={setLocalFormData}
                 fieldMapping={{
                   state: "selectedEstado",
                   municipio: "selectedMunicipio",
@@ -708,6 +827,8 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
                 }}
                 title="Dirección de Institución"
                 addressPlaceholder="Calle, Avenida, Edificio, Piso, Oficina"
+                attemptedNext={attemptedNext}
+                municipiosDisponibles={municipiosDisponibles[registro.id] || []}
               />
             </div>
           ))}
@@ -742,17 +863,12 @@ export default function InfoLaboralWithDireccionForm({ formData, onInputChange, 
           </div>
           <h3 className="text-center text-gray-700 font-medium mb-2">No laborando actualmente</h3>
           <p className="text-center text-gray-600 text-sm">
-            Ha indicado que no se encuentra laborando actualmente. Puede continuar con el siguiente paso.
-            Esta sección puede ser modificada o completada posteriormente si su situación laboral cambia.
+            Ha indicado que no se encuentra laborando actualmente.
           </p>
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-            <p className="text-xs text-blue-700 text-center">
-              Si comienza a laborar en el futuro, puede volver a esta sección y actualizar su información laboral.
-            </p>
-          </div>
         </div>
       )}
 
+      {/* Botón Guardar cambios */}
       {isEditMode && (
         <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           <button

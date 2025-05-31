@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { AlertCircle, Camera, CheckCircle, Upload, X } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 export default function FotoColegiado({
@@ -12,10 +13,28 @@ export default function FotoColegiado({
   const [isCapturing, setIsCapturing] = useState(false);
   const [stream, setStream] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [currentExampleIndex, setCurrentExampleIndex] = useState(0);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Imágenes de ejemplo
+  const exampleImages = [
+    { src: "/FTH.png", alt: "Ejemplo foto carnet hombre" },
+    { src: "/FTM.png", alt: "Ejemplo foto carnet mujer" }
+  ];
+
+  // Efecto para cambiar las imágenes de ejemplo cada 3 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentExampleIndex((prevIndex) => 
+        prevIndex === 0 ? 1 : 0
+      );
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Efecto para manejar foto existente
   useEffect(() => {
@@ -293,95 +312,135 @@ const startCamera = async () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="space-y-8"
+      className="space-y-6 max-w-4xl mx-auto"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Instrucciones - Mejoradas */}
-        <div className="lg:col-span-1">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6 shadow-sm mt-0 md:mt-12">
-            <div className="flex items-start space-x-3">
-              <div className="flex-1">
-                <h3 className="text-base text-center font-semibold text-blue-900 mb-3">
-                  Requisitos para la foto
-                </h3>
-                <ul className="space-y-2 text-sm text-blue-800">
-                  <li className="flex items-start space-x-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                    <span>Fondo completamente blanco</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                    <span>Posición frontal mirando a la cámara</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                    <span>Sin gorras, sombreros o accesorios</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                    <span>Expresión neutral y rostro visible</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                    <span>Buena iluminación natural</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                    <span>Foto reciente (máximo 6 meses)</span>
-                  </li>
-                </ul>
+      {/* Requisitos para la foto - Como opciones dinámicas en la parte superior */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-4 shadow-sm">
+        <h3 className="text-base font-semibold text-blue-900 mb-4 text-center">
+          Requisitos para la foto tipo carnet
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 border border-blue-100">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></div>
+            <span className="text-xs text-blue-800 font-medium">Fondo blanco</span>
+          </div>
+          <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 border border-blue-100">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></div>
+            <span className="text-xs text-blue-800 font-medium">Posición frontal</span>
+          </div>
+          <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 border border-blue-100">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></div>
+            <span className="text-xs text-blue-800 font-medium">Sin accesorios</span>
+          </div>
+          <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 border border-blue-100">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></div>
+            <span className="text-xs text-blue-800 font-medium">Rostro visible</span>
+          </div>
+          <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 border border-blue-100">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></div>
+            <span className="text-xs text-blue-800 font-medium">Buena iluminación</span>
+          </div>
+          <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 border border-blue-100">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></div>
+            <span className="text-xs text-blue-800 font-medium">Foto reciente</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Ejemplos y Campo de foto - Lado a lado del mismo tamaño */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Ejemplos de foto */}
+        <div className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200 p-3 shadow-sm">
+          <h3 className="text-sm font-semibold text-green-900 mb-3 text-center">
+            Ejemplos correctos
+          </h3>
+          <div className="flex justify-center">
+            <div className="relative w-36 h-44 bg-white rounded-lg overflow-hidden border-2 border-green-200 shadow-md">
+              {exampleImages.map((image, index) => (
+                <motion.div
+                  key={index}
+                  className="absolute inset-0"
+                  initial={{ opacity: index === 0 ? 1 : 0 }}
+                  animate={{ 
+                    opacity: currentExampleIndex === index ? 1 : 0 
+                  }}
+                  transition={{ 
+                    duration: 0.8,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 144px"
+                  />
+                </motion.div>
+              ))}
+              
+              {/* Indicadores */}
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                {exampleImages.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      currentExampleIndex === index 
+                        ? 'bg-green-600' 
+                        : 'bg-white/60'
+                    }`}
+                  />
+                ))}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Campo de foto - Mejorado */}
-        <div className="lg:col-span-2">
-          <label className="block mb-4 text-lg font-semibold text-[#41023B] flex items-center">
-            <Camera className="w-5 h-5 mr-2" />
+        {/* Campo de foto */}
+        <div className="lg:col-span-2 bg-white rounded-lg border-2 border-gray-200 p-3 shadow-sm">
+          <label className="block mb-3 text-sm font-semibold text-[#41023B] flex items-center justify-center">
+            <Camera className="w-4 h-4 mr-2" />
             Foto tipo Carnet
             <span className="text-red-500 ml-1">*</span>
           </label>
 
           {/* Mostrar foto capturada/subida */}
           {previewUrl ? (
-            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6 shadow-sm">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="relative">
-                  <div className="w-56 h-72 bg-gray-50 rounded-xl overflow-hidden border-2 border-gray-200 shadow-md">
-                    <img
-                      src={previewUrl}
-                      alt="Foto del colegiado"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={removePhoto}
-                    className="absolute -top-3 -right-3 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+            <div className="flex flex-col items-center space-y-2">
+              <div className="relative">
+                <div className="w-36 h-44 bg-gray-50 rounded-lg overflow-hidden border-2 border-gray-200 shadow-md">
+                  <img
+                    src={previewUrl}
+                    alt="Foto del colegiado"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                
-                <div className="flex items-center space-x-2 bg-green-50 px-4 py-2 rounded-full border border-green-200">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <p className="text-sm text-green-700 font-medium">
-                    Foto cargada correctamente
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={removePhoto}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+              
+              <div className="flex items-center space-x-2 bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                <CheckCircle className="w-3 h-3 text-green-600" />
+                <p className="text-xs text-green-700 font-medium">
+                  Foto cargada
+                </p>
               </div>
             </div>
           ) : (
-            <div className={`bg-white rounded-2xl border-2 border-dashed p-8 shadow-sm transition-all duration-200 ${
+            <div className={`rounded-lg border-2 border-dashed p-3 transition-all duration-200 ${
               isFieldEmpty("foto_colegiado") 
                 ? "border-red-300 bg-red-50" 
                 : "border-gray-300 hover:border-[#D7008A] hover:bg-gray-50"
             }`}>
               {isCapturing ? (
-                <div className="space-y-6">
+                <div className="space-y-3">
                   <div className="flex justify-center">
-                    <div className="w-80 h-60 bg-black rounded-xl overflow-hidden shadow-lg relative">
+                    <div className="w-56 h-42 bg-black rounded-lg overflow-hidden shadow-lg relative">
                       <video
                         ref={videoRef}
                         autoPlay
@@ -392,25 +451,25 @@ const startCamera = async () => {
                       {!cameraReady && (
                         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                           <div className="text-white text-center">
-                            <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full mx-auto mb-2"></div>
-                            <p className="text-sm">Preparando cámara...</p>
+                            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto mb-1"></div>
+                            <p className="text-xs">Preparando...</p>
                           </div>
                         </div>
                       )}
                       {cameraReady && (
-                        <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        <div className="absolute top-1 right-1 bg-green-500 text-white px-1.5 py-0.5 rounded-full text-xs flex items-center gap-1">
+                          <div className="w-1 h-1 bg-white rounded-full"></div>
                           Listo
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="flex justify-center gap-4">
+                  <div className="flex justify-center gap-2">
                     <motion.button
                       type="button"
                       onClick={capturePhoto}
                       disabled={!cameraReady}
-                      className={`flex items-center gap-2 px-6 py-3 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
+                      className={`flex items-center gap-1 px-3 py-1.5 text-white rounded-md font-medium shadow-md hover:shadow-lg transition-all duration-200 text-xs ${
                         cameraReady 
                           ? "bg-gradient-to-r from-[#D7008A] to-[#B8007A] hover:opacity-90" 
                           : "bg-gray-400 cursor-not-allowed"
@@ -418,13 +477,13 @@ const startCamera = async () => {
                       whileHover={cameraReady ? { scale: 1.02 } : {}}
                       whileTap={cameraReady ? { scale: 0.98 } : {}}
                     >
-                      <Camera className="w-5 h-5" />
-                      {cameraReady ? "Capturar Foto" : "Preparando..."}
+                      <Camera className="w-3 h-3" />
+                      {cameraReady ? "Capturar" : "Preparando..."}
                     </motion.button>
                     <motion.button
                       type="button"
                       onClick={stopCamera}
-                      className="flex items-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:bg-gray-600 transition-all duration-200"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-gray-500 text-white rounded-md font-medium shadow-md hover:shadow-lg hover:bg-gray-600 transition-all duration-200 text-xs"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -433,44 +492,33 @@ const startCamera = async () => {
                   </div>
                 </div>
               ) : (
-                <div className="text-center space-y-6">
+                <div className="text-center space-y-3">
                   <div className="flex justify-center">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
-                      <Camera className="w-10 h-10 text-gray-400" />
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Camera className="w-5 h-5 text-gray-400" />
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      Agregue foto tipo carnet
+                    <h3 className="text-sm font-semibold text-gray-800 mb-1">
+                      Agregue su foto
                     </h3>
-                    <p className="text-sm text-gray-600">
-                      Puede tomar una foto con su cámara o subir un archivo desde su dispositivo
+                    <p className="text-xs text-gray-600 mb-1">
+                      Subir archivo desde dispositivo
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Formatos: JPG, PNG • Tamaño máximo: 5MB
+                    <p className="text-xs text-gray-500">
+                      JPG, PNG • Máx. 5MB
                     </p>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    {/* <motion.button
-                      type="button"
-                      onClick={startCamera}
-                      className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#D7008A] to-[#B8007A] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-200"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Camera className="w-5 h-5" />
-                      Tomar Foto
-                    </motion.button> */}
-                    
+                  <div className="flex justify-center">
                     <motion.button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-3 px-6 py-3 bg-gray-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:bg-gray-700 transition-all duration-200"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-gray-600 text-white rounded-md font-medium shadow-md hover:shadow-lg hover:bg-gray-700 transition-all duration-200 text-xs"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Upload className="w-5 h-5" />
+                      <Upload className="w-3 h-3" />
                       Subir Archivo
                     </motion.button>
                   </div>
@@ -491,9 +539,9 @@ const startCamera = async () => {
             <motion.p 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-2 text-sm text-red-500 flex items-center gap-1"
+              className="mt-2 text-xs text-red-500 flex items-center justify-center gap-1"
             >
-              <AlertCircle className="w-4 h-4" />
+              <AlertCircle className="w-3 h-3" />
               Este campo es obligatorio
             </motion.p>
           )}

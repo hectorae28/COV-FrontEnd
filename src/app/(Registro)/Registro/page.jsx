@@ -355,14 +355,14 @@ export default function RegistrationForm({
       }
 
       if (!formData.laboralRegistros || formData.laboralRegistros.length === 0) {
-        const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio", "constancia_trabajo"]
+        const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio"]
         requiredLabFields.forEach(field => {
           errors[field] = true
         })
         isValid = false
       } else {
         formData.laboralRegistros.forEach((registro, index) => {
-          const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio", "constancia_trabajo"]
+          const requiredLabFields = ["institutionName", "institutionAddress", "institutionPhone", "cargo", "institutionType", "selectedEstado", "selectedMunicipio"]
 
           requiredLabFields.forEach(field => {
             if (!registro[field] || (typeof registro[field] === "string" && registro[field].trim() === "")) {
@@ -761,10 +761,10 @@ export default function RegistrationForm({
                   <UserPlus className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-[#41023B] mb-2">
-                  Colegiado Nuevo
+                  Nuevo Colegiado
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Soy un profesional recién graduado que desea colegiarse por primera vez
+                  Soy un profesional que desea colegiarse por primera vez
                 </p>
                 <div className="mt-4 flex items-center justify-center text-[#D7008A] opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-sm font-medium mr-2">Continuar</span>
@@ -786,7 +786,7 @@ export default function RegistrationForm({
                   <UserCheck className="w-8 h-8 text-gray-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-[#41023B] mb-2">
-                  Colegiado Existente
+                  Colegiado
                 </h3>
                 <p className="text-gray-600 text-sm">
                   Ya estoy colegiado y deseo renovar o actualizar mi registro
