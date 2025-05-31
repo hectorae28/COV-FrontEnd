@@ -6,9 +6,9 @@ import { Briefcase, Eye, FileText, MapPin, Pencil, Phone } from "lucide-react";
 import { useState } from "react";
 
 import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
-import VerificationSwitch from "../VerificationSwitch";
+import VerificationSwitch from "@/Components/Solicitudes/ListaColegiados/VerificationSwitch";
 
-export default function InstitutionsSection({
+export default function SituacionLaboral({
   pendiente,
   instituciones,
   setInstituciones,
@@ -16,11 +16,21 @@ export default function InstitutionsSection({
   pendienteId,
   setCambiosPendientes,
   readOnly = false,
-  isAdmin = false
+  isAdmin = false,
+  isColegiado = false,
+  pendienteData = null,
+  entityData = null
 }) {
   // Estados para el modal
   const [showModal, setShowModal] = useState(false);
   const [localFormData, setLocalFormData] = useState(null);
+  
+  // Estado para controlar qué vista mostrar
+  const [vistaActiva, setVistaActiva] = useState("actuales");
+
+  // ✅ DETERMINAR FUENTE DE DATOS: Compatibilidad dual (solo para instituciones)
+  const sourceData = pendienteData || entityData || pendiente;
+  
   // Obtener nombre del tipo de institución
   const getInstitucionTypeName = (code) => {
     const institucionesList = [
@@ -40,7 +50,6 @@ export default function InstitutionsSection({
     const institucion = institucionesList.find(inst => inst.code === code);
     return institucion ? institucion.name : code;
   };
-  console.log({instituciones})
 
   // Formatear dirección completa
   const formatearDireccion = (institucion) => {
@@ -50,7 +59,6 @@ export default function InstitutionsSection({
 
     if (direccion) {
       return `${direccion.municipio_nombre}, ${direccion.estado_nombre} - ${direccion.referencia}`;
-
     } else {
       return "No especificada";
     }
@@ -63,12 +71,24 @@ export default function InstitutionsSection({
     }
   };
 
+  // Filtrar instituciones por estado (activo/inactivo)
+  const institucionesActuales = instituciones?.filter(inst => 
+    inst.estado_laboral !== "anterior" && inst.estado_laboral !== "inactivo"
+  ) || [];
+  
+  const institucionesAnteriores = instituciones?.filter(inst => 
+    inst.estado_laboral === "anterior" || inst.estado_laboral === "inactivo"
+  ) || [];
+
+  // Determinar qué instituciones mostrar según la vista activa
+  const institucionesToShow = vistaActiva === "actuales" ? institucionesActuales : institucionesAnteriores;
+
   // Extraer los valores iniciales para el formulario de edición
   const getInitialFormData = () => {
-    const workStatus = instituciones && instituciones.length > 0 ? "labora" : "noLabora";
+    const workStatus = instituciones?.length > 0 ? "labora" : "noLabora";
 
     // Si hay instituciones, adaptarlas al formato de laboralRegistros
-    const laboralRegistros = instituciones && instituciones.length > 0
+    const laboralRegistros = instituciones?.length > 0
       ? instituciones.map((inst, index) => ({
         id: index + 1,
         institutionType: inst.tipo_institucion || inst.institutionType || "",
@@ -83,7 +103,8 @@ export default function InstitutionsSection({
         NameMunicipio: inst.direccion.municipio_nombre || "",
         verification_status: inst.verification_status || undefined,
         rejection_reason: inst.rejection_reason || '',
-        constancia_trabajo: inst.constancia_trabajo || null
+        constancia_trabajo: inst.constancia_trabajo || null,
+        estado_laboral: inst.estado_laboral || "actual"
       }))
       : [];
 
@@ -110,10 +131,13 @@ export default function InstitutionsSection({
 
   const handleSaveChanges = (updatedData = null) => {
     const dataToUpdate = updatedData || localFormData;
-    console.log(updatedData);
+    
     // Si no está laborando, limpiar instituciones
     if (dataToUpdate.workStatus === "noLabora") {
-      setInstituciones([]);
+      // ✅ ACTUALIZAR ESTADO LOCAL según tipo
+      if (setInstituciones) {
+        setInstituciones([]);
+      }
       updateData(pendienteId, { instituciones: [] });
     } else {
       const updatedInstituciones = dataToUpdate.laboralRegistros.map(reg => ({
@@ -134,10 +158,14 @@ export default function InstitutionsSection({
         selectedMunicipio: reg.selectedMunicipio,
         verificado: reg.verification_status || undefined,
         motivo_rechazo: reg.rejection_reason || '',
-        constancia_trabajo: reg.constancia_trabajo || null
+        constancia_trabajo: reg.constancia_trabajo || null,
+        estado_laboral: reg.estado_laboral || "actual"
       }));
 
-      setInstituciones(updatedInstituciones);
+      // ✅ ACTUALIZAR ESTADO LOCAL según tipo
+      if (setInstituciones) {
+        setInstituciones(updatedInstituciones);
+      }
       updateData(pendienteId, { instituciones: updatedInstituciones });
     }
 
@@ -154,22 +182,35 @@ export default function InstitutionsSection({
 
   // Manejar cambio de estado de verificación de instituciones
   const handleInstitutionStatusChange = (updatedInstitution, index) => {
-    console.log(updatedInstitution);
-    console.log(index);
-    const updatedInstituciones = [...instituciones];
-    updatedInstituciones[index] = {
-      ...updatedInstituciones[index],
-      verificado: updatedInstitution.verificado,
-      motivo_rechazo: updatedInstitution.motivo_rechazo || ''
-    };
+    const institucionesToUpdate = vistaActiva === "actuales" ? institucionesActuales : institucionesAnteriores;
+    const allInstituciones = [...instituciones];
+    
+    // Encontrar el índice real en el array completo
+    const realIndex = allInstituciones.findIndex(inst => 
+      inst.id === institucionesToUpdate[index].id || 
+      (inst.nombre === institucionesToUpdate[index].nombre && 
+       inst.cargo === institucionesToUpdate[index].cargo)
+    );
 
-    setInstituciones(updatedInstituciones);
-    // Actualizar en backend
-    const updateData_verification = {
-      instituciones: updatedInstituciones,
-    };
+    if (realIndex !== -1) {
+      allInstituciones[realIndex] = {
+        ...allInstituciones[realIndex],
+        verificado: updatedInstitution.verificado,
+        motivo_rechazo: updatedInstitution.motivo_rechazo || ''
+      };
 
-    updateData(pendienteId, updateData_verification);
+      // ✅ ACTUALIZAR ESTADO LOCAL según tipo
+      if (setInstituciones) {
+        setInstituciones(allInstituciones);
+      }
+      
+      // Actualizar en backend
+      const updateData_verification = {
+        instituciones: allInstituciones,
+      };
+
+      updateData(pendienteId, updateData_verification);
+    }
   };
 
   return (
@@ -177,13 +218,13 @@ export default function InstitutionsSection({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
-      className="bg-white rounded-lg shadow-md p-6 md:col-span-2 border border-gray-100 mb-6"
+      className="bg-white rounded-lg shadow-md p-6 border border-gray-100"
     >
       <div className="flex items-center justify-between mb-5 border-b pb-3">
         <div className="flex items-center">
           <Briefcase size={20} className="text-[#C40180] mr-2" />
           <h2 className="text-lg font-semibold text-gray-900">
-            Instituciones donde trabaja
+            Situación Laboral
           </h2>
         </div>
 
@@ -198,10 +239,46 @@ export default function InstitutionsSection({
         )}
       </div>
 
+      {/* Selector de vista */}
+      <div className="mb-6">
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          <button
+            onClick={() => setVistaActiva("actuales")}
+            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+              vistaActiva === "actuales"
+                ? "bg-white text-[#C40180] shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Instituciones Actuales
+            {institucionesActuales.length > 0 && (
+              <span className="ml-2 bg-[#C40180] text-white text-xs px-2 py-1 rounded-full">
+                {institucionesActuales.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setVistaActiva("anteriores")}
+            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+              vistaActiva === "anteriores"
+                ? "bg-white text-[#C40180] shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Trabajos Anteriores
+            {institucionesAnteriores.length > 0 && (
+              <span className="ml-2 bg-gray-500 text-white text-xs px-2 py-1 rounded-full">
+                {institucionesAnteriores.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
       {/* Vista de instituciones */}
-      {instituciones && instituciones.length > 0 ? (
+      {institucionesToShow && institucionesToShow.length > 0 ? (
         <div className="space-y-6">
-          {instituciones.map((institucion, index) => (
+          {institucionesToShow.map((institucion, index) => (
             <div
               key={index}
               className="bg-gray-50 p-4 rounded-md mb-4 last:mb-0"
@@ -209,6 +286,11 @@ export default function InstitutionsSection({
               <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200 flex items-center">
                 <Briefcase size={16} className="mr-2 text-[#C40180]" />
                 {institucion.nombre || institucion.institutionName || "Institución sin nombre"}
+                {vistaActiva === "anteriores" && (
+                  <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                    Anterior
+                  </span>
+                )}
               </h3>
 
               {/* 1ra línea: Tipo de institución y Nombre de institución */}
@@ -318,8 +400,8 @@ export default function InstitutionsSection({
                 )}
               </div>
 
-              {/* Switch de verificación para admin */}
-              {isAdmin && !readOnly && (
+              {/* Switch de verificación para admin (solo para instituciones actuales) */}
+              {isAdmin && !readOnly && vistaActiva === "actuales" && (
                 <div className="pt-4 border-t border-gray-200">
                   <VerificationSwitch
                     item={institucion}
@@ -336,7 +418,10 @@ export default function InstitutionsSection({
         <div className="bg-gray-50 p-4 rounded-md text-gray-500 italic flex items-center justify-center h-32">
           <div className="text-center">
             <Briefcase size={24} className="mx-auto mb-2 text-gray-400" />
-            No hay instituciones registradas
+            {vistaActiva === "actuales" 
+              ? "No hay instituciones actuales registradas"
+              : "No hay trabajos anteriores registrados"
+            }
           </div>
         </div>
       )}
@@ -345,7 +430,7 @@ export default function InstitutionsSection({
       <Modal
         isOpen={showModal}
         onClose={handleCloseModal}
-        title="Editar instituciones donde trabaja"
+        title="Editar situación laboral"
         maxWidth="max-w-4xl"
       >
         {localFormData && (
@@ -360,4 +445,4 @@ export default function InstitutionsSection({
       </Modal>
     </motion.div>
   );
-}
+} 

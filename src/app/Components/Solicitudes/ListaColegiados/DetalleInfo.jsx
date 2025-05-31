@@ -10,7 +10,6 @@ import {
   DocumentSection,
   DocumentViewer,
 } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
-import InstitutionsSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/InstitutionsSection";
 import PaymentReceiptSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PaymentReceiptSection";
 import PersonalInfoSection from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/PersonalInfoSection";
 import UserProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/UserProfileCard";
@@ -19,8 +18,8 @@ import UserProfileCard from "@/Components/Solicitudes/ListaColegiados/SharedList
 import CarnetInfo from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/CarnetInfo";
 import ChatSection from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/ChatSection";
 import EstadisticasUsuario from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/EstadisticasUsuario";
+import SituacionLaboral from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/SituacionLaboral";
 import TablaInscripciones from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/TablaInscripciones";
-import TablaPagos from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/TablaPagos";
 import TablaSolicitudes from "@/Components/Solicitudes/ListaColegiados/DetalleColegiados/TablaSolicitudes";
 
 // Modal para crear solicitudes
@@ -106,7 +105,7 @@ export default function DetalleInfo({
   // Estado para forzar actualizaciones
   const [documentUpdateTrigger, setDocumentUpdateTrigger] = useState(0);
 
-  // 🔧 NUEVOS ESTADOS: Validaciones desde componentes especializados
+  // Validaciones desde componentes especializados
   const [documentsApproved, setDocumentsApproved] = useState(false);
   const [paymentApproved, setPaymentApproved] = useState(false);
 
@@ -121,7 +120,7 @@ export default function DetalleInfo({
     approveRegistration,
   } = useDataListaColegiados();
 
-  // 📊 HANDLERS para recibir estados de componentes especializados
+  // HANDLERS para recibir estados de componentes especializados
   const handleDocumentsStatusChange = useCallback((allApproved) => {
     setDocumentsApproved(allApproved);
   }, []);
@@ -130,7 +129,7 @@ export default function DetalleInfo({
     setPaymentApproved(approved);
   }, []);
 
-  // 🔧 MANEJAR PAGO EXONERADO: Si el pago está exonerado, se considera aprobado
+  // MANEJAR PAGO EXONERADO: Si el pago está exonerado, se considera aprobado
   useEffect(() => {
     if (entityData?.pago_exonerado) {
       setPaymentApproved(true);
@@ -212,6 +211,10 @@ export default function DetalleInfo({
           loadComprobanteData(entityData);
         } else {
           initializeColegiadoData(entityData);
+          // CARGAR COMPROBANTE PARA COLEGIADOS
+          if (entityData.recaudos) {
+            loadComprobanteData(entityData.recaudos);
+          }
         }
 
         // Cargar documentos SOLO para colegiados registrados
@@ -360,6 +363,11 @@ export default function DetalleInfo({
     });
 
     setInstituciones(JSON.parse(JSON.stringify(data.instituciones || [])));
+
+    // CARGAR DATOS DE COMPROBANTE PARA COLEGIADOS
+    if (data.recaudos) {
+      loadComprobanteData(data.recaudos);
+    }
   };
 
   // Cargar datos de pago para pendientes
@@ -404,7 +412,7 @@ export default function DetalleInfo({
     setDocumentoSeleccionado(null);
   };
 
-  // ✅ FUNCIÓN SIMPLIFICADA: Solo para actualizar archivos (NO validación)
+  // Solo para actualizar archivos (NO validación)
   const updateDocumento = async (documentoActualizado) => {
     try {
       let response;
@@ -417,10 +425,6 @@ export default function DetalleInfo({
       // Si el backend devuelve el pending completo, actualizar
       if (response && response.data) {
         setEntityData(prevData => ({ ...prevData, ...response.data }));
-        // setDocumentUpdateTrigger(prev => prev + 1); // Comentado temporalmente para evitar re-render de documentos
-
-        // Actualizar también los datos del comprobante local
-        console.log("🔄 Actualizando comprobanteData...");
         loadComprobanteData(response.data);
       }
 
@@ -430,7 +434,7 @@ export default function DetalleInfo({
     }
   };
 
-  // ✅ FUNCIÓN NUEVA: Solo para manejar validación desde VerificationSwitch
+  // Solo para manejar validación desde VerificationSwitch
   const handleDocumentValidationChange = useCallback(async (documentoActualizado) => {
     try {
       // Determinar valor de validación
@@ -446,7 +450,7 @@ export default function DetalleInfo({
         updateData[`${documentoActualizado.id}_motivo_rechazo`] = documentoActualizado.rejectionReason;
       }
 
-      // ✅ Actualizar estado local inmediatamente
+      // Actualizar estado local inmediatamente
       setEntityData(prevData => ({
         ...prevData,
         ...updateData
@@ -704,17 +708,14 @@ export default function DetalleInfo({
     entityData.persona?.segundo_apellido || entityData.recaudos?.persona?.segundo_apellido
   ].filter(Boolean).join(" ") || "Sin nombre";
 
-  // 🔧 FUNCIÓN PARA EXTRAER INCIDENCIAS RECHAZADAS
-  
+  // FUNCIÓN PARA EXTRAER INCIDENCIAS RECHAZADAS
+
   // Extraer documentos rechazados
   const getDocumentosRechazados = () => {
-    console.log("🔍 Revisando documentos rechazados...");
-    console.log("EntityData para documentos:", entityData);
-    
     // Para pendientes, los documentos están en entityData directamente
     if (tipo === "pendiente" && entityData) {
       const documentosRechazados = [];
-      
+
       // Lista de documentos a verificar
       const documentosAVerificar = [
         { key: 'file_ci', nombre: 'Cédula de identidad' },
@@ -725,22 +726,22 @@ export default function DetalleInfo({
         { key: 'notas_curso', nombre: 'Notas del curso' },
         { key: 'fondo_negro_titulo_bachiller', nombre: 'Título bachiller fondo negro' }
       ];
-      
+
       documentosAVerificar.forEach(doc => {
         const validateField = `${doc.key}_validate`;
         const urlField = `${doc.key}_url`;
         const motivoField = `${doc.key}_motivo_rechazo`;
-        
+
         const hasFile = !!entityData[urlField];
         const isRejected = entityData[validateField] === false || entityData[validateField] === "rechazado";
-        
+
         console.log(`Documento ${doc.key}:`, {
           hasFile,
           validateValue: entityData[validateField],
           isRejected,
           motivo: entityData[motivoField]
         });
-        
+
         if (hasFile && isRejected) {
           documentosRechazados.push({
             nombre: doc.nombre,
@@ -749,11 +750,10 @@ export default function DetalleInfo({
           });
         }
       });
-      
-      console.log("✅ Documentos rechazados encontrados:", documentosRechazados);
+
       return documentosRechazados;
     }
-    
+
     // Para colegiados registrados, usar el array de documentos
     if (documentos && Array.isArray(documentos)) {
       const rechazados = documentos.filter(doc => doc.status === "rechazado").map(doc => ({
@@ -761,70 +761,59 @@ export default function DetalleInfo({
         rejectionReason: doc.rejectionReason || doc.motivo_rechazo || "Sin motivo especificado",
         tipo: "documento"
       }));
-      
-      console.log("✅ Documentos rechazados (colegiados):", rechazados);
+
       return rechazados;
     }
-    
-    console.log("❌ No se encontraron documentos rechazados");
+
     return [];
   };
 
   // Extraer instituciones rechazadas
   const getInstitucionesRechazadas = () => {
-    console.log("🔍 Revisando instituciones rechazadas...");
-    console.log("Instituciones:", instituciones);
-    
     if (!instituciones || !Array.isArray(instituciones)) {
-      console.log("❌ No hay instituciones para revisar");
       return [];
     }
-    
+
     const rechazadas = instituciones.filter(inst => {
       // Verificar diferentes campos que pueden indicar rechazo
-      const isRejected = inst.verificado === false || 
-                        inst.verification_status === false || 
-                        inst.verification_status === "rechazado";
-      
+      const isRejected = inst.verificado === false ||
+        inst.verification_status === false ||
+        inst.verification_status === "rechazado";
+
       console.log(`Institución ${inst.nombre || inst.institutionName}:`, {
         verificado: inst.verificado,
         verification_status: inst.verification_status,
         isRejected: isRejected,
         motivo: inst.motivo_rechazo || inst.rejection_reason
       });
-      
+
       return isRejected;
     }).map(inst => ({
       nombre: inst.nombre || inst.institutionName || "Institución sin nombre",
       motivo_rechazo: inst.motivo_rechazo || inst.rejection_reason || "Sin motivo especificado",
       tipo: "institucion"
     }));
-    
-    console.log("✅ Instituciones rechazadas encontradas:", rechazadas);
+
     return rechazadas;
   };
 
   // Extraer pagos rechazados  
   const getPagosRechazados = () => {
-    console.log("🔍 Revisando pagos rechazados...");
-    console.log("EntityData pago:", entityData?.pago);
-    console.log("ComprobanteData:", comprobanteData);
-    
     const pagosRechazados = [];
-    
+
     // Verificar pago en entityData
     if (entityData?.pago) {
       const pago = entityData.pago;
-      const isRechazado = pago.status === "rechazado" || 
-                         pago.status === false ||
-                         pago.status === "false";
-      
+      const isRechazado = pago.status === "rechazado" ||
+        pago.status === false ||
+        pago.status === "false";
+
       console.log("Pago en entityData:", {
         status: pago.status,
         isRechazado: isRechazado,
         motivo: pago.motivo_rechazo
       });
-      
+
       if (isRechazado) {
         pagosRechazados.push({
           nombre: "Comprobante de pago",
@@ -835,7 +824,7 @@ export default function DetalleInfo({
         });
       }
     }
-    
+
     // También verificar en comprobanteData
     if (comprobanteData && comprobanteData.status === "rechazado") {
       console.log("Comprobante rechazado encontrado en comprobanteData");
@@ -847,19 +836,19 @@ export default function DetalleInfo({
         tipo: "pago"
       });
     }
-    
+
     // Verificar campos de validación de comprobante en entityData
     if (entityData) {
       const comprobanteValidate = entityData.comprobante_validate;
-      const isComprobanteRechazado = comprobanteValidate === false || 
-                                    comprobanteValidate === "rechazado";
-      
+      const isComprobanteRechazado = comprobanteValidate === false ||
+        comprobanteValidate === "rechazado";
+
       console.log("Comprobante validate:", {
         comprobante_validate: comprobanteValidate,
         isRechazado: isComprobanteRechazado,
         motivo: entityData.comprobante_motivo_rechazo
       });
-      
+
       if (isComprobanteRechazado && entityData.comprobante_url) {
         pagosRechazados.push({
           nombre: "Comprobante de pago",
@@ -868,8 +857,7 @@ export default function DetalleInfo({
         });
       }
     }
-    
-    console.log("✅ Pagos rechazados encontrados:", pagosRechazados);
+
     return pagosRechazados;
   };
 
@@ -980,18 +968,6 @@ export default function DetalleInfo({
             readOnly={entityData?.status === "anulado"}
           />
 
-          <InstitutionsSection
-            pendiente={entityData}
-            instituciones={instituciones}
-            setInstituciones={setInstituciones}
-            updateData={updateData}
-            pendienteId={entityId}
-            setCambiosPendientes={setCambiosPendientes}
-            readOnly={entityData?.status === "anulado"}
-            isAdmin={isAdmin}
-          />
-
-          {/* ✅ DocumentSection simplificado */}
           <DocumentSection
             documentos={[]}
             onViewDocument={handleVerDocumento}
@@ -1004,7 +980,7 @@ export default function DetalleInfo({
             onDocumentsStatusChange={handleDocumentsStatusChange}
           />
 
-          {/* Sección de comprobante de pago optimizada */}
+          {/* Sección de comprobante de pago */}
           {!entityData.pago_exonerado && (
             <PaymentReceiptSection
               comprobanteData={comprobanteData}
@@ -1018,10 +994,12 @@ export default function DetalleInfo({
               tasaBCV={tasaBcv}
               entityData={entityData}
               onPaymentStatusChange={handlePaymentStatusChange}
+              showPaymentHistory={tipo === "colegiado"}
+              colegiadoId={tipo === "colegiado" ? entityId : null}
+              handleVerDocumento={handleVerDocumento}
+              documentos={documentos || []}
             />
           )}
-
-          {/* Nota: La sección de pagos para pendientes ahora está integrada en PaymentReceiptSection */}
         </>
       ) : (
         // Vista para colegiados - Con tabs
@@ -1036,7 +1014,25 @@ export default function DetalleInfo({
                   } transition-colors`}
                 onClick={() => setTabActivo("informacion")}
               >
-                Información
+                Información Personal
+              </button>
+              <button
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "situacion-laboral"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
+                onClick={() => setTabActivo("situacion-laboral")}
+              >
+                Situación Laboral
+              </button>
+              <button
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "documentacion"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
+                onClick={() => setTabActivo("documentacion")}
+              >
+                Documentación
               </button>
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "pagos"
@@ -1066,6 +1062,15 @@ export default function DetalleInfo({
                 Solicitudes
               </button>
               <button
+                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "comunicaciones"
+                  ? "border-b-2 border-[#C40180] text-[#C40180]"
+                  : "text-gray-500 hover:text-gray-700"
+                  } transition-colors`}
+                onClick={() => setTabActivo("comunicaciones")}
+              >
+                Comunicaciones
+              </button>
+              <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "carnet"
                   ? "border-b-2 border-[#C40180] text-[#C40180]"
                   : "text-gray-500 hover:text-gray-700"
@@ -1073,24 +1078,6 @@ export default function DetalleInfo({
                 onClick={() => setTabActivo("carnet")}
               >
                 Carnet
-              </button>
-              <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "documentos"
-                  ? "border-b-2 border-[#C40180] text-[#C40180]"
-                  : "text-gray-500 hover:text-gray-700"
-                  } transition-colors`}
-                onClick={() => setTabActivo("documentos")}
-              >
-                Documentos
-              </button>
-              <button
-                className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "chats"
-                  ? "border-b-2 border-[#C40180] text-[#C40180]"
-                  : "text-gray-500 hover:text-gray-700"
-                  } transition-colors`}
-                onClick={() => setTabActivo("chats")}
-              >
-                Chats
               </button>
               <button
                 className={`whitespace-nowrap py-4 px-6 font-medium text-sm ${tabActivo === "estadisticas"
@@ -1140,23 +1127,52 @@ export default function DetalleInfo({
                   setCambiosPendientes={setCambiosPendientes}
                   readonly={entityData?.status === "anulado"}
                 />
-
-                <InstitutionsSection
-                  pendiente={entityData}
-                  instituciones={instituciones}
-                  setInstituciones={setInstituciones}
-                  updateData={updateData}
-                  pendienteId={entityId}
-                  setCambiosPendientes={setCambiosPendientes}
-                  readonly={entityData?.status === "anulado"}
-                  isAdmin={isAdmin}
-                />
               </>
             )}
 
+            {tabActivo === "situacion-laboral" && (
+              <SituacionLaboral
+                pendiente={entityData}
+                instituciones={instituciones}
+                setInstituciones={setInstituciones}
+                updateData={updateData}
+                pendienteId={entityId}
+                setCambiosPendientes={setCambiosPendientes}
+                readOnly={entityData?.status === "anulado"}
+                isAdmin={isAdmin}
+                isColegiado={isColegiado}
+                pendienteData={tipo === "pendiente" ? entityData : null}
+                entityData={tipo === "colegiado" ? entityData : null}
+              />
+            )}
+
+            {tabActivo === "documentacion" && (
+              <DocumentSection
+                documentos={documentos}
+                onViewDocument={handleVerDocumento}
+                updateDocumento={updateDocumento}
+                onValidationChange={handleDocumentValidationChange}
+                readonly={entityData?.status === "anulado"}
+                isColegiado={isColegiado}
+                pendienteData={tipo === "pendiente" ? entityData : entityData?.recaudos}
+                onDocumentsStatusChange={handleDocumentsStatusChange}
+                isAdmin={isAdmin}
+              />
+            )}
+
             {tabActivo === "pagos" && (
-              <TablaPagos
-                colegiadoId={entityId}
+              <PaymentReceiptSection
+                entityData={tipo === "pendiente" ? entityData : { ...entityData, ...entityData?.recaudos }}
+                onUploadComprobante={handleUploadComprobante}
+                onValidationChange={handleComprobanteStatusChange}
+                readOnly={entityData?.status === "anulado"}
+                isAdmin={isAdmin}
+                costoInscripcion={costoInscripcion}
+                metodoPago={metodoPago}
+                tasaBCV={tasaBcv}
+                onPaymentStatusChange={handlePaymentStatusChange}
+                showPaymentHistory={tipo === "colegiado"}
+                colegiadoId={tipo === "colegiado" ? entityId : null}
                 handleVerDocumento={handleVerDocumento}
                 documentos={documentos || []}
               />
@@ -1175,6 +1191,8 @@ export default function DetalleInfo({
               />
             )}
 
+            {tabActivo === "comunicaciones" && <ChatSection colegiado={entityData} />}
+
             {tabActivo === "carnet" && (
               <CarnetInfo
                 colegiado={{
@@ -1183,21 +1201,6 @@ export default function DetalleInfo({
                 }}
               />
             )}
-
-            {tabActivo === "documentos" && (
-              <DocumentSection
-                documentos={documentos}
-                onViewDocument={handleVerDocumento}
-                updateDocumento={updateDocumento}
-                onValidationChange={handleDocumentValidationChange}
-                title="Documentos"
-                subtitle="Documentación del colegiado"
-                isColegiado={isColegiado}
-                onDocumentsStatusChange={handleDocumentsStatusChange}
-              />
-            )}
-
-            {tabActivo === "chats" && <ChatSection colegiado={entityData} />}
 
             {tabActivo === "estadisticas" && (
               <EstadisticasUsuario colegiado={entityData} />
