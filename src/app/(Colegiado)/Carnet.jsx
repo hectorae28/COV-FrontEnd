@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Expand, Download } from 'lucide-react';
-import useColegiadoUserStore from '@/store/colegiadoUserStore';
 import api from '@/api/api';
-import { generateConstanciaPDF, downloadPDF, openPDF } from '@/utils/PDF/constanciasPDFService';
+import useColegiadoUserStore from '@/store/colegiadoUserStore';
+import { generateConstanciaPDF, openPDF } from '@/utils/PDF/constanciasPDFService';
+import { Download, Expand } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function Carnet() {
     const [isHovered, setIsHovered] = useState(false);
@@ -14,6 +14,13 @@ export default function Carnet() {
         try {
             if (!colegiadoUser) return;
             const solicitudCarnet = await api.get(`/solicitudes/solicitud_unida/?colegiado=${colegiadoUser.colegiado_id}&status=cerrada&solicitudcarnet__status=aprobado`);
+            
+            // Validar que existe la respuesta y tiene resultados
+            if (!solicitudCarnet?.data?.results || solicitudCarnet.data.results.length === 0) {
+                console.log("No se encontraron carnets aprobados para este colegiado");
+                return;
+            }
+            
             const datosResponse = await api.get(`/solicitudes/solicitud_carnet/${solicitudCarnet.data.results[0].id}/datos/`);
             const datosCarnet = datosResponse.data;
             const { docDefinition } = generateConstanciaPDF(datosCarnet, 'carnet');

@@ -1,9 +1,8 @@
 // src/app/Models/PanelControl/Solicitudes/SolicitudesData.jsx
 
-import { create } from "zustand";
-import { fetchSolicitudes } from "@/api/endpoints/solicitud";
-import { postDataSolicitud, patchDataSolicitud } from "@/api/endpoints/solicitud";
+import { fetchSolicitudes, patchDataSolicitud, postDataSolicitud } from "@/api/endpoints/solicitud";
 import transformBackendData from "@/utils/formatDataSolicitudes";
+import { create } from "zustand";
 
 export const TIPOS_SOLICITUD = {
   Carnet: {
@@ -391,9 +390,21 @@ export const useSolicitudesStore = create((set, get) => ({
     } catch (error) {
       set({
         loading: false,
-        error: error.message || "Error al cargar los pagos de la solicitud"
+        error: error.message || "Error al cargar solicitudes de solvencia"
       });
-      throw error;
+      
+      // Si es error 403, configurar una lista vacía pero no fallar
+      if (error.response?.status === 403) {
+        console.log("Error 403: No se tienen permisos para acceder a las solicitudes de solvencia");
+        set({
+          solicitudesDeSolvencia: [],
+          solicitudesDeSolvenciaPagination: { results: [], count: 0 },
+          loading: false,
+          error: null // No mostrar error para 403
+        });
+      } else {
+        throw error;
+      }
     }
   },
 

@@ -11,7 +11,6 @@ import Cards from "../Cards";
 import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
-import { set } from "date-fns";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
@@ -40,7 +39,7 @@ export default function Home() {
     const MS_PER_DAY = 1000 * 60 * 60 * 24;
     // difference in milliseconds
     const diffMs = solvencyDate.getTime() - today.getTime();
-    // convert to days; Math.ceil so that any partial day counts as “1 day left”
+    // convert to days; Math.ceil so that any partial day counts as "1 day left"
     const diffDays = Math.ceil(diffMs / MS_PER_DAY);
 
     // 3. Your flag: true only if 0 ≤ diffDays ≤ 14
@@ -224,7 +223,7 @@ export default function Home() {
                   setActiveTab("solicitudes");
                   setShowSolicitudForm(false);
                 }}
-                className={`px-4 py-2 font-medium text-sm ${activeTab === "solicitudes"
+                className={`px-4 py-2 mt-6 font-medium text-sm ${activeTab === "solicitudes"
                   ? "text-[#D7008A] border-b-2 border-[#D7008A]"
                   : "text-gray-500 hover:text-[#41023B]"
                   }`}
@@ -236,7 +235,7 @@ export default function Home() {
             {(canShowTabs || showSolvencyWarning) &&
               <button
                 onClick={() => setActiveTab("solvencia")}
-                className={`px-4 py-2 font-medium text-sm ${activeTab === "solvencia"
+                className={`px-4 py-2 mt-6 font-medium text-sm ${activeTab === "solvencia"
                   ? "text-[#D7008A] border-b-2 border-[#D7008A]"
                   : "text-gray-500 hover:text-[#41023B]"
                   }`}

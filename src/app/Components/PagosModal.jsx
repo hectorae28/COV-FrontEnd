@@ -263,14 +263,13 @@ export default function PagosColg({ props }) {
   };
 
   return (
-    <div id="pagos-modal" className="w-full">
+    <div id="pagos-modal" className="w-full pt-4">
       <div className="mb-8 text-center">
         <h2 className="text-2xl font-bold text-[#41023B] mb-2">
           Registro de Pago
         </h2>
         <p className="text-gray-600">
-          Complete la información de su pago para finalizar el proceso de
-          registro
+          Complete la información para finalizar su pago
         </p>
       </div>
 
