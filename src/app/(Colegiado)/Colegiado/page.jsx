@@ -1,6 +1,7 @@
 "use client";
 import { fetchMe } from "@/api/endpoints/colegiado";
 import { fetchDataSolicitudes } from "@/api/endpoints/landingPage";
+import { solicitarPagosSolvencia, solicitarSolvencia } from "@/api/endpoints/solicitud";
 import CrearSolicitudModal from "@/Components/Solicitudes/Solicitudes/CrearSolicitudModal";
 import SolvencyStatus from "@/Components/Solvencia/EstatusSolv";
 import SolvenciaPago from "@/Components/Solvencia/PagoSolv";
@@ -11,8 +12,6 @@ import Cards from "../Cards";
 import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
-import { solicitarSolvencia, solicitarPagosSolvencia } from "@/api/endpoints/solicitud";
-import { set } from "date-fns";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
@@ -31,6 +30,10 @@ export default function Home() {
   const pagosSolvencia = useColegiadoUserStore((state) => state.pagosSolvencia);
   const setPagosSolvencia = useColegiadoUserStore((state) => state.setPagosSolvencia);
   const [canShowTabs, setCanShowTabs] = useState(false);
+
+  // Estados adicionales para optimización
+  const [solvenciaData, setSolvenciaData] = useState(null);
+  const [isLoadingSolvencia, setIsLoadingSolvencia] = useState(false);
 
   const checkSolvencyStatus = () => {
     if (!colegiadoUser) return;
@@ -130,9 +133,14 @@ export default function Home() {
     }
   }, [session, status]);
 
+  // Separar este useEffect y usar un selector más específico
+  const colegiadoUserSolvente = useColegiadoUserStore((state) => state.colegiadoUser?.solvente);
+  
   useEffect(() => {
-    fetchUserAndSolvency();
-  }, [useColegiadoUserStore((state) => state.colegiadoUser?.solvente)]);
+    if (colegiadoUserSolvente) {
+      fetchUserAndSolvency();
+    }
+  }, [colegiadoUserSolvente]);
 
   const handleCardClick = (cardId) => {
     if (cardId === "multiple") {
@@ -140,18 +148,42 @@ export default function Home() {
     }
   };
 
-  // Manejar clic en botón de pago
-  const handlePayClick = async () => {
-    let pagosResult = [];
-    if(colegiadoUser.solicitud_solvencia_activa){
-      pagosResult = await solicitarPagosSolvencia({user_id: colegiadoUser.id});
-    }else{
-      const solvenciaResult = await solicitarSolvencia({user_id: colegiadoUser.id});
+  // Función optimizada para obtener datos de solvencia
+  const obtenerDatosSolvencia = async () => {
+    if (!colegiadoUser?.id) return;
+    
+    setIsLoadingSolvencia(true);
+    try {
+      let resultado = [];
+      if (colegiadoUser.solicitud_solvencia_activa) {
+        resultado = await solicitarPagosSolvencia({ user_id: colegiadoUser.id });
+        setSolvenciaData(resultado.data);
+        setPagosSolvencia(resultado.data);
+      } else {
+        // Si no hay solicitud activa, crear una nueva
+        await solicitarSolvencia({ user_id: colegiadoUser.id });
+        // Después de crear, obtener los datos
+        resultado = await solicitarPagosSolvencia({ user_id: colegiadoUser.id });
+        setSolvenciaData(resultado.data);
+        setPagosSolvencia(resultado.data);
+      }
+    } catch (error) {
+      console.error('Error al obtener datos de solvencia:', error);
+    } finally {
+      setIsLoadingSolvencia(false);
     }
-    setPagosSolvencia(pagosResult.data);
-    console.log(pagosSolvencia);
-    setActiveTab("solvencia")
-  }
+  };
+
+  // Manejar clic en botón de pago optimizado
+  const handlePayClick = async () => {
+    await obtenerDatosSolvencia();
+    setActiveTab("solvencia");
+  };
+
+  // Función para refrescar datos de solvencia
+  const handleRefreshSolvenciaData = async () => {
+    await obtenerDatosSolvencia();
+  };
 
   // Función para volver al estado inicial (mostrar todas las solicitudes)
   const handleBackToAllSolicitudes = () => {
@@ -309,7 +341,22 @@ export default function Home() {
           ) : null}
 
           {/* Página de Pago de Solvencia */}
-          {activeTab === "solvencia" && <SolvenciaPago props={{ setActiveTab }} />}
+          {activeTab === "solvencia" && (
+            <div className="space-y-6">
+              {isLoadingSolvencia ? (
+                <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D7008A] mx-auto mb-4"></div>
+                  <p className="text-gray-600">Cargando información de solvencia...</p>
+                </div>
+              ) : (
+                <SolvenciaPago 
+                  props={{ setActiveTab }} 
+                  solvenciaData={solvenciaData}
+                  onRefreshData={handleRefreshSolvenciaData}
+                />
+              )}
+            </div>
+          )}
         </>
       )}
 

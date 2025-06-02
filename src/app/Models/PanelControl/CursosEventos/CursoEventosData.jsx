@@ -9,6 +9,8 @@ export const eventosData = [
         "certificado_url": "/assets/eventos/evento1.avif", // Usando la misma imagen como placeholder
         "nombre": "Congreso Internacional 80 Aniversario del Colegio de Odontólogos de Venezuela",
         "precio": "10",
+        "isPaid": true,
+        "tipo": "evento",
         "slug": "congreso-internacional-80-aniversario",
         "cupos": 200,
         "hora_inicio": "08:00:00",
@@ -69,6 +71,8 @@ export const eventosData = [
         "certificado_url": "/assets/eventos/evento2.avif",
         "nombre": "Desde la historia hasta la biopsia",
         "precio": "97.50",
+        "isPaid": true,
+        "tipo": "evento",
         "slug": "historia-hasta-biopsia",
         "cupos": 75,
         "hora_inicio": "10:00:00",
@@ -119,6 +123,56 @@ export const eventosData = [
         "location": "Auditorio COV Las Palmas, Caracas",
         "image": "/assets/eventos/evento2.avif",
         "linkText": "Inscripciones clic aquí"
+    },
+    {
+        "id": 4,
+        "logo": "logo4.png",
+        "logo_url": "/assets/eventos/evento1.avif",
+        "cover": "cover4.png",
+        "cover_url": "/assets/eventos/evento1.avif",
+        "certificado": "cert4.png",
+        "certificado_url": "/assets/eventos/evento1.avif",
+        "nombre": "Charla Gratuita: Prevención en Salud Oral",
+        "precio": "0.00",
+        "isPaid": false,
+        "tipo": "evento",
+        "slug": "charla-prevencion-salud-oral",
+        "cupos": 150,
+        "hora_inicio": "14:00:00",
+        "hora_final": "16:00:00",
+        "fecha": "2025-04-15",
+        "lugar": "Auditorio COV Principal, Caracas",
+        "descripcion": "Charla educativa gratuita sobre técnicas de prevención en salud oral dirigida al público general.",
+        "showPriceTag": true,
+        "currency": "USD",
+        "formulario": {
+            "campos": [
+                {
+                    "tipo": "texto",
+                    "nombre": "Nombres y Apellidos",
+                    "requerido": "true",
+                    "longitud_maxima": 100
+                },
+                {
+                    "tipo": "email",
+                    "nombre": "Correo electrónico",
+                    "requerido": "true"
+                },
+                {
+                    "tipo": "telefono",
+                    "nombre": "Teléfono de contacto",
+                    "requerido": "false"
+                }
+            ]
+        },
+        "create_at": "2025-01-20",
+        "update_at": "2025-01-20",
+        // Compatibilidad con el código anterior
+        "title": "Charla Gratuita: Prevención en Salud Oral",
+        "date": "2025-04-15",
+        "location": "Auditorio COV Principal, Caracas",
+        "image": "/assets/eventos/evento1.avif",
+        "linkText": "Inscríbete Gratis"
     }
 ];
 
@@ -133,6 +187,8 @@ export const cursosData = [
         "certificado_url": "/assets/eventos/evento3.avif",
         "nombre": "Ortodoncia al 100%",
         "precio": "250.00",
+        "isPaid": true,
+        "tipo": "curso",
         "instructores": "Dr. Juan Pérez, Dra. María Rodríguez",
         "hora_inicio": "09:00:00",
         "duracion": "8 horas",

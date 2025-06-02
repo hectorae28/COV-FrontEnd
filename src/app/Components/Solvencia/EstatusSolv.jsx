@@ -6,19 +6,7 @@ import useColegiadoUserStore from "@/store/colegiadoUserStore";
 import { Warning } from "@mui/icons-material";
 import { AlertCircle, Calendar, CheckCircle } from "lucide-react";
 
-export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSoon }) {
-  /*
-    Condicion para saber si el colegiado puede pedir costo especial:
-      - Si el colegiado es antiguo y no posee solvencia (requiere solvencia especial)
-    El colegiado puede solicitar el costo especial (crear la solicitud directamente) y el admin lo revisara
-    El admin ingresa el monto en la solicitud de solvencia (de lo contrario el monto llega -1.0)
-    
-    Boton de pago:
-      -Si el colegiado no requiere solvencia especial o si el costo es mayor a 0 se muestra el boton de pago
-      -Si el colegiado puede pedir el monto especial se muestra el boton de solicitar costo de solvencia
-      -Si el colegiado requiere la solvencia especial y el costo < 0, no mostrar nigun boton
-  */
-
+export default function SolvencyStatus({ solvencyAmount, onPayClick, isExpiringSoon }) {
   const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
   const setColegiadoUser = useColegiadoUserStore((state) => state.setColegiadoUser);
 
@@ -39,18 +27,18 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
 
   const handleSolicitarSolvencia = async () => {
     try {
-      if(colegiadoUser.requiere_solvencia_esp && colegiadoUser.puede_pedir_costo_especial){
-        const pagoResult = await solicitarSolvencia({user_id: colegiadoUser.id});
+      if (colegiadoUser.requiere_solvencia_esp && colegiadoUser.puede_pedir_costo_especial) {
+        const pagoResult = await solicitarSolvencia({ user_id: colegiadoUser.id });
         const colegiadoResult = await fetchMe();
         setColegiadoUser(colegiadoResult.data);
         return [undefined, pagoResult]
-      }else{
+      } else {
         // Siempre llamar onPayClick para abrir el modal de pago
         if (onPayClick && typeof onPayClick === 'function') {
           onPayClick();
         }
       }
-    } catch(error) {
+    } catch (error) {
       console.error("Error en handleSolicitarSolvencia:", error);
       return [error, undefined];
     }
@@ -85,7 +73,7 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
       <div className="bg-gradient-to-b from-[#41023B] to-[#D7008A] p-4">
         <h2 className="text-white font-semibold text-lg">Estado de Solvencia</h2>
       </div>
-      
+
       <div className="p-5">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
@@ -124,7 +112,7 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
               </>
             )}
           </div>
-          
+
           <div className="flex flex-col items-end">
             <div className="text-gray-700 mb-2">
               <span className="font-semibold text-lg">{mensajeDeCosto}</span>

@@ -147,12 +147,12 @@ export default function Eventos() {
           className="text-center mb-12 relative z-10"
         >
           <motion.h1
-            className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text mt-18 md:mt-28"
+            className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-[#C40180] to-[#590248] text-transparent bg-clip-text mt-18 md:mt-28 py-2"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
           >
-            Eventos y Cursos
+            Cursos y Eventos
           </motion.h1>
           <motion.p
             className="mt-4 max-w-2xl mx-auto text-gray-600"

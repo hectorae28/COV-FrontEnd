@@ -12,10 +12,17 @@ export default function PagosColg({ props }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [referenceNumber, setReferenceNumber] = useState("");
+  
+  // Establecer fecha actual por defecto
+  const today = new Date();
+  const currentDay = today.getDate().toString().padStart(2, '0');
+  const currentMonth = (today.getMonth() + 1).toString().padStart(2, '0');
+  const currentYear = today.getFullYear().toString();
+  
   const [paymentDate, setPaymentDate] = useState({
-    day: "",
-    month: "",
-    year: ""
+    day: currentDay,
+    month: currentMonth,
+    year: currentYear
   });
   const [paymentAmount, setPaymentAmount] = useState(parseFloat(costo).toFixed(2));
   const [paymentFile, setPaymentFile] = useState(null);
@@ -46,24 +53,58 @@ export default function PagosColg({ props }) {
     { value: "12", label: "Diciembre" }
   ];
 
-  // Generar años (últimos 10 años y próximos 2)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 13 }, (_, i) => {
-    const year = currentYear - 10 + i;
+  // Generar años desde el año actual hacia atrás (últimos 10 años)
+  const currentYear_val = new Date().getFullYear();
+  const years = Array.from({ length: 11 }, (_, i) => {
+    const year = currentYear_val - i;
     return { value: year.toString(), label: year.toString() };
   });
 
-  // Generar días según el mes y año
+  // Función para obtener meses válidos (no futuros)
+  const getValidMonths = (selectedYear) => {
+    const currentYear_check = new Date().getFullYear();
+    const currentMonth_check = new Date().getMonth() + 1;
+    
+    if (!selectedYear) return months;
+    
+    const yearNum = parseInt(selectedYear);
+    
+    // Si es el año actual, solo mostrar meses hasta el mes actual
+    if (yearNum === currentYear_check) {
+      return months.filter(month => parseInt(month.value) <= currentMonth_check);
+    }
+    
+    // Si es un año anterior, mostrar todos los meses
+    return months;
+  };
+
+  // Generar días según el mes y año (no futuros)
   const getDaysInMonth = (year, month) => {
     if (!year || !month) return [];
-    const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
-    return Array.from({ length: daysInMonth }, (_, i) => {
+    
+    const currentDate = new Date();
+    const currentYear_check = currentDate.getFullYear();
+    const currentMonth_check = currentDate.getMonth() + 1;
+    const currentDay_check = currentDate.getDate();
+    
+    const yearNum = parseInt(year);
+    const monthNum = parseInt(month);
+    
+    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
+    const days = Array.from({ length: daysInMonth }, (_, i) => {
       const day = i + 1;
       return {
         value: day < 10 ? `0${day}` : day.toString(),
         label: day.toString()
       };
     });
+    
+    // Si es el año y mes actual, solo mostrar días hasta el día actual
+    if (yearNum === currentYear_check && monthNum === currentMonth_check) {
+      return days.filter(day => parseInt(day.value) <= currentDay_check);
+    }
+    
+    return days;
   };
 
   // Verificar si hay más de 4 métodos de pago para cambiar el estilo de visualización
@@ -642,7 +683,7 @@ export default function PagosColg({ props }) {
                             className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] appearance-none text-gray-700"
                           >
                             <option value="">Mes</option>
-                            {months.map(month => (
+                            {getValidMonths(paymentDate.year).map(month => (
                               <option key={`month-${month.value}`} value={month.value}>
                                 {month.label}
                               </option>

@@ -116,3 +116,25 @@ export const solicitarPagosSolvencia = async (detallesSolvenciaEspecial) => {
         throw error;
     }
 }
+
+// Nueva función optimizada para obtener datos de solvencia con historial de pagos
+export const obtenerDatosSolvenciaCompletos = async (userId) => {
+    try {
+        const data = await api.get(`solicitudes/solvencia_completa/${userId}/`);
+        return data;
+    } catch (error) {
+        console.error("Error al obtener datos completos de solvencia: ", error);
+        throw error;
+    }
+}
+
+// Función para obtener el historial de pagos de solvencia específicamente
+export const obtenerHistorialPagosSolvencia = async (solicitudId) => {
+    try {
+        const data = await api.get(`solicitudes/historial_pagos_solvencia/${solicitudId}/`);
+        return data;
+    } catch (error) {
+        console.error("Error al obtener historial de pagos: ", error);
+        throw error;
+    }
+}

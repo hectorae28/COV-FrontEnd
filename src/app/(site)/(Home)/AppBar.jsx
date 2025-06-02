@@ -27,7 +27,7 @@ const menuItems = [
     route: "/Especialistas",
   },
   {
-    title: "Eventos",
+    title: "Cursos y Eventos",
     route: "/CursosEventos",
   },
   { title: "Trámites", route: "/Tramites" },
