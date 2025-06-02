@@ -590,7 +590,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                               onChange={(e) => handleSeleccionarFecha(e)}>
                                 <option value="" disabled>Seleccione una fecha</option>
                                 {fechasDeVencimiento.map(({trimestre, fecha}) => {
-                                  console.log(fechaActual > fecha,(solvencia.fechaExpSolicitud!==null || new Date(solvencia.fechaExpSolicitud) > fecha), formatDate(fecha));
                                   return (
                                     <option key={trimestre} value={fecha} disabled={fechaActual > fecha || (solvencia.fechaExpSolicitud!==null && new Date(solvencia.fechaExpSolicitud) > fecha)}>{formatDate(fecha)}</option>
                                   )}

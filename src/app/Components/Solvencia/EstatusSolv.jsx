@@ -1,10 +1,8 @@
 "use client";
 
 import { fetchMe } from "@/api/endpoints/colegiado";
-import { solicitarPagosSolvencia, solicitarSolvencia } from "@/api/endpoints/solicitud";
-import useColegiadoUserStore from "@/store/colegiadoUserStore";
 import { solicitarSolvencia } from "@/api/endpoints/solicitud";
-import { fetchMe } from "@/api/endpoints/colegiado";
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 import { Warning } from "@mui/icons-material";
 import { AlertCircle, Calendar, CheckCircle } from "lucide-react";
 

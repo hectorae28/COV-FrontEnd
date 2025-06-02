@@ -146,7 +146,7 @@ export default function Home() {
     if(colegiadoUser.solicitud_solvencia_activa){
       pagosResult = await solicitarPagosSolvencia({user_id: colegiadoUser.id});
     }else{
-      solvenciaResult = await solicitarSolvencia({user_id: colegiadoUser.id});
+      const solvenciaResult = await solicitarSolvencia({user_id: colegiadoUser.id});
     }
     setPagosSolvencia(pagosResult.data);
     console.log(pagosSolvencia);
