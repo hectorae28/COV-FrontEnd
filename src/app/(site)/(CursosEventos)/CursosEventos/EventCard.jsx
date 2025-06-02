@@ -100,6 +100,7 @@ export default function EventCard({
                             {isEventPaid ? (
                                 <span className="text-[10px]">
                                     {isCurso ? "Curso Pago" : "Evento Pago"}
+                                    {true ? 'CURSO PAGO' : 'EVENTO PAGO'}
                                 </span>
                             ) : (
                                 <span className="text-[10px]">PASE LIBRE</span>
@@ -111,8 +112,8 @@ export default function EventCard({
                     <div className="relative h-48 overflow-hidden flex-shrink-0">
                         <div
                             className={`absolute inset-0 ${eventImage
-                                    ? "bg-white"
-                                    : "bg-gradient-to-br from-[#C40180] to-[#590248]"
+                                ? "bg-white"
+                                : "bg-gradient-to-br from-[#C40180] to-[#590248]"
                                 } opacity-80`}
                         ></div>
                         <div className="absolute inset-0">

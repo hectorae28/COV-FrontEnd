@@ -1051,12 +1051,23 @@ export default function RegistrationForm({
                           </button>
                         </div>
                         {!pagarLuego && !exonerarPagos && (
-                          <PagosColg props={{
-                            costo: costoInscripcion,
-                            allowMultiplePayments: false,
-                            handlePago: handlePago,
-                          }}
-                          />
+                          <>
+                            <div className="mb-8 text-center">
+                              <h2 className="text-2xl font-bold text-[#41023B] mb-2">
+                                Registro de Pago
+                              </h2>
+                              <p className="text-gray-600">
+                                Complete la información de su pago para finalizar el proceso de
+                                registro
+                              </p>
+                            </div>
+                            <PagosColg props={{
+                              costo: costoInscripcion,
+                              allowMultiplePayments: false,
+                              handlePago: handlePago,
+                            }}
+                            />
+                          </>
                         )}
 
                         <div className="w-full max-w-md mx-auto mt-6">

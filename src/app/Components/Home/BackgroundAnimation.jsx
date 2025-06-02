@@ -1,3 +1,4 @@
+"use client"
 import { useEffect, useRef, useState } from "react";
 
 // Componente para las partículas flotantes
