@@ -123,7 +123,7 @@ export function InlineEditForm({
                         <button
                             type="button"
                             onClick={() => setImageType("file")}
-                            className={`px-3 py-1.5 rounded text-sm font-medium ${imageType === "file"
+                            className={`cursor-pointer px-3 py-1.5 rounded text-sm font-medium ${imageType === "file"
                                 ? "bg-[#C40180] text-white"
                                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                                 }`}
@@ -133,7 +133,7 @@ export function InlineEditForm({
                         <button
                             type="button"
                             onClick={() => setImageType("url")}
-                            className={`px-3 py-1.5 rounded text-sm font-medium ${imageType === "url"
+                            className={`cursor-pointer px-3 py-1.5 rounded text-sm font-medium ${imageType === "url"
                                 ? "bg-[#C40180] text-white"
                                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                                 }`}
@@ -246,7 +246,7 @@ export function InlineEditForm({
                 <button
                     type="button"
                     onClick={handleSave}
-                    className="flex-1 py-2.5 px-4 rounded-md font-semibold text-white bg-gradient-to-r from-[#C40180] to-[#590248] hover:from-[#a80166] hover:to-[#470137] transition-all duration-300 shadow-md"
+                    className="cursor-pointer flex-1 py-2.5 px-4 rounded-md font-semibold text-white bg-gradient-to-r from-[#C40180] to-[#590248] hover:from-[#a80166] hover:to-[#470137] transition-all duration-300 shadow-md"
                 >
                     {isNew ? "Crear" : "Guardar cambios"}
                 </button>
@@ -256,7 +256,7 @@ export function InlineEditForm({
                         e.stopPropagation();
                         handleCancel();
                     }}
-                    className="py-2.5 px-4 rounded-md font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-300 flex items-center"
+                    className="cursor-pointer py-2.5 px-4 rounded-md font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-300 flex items-center"
                 >
                     <FiX className="mr-1" /> Cancelar
                 </button>

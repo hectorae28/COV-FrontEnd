@@ -57,13 +57,13 @@ export default function EventList({
                         <div className="flex justify-end space-x-3">
                             <button
                                 onClick={cancelDelete}
-                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 transition-colors"
+                                className="cursor-pointer px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 transition-colors"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={executeDelete}
-                                className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white transition-colors"
+                                className="cursor-pointer px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white transition-colors"
                             >
                                 Eliminar
                             </button>
@@ -74,7 +74,7 @@ export default function EventList({
 
             <TabList className="flex space-x-2 mb-4 p-1 rounded-lg bg-gray-100">
                 <Tab className={({ selected }) =>
-                    `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
+                    `cursor-pointer px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
                         ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
                         : "text-gray-700 hover:bg-gray-200"
                     }`
@@ -82,7 +82,7 @@ export default function EventList({
                     Eventos
                 </Tab>
                 <Tab className={({ selected }) =>
-                    `px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
+                    `cursor-pointer px-4 py-2 rounded-md transition-all duration-200 flex-1 text-center font-medium ${selected
                         ? "bg-gradient-to-r from-[#C40180] to-[#590248] text-white shadow-md"
                         : "text-gray-700 hover:bg-gray-200"
                     }`
@@ -96,7 +96,7 @@ export default function EventList({
                     <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
                         type="text"
-                        placeholder={`Buscar ${tabIndex === 0 ? "eventos" : "cursos"}...`}
+                        placeholder={`Buscar ${tabIndex === 0 ? "en Eventos" : "en Cursos"}...`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-[#C40180] focus:border-[#C40180] outline-none"
@@ -114,7 +114,7 @@ export default function EventList({
                     </div>
                     <button
                         onClick={handleAdd}
-                        className="whitespace-nowrap flex items-center gap-1 bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg hover:from-[#a80166] hover:to-[#470137] transition-all"
+                        className="cursor-pointer whitespace-nowrap flex items-center gap-1 bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4 py-2 rounded-lg hover:from-[#a80166] hover:to-[#470137] transition-all"
                     >
                         <FiPlus /> Nuevo {tabIndex === 0 ? "Evento" : "Curso"}
                     </button>

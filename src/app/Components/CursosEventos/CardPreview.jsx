@@ -99,7 +99,7 @@ export default function CardPreview({
                 </div>
                 <a
                     href="#"
-                    className="mt-3 inline-flex items-center justify-center px-5 py-2 rounded-md bg-gradient-to-r from-[#C40180] to-[#590248] text-white font-semibold text-sm"
+                    className="mt-3 inline-flex items-center justify-center px-5 py-2 rounded-md bg-gradient-to-r from-[#C40180] to-[#590248] text-white font-semibold text-sm pointer-events-none"
                 >
                     {linkText || "Inscríbete"}
                 </a>

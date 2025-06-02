@@ -279,7 +279,7 @@ export default function EventForm({
                 <button
                     type="button"
                     onClick={handleSave}
-                    className="w-full py-2.5 px-4 rounded-md font-semibold text-white bg-gradient-to-r from-[#C40180] to-[#590248] hover:from-[#a80166] hover:to-[#470137] transition-all duration-300 shadow-md"
+                    className="cursor-pointer w-full py-2.5 px-4 rounded-md font-semibold text-white bg-gradient-to-r from-[#C40180] to-[#590248] hover:from-[#a80166] hover:to-[#470137] transition-all duration-300 shadow-md"
                 >
                     {!isCreating ? "Guardar cambios" : `Crear ${tabIndex === 0 ? "Evento" : "Curso"}`}
                 </button>
