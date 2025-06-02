@@ -12,10 +12,17 @@ export default function PagosColg({ props }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [referenceNumber, setReferenceNumber] = useState("");
+  
+  // Obtener fecha actual para valores por defecto
+  const today = new Date();
+  const todayDay = today.getDate().toString().padStart(2, '0');
+  const todayMonth = (today.getMonth() + 1).toString().padStart(2, '0');
+  const todayYear = today.getFullYear().toString();
+  
   const [paymentDate, setPaymentDate] = useState({
-    day: "",
-    month: "",
-    year: ""
+    day: todayDay,
+    month: todayMonth,
+    year: todayYear
   });
   const [paymentAmount, setPaymentAmount] = useState(parseFloat(costo).toFixed(2));
   const [paymentFile, setPaymentFile] = useState(null);
@@ -263,16 +270,7 @@ export default function PagosColg({ props }) {
   };
 
   return (
-    <div id="pagos-modal" className="w-full pt-4">
-      <div className="mb-8 text-center">
-        <h2 className="text-2xl font-bold text-[#41023B] mb-2">
-          Registro de Pago
-        </h2>
-        <p className="text-gray-600">
-          Complete la información para finalizar su pago
-        </p>
-      </div>
-
+    <div id="pagos-modal" className="w-full">
       {!pagarLuego && (
         <div className="bg-[#f8f9fa] p-6 rounded-xl mb-8">
           <div className="md:flex items-center justify-between mb-6 ">

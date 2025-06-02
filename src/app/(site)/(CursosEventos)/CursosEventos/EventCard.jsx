@@ -84,7 +84,7 @@ export default function EventCard({
     text-white font-bold py-0.5 px-8 shadow-md`}>
                             {isEventPaid ? (
                                 <span className="text-[10px]">
-                                    {isCurso ? 'CURSO PAGO' : 'EVENTO PAGO'}
+                                    {true ? 'CURSO PAGO' : 'EVENTO PAGO'}
                                 </span>
                             ) : (
                                 <span className="text-[10px]">PASE LIBRE</span>
