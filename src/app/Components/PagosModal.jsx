@@ -13,13 +13,6 @@ export default function PagosColg({ props }) {
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [referenceNumber, setReferenceNumber] = useState("");
   
-  // Establecer fecha actual por defecto
-  const today = new Date();
-  const currentDay = today.getDate().toString().padStart(2, '0');
-  const currentMonth = (today.getMonth() + 1).toString().padStart(2, '0');
-  const currentYear = today.getFullYear().toString();
-  
-  
   // Obtener fecha actual para valores por defecto
   const today = new Date();
   const todayDay = today.getDate().toString().padStart(2, '0');
@@ -27,9 +20,6 @@ export default function PagosColg({ props }) {
   const todayYear = today.getFullYear().toString();
   
   const [paymentDate, setPaymentDate] = useState({
-    day: currentDay,
-    month: currentMonth,
-    year: currentYear
     day: todayDay,
     month: todayMonth,
     year: todayYear

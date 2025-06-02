@@ -100,7 +100,6 @@ export default function EventCard({
                             {isEventPaid ? (
                                 <span className="text-[10px]">
                                     {isCurso ? "Curso Pago" : "Evento Pago"}
-                                    {true ? 'CURSO PAGO' : 'EVENTO PAGO'}
                                 </span>
                             ) : (
                                 <span className="text-[10px]">PASE LIBRE</span>
