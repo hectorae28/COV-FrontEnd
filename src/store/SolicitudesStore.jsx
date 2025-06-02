@@ -119,6 +119,7 @@ export const formatSolicitudSolvencia = (solicitud) => {
           fechaSolicitud: solicitud.solicitudes_solvencia.lista[0].fecha_solicitud,
           costoRegularSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_regular,
           costoEspecialSolicitud: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
+          fechaExpSolicitud: solicitud.solicitudes_solvencia.lista[0].fecha_expiracion,
           fechaExpSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
           modeloSolvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
           adminCreador: solicitud.solicitudes_solvencia.lista[0].user_admin_create,

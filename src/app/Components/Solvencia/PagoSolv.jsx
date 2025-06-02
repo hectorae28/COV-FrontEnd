@@ -4,167 +4,33 @@ import { fetchMe } from "@/api/endpoints/colegiado";
 import { pagoSolvencia, pagoSolvenciaEspecial } from "@/api/endpoints/solicitud";
 import PagosColg from "@/app/Components/PagosModal";
 import useColegiadoUserStore from "@/store/colegiadoUserStore";
-import { useSolicitudesStore } from "@/store/SolicitudesStore";
-import { AlertCircle, Calendar, CheckCircle, Clock, CreditCard, FileText, Info, X } from "lucide-react";
+import { Calendar, CheckCircle, CreditCard, Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
-
-// Datos de ejemplo para mostrar cómo se vería la lista
-const SOLICITUDES_EJEMPLO = [
-  {
-    idSolicitudSolvencia: 1,
-    statusSolicitud: "revisando",
-    fechaSolicitud: "2024-01-15",
-    fechaExpSolvencia: "2024-12-31",
-    costoRegularSolicitud: 50.00,
-    observaciones: "Solicitud regular de solvencia para ejercicio profesional",
-    creador: {
-      isAdmin: false,
-      nombre: "Colegiado"
-    },
-    pagada: false
-  },
-  {
-    idSolicitudSolvencia: 2,
-    statusSolicitud: "costo_especial",
-    fechaSolicitud: "2024-01-10",
-    fechaExpSolvencia: null,
-    costoRegularSolicitud: -1,
-    observaciones: "Solicitud de costo especial por situación económica especial debido a circunstancias personales comprobadas",
-    creador: {
-      isAdmin: true,
-      nombre: "Administrador"
-    },
-    pagada: false
-  },
-  {
-    idSolicitudSolvencia: 3,
-    statusSolicitud: "aprobado",
-    fechaSolicitud: "2023-12-01",
-    fechaExpSolvencia: "2024-11-30",
-    costoRegularSolicitud: 50.00,
-    observaciones: "Solvencia aprobada y pagada correctamente. Certificado emitido.",
-    creador: {
-      isAdmin: false,
-      nombre: "Colegiado"
-    },
-    pagada: true
-  },
-  {
-    idSolicitudSolvencia: 4,
-    statusSolicitud: "revisando",
-    fechaSolicitud: "2024-01-20",
-    fechaExpSolvencia: "2024-12-31",
-    costoRegularSolicitud: 75.00,
-    observaciones: "Solicitud de solvencia con especialidad en Endodoncia - Requiere documentación adicional",
-    creador: {
-      isAdmin: false,
-      nombre: "Colegiado"
-    },
-    pagada: false
-  },
-  {
-    idSolicitudSolvencia: 5,
-    statusSolicitud: "rechazado",
-    fechaSolicitud: "2024-01-05",
-    fechaExpSolvencia: null,
-    costoRegularSolicitud: 50.00,
-    observaciones: "Solicitud rechazada por documentación incompleta. Falta: Certificado de estudios actualizado y comprobante de residencia vigente.",
-    creador: {
-      isAdmin: false,
-      nombre: "Colegiado"
-    },
-    pagada: false
-  },
-  {
-    idSolicitudSolvencia: 6,
-    statusSolicitud: "revisando",
-    fechaSolicitud: "2024-01-25",
-    fechaExpSolvencia: "2025-01-24",
-    costoRegularSolicitud: 125.00,
-    observaciones: "Solicitud de solvencia para múltiples especialidades: Ortodoncia y Periodoncia",
-    creador: {
-      isAdmin: false,
-      nombre: "Colegiado"
-    },
-    pagada: false
-  },
-  {
-    idSolicitudSolvencia: 7,
-    statusSolicitud: "aprobado",
-    fechaSolicitud: "2023-11-15",
-    fechaExpSolvencia: "2024-11-14",
-    costoRegularSolicitud: 60.00,
-    observaciones: "Solvencia para ejercicio temporal - 6 meses. Renovación automática aprobada.",
-    creador: {
-      isAdmin: true,
-      nombre: "Administrador"
-    },
-    pagada: true
-  },
-  {
-    idSolicitudSolvencia: 8,
-    statusSolicitud: "costo_especial",
-    fechaSolicitud: "2024-01-12",
-    fechaExpSolvencia: null,
-    costoRegularSolicitud: -1,
-    observaciones: "Evaluación de costo especial en proceso - Caso de colegiado jubilado con más de 30 años de ejercicio",
-    creador: {
-      isAdmin: true,
-      nombre: "Administrador"
-    },
-    pagada: false
-  }
-];
 
 export default function SolvenciaPago({ props }) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [costoSolvencia, setCostoSolvencia] = useState(0);
-  const [validationErrors, setValidationErrors] = useState({});
-  const [loadingSolicitudes, setLoadingSolicitudes] = useState(false);
   const [showPagoModal, setShowPagoModal] = useState(false);
   const [montoPagado, setMontoPagado] = useState(0); // Monto ya pagado en partes
-  const [tipoSolvenciaSeleccionada, setTipoSolvenciaSeleccionada] = useState(null); // 'trimestre' o 'anual'
-  const [solicitudesEjemplo, setSolicitudesEjemplo] = useState(SOLICITUDES_EJEMPLO);
-  const [solicitudesSeleccionadas, setSolicitudesSeleccionadas] = useState(new Set());
+  const [tipoSolvenciaSeleccionada, setTipoSolvenciaSeleccionada] = useState('Trimestre'); // 'trimestre' o 'anual'
   
   // Store states
-  const costos = useColegiadoUserStore((store) => store.costos);
   const setColegiadoUser = useColegiadoUserStore((store) => store.setColegiadoUser);
   const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser);
-  const solicitudesDeSolvencia = useSolicitudesStore((store) => store.solicitudesDeSolvencia);
-  const fetchSolicitudesDeSolvencia = useSolicitudesStore((store) => store.fetchSolicitudesDeSolvencia);
   
   const { setActiveTab } = props;
+  
+  // Función para formatear fechas
+  const formatearFecha = (fechaISO) => {
+      if (!fechaISO) return "No especificada"
+      return new Date(fechaISO).toLocaleDateString('es-ES')
+  }
 
   useEffect(() => {
     if (colegiadoUser && colegiadoUser.costo_de_solvencia) {
       setCostoSolvencia(colegiadoUser.costo_de_solvencia);
-      // Aquí puedes obtener el monto ya pagado desde el backend
-      // setMontoPagado(colegiadoUser.monto_pagado_solvencia || 0);
     }
   }, [colegiadoUser]);
-
-  // Cargar solicitudes de solvencia si existe solicitud activa
-  useEffect(() => {
-    if (colegiadoUser?.solicitud_solvencia_activa) {
-      const cargarSolicitudes = async () => {
-        try {
-          setLoadingSolicitudes(true);
-          await fetchSolicitudesDeSolvencia();
-        } catch (error) {
-          console.error("Error al cargar solicitudes de solvencia:", error);
-          // Si es error 403, es probable que el endpoint no esté disponible o no tenga permisos
-          if (error.response?.status === 403) {
-            console.log("No se tienen permisos para acceder a las solicitudes de solvencia o el endpoint no está disponible");
-          }
-        } finally {
-          setLoadingSolicitudes(false);
-        }
-      };
-      
-      cargarSolicitudes();
-    }
-  }, [colegiadoUser?.solicitud_solvencia_activa, fetchSolicitudesDeSolvencia]);
 
   // Lógica de trimestres
   const obtenerInfoTrimestre = () => {
@@ -195,17 +61,24 @@ export default function SolvenciaPago({ props }) {
   };
 
   const infoTrimestre = obtenerInfoTrimestre();
-  const montoRestante = costoSolvencia - montoPagado;
   const esPagoCompleto = montoPagado >= costoSolvencia;
 
   // Calcular costos según el tipo seleccionado
   const calcularCosto = (tipo) => {
-    if (tipo === 'trimestre') {
-      return costoSolvencia; // Costo por trimestre
-    } else if (tipo === 'anual') {
-      return costoSolvencia * 4; // Costo anual (4 trimestres)
+    if (tipo === 'Trimestre') {
+      return colegiadoUser.costo_de_solvencia;
+    } else if (tipo === 'Anual') {
+      return colegiadoUser.costo_de_solvencia_anual;
     }
     return 0;
+  };
+
+  const calcularCostoRestante = (tipo) => {
+    if (tipo === 'Anual') {
+      return colegiadoUser.costo_de_solvencia_anual - montoPagado;
+    } else {
+      return colegiadoUser.costo_de_solvencia - montoPagado;
+    }
   };
 
   const handlePagoSolvencia = async (detallesPagoSolvencia) => {
@@ -216,17 +89,8 @@ export default function SolvenciaPago({ props }) {
       const colegiadoResult = await fetchMe();
       setColegiadoUser(colegiadoResult.data);
       
-      // Recargar solicitudes si hay solicitud activa (con manejo de errores)
-      if (colegiadoUser?.solicitud_solvencia_activa) {
-        try {
-          await fetchSolicitudesDeSolvencia();
-        } catch (error) {
-          console.log("No se pudieron recargar las solicitudes de solvencia, pero el pago se procesó correctamente");
-        }
-      }
-      
       setShowPagoModal(false);
-      setTipoSolvenciaSeleccionada(null);
+      setTipoSolvenciaSeleccionada('Trimestre');
       setIsSuccess(true);
       
       // Auto-cerrar el mensaje de éxito después de 3 segundos
@@ -241,68 +105,8 @@ export default function SolvenciaPago({ props }) {
     }
   }
 
-  const getEstadoColor = (estado) => {
-    switch (estado) {
-      case 'revisando':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'aprobado':
-        return 'text-green-600 bg-green-50 border-green-200';
-      case 'rechazado':
-        return 'text-red-600 bg-red-50 border-red-200';
-      case 'costo_especial':
-        return 'text-blue-600 bg-blue-50 border-blue-200';
-      default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
-  };
-
-  const getEstadoIcono = (estado) => {
-    switch (estado) {
-      case 'revisando':
-        return <Clock size={16} />;
-      case 'aprobado':
-        return <CheckCircle size={16} />;
-      case 'rechazado':
-        return <AlertCircle size={16} />;
-      case 'costo_especial':
-        return <FileText size={16} />;
-      default:
-        return <Clock size={16} />;
-    }
-  };
-
-  const getEstadoTexto = (estado) => {
-    switch (estado) {
-      case 'revisando':
-        return 'En Revisión';
-      case 'aprobado':
-        return 'Aprobada';
-      case 'rechazado':
-        return 'Rechazada';
-      case 'costo_especial':
-        return 'Costo Especial';
-      default:
-        return estado;
-    }
-  };
-
-  const formatearFecha = (fechaStr) => {
-    if (!fechaStr) return 'No especificada';
-    
-    try {
-      const fecha = new Date(fechaStr);
-      return fecha.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch (error) {
-      return fechaStr;
-    }
-  };
-
   // Determinar qué mostrar según solicitud_solvencia_activa
-  const mostrarOpcionesTrimestre = !colegiadoUser?.solicitud_solvencia_activa;
+  const mostrarOpcionesTrimestre = !colegiadoUser?.requiere_solvencia_esp;
   const mostrarSolvenciaActiva = colegiadoUser?.solicitud_solvencia_activa;
 
   return (
@@ -356,10 +160,9 @@ export default function SolvenciaPago({ props }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Opción Trimestre Actual */}
               <div
-                className="border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 hover:border-[#D7008A] hover:bg-[#D7008A]/5 hover:shadow-lg"
+                className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 hover:border-[#D7008A] hover:bg-[#D7008A]/5 hover:shadow-lg ${tipoSolvenciaSeleccionada == 'Trimestre' ? 'border-[#D7008A] bg-[#D7008A]/5' : ''}`}
                 onClick={() => {
-                  setTipoSolvenciaSeleccionada('trimestre');
-                  setShowPagoModal(true);
+                  setTipoSolvenciaSeleccionada('Trimestre');
                 }}
               >
                 <div className="text-center">
@@ -374,7 +177,7 @@ export default function SolvenciaPago({ props }) {
                   </p>
                   <div className="bg-blue-50 rounded-lg p-3 mb-4">
                     <p className="text-2xl font-bold text-blue-700">
-                      USD$ {calcularCosto('trimestre').toFixed(2)}
+                      USD$ {calcularCosto('Trimestre').toFixed(2)}
                     </p>
                     <p className="text-xs text-blue-600">Por trimestre</p>
                   </div>
@@ -387,10 +190,9 @@ export default function SolvenciaPago({ props }) {
               {/* Opción Anual - Solo si NO es último trimestre */}
               {!infoTrimestre.esUltimoTrimestre && (
                 <div
-                  className="border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 hover:border-[#D7008A] hover:bg-[#D7008A]/5 hover:shadow-lg"
+                  className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 hover:border-[#D7008A] hover:bg-[#D7008A]/5 hover:shadow-lg ${tipoSolvenciaSeleccionada == 'Anual' ? 'border-[#D7008A] bg-[#D7008A]/5' : ''}`}
                   onClick={() => {
-                    setTipoSolvenciaSeleccionada('anual');
-                    setShowPagoModal(true);
+                    setTipoSolvenciaSeleccionada('Anual');
                   }}
                 >
                   <div className="text-center">
@@ -405,7 +207,7 @@ export default function SolvenciaPago({ props }) {
                     </p>
                     <div className="bg-green-50 rounded-lg p-3 mb-4">
                       <p className="text-2xl font-bold text-green-700">
-                        USD$ {calcularCosto('anual').toFixed(2)}
+                        USD$ {calcularCosto('Anual').toFixed(2)}
                       </p>
                       <p className="text-xs text-green-600">Por año completo</p>
                     </div>
@@ -434,7 +236,7 @@ export default function SolvenciaPago({ props }) {
       )}
 
       {/* Solvencia Activa - Solo cuando solicitud_solvencia_activa es true */}
-      {!isSuccess && mostrarSolvenciaActiva && (
+      {!isSuccess && (
         <div className="bg-white rounded-xl shadow-md">
           <div className="p-6">
             <div className="flex items-center mb-6">
@@ -481,7 +283,7 @@ export default function SolvenciaPago({ props }) {
                         <CreditCard size={16} className="mr-2 text-green-500" />
                         <div>
                           <div className="text-xs text-gray-500 uppercase tracking-wide">Costo Total</div>
-                          <div className="font-semibold text-gray-900">USD$ {costoSolvencia.toFixed(2)}</div>
+                          <div className="font-semibold text-gray-900">USD$ {calcularCosto(tipoSolvenciaSeleccionada).toFixed(2)}</div>
                         </div>
                       </div>
                     </div>
@@ -491,7 +293,7 @@ export default function SolvenciaPago({ props }) {
                         <CreditCard size={16} className="mr-2 text-red-500" />
                         <div>
                           <div className="text-xs text-gray-500 uppercase tracking-wide">Restante</div>
-                          <div className="font-semibold text-red-700">USD$ {montoRestante.toFixed(2)}</div>
+                          <div className="font-semibold text-red-700">USD$ {calcularCostoRestante(tipoSolvenciaSeleccionada).toFixed(2)}</div>
                         </div>
                       </div>
                     </div>
@@ -526,7 +328,7 @@ export default function SolvenciaPago({ props }) {
                         </p>
                         <p className="text-xs text-gray-600">
                           {montoPagado > 0 
-                            ? `Faltan USD$ ${montoRestante.toFixed(2)} por pagar`
+                            ? `Faltan USD$ ${calcularCostoRestante(tipoSolvenciaSeleccionada).toFixed(2)} por pagar`
                             : 'Haga clic para proceder con el pago'
                           }
                         </p>
@@ -557,7 +359,7 @@ export default function SolvenciaPago({ props }) {
                 )}
                 {mostrarSolvenciaActiva && montoPagado > 0 && (
                   <span className="text-sm font-normal text-gray-600 ml-2">
-                    (Pago parcial - Restante: USD$ {montoRestante.toFixed(2)})
+                    (Pago parcial - Restante: USD$ {calcularCostoRestante(tipoSolvenciaSeleccionada).toFixed(2)})
                   </span>
                 )}
               </h3>
@@ -575,9 +377,7 @@ export default function SolvenciaPago({ props }) {
             <div className="p-0">
               <PagosColg
                 props={{
-                  costo: mostrarOpcionesTrimestre 
-                    ? calcularCosto(tipoSolvenciaSeleccionada) 
-                    : montoRestante, // Para solvencia activa, solo el monto restante
+                  costo: calcularCostoRestante(tipoSolvenciaSeleccionada).toFixed(2), // Para solvencia activa, solo el monto restante
                   allowMultiplePayments: true, // Permitir pagos parciales
                   handlePago: handlePagoSolvencia
                 }}
