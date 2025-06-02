@@ -56,7 +56,6 @@ const DEFAULT_FIELDS = {
 };
 
 export default function FormBuilder({ item, onBack, onSave }) {
-  const [activeTab, setActiveTab] = useState("fields");
   const [formFields, setFormFields] = useState(item.formulario?.campos || []);
   const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
   const [isFormModified, setIsFormModified] = useState(false);
@@ -225,7 +224,7 @@ export default function FormBuilder({ item, onBack, onSave }) {
                     <button
                       onClick={addPriceField}
                       disabled={includePriceField}
-                      className={`px-3 py-1 text-xs rounded-md ${includePriceField
+                      className={`cursor-pointer px-3 py-1 text-xs rounded-md ${includePriceField
                         ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                         : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                         }`}
@@ -247,148 +246,125 @@ export default function FormBuilder({ item, onBack, onSave }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden h-[calc(100vh-240px)] overflow-y-auto">
             <div className="flex border-b border-gray-200">
-              <button
-                className={`cursor-pointer px-6 py-3 text-sm font-medium ${activeTab === "fields"
-                  ? "border-b-2 border-[#C40180] text-[#C40180]"
-                  : "text-gray-500 hover:text-gray-700"
-                  }`}
-                onClick={() => setActiveTab("fields")}
-              >
+              <div className="px-6 py-3 text-sm font-medium border-b-2 border-[#C40180] text-[#C40180]">
                 Campos del Formulario
-              </button>
-              <button
-                className={`cursor-pointer px-6 py-3 text-sm font-medium ${activeTab === "settings"
-                  ? "border-b-2 border-[#C40180] text-[#C40180]"
-                  : "text-gray-500 hover:text-gray-700"
-                  }`}
-                onClick={() => setActiveTab("settings")}
-              >
-                Ajustes del Formulario
-              </button>
+              </div>
             </div>
 
             <div className="p-6">
-              {activeTab === "fields" ? (
-                <>
-                  {formFields.length === 0 && !tempNewField && !showFieldTypes ? (
-                    <div className="text-center py-6 text-gray-500">
-                      No hay campos en el formulario. Añade uno utilizando el botón de abajo.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {formFields.map((field, index) => {
-                        const isPriceField =
-                          field.nombre.toLowerCase().includes("monto") ||
-                          field.nombre.toLowerCase().includes("precio") ||
-                          field.nombre.toLowerCase().includes("pago");
-
-                        return (
-                          <div
-                            key={index}
-                            className={`p-3 border rounded-lg transition-colors ${selectedFieldIndex === index ? 'border-[#C40180] bg-[#C40180]/5' : 'border-gray-200'} ${isPriceField ? 'border-orange-200 bg-orange-50' : ''}`}
-                          >
-                            <div
-                              className="flex justify-between items-center cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedFieldIndex(selectedFieldIndex === index ? null : index);
-                              }}
-                            >
-                              <div className="flex items-center">
-                                <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 mr-2">
-                                  {FIELD_TYPES.find(t => t.value === field.tipo)?.label || field.tipo}
-                                </span>
-                                <span className="font-medium text-gray-800">{field.nombre}</span>
-                              </div>
-                              <div className="flex space-x-1">
-                                {field.requerido === "true" && <span className="text-xs px-2 py-1 rounded bg-red-50 text-red-600 mr-2">Requerido</span>}
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); moveField(index, 'up'); }}
-                                  disabled={index === 0}
-                                  className={`p-1 rounded ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
-                                  type="button"
-                                >
-                                  <ArrowUp size={14} />
-                                </button>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); moveField(index, 'down'); }}
-                                  disabled={index === formFields.length - 1}
-                                  className={`p-1 rounded ${index === formFields.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
-                                  type="button"
-                                >
-                                  <ArrowDown size={14} />
-                                </button>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); deleteField(index); }}
-                                  className="p-1 text-gray-400 hover:text-red-500"
-                                  type="button"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </div>
-
-                            {selectedFieldIndex === index && (
-                              <div
-                                className="mt-3 border-t pt-3"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="flex justify-end mb-2">
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); setSelectedFieldIndex(null); }}
-                                    className="text-gray-500 hover:text-[#C40180] flex items-center text-sm"
-                                    type="button"
-                                  >
-                                    <X size={16} className="mr-1" /> Cerrar edición
-                                  </button>
-                                </div>
-                                <FormFieldItem
-                                  field={field}
-                                  index={index}
-                                  onUpdate={(updatedField) => updateField(index, updatedField)}
-                                  onMove={(direction) => moveField(index, direction)}
-                                  onDelete={() => deleteField(index)}
-                                  isFirst={index === 0}
-                                  isLast={index === formFields.length - 1}
-                                  disableEditing={includePriceField && isPriceField}
-                                  hideControls={true}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Field Type Selection */}
-                  {showFieldTypes && (
-                    <div className="mt-4 p-4 border border-gray-200 rounded-lg">
-                      … (rest unchanged) …
-                    </div>
-                  )}
-
-                  {/* Temporary field editor */}
-                  {tempNewField && (
-                    <div className="mt-4 p-4 border border-[#C40180] rounded-lg bg-[#C40180]/5">
-                      … (rest unchanged) …
-                    </div>
-                  )}
-
-                  {!tempNewField && !showFieldTypes && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); startAddingField(); }}
-                      className="mt-4 w-full py-2 px-4 rounded-md font-medium text-[#C40180] border border-[#C40180] hover:bg-[#C40180]/5 transition-colors flex items-center justify-center"
-                      type="button"
-                    >
-                      <Plus size={16} className="mr-1" /> Añadir nuevo campo
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  … configuraciones …
+              {formFields.length === 0 && !tempNewField && !showFieldTypes ? (
+                <div className="text-center py-6 text-gray-500">
+                  No hay campos en el formulario. Añade uno utilizando el botón de abajo.
                 </div>
+              ) : (
+                <div className="space-y-3">
+                  {formFields.map((field, index) => {
+                    const isPriceField =
+                      field.nombre.toLowerCase().includes("monto") ||
+                      field.nombre.toLowerCase().includes("precio") ||
+                      field.nombre.toLowerCase().includes("pago");
+
+                    return (
+                      <div
+                        key={index}
+                        className={`p-3 border rounded-lg transition-colors ${selectedFieldIndex === index ? 'border-[#C40180] bg-[#C40180]/5' : 'border-gray-200'} ${isPriceField ? 'border-orange-200 bg-orange-50' : ''}`}
+                      >
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedFieldIndex(selectedFieldIndex === index ? null : index);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 mr-2">
+                              {FIELD_TYPES.find(t => t.value === field.tipo)?.label || field.tipo}
+                            </span>
+                            <span className="font-medium text-gray-800">{field.nombre}</span>
+                          </div>
+                          <div className="flex space-x-1">
+                            {field.requerido === "true" && <span className="text-xs px-2 py-1 rounded bg-red-50 text-red-600 mr-2">Requerido</span>}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); moveField(index, 'up'); }}
+                              disabled={index === 0}
+                              className={`cursor-pointer p-1 rounded ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                              type="button"
+                            >
+                              <ArrowUp size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); moveField(index, 'down'); }}
+                              disabled={index === formFields.length - 1}
+                              className={`cursor-pointer p-1 rounded ${index === formFields.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                              type="button"
+                            >
+                              <ArrowDown size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteField(index); }}
+                              className="cursor-pointer p-1 text-gray-400 hover:text-red-500"
+                              type="button"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {selectedFieldIndex === index && (
+                          <div
+                            className="mt-3 border-t pt-3"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex justify-end mb-2">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setSelectedFieldIndex(null); }}
+                                className="cursor-pointer text-gray-500 hover:text-[#C40180] flex items-center text-sm"
+                                type="button"
+                              >
+                                <X size={16} className="mr-1" /> Cerrar edición
+                              </button>
+                            </div>
+                            <FormFieldItem
+                              field={field}
+                              index={index}
+                              onUpdate={(updatedField) => updateField(index, updatedField)}
+                              onMove={(direction) => moveField(index, direction)}
+                              onDelete={() => deleteField(index)}
+                              isFirst={index === 0}
+                              isLast={index === formFields.length - 1}
+                              disableEditing={includePriceField && isPriceField}
+                              hideControls={true}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Field Type Selection */}
+              {showFieldTypes && (
+                <div className="mt-4 p-4 border border-gray-200 rounded-lg">
+                  … (rest unchanged) …
+                </div>
+              )}
+
+              {/* Temporary field editor */}
+              {tempNewField && (
+                <div className="mt-4 p-4 border border-[#C40180] rounded-lg bg-[#C40180]/5">
+                  … (rest unchanged) …
+                </div>
+              )}
+
+              {!tempNewField && !showFieldTypes && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); startAddingField(); }}
+                  className="cursor-pointer mt-4 w-full py-2 px-4 rounded-md font-medium text-[#C40180] border border-[#C40180] hover:bg-[#C40180]/5 transition-colors flex items-center justify-center"
+                  type="button"
+                >
+                  <Plus size={16} className="mr-1" /> Añadir nuevo campo
+                </button>
               )}
             </div>
           </div>

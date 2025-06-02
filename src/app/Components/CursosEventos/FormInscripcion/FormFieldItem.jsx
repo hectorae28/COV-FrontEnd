@@ -103,12 +103,12 @@ export default function FormFieldItem({
                 onDelete();
               }}
               disabled={disableEditing}
-              className={`p-1 rounded ${disableEditing ? "text-gray-300 cursor-not-allowed" : "text-red-500 hover:bg-red-50"
+              className={`cursor-pointerp-1 rounded ${disableEditing ? "text-gray-300 cursor-not-allowed" : "text-red-500 hover:bg-red-50"
                 }`}
               title="Eliminar campo"
               type="button"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="cursor-pointer w-4 h-4" />
             </button>
             <button
               onClick={(e) => {
@@ -186,7 +186,7 @@ export default function FormFieldItem({
           />
           <label
             htmlFor={`required-${index}`}
-            className="ml-2 block text-sm text-gray-700"
+            className="cursor-pointer ml-2 block text-sm text-gray-700"
           >
             Campo requerido
           </label>
@@ -229,7 +229,7 @@ export default function FormFieldItem({
                       removeOption(i);
                     }}
                     disabled={fieldData.opciones.length <= 1 || disableEditing}
-                    className={`ml-2 p-1 rounded ${fieldData.opciones.length <= 1 || disableEditing
+                    className={`cursor-pointer ml-2 p-1 rounded ${fieldData.opciones.length <= 1 || disableEditing
                       ? "text-gray-300 cursor-not-allowed"
                       : "text-red-500 hover:bg-red-50"
                       }`}
@@ -245,7 +245,7 @@ export default function FormFieldItem({
                     e.stopPropagation();
                     addOption();
                   }}
-                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
+                  className="cursor-pointer px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
                   type="button"
                 >
                   + Añadir opción
@@ -342,7 +342,7 @@ export default function FormFieldItem({
               Valor predeterminado
             </label>
             <div className="flex items-center">
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="cursor-pointer relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={fieldData.valor_predeterminado === "true"}
