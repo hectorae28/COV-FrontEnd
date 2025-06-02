@@ -562,7 +562,7 @@ const conteoSolvencias = useMemo(() => ({
                                 : 'bg-red-100 text-red-800'
                             }`}>
                             {solvencia.statusSolicitud === 'revisando' && (<><Clock size={12} /> Pendiente</>)}
-                            {solvencia.statusSolicitud === 'aprobado' && (<><CheckCircle size={12} />Aprovado</>)}
+                            {solvencia.statusSolicitud === 'aprobado' && (<><CheckCircle size={12} />Aprobado</>)}
                             {solvencia.statusSolicitud === 'rechazado' && (<><XCircle size={12} />Rechazado</>)}
                             {solvencia.statusSolicitud === "costo_especial" && (<><CreditCard size={12} />Costo Especial</>)}
                           </span>

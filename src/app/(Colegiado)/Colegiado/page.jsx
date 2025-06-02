@@ -11,6 +11,8 @@ import Cards from "../Cards";
 import Carnet from "../Carnet";
 import Chat from "../Chat";
 import TablaHistorial from "../Tabla";
+import { solicitarSolvencia, solicitarPagosSolvencia } from "@/api/endpoints/solicitud";
+import { set } from "date-fns";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("solicitudes"); // 'solicitudes', 'solvencia'
@@ -26,6 +28,8 @@ export default function Home() {
   const setCostos = useColegiadoUserStore((state) => state.setCostos);
   const setTasaBcv = useColegiadoUserStore((state) => state.setTasaBcv);
   const colegiadoUser = useColegiadoUserStore((state) => state.colegiadoUser);
+  const pagosSolvencia = useColegiadoUserStore((state) => state.pagosSolvencia);
+  const setPagosSolvencia = useColegiadoUserStore((state) => state.setPagosSolvencia);
   const [canShowTabs, setCanShowTabs] = useState(false);
 
   const checkSolvencyStatus = () => {
@@ -137,7 +141,15 @@ export default function Home() {
   };
 
   // Manejar clic en botón de pago
-  const handlePayClick = () => {
+  const handlePayClick = async () => {
+    let pagosResult = [];
+    if(colegiadoUser.solicitud_solvencia_activa){
+      pagosResult = await solicitarPagosSolvencia({user_id: colegiadoUser.id});
+    }else{
+      solvenciaResult = await solicitarSolvencia({user_id: colegiadoUser.id});
+    }
+    setPagosSolvencia(pagosResult.data);
+    console.log(pagosSolvencia);
     setActiveTab("solvencia")
   }
 
@@ -234,7 +246,9 @@ export default function Home() {
 
             {(canShowTabs || showSolvencyWarning) &&
               <button
-                onClick={() => setActiveTab("solvencia")}
+                onClick={() => {
+                  handlePayClick();
+                }}
                 className={`px-4 py-2 mt-6 font-medium text-sm ${activeTab === "solvencia"
                   ? "text-[#D7008A] border-b-2 border-[#D7008A]"
                   : "text-gray-500 hover:text-[#41023B]"

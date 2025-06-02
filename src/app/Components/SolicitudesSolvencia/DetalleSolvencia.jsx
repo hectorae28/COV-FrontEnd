@@ -103,6 +103,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       const solvenciaEncontrada = solvencias.find(s => s.idSolicitudSolvencia === solvenciaId);
       if (solvenciaEncontrada) {
         setSolvencia(solvenciaEncontrada);
+        console.log(solvenciaEncontrada.fechaExpSolicitud);
         getMetodosDePago();
 
         // Si tiene fecha de vencimiento, establecerla en los campos separados
@@ -588,9 +589,12 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                               focus:ring-[#C40180] focus:border-[#C40180]"
                               onChange={(e) => handleSeleccionarFecha(e)}>
                                 <option value="" disabled>Seleccione una fecha</option>
-                                {fechasDeVencimiento.map(({trimestre, fecha}) => (
-                                  <option key={trimestre} value={fecha} disabled={fechaActual > fecha}>{formatDate(fecha)}</option>
-                                ))}
+                                {fechasDeVencimiento.map(({trimestre, fecha}) => {
+                                  console.log(fechaActual > fecha,(solvencia.fechaExpSolicitud!==null || new Date(solvencia.fechaExpSolicitud) > fecha), formatDate(fecha));
+                                  return (
+                                    <option key={trimestre} value={fecha} disabled={fechaActual > fecha || (solvencia.fechaExpSolicitud!==null && new Date(solvencia.fechaExpSolicitud) > fecha)}>{formatDate(fecha)}</option>
+                                  )}
+                                )}
                             </select>
                           </div>
                         </div>

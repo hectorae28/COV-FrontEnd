@@ -3,6 +3,8 @@
 import { fetchMe } from "@/api/endpoints/colegiado";
 import { solicitarPagosSolvencia, solicitarSolvencia } from "@/api/endpoints/solicitud";
 import useColegiadoUserStore from "@/store/colegiadoUserStore";
+import { solicitarSolvencia } from "@/api/endpoints/solicitud";
+import { fetchMe } from "@/api/endpoints/colegiado";
 import { Warning } from "@mui/icons-material";
 import { AlertCircle, Calendar, CheckCircle } from "lucide-react";
 
@@ -26,7 +28,7 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
     "" : "Su costo esta siendo calculado";
 
   const mensajeDeCosto = (colegiadoUser.requiere_solvencia_esp && colegiadoUser.costo_de_solvencia < 0) ?
-    costoEspecialMessage : `Monto: ${colegiadoUser.costo_de_solvencia}`;
+    costoEspecialMessage : `Monto: $${colegiadoUser.costo_de_solvencia}`;
 
   const mostraBoton = () => {
     if (colegiadoUser.requiere_solvencia_esp && !colegiadoUser.puede_pedir_costo_especial) {
@@ -45,19 +47,6 @@ export default function SolvencyStatus({solvencyAmount, onPayClick, isExpiringSo
         setColegiadoUser(colegiadoResult.data);
         return [undefined, pagoResult]
       }else{
-        if(colegiadoUser.solicitud_solvencia_activa){
-          try {
-            const pagosResult = await solicitarPagosSolvencia({user_id: colegiadoUser.id});
-          } catch (error) {
-            console.error("Error al solicitar pagos de solvencia:", error);
-          }
-        }else{
-          try {
-            const pagoResult = await solicitarSolvencia({user_id: colegiadoUser.id});
-          } catch (error) {
-            console.error("Error al solicitar solvencia:", error);
-          }
-        }
         // Siempre llamar onPayClick para abrir el modal de pago
         if (onPayClick && typeof onPayClick === 'function') {
           onPayClick();
