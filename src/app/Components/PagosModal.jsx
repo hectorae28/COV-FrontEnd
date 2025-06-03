@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import PaymentLinkSection from "./MetodoPago/pagoLink.jsx";
 
 export default function PagosColg({ props }) {
-  const { costo, allowMultiplePayments, handlePago, handlePaymentComplete } =
+  const { costo, allowMultiplePayments, handlePago, paymentInfo=null, isAdmin } =
     props;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -235,7 +235,7 @@ export default function PagosColg({ props }) {
 
   const getMetodosDePago = async () => {
     try {
-      const metodos = await fetchDataSolicitudes("metodo-de-pago");
+      const metodos = await fetchDataSolicitudes("metodo-de-pago",`?es_visible_colegiado=${!isAdmin}`);
       setMetodoDePago(metodos.data);
     } catch (error) {
       console.log(`Ha ocurrido un error: ${error}`)
@@ -487,8 +487,7 @@ export default function PagosColg({ props }) {
           ) : (
             // Vista original de botones para 4 métodos o menos
             <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
-              {metodoDePago.filter(metodo => metodo.es_visible_colegiado)
-                .map((metodo, index) => (
+              {metodoDePago.map((metodo, index) => (
                   <button
                     key={index}
                     className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
@@ -778,10 +777,10 @@ export default function PagosColg({ props }) {
                     </div>
                   </div>
                 </div>
-              ) : paymentMethod.nombre === "pago-link" ? (
+              ) : paymentMethod.nombre === "pago-link" && paymentInfo ? (
                 <>
                   <PaymentLinkSection
-                    paymentInfo={paymentAmount}
+                    paymentInfo={paymentInfo}
                     onPaymentLinkSubmit={(email) => {
                       console.log("Payment link sent to:", email)
                     }}

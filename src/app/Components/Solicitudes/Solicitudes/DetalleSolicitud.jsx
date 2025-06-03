@@ -712,6 +712,8 @@ export default function DetalleSolicitud({ props }) {
                   costo: totales.totalPendiente,
                   allowMultiplePayments: true,
                   handlePago: handlePaymentComplete,
+                  paymentInfo: {id:solicitud.id,type_id:"solicitud",monto:totales.totalPendiente},
+                  isAdmin: isAdmin,
                 }}
               />
             </div>
