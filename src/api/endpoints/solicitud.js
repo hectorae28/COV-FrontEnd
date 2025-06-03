@@ -79,7 +79,21 @@ export const postDataSolicitud = async (url, body) => {
 
 export const pagoSolvencia = async (detallesPagoSolvencia) => {
     try {
-        const data = api.post('solicitudes/pago_solvencia/', detallesPagoSolvencia)
+        // Determinar headers basado en el tipo de datos
+        const headers = {};
+        
+        // Si es FormData (contiene archivos), no establecer Content-Type para que el navegador lo haga automáticamente
+        if (detallesPagoSolvencia instanceof FormData) {
+            // No establecer Content-Type, el navegador lo hará automáticamente con boundary
+            console.log('📤 Enviando FormData al backend...');
+        } else {
+            // Para objetos JSON normales
+            headers['Content-Type'] = 'application/json';
+        }
+
+        const data = await api.post('solicitudes/pago_solvencia/', detallesPagoSolvencia, {
+            headers
+        });
         return data;
     } catch (error) {
         console.error("Ha ocurrido un error: ", error);
@@ -135,6 +149,21 @@ export const obtenerHistorialPagosSolvencia = async (solicitudId) => {
         return data;
     } catch (error) {
         console.error("Error al obtener historial de pagos: ", error);
+        throw error;
+    }
+}
+
+// Función para actualizar el estado de un pago específico (aprobar/rechazar)
+export const actualizarEstadoPago = async (datosPago) => {
+    try {
+        const data = await api.patch(`solicitudes/actualizar_estado_pago/`, datosPago, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        return data;
+    } catch (error) {
+        console.error("Error al actualizar estado del pago: ", error);
         throw error;
     }
 }

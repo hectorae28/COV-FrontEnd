@@ -128,6 +128,18 @@ export const formatSolicitudSolvencia = (solicitud) => {
           fechaAprobacion: solicitud.solicitudes_solvencia.lista[0].fecha_aprobacion,
           fechaExoneracion: solicitud.solicitudes_solvencia.lista[0].fecha_exoneracion,
           motivoExoneracion: solicitud.solicitudes_solvencia.lista[0].motivo_exoneracion,
+          pagos: solicitud.solicitudes_solvencia.lista[0].pagos || [],
+          detalles: {
+            costo_regular: solicitud.solicitudes_solvencia.lista[0].detalles.costo_regular,
+            costo_especial: solicitud.solicitudes_solvencia.lista[0].detalles.costo_especial,
+            fecha_exp_solvencia: solicitud.solicitudes_solvencia.lista[0].detalles.fecha_exp_solvencia,
+            modelo_solvencia: solicitud.solicitudes_solvencia.lista[0].detalles.modelo_solvencia,
+            creador: {
+              nombre_creador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.nombre_creador,
+              id_creador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.id_creador,
+              is_admin: solicitud.solicitudes_solvencia.lista[0].detalles.creador.is_admin,
+            }
+          },
           creador: {
             nombreCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.nombre_creador,
             idCreador: solicitud.solicitudes_solvencia.lista[0].detalles.creador.id_creador,
