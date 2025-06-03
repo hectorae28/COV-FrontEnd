@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Ban,
   Calendar,
-  Check,
   CheckCircle,
   ChevronLeft,
   Clock,
@@ -24,7 +23,6 @@ import { fetchSolicitudes, pagoSolvencia, patchDataSolicitud, postDataSolicitud 
 import PagosColg from "@/app/Components/PagosModal";
 import VerificationSwitch from "@/app/Components/Solicitudes/ListaColegiados/VerificationSwitch";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
-import ConfirmacionModal from "./ConfirmacionModal";
 import ExoneracionModal from "./ExoneracionModal";
 import RechazoModal from "./RechazoModal";
 
@@ -55,6 +53,16 @@ const ESTADOS_PAGO = {
   }
 };
 
+// Función para actualizar estado de pago
+const actualizarEstadoPago = async (datosActualizacion) => {
+  try {
+    const response = await patchDataSolicitud('actualizar_estado_pago', datosActualizacion);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, actualizarSolvencia }) {
   // Estados principales
   const [solvencia, setSolvencia] = useState(null);
@@ -62,7 +70,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   const [alertaExito, setAlertaExito] = useState(null);
 
   // Estados de modales
-  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [mostrarRechazo, setMostrarRechazo] = useState(false);
   const [mostrarExoneracion, setMostrarExoneracion] = useState(false);
   const [showPagoModal, setShowPagoModal] = useState(false);
@@ -157,7 +164,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   const historialPagos = useMemo(() => {
     // Obtener pagos de la estructura correcta: solicitudes_solvencia.lista[0].pagos
     const pagosArray = solvencia?.pagos || [];
-    
+
     if (!Array.isArray(pagosArray) || pagosArray.length === 0) {
       return [];
     }
@@ -196,7 +203,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
 
     // Obtener el costo total desde las propiedades mapeadas del store
     let costoTotal = 0;
-    
+
     // Priorizar costo especial si existe y no es null
     if (solvencia.costoEspecialSolicitud !== null && solvencia.costoEspecialSolicitud !== undefined) {
       costoTotal = parseFloat(solvencia.costoEspecialSolicitud || 0);
@@ -204,7 +211,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       // Usar costo regular como fallback
       costoTotal = parseFloat(solvencia.costoRegularSolicitud || 0);
     }
-    
+
     // Calcular monto pagado SOLO de pagos aprobados, con conversión correcta a USD
     const montoPagado = historialPagos
       .filter(pago => {
@@ -214,22 +221,24 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         const montoUSD = pago.montoUSD;
         return sum + montoUSD;
       }, 0);
-    
+
     // También calcular pagos en revisión para mostrar información adicional
     const montoPendiente = historialPagos
       .filter(pago => pago.status === 'revisando' || pago.status === 'revision')
       .reduce((sum, pago) => sum + pago.montoUSD, 0);
-    
+
+    // Asegurar que el monto restante nunca sea negativo
     const montoRestante = Math.max(0, costoTotal - montoPagado);
     const pagoCompleto = montoRestante <= 0 && costoTotal > 0;
 
     return {
-      total: costoTotal,
-      pagado: montoPagado,
+      total: Math.max(0, costoTotal), // Asegurar que el total nunca sea negativo
+      pagado: Math.max(0, montoPagado), // Asegurar que el pagado nunca sea negativo
       restante: montoRestante,
-      porcentajePagado: costoTotal > 0 ? (montoPagado / costoTotal) * 100 : 0,
-      pendiente: montoPendiente,
-      pagoCompleto
+      porcentajePagado: costoTotal > 0 ? Math.min(100, (montoPagado / costoTotal) * 100) : 0, // Limitar a 100%
+      pendiente: Math.max(0, montoPendiente), // Asegurar que el pendiente nunca sea negativo
+      pagoCompleto,
+      tieneCostoAsignado: costoTotal > 0 // Nueva propiedad para verificar si ya tiene costo
     };
   }, [solvencia, historialPagos]);
 
@@ -251,17 +260,17 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
     try {
       // Refrescar datos del store
       await fetchSolicitudesDeSolvencia();
-      
+
       // Esperar un momento para que se actualice el store y luego buscar la solvencia actualizada
       setTimeout(() => {
         const solicitudesActualizadas = useSolicitudesStore.getState().solicitudesDeSolvencia;
         const solvenciaActualizada = solicitudesActualizadas.find(s => s.idSolicitudSolvencia === solvenciaId);
-        
+
         if (solvenciaActualizada) {
           setSolvencia(solvenciaActualizada);
           mostrarAlerta("exito", "Datos actualizados correctamente");
         }
-        
+
         setIsRefreshing(false);
       }, 1000);
     } catch (error) {
@@ -291,26 +300,26 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       } else {
         nuevoEstado = 'revisando';
       }
-      
+
       // Preparar datos para el endpoint de actualización de pago
       const datosActualizacion = {
         pago_id: pagoActualizado.id,
         nuevo_status: nuevoEstado,
         motivo_rechazo: pagoActualizado.rejectionReason || pagoActualizado.motivo_rechazo || ''
       };
-      
+
       // Llamar al endpoint para actualizar el estado del pago
       const resultado = await actualizarEstadoPago(datosActualizacion);
-      
+
       // Mostrar mensaje de éxito
       const accion = nuevoEstado === 'aprobado' ? 'aprobado' : 'rechazado';
       mostrarAlerta("exito", `Pago ${accion} correctamente. Actualizando datos...`);
-      
+
       // Actualizar los datos después de un breve delay
       setTimeout(async () => {
         await handleRefreshData();
       }, 1000);
-      
+
     } catch (error) {
       let mensajeError = 'Error al actualizar el estado del pago';
       if (error.response?.data?.detail) {
@@ -320,7 +329,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       } else if (error.message) {
         mensajeError = error.message;
       }
-      
+
       mostrarAlerta("alerta", `Error: ${mensajeError}`);
     }
   }, [handleRefreshData, mostrarAlerta]);
@@ -367,26 +376,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
     }
   };
 
-  // Función para aprobar la solvencia
-  const handleAprobarSolvencia = async () => {
-    try {
-      const solvenciaActualizada = {
-        solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
-        colegiado_id: solvencia.idColegiado,
-        costo: datosResumen.total,
-        fecha_exp: formatDate(fechaVencimiento)
-      };
-
-      postDataSolicitud('aprobar_solicitud_solvencia', solvenciaActualizada);
-      setMostrarConfirmacion(false);
-      fetchSolicitudesDeSolvencia();
-      mostrarAlerta("exito", "La solvencia ha sido aprobada correctamente");
-      onVolver();
-    } catch (error) {
-      console.error("Error al aprobar solvencia:", error);
-    }
-  };
-
   // Función para rechazar la solvencia
   const handleRechazarSolvencia = async (motivo) => {
     try {
@@ -407,7 +396,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       mostrarAlerta("alerta", "La solvencia ha sido rechazada");
       onVolver();
     } catch (error) {
-      console.error("Error al rechazar solvencia:", error);
+      // Error al rechazar solvencia
     }
   };
 
@@ -432,7 +421,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       if (!solvenciaId) {
         throw new Error('ID de solicitud de solvencia no disponible');
       }
-      
+
       if (!solvencia?.idColegiado) {
         throw new Error('ID de colegiado no disponible');
       }
@@ -495,19 +484,19 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         user_id: solvencia.idColegiado,
         solicitud_solvencia_id: parseInt(solvenciaId)
       };
-      
+
       const pagoResult = await pagoSolvencia(detallesPagoParaBackend);
-      
+
       // Cerrar modal inmediatamente
       setShowPagoModal(false);
-      
+
       // Mostrar mensaje de éxito con el monto correcto
-      const montoMensaje = moneda === 'bs' 
+      const montoMensaje = moneda === 'bs'
         ? `${montoFinal.toLocaleString('es-VE')} Bs (${formatearMoneda(montoParaValidacion)})`
         : formatearMoneda(montoFinal);
-      
+
       mostrarAlerta("exito", `Pago de ${montoMensaje} procesado exitosamente. Actualizando datos...`);
-      
+
       // Actualizar datos después de un breve tiempo para permitir que el backend procese
       setTimeout(async () => {
         await handleRefreshData();
@@ -535,7 +524,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       } else if (error.message) {
         mensajeError = error.message;
       }
-      
+
       mostrarAlerta("alerta", `Error al procesar el pago: ${mensajeError}`);
       return [error, undefined];
     }
@@ -580,15 +569,14 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
             <ChevronLeft className="mr-2" size={20} />
             <span>Volver a la lista</span>
           </button>
-          <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${
-            solvencia.statusSolicitud === 'revisando'
+          <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${solvencia.statusSolicitud === 'revisando'
               ? 'bg-yellow-100 text-yellow-800'
               : solvencia.statusSolicitud === 'aprobado'
                 ? 'bg-green-100 text-green-800'
                 : solvencia.statusSolicitud === 'rechazado'
                   ? 'bg-red-100 text-red-800'
                   : 'bg-indigo-100 text-indigo-800'
-          }`}>
+            }`}>
             {solvencia.statusSolicitud === 'revisando' && <Clock size={16} />}
             {solvencia.statusSolicitud === 'aprobado' && <CheckCircle size={16} />}
             {solvencia.statusSolicitud === 'rechazado' && <X size={16} />}
@@ -602,11 +590,10 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
 
         {/* Alertas */}
         {alertaExito && (
-          <div className={`mt-4 p-4 rounded-xl flex items-center justify-between shadow-md ${
-            alertaExito.tipo === "exito" 
-              ? "bg-green-50 text-green-800 border border-green-200" 
+          <div className={`mt-4 p-4 rounded-xl flex items-center justify-between shadow-md ${alertaExito.tipo === "exito"
+              ? "bg-green-50 text-green-800 border border-green-200"
               : "bg-red-50 text-red-800 border border-red-200"
-          }`}>
+            }`}>
             <div className="flex items-center">
               {alertaExito.tipo === "exito" ? (
                 <CheckCircle className="mr-2" size={20} />
@@ -666,7 +653,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
               <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
                 Gestión de Pago
               </h3>
-              
+
               <div className="flex-grow flex flex-col justify-between">
                 {/* Descripción de funcionalidades */}
                 <div className="mb-6">
@@ -696,11 +683,10 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                   <button
                     onClick={() => setShowPagoModal(true)}
                     disabled={datosResumen.restante <= 0}
-                    className={`w-full py-4 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-3 text-lg ${
-                      datosResumen.restante <= 0
+                    className={`w-full py-4 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-3 text-lg ${datosResumen.restante <= 0
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-gradient-to-t from-[#41023B] to-[#D7008A] hover:opacity-90 text-white shadow-lg'
-                    }`}
+                      }`}
                   >
                     <CreditCard size={24} />
                     <span>
@@ -711,9 +697,9 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                     </span>
                     {datosResumen.restante > 0 && <ArrowRight size={24} />}
                   </button>
-                  
+
                   <p className="text-xs text-gray-500 text-center mt-3">
-                    {datosResumen.restante <= 0 
+                    {datosResumen.restante <= 0
                       ? 'El pago ha sido completado exitosamente'
                       : 'Acceda a todas las opciones de pago disponibles'
                     }
@@ -778,7 +764,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
 
               <div className="p-6">
                 {/* Asignación de costo si es necesario */}
-                {solvencia.statusSolicitud === 'costo_especial' && (
+                {solvencia.statusSolicitud === 'costo_especial' && !datosResumen.tieneCostoAsignado && (
                   <div className="space-y-6">
                     <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-200">
                       <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -809,11 +795,10 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                         <button
                           onClick={handleAsignarCosto}
                           disabled={!costoNuevo || parseFloat(costoNuevo) <= 0}
-                          className={`flex-1 inline-flex items-center justify-center px-4 py-2.5 ${
-                            !costoNuevo || parseFloat(costoNuevo) <= 0
+                          className={`flex-1 inline-flex items-center justify-center px-4 py-2.5 ${!costoNuevo || parseFloat(costoNuevo) <= 0
                               ? 'bg-gray-300 cursor-not-allowed'
                               : 'bg-gradient-to-r from-[#D7008A] to-[#41023B] hover:opacity-90'
-                          } text-white rounded-lg transition-colors text-base font-medium`}
+                            } text-white rounded-lg transition-colors text-base font-medium`}
                         >
                           <DollarSign className="mr-2" size={20} />
                           Asignar Costo
@@ -831,6 +816,39 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                   </div>
                 )}
 
+                {/* Acciones administrativas para costo especial con costo asignado */}
+                {solvencia.statusSolicitud === 'costo_especial' && datosResumen.tieneCostoAsignado && (
+                  <div className="space-y-6">
+                    <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+                      <h3 className="text-lg font-medium text-green-900 mb-4 flex items-center">
+                        <CheckCircle className="mr-2 text-green-600" size={20} />
+                        Costo Asignado: {formatearMoneda(datosResumen.total)}
+                      </h3>
+                      <p className="text-green-700 text-sm mb-4">
+                        El costo ha sido asignado correctamente. El colegiado puede proceder con el pago.
+                      </p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button
+                          onClick={() => setMostrarExoneracion(true)}
+                          className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors font-medium text-base"
+                        >
+                          <Ban className="mr-2" size={20} />
+                          Exonerar
+                        </button>
+
+                        <button
+                          onClick={() => setMostrarRechazo(true)}
+                          className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-colors font-medium text-base"
+                        >
+                          <X className="mr-2" size={20} />
+                          Rechazar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Acciones administrativas para revisión */}
                 {(solvencia.statusSolicitud === "revisando" || solvencia.statusSolicitud === "revision") && datosResumen.total > 0 && (
                   <div className="space-y-6 mt-6">
@@ -840,15 +858,15 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                         <Calendar className="mr-2 text-orange-600" size={20} />
                         Fecha de vencimiento
                       </h3>
-                      <select 
+                      <select
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#C40180] focus:border-[#C40180]"
                         onChange={handleSeleccionarFecha}
                       >
                         <option value="" disabled>Seleccione una fecha</option>
-                        {fechasDeVencimiento.map(({trimestre, fecha}) => (
-                          <option 
-                            key={trimestre} 
-                            value={fecha} 
+                        {fechasDeVencimiento.map(({ trimestre, fecha }) => (
+                          <option
+                            key={trimestre}
+                            value={fecha}
                             disabled={fechaActual > fecha || (solvencia.fechaExpSolicitud && new Date(solvencia.fechaExpSolicitud) > fecha)}
                           >
                             {formatDate(fecha)}
@@ -858,21 +876,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                     </div>
 
                     {/* Botones de acción */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <button
-                        onClick={() => setMostrarConfirmacion(true)}
-                        disabled={!datosResumen.pagoCompleto}
-                        className={`inline-flex items-center justify-center px-4 py-3 rounded-lg transition-colors font-medium text-base ${
-                          datosResumen.pagoCompleto
-                            ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
-                        title={!datosResumen.pagoCompleto ? "Debe completarse el pago para aprobar" : ""}
-                      >
-                        <Check className="mr-2" size={20} />
-                        Aprobar
-                      </button>
-
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <button
                         onClick={() => setMostrarExoneracion(true)}
                         className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors font-medium text-base"
@@ -981,15 +985,15 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                             <VerificationSwitch
                               item={{
                                 ...pago,
-                                status: pago.status === 'aprobado' ? 'approved' : 
-                                       pago.status === 'rechazado' ? 'rechazado' : 'pending'
+                                status: pago.status === 'aprobado' ? 'approved' :
+                                  pago.status === 'rechazado' ? 'rechazado' : 'pending'
                               }}
                               onChange={handleCambioEstadoPago}
                               index={index}
                               type="comprobante"
                               labels={{
                                 aprobado: "Aprobado",
-                                pendiente: "En Revisión", 
+                                pendiente: "En Revisión",
                                 rechazado: "Rechazado"
                               }}
                               readOnly={pago.status === 'aprobado'}
@@ -1003,7 +1007,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
               </table>
             </div>
 
-            
+
           </div>
         )}
 
@@ -1022,11 +1026,10 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
             <button
               onClick={() => setShowPagoModal(true)}
               disabled={datosResumen.restante <= 0}
-              className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                datosResumen.restante <= 0
+              className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${datosResumen.restante <= 0
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white hover:opacity-90'
-              }`}
+                }`}
             >
               <CreditCard className="w-4 h-4 mr-2" />
               Realizar primer pago
@@ -1057,7 +1060,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                     </p>
                   )}
                 </div>
-                
+
                 {/* Mostrar progreso si hay pagos previos */}
                 {datosResumen.pagado > 0 && (
                   <div className="mt-3">
@@ -1114,15 +1117,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       )}
 
       {/* Modales */}
-      {mostrarConfirmacion && (
-        <ConfirmacionModal
-          onCancel={() => setMostrarConfirmacion(false)}
-          onConfirm={handleAprobarSolvencia}
-          titulo="Confirmar Aprobación"
-          mensaje="¿Está seguro que desea aprobar esta solvencia? Una vez aprobada, no podrá revertir esta acción."
-        />
-      )}
-
       {mostrarRechazo && (
         <RechazoModal
           onCancel={() => setMostrarRechazo(false)}
