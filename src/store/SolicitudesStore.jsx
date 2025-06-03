@@ -248,6 +248,7 @@ export const useSolicitudesStore = create((set, get) => ({
   getSolicitudById: async (id) => {
     try {
       const res = await fetchSolicitudes(`solicitud_unida/${id}`);
+      set({ error:res });
       await get().getPagosSolicitud(id);
       set({ solicitudSeleccionada: transformBackendData(res.data) });
       return res.data;

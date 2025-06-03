@@ -40,6 +40,7 @@ export default function DetalleSolicitud({ props }) {
   const addPagosSolicitud = useSolicitudesStore(
     (state) => state.addPagosSolicitud
   );
+  const error = useSolicitudesStore(state => state.error);
   const updateDocumentoSolicitud = useSolicitudesStore(state => state.updateDocumentoSolicitud)
 
 
@@ -63,18 +64,19 @@ export default function DetalleSolicitud({ props }) {
   const loadSolicitudById = async () => {
     const solicitud = await getSolicitudById(id);
     setIsLoading(false);
-
+    console.log({solicitud,err:error})
+    
     // Verificar si todas las solicitudes hijas están aprobadas
     if (solicitud && solicitud.itemsSolicitud && 
-        solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada')) {
-      cargarDocumentosSistema();
-    }
-  };
-
-  useEffect(() => {
-    loadSolicitudById();
-  }, [id]);
-
+      solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada')) {
+        cargarDocumentosSistema();
+      }
+    };
+    
+    useEffect(() => {
+      loadSolicitudById();
+    }, [id]);
+    
   useEffect(() => {
     if (solicitud && solicitud.itemsSolicitud) {
       // Verificar si hay al menos una constancia o carnet aprobado
@@ -456,7 +458,7 @@ export default function DetalleSolicitud({ props }) {
       });
     }
   };
-
+  
   // Renderizar estado de carga
   if (isLoading) {
     return (
