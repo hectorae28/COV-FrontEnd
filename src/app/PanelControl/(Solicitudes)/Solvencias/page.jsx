@@ -1,8 +1,8 @@
 "use client"
 
-import CrearSolvenciaModal from "@/Components/SolicitudesSolvencia/CrearSolvenciaModal"
-import DateRangePicker from "@/Components/SolicitudesSolvencia/DateRangePicker"
-import DetalleSolvencia from "@/Components/SolicitudesSolvencia/DetalleSolvencia"
+import DateRangePicker from "@/app/Components/SolicitudesSolvencia/DateRangePicker"
+import DetalleSolvencia from "@/app/Components/SolicitudesSolvencia/DetalleSolvencia"
+import { useSolicitudesStore } from "@/store/SolicitudesStore"
 import { motion } from "framer-motion"
 import {
   Calendar,
@@ -10,20 +10,16 @@ import {
   ChevronDown,
   Clock,
   CreditCard,
-  PlusCircle,
   Search,
   Shield,
   XCircle
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { useSolicitudesStore } from "@/store/SolicitudesStore"
 
 export default function ListaSolvencias() {
   // Estados para manejar los datos
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [colegiadoSeleccionado, setColegiadoSeleccionado] = useState(null);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [filtroCreador, setFiltroCreador] = useState("todos");
@@ -58,7 +54,6 @@ export default function ListaSolvencias() {
   },[solicitudesDeSolvencia]);
 
   // Conteo de solvencias por estado para los tabs
-
 const conteoSolvencias = useMemo(() => ({
   // En "todas" solo contar las que no están aprobadas ni rechazadas
   todas: solicitudesDeSolvencia.filter(s => s.statusSolicitud !== "aprobado"
@@ -106,67 +101,20 @@ const conteoSolvencias = useMemo(() => ({
           searchTerm === "" ||
           solvencia.nombreColegiado.toLowerCase().includes(searchTerm.toLowerCase())
 
-        // Filtro por tab/estado principal (SIMPLIFICADO - ya no incluye "todas")
+        // Filtro por tab/estado principal
         let matchesTab = true;
 
-        // Lógica para cada pestaña
-        /*if (tabActual === "admin") {
-          // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
-          matchesTab = solvencia.creadoPor &&
-                      solvencia.statusSolicitud !== "aprobado" &&
-                      solvencia.statusSolicitud !== "rechazado";
-
-          // Si hay filtro específico de estado, aplicarlo
-          if (filtroEstado !== "todos") {
-            matchesTab = solvencia.creadoPor && solvencia.statusSolicitud === (
-              filtroEstado === "revisando" ? "Revisión" :
-              filtroEstado === "aprobadas" ? "Aprobada" :
-              "Rechazada"
-            );
-          }
-        } else if (tabActual === "colegiado") {
-          // En "colegiado" mostrar solo las que no estén aprobadas ni rechazadas y no sean creadas por admin
-          matchesTab = solvencia.creadoPor === null &&
-                      solvencia.statusSolicitud !== "aprobado" &&
-                      solvencia.statusSolicitud !== "rechazado";
-
-          // Si hay filtro específico de estado, aplicarlo
-          if (filtroEstado !== "todos") {
-            matchesTab = solvencia.creadoPor !== null && solvencia.statusSolicitud === (
-              filtroEstado === "revisando" ? "Revisión" :
-              filtroEstado === "aprobado" ? "Aprobada" :
-              "Rechazada"
-            );
-          }*/
         if (tabActual === "admin") {
           // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
           matchesTab = solvencia.creador.isAdmin &&
               solvencia.statusSolicitud !== "aprobado" &&
               solvencia.statusSolicitud !== "rechazado";
 
-          // Si hay filtro específico de estado, aplicarlo
-          /*if (filtroEstado !== "todos") {
-            matchesTab = solvencia.creador.isAdmin && solvencia.statusSolicitud === (
-                filtroEstado === "revisando" ? "Revisión" :
-                    filtroEstado === "aprobadas" ? "Aprobada" :
-                        "Rechazada"
-            );
-          }*/
-
         } else if (tabActual === "colegiado") {
           // En "admin" mostrar solo las que no estén aprobadas ni rechazadas y sean creadas por admin
           matchesTab = !solvencia.creador.isAdmin &&
               solvencia.statusSolicitud !== "aprobado" &&
               solvencia.statusSolicitud !== "rechazado";
-
-          // Si hay filtro específico de estado, aplicarlo
-          /*if (filtroEstado !== "todos") {
-            matchesTab = solvencia.creador.isAdmin && solvencia.statusSolicitud === (
-                filtroEstado === "revisando" ? "Revisión" :
-                    filtroEstado === "aprobadas" ? "Aprobada" :
-                        "Rechazada"
-            );
-          }*/
 
         } else if (tabActual === "costo_especial") {
           // En "costo_especial" mostrar solo las que tengan costo null
@@ -175,48 +123,16 @@ const conteoSolvencias = useMemo(() => ({
           // En "revisión" mostrar solo las que estén en revisión
           matchesTab = solvencia.statusSolicitud === "revisando";
 
-          // Aplicar filtro de creador si está activo
-          /*if (filtroCreador !== "todos") {
-            matchesTab = matchesTab && (
-                filtroCreador === "admin" ? solvencia.creador.isAdmin : false
-            );
-          }*/
         } else if (tabActual === "aprobadas") {
           // En "aprobadas" mostrar solo las que estén aprobadas
           matchesTab = solvencia.statusSolicitud === "aprobado";
 
-          // Aplicar filtro de creador si está activo
-          /*if (filtroCreador !== "todos") {
-            matchesTab = matchesTab && (
-              filtroCreador === "admin" ? solvencia.creador.isAdmin : false
-            );
-          }*/
         } else if (tabActual === "rechazadas") {
           // En "rechazadas" mostrar solo las que estén rechazadas
           matchesTab = solvencia.statusSolicitud === "rechazado";
 
-          // Aplicar filtro de creador si está activo
-          /*if (filtroCreador !== "todos") {
-            matchesTab = matchesTab && (
-              filtroCreador === "admin" ? solvencia.creador.isAdmin :
-              false
-            );
-          }*/
         }
 
-        // Filtro por rango de fechas
-        /*
-        let matchesFechas = true;
-        if (fechaInicio && fechaFin) {
-          const fechaSolvencia = parseStringToDate(solvencia.fecha);
-          const inicio = parseStringToDate(fechaInicio);
-          const fin = parseStringToDate(fechaFin);
-
-          if (fechaSolvencia && inicio && fin) {
-            fin.setHours(23, 59, 59, 999);
-            matchesFechas = fechaSolvencia >= inicio && fechaSolvencia <= fin;
-          }
-        }*/
         console.log(solvencia,matchesTab,matchesSearch);
 
         return matchesSearch && matchesTab;
@@ -242,21 +158,6 @@ const conteoSolvencias = useMemo(() => ({
   const volverALista = () => {
     setVistaActual("lista")
     setSolvenciaSeleccionadaId(null)
-  }
-
-  // Función para manejar la creación exitosa de una nueva solvencia
-  const handleSolvenciaCreada = (nuevaSolvencia) => {
-    setSolvencias(prev => [nuevaSolvencia, ...prev]); // Añadir al principio del array
-  }
-
-  // Función para abrir el modal con un colegiado preseleccionado
-  const abrirModalParaColegiado = (event, colegiadoId) => {
-    // Detener la propagación para evitar que el clic llegue a la fila
-    event.stopPropagation();
-
-    const colegiado = solicitudesDeSolvencia.find(c => c.idColegiado === colegiadoId)
-    setColegiadoSeleccionado(colegiado)
-    setShowModal(true)
   }
 
   // Actualizar una solvencia existente
@@ -315,11 +216,11 @@ const conteoSolvencias = useMemo(() => ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
         >
-          Administre las solvencias de los colegiados y genere nuevas
+          Administre las solvencias de los colegiados
         </motion.p>
       </motion.div>
 
-      {/* Barra de acciones: Búsqueda, filtros y botón de registro */}
+      {/* Barra de acciones: Búsqueda, filtros */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div className="flex-1 w-full md:w-auto">
           <div className="relative">
@@ -336,8 +237,6 @@ const conteoSolvencias = useMemo(() => ({
         </div>
 
         <div className="flex gap-4 w-full md:w-auto">
-
-
           <button
             onClick={() => setShowDateFilter(!showDateFilter)}
             className="cursor-pointer border border-gray-300 bg-white text-gray-700
@@ -347,18 +246,6 @@ const conteoSolvencias = useMemo(() => ({
             <Calendar size={20} />
             <span>Filtrar por fecha</span>
           </button>
-          
-          {/*<button
-            onClick={() => {
-              setColegiadoSeleccionado(null);
-              setShowModal(true);
-            }}
-            className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-4
-            py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity w-full md:w-auto justify-center"
-          >
-            <PlusCircle size={20} />
-            <span>Nueva solvencia</span>
-          </button>*/}
         </div>
       </div>
 
@@ -500,7 +387,7 @@ const conteoSolvencias = useMemo(() => ({
               <p className="text-gray-500 mb-6">
                 {searchTerm || fechaInicio || fechaFin
                   ? "Intenta cambiar los criterios de búsqueda o filtros de fecha"
-                  : "Puede crear una nueva solvencia usando el botón superior"}
+                  : "Las solicitudes de solvencia aparecerán aquí cuando los colegiados las generen"}
               </p>
             </div>
           ) : (
@@ -540,12 +427,6 @@ const conteoSolvencias = useMemo(() => ({
                               </div>
                             )}
                           </div>
-                          {/*<button
-                            className="text-xs text-[#C40180] hover:underline"
-                            onClick={(e) => abrirModalParaColegiado(e, solvencia.idColegiado)}
-                          >
-                            + Nueva solvencia
-                          </button>*/}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
@@ -559,7 +440,9 @@ const conteoSolvencias = useMemo(() => ({
                               ? 'bg-yellow-100 text-yellow-800'
                               : solvencia.statusSolicitud === 'aprobado'
                                 ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
+                                : solvencia.statusSolicitud === 'rechazado'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-indigo-100 text-indigo-800'
                             }`}>
                             {solvencia.statusSolicitud === 'revisando' && (<><Clock size={12} /> Pendiente</>)}
                             {solvencia.statusSolicitud === 'aprobado' && (<><CheckCircle size={12} />Aprobado</>)}
@@ -575,28 +458,6 @@ const conteoSolvencias = useMemo(() => ({
             </div>
           )}
         </>
-      )}
-
-      {/* Modal para crear nueva solvencia */}
-      {showModal && (
-        <CrearSolvenciaModal
-          onClose={() => {
-            setShowModal(false);
-            setColegiadoSeleccionado(null);
-          }}
-          onSolvenciaCreada={handleSolvenciaCreada}
-          colegiados={solicitudesDeSolvencia}
-          colegiadoPreseleccionado={colegiadoSeleccionado}
-          onVerDetalle={verDetalleSolvencia}
-          session={{
-            user: {
-              name: "Administrador",
-              email: "admin@ejemplo.com",
-              role: "admin",
-              isAdmin: true
-            }
-          }}
-        />
       )}
     </div>
   )

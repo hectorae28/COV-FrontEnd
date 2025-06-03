@@ -250,7 +250,8 @@ export default function PagosColg({ props }) {
   const handleSelectPaymentMethod = (metodo) => {
     setPaymentMethod({
       nombre: metodo.datos_adicionales.slug,
-      metodoId: metodo.id
+      metodoId: metodo.id,
+      id: metodo.id // Agregar el id para comparaciones
     });
     setShowMethodSelection(false);
   };
@@ -269,9 +270,9 @@ export default function PagosColg({ props }) {
       paymentDate: fullDate,
       referenceNumber,
       paymentFile,
-      totalAmount: paymentMethod.nombre === "bdv" ? montoEnBs : paypalAmount,
+      totalAmount: metodoDePago.find(m => m.id === paymentMethod.id)?.datos_adicionales?.slug === "bdv" ? montoEnBs : paypalAmount,
       metodo_de_pago: metodoDePago.find(
-        (m) => m.datos_adicionales.slug === paymentMethod.nombre
+        (m) => m.id === paymentMethod.id
       ),
       tasa_bcv_del_dia: tasaBCV,
     });
@@ -360,18 +361,18 @@ export default function PagosColg({ props }) {
                         <div className="flex items-center">
                           <img
                             src={
-                              metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod.nombre)?.logo_url
-                                ? metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod.nombre)?.logo_url.startsWith("/")
-                                  ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod.nombre)?.logo_url}`
-                                  : metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod.nombre)?.logo_url
+                              metodoDePago.find(m => m.id === paymentMethod.id)?.logo_url
+                                ? metodoDePago.find(m => m.id === paymentMethod.id)?.logo_url.startsWith("/")
+                                  ? `${process.env.NEXT_PUBLIC_BACK_HOST}${metodoDePago.find(m => m.id === paymentMethod.id)?.logo_url}`
+                                  : metodoDePago.find(m => m.id === paymentMethod.id)?.logo_url
                                 : "/placeholder.svg"
                             }
-                            alt={metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod.nombre)?.nombre}
+                            alt={metodoDePago.find(m => m.id === paymentMethod.id)?.nombre}
                             className="w-10 h-10 mr-3 object-contain"
                           />
                           <div>
-                            <p className="font-medium text-gray-900">{metodoDePago.find(m => m.datos_adicionales.slug === paymentMethod.nombre)?.nombre}</p>
-                            <p className="text-xs text-gray-500">Método de pago seleccionado</p>
+                            <p className="font-medium text-gray-900">{metodoDePago.find(m => m.id === paymentMethod.id)?.nombre}</p>
+                            <p className="text-xs text-gray-500">{metodoDePago.find(m => m.id === paymentMethod.id)?.descripcion || "Método de pago seleccionado"}</p>
                           </div>
                         </div>
                         <motion.button
@@ -427,25 +428,25 @@ export default function PagosColg({ props }) {
 
                           if (totalMetodos <= 4) {
                             // Si hay 4 o menos, todos en una fila
-                            widthClass = "w-20"; // Ancho fijo para hasta 4 elementos
+                            widthClass = "w-24"; // Ancho fijo para hasta 4 elementos (aumentado de w-20)
                           } else if (totalMetodos === 5) {
-                            // Si hay 5, mostramos 3 arriba y 2 abajo centrados
-                            widthClass = "w-40"; // Un poco más ancho para mejor distribución
+                            // Si hay 5, mostramos 3 arriba y 2 abajo centrados  
+                            widthClass = "w-36"; // Un poco más ancho para mejor distribución (reducido de w-40)
                           } else if (totalMetodos === 6) {
                             // Si hay 6, mostramos 3 arriba y 3 abajo
                             widthClass = "w-32";
                           } else if (totalMetodos <= 8) {
                             // Si hay 7-8, mostramos 4 arriba y el resto abajo
-                            widthClass = "w-20";
+                            widthClass = "w-24"; // Aumentado de w-20
                           } else {
                             // Para 9 o más
-                            widthClass = "w-20";
+                            widthClass = "w-24"; // Aumentado de w-20
                           }
 
                           return (
                             <motion.div
                               key={index}
-                              className={`cursor-pointer rounded-lg border transition-all overflow-hidden p-2 ${widthClass} ${paymentMethod?.nombre === metodo.datos_adicionales.slug
+                              className={`cursor-pointer rounded-lg border transition-all overflow-hidden p-2 ${widthClass} min-h-[80px] ${paymentMethod?.id === metodo.id
                                 ? "border-[#D7008A] ring-1 ring-[#D7008A] bg-[#D7008A]/5"
                                 : "border-gray-200 hover:border-[#D7008A]"
                                 }`}
@@ -453,8 +454,8 @@ export default function PagosColg({ props }) {
                               whileHover={{ y: -2, scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
-                              <div className="flex flex-col items-center text-center">
-                                <div className="w-10 h-10 flex items-center justify-center mb-1 relative">
+                              <div className="flex flex-col items-center text-center h-full justify-between">
+                                <div className="w-10 h-10 flex items-center justify-center mb-1 relative flex-shrink-0">
                                   <img
                                     src={
                                       metodo.logo_url
@@ -466,13 +467,21 @@ export default function PagosColg({ props }) {
                                     alt={metodo.nombre}
                                     className="max-w-full max-h-full object-contain"
                                   />
-                                  {paymentMethod?.nombre === metodo.datos_adicionales.slug && (
+                                  {paymentMethod?.id === metodo.id && (
                                     <div className="absolute -top-1 -right-1 bg-[#D7008A] rounded-full w-4 h-4 flex items-center justify-center">
                                       <Check className="w-3 h-3 text-white" />
                                     </div>
                                   )}
                                 </div>
-                                <h4 className="text-xs font-medium text-gray-900 truncate w-full">{metodo.nombre}</h4>
+                                <div className="flex-1 flex flex-col justify-center">
+                                  <h4 className="text-xs font-medium text-gray-900 truncate w-full mb-1">{metodo.nombre}</h4>
+                                  {/* Agregar descripción para diferenciar métodos del mismo banco */}
+                                  {metodo.descripcion && (
+                                    <p className="text-xs text-gray-500 line-clamp-2 text-center leading-tight">
+                                      {metodo.descripcion}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                             </motion.div>
                           );
@@ -493,7 +502,7 @@ export default function PagosColg({ props }) {
                     className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
                       ? "bg-red-50 border-red-300 text-red-700"
                       : "bg-blue-50 border-blue-300 text-blue-700"
-                      } ${paymentMethod?.nombre === metodo.datos_adicionales.slug
+                      } ${paymentMethod?.id === metodo.id
                         ? 'ring-2 ring-offset-2 ring-[#D7008A]'
                         : ''
                       }`}
@@ -519,7 +528,7 @@ export default function PagosColg({ props }) {
           {/* Conditional content based on payment method */}
           {paymentMethod && (
             <div className="mt-6 border-t pt-6">
-              {paymentMethod.nombre === "bdv" ? (
+              {metodoDePago.find(m => m.id === paymentMethod.id)?.datos_adicionales?.slug === "bdv" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Banco de Venezuela information */}
                   <div className="space-y-4">
