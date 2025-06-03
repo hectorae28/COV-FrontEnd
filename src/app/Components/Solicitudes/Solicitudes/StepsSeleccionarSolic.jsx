@@ -2,7 +2,7 @@
 
 import useDataListaColegiados from "@/store/ListaColegiadosData"
 import { useSolicitudesStore } from "@/store/SolicitudesStore"
-import { Building, Check, FileCheck, FileText, Search, ShoppingCart, Trash2, User } from "lucide-react"
+import { Building, Check, FileCheck, FileText, Search, Trash2, User, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import SeleccionarInstitucionesModal from "./SelectInstitutionsModal"
 
@@ -97,7 +97,8 @@ export default function SeleccionarSolicitudesStep({
 
   // Efecto para manejar el tipo de solicitud preseleccionado
   useEffect(() => {
-    if (!tipos_solicitud || !tipos_solicitud[0]?.costo) return;
+    // Verificar que tipos_solicitud existe y no está vacío
+    if (!tipos_solicitud || Object.keys(tipos_solicitud).length === 0) return;
 
     if (tipoSolicitudPreseleccionado) {
       // Convertir a formato correcto (primera letra mayúscula, resto minúsculas)
@@ -126,6 +127,8 @@ export default function SeleccionarSolicitudesStep({
         if (tipoFormateado !== "Constancia") {
           // Para los demás tipos, pre-agregar al carrito
           const tipoInfo = tipos_solicitud[tipoFormateado];
+          console.log("Agregando al carrito tipo preseleccionado:", tipoFormateado, tipoInfo);
+          
           // Verificamos que tipoInfo y sus propiedades existan antes de usarlas
           if (tipoInfo && tipoInfo.codigo && tipoInfo.nombre && tipoInfo.costo) {
             const nuevoItem = {
@@ -137,12 +140,17 @@ export default function SeleccionarSolicitudesStep({
               exonerado: false,
               codigo: tipoInfo.codigo,
               documentosRequeridos: tipoInfo.documentosRequeridos ?
-                tipoInfo.documentosRequeridos.map(doc => doc.displayName) : []
+                tipoInfo.documentosRequeridos.map(doc => doc.displayName || doc) : []
             };
+            console.log("Item creado:", nuevoItem);
             setItemsCarrito([nuevoItem]);
             actualizarTotal([nuevoItem]);
+          } else {
+            console.error("TipoInfo incompleto:", tipoInfo);
           }
         }
+      } else {
+        console.error("Tipo no encontrado en tipos_solicitud:", tipoFormateado, tipos_solicitud);
       }
     }
   }, [tipoSolicitudPreseleccionado, tipos_solicitud]);
@@ -608,25 +616,51 @@ export default function SeleccionarSolicitudesStep({
           )}
           {/* Selección de colegiado (solo si es necesario) */}
           {mostrarSeleccionColegiado && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Colegiado <span className="text-red-500">*</span>
-              </label>
+            <div className="mb-8">
+              {/* Título sin numeración */}
+              <div className="flex items-center mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Seleccionar Colegiado
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Busque y seleccione el colegiado para quien realizará la solicitud
+                  </p>
+                </div>
+                <span className="text-red-500 text-lg">*</span>
+              </div>
+              
+              {!colegiadoSeleccionado && (
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-[12px] text-blue-700">
+                        <strong>Instrucción:</strong> Para continuar debe seleccionar primero el colegiado.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {errors.colegiadoId && (
                 <div className="text-red-500 text-xs mb-2">
                   {errors.colegiadoId}
                 </div>
               )}
+              
               <div className="relative">
                 {colegiadoSeleccionado ? (
-                  <div className="flex items-center justify-between border rounded-lg p-3 mb-2">
+                  <div className="flex items-center justify-between border border-green-300 bg-green-50 rounded-lg p-4 mb-2">
                     <div className="flex items-center">
-                      <User size={20} className="text-gray-400 mr-2" />
+                      <div className="bg-green-500 text-white rounded-full p-2 mr-3">
+                        <Check size={20} />
+                      </div>
+                      <User size={24} className="text-gray-600 mr-3" />
                       <div>
-                        <p className="font-medium">
+                        <p className="font-semibold text-gray-800 text-lg">
                           {colegiadoSeleccionado.recaudos?.persona?.nombre || "Nombre no disponible"}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-600">
                           {colegiadoSeleccionado.recaudos?.persona?.identificacion || "ID no disponible"} ·{" "}
                           COV: {colegiadoSeleccionado.num_cov || "Nº no disponible"}
                         </p>
@@ -638,7 +672,7 @@ export default function SeleccionarSolicitudesStep({
                         setFormData((prev) => ({ ...prev, colegiadoId: "" }));
                         setShowColegiadosList(true);
                       }}
-                      className="text-[#C40180] text-sm hover:underline"
+                      className="text-[#C40180] text-sm hover:underline font-medium bg-white px-3 py-1 rounded border"
                     >
                       Cambiar
                     </button>
@@ -648,7 +682,7 @@ export default function SeleccionarSolicitudesStep({
                     <input
                       type="text"
                       placeholder="Buscar colegiado por nombre, cédula o registro..."
-                      className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="pl-12 pr-4 py-4 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-[#C40180] focus:border-[#C40180] text-lg"
                       value={searchTerm}
                       onChange={(e) => {
                         setSearchTerm(e.target.value);
@@ -656,7 +690,7 @@ export default function SeleccionarSolicitudesStep({
                       }}
                       onFocus={() => setShowColegiadosList(true)}
                     />
-                    <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                    <Search className="absolute left-4 top-4.5 h-6 w-6 text-gray-400" />
                   </div>
                 )}
                 {/* Lista de colegiados */}
@@ -684,260 +718,412 @@ export default function SeleccionarSolicitudesStep({
                     )}
                   </div>
                 )}
-                {/* Overlay de bloqueo */}
-                {mostrarSeleccionColegiado && bloqueadoPorUsuario && (
-                  <strong className="mt-2 ml-8 text-[10px] text-[#590248]">
-                    Debe seleccionar un colegiado para continuar con la solicitud.
-                  </strong>
-                )}
+
               </div>
             </div>
           )}
 
           <div className={`transition-opacity duration-200 ${bloqueadoPorUsuario ? 'opacity-50 pointer-events-none' : ''}`}>
-            {/* Selección de tipos de solicitud */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {tipoSolicitudPreseleccionado &&
-                  tipoSolicitudPreseleccionado !== "multiple"
-                  ? "Tipo de solicitud seleccionado"
-                  : "Tipos de solicitud"}{" "}
-                <span className="text-red-500">*</span>
-              </label>
-              {errors.items && (
-                <div className="text-red-500 text-xs mb-2">{errors.items}</div>
-              )}
-              {/* Si no hay tipo preseleccionado o es "multiple", mostrar todos los tipos*/}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                {tipos_solicitud && Object.keys(tipos_solicitud).map((tipo) => (
-                  <div
-                    key={tipo}
-                    className={`
-                                          border rounded-md p-3 cursor-pointer transition-colors
-                                          ${tiposSeleccionados.includes(tipo)
-                        ? "border-[#C40180] bg-purple-50"
-                        : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    onClick={() => handleSeleccionTipo(tipo)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-gray-800">
-                          {tipos_solicitud[tipo]?.nombre || tipo}
-                        </p>
-                        {tipo !== "Constancia" ? (
-                          <p className="text-xs text-gray-500">
-                            Costo: ${tipos_solicitud[tipo]?.costo?.monto?.toFixed(2) || "0.00"}
+            {/* Selección de tipos de solicitud - Solo mostrar si no hay tipo preseleccionado específico */}
+            {(!tipoSolicitudPreseleccionado || tipoSolicitudPreseleccionado === "multiple") && (
+              <div className="mb-8">
+                {/* Título sin numeración */}
+                <div className="flex items-center mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      Seleccionar Tipo de Solicitud
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Elija el tipo de solicitud que desea realizar
+                    </p>
+                  </div>
+                  <span className="text-red-500 text-lg">*</span>
+                </div>
+                
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-[12px] text-blue-700">
+                        <strong>Instrucción:</strong> Seleccione el tipo de solicitud que desea realizar. Puede elegir una o múltiples opciones según sus necesidades.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {errors.items && (
+                  <div className="text-red-500 text-xs mb-2">{errors.items}</div>
+                )}
+                
+                {/* Opciones de tipo de solicitud */}
+                <div className="flex flex-wrap gap-4 mb-6">
+                  {tipos_solicitud && Object.keys(tipos_solicitud).map((tipo) => (
+                    <div
+                      key={tipo}
+                      className={`
+                        flex-1 min-w-[220px] border-2 rounded-xl p-5 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-101
+                        ${tiposSeleccionados.includes(tipo)
+                          ? "border-[#C40180] bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 shadow-xl"
+                          : "border-gray-200 hover:border-gray-300 bg-white"
+                        }`}
+                      onClick={() => handleSeleccionTipo(tipo)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-800 mb-2 text-lg">
+                            {tipos_solicitud[tipo]?.nombre || tipo}
                           </p>
-                        ) : (
-                          <p className="text-xs text-gray-500">
-                            Requiere selección de tipo específico
-                          </p>
+                          {tipo !== "Constancia" ? (
+                            <p className="text-sm text-gray-600 font-semibold">
+                              Costo: ${tipos_solicitud[tipo]?.costo?.monto?.toFixed(2) || "0.00"}
+                            </p>
+                          ) : (
+                            <p className="text-sm text-gray-600 italic">
+                              Requiere selección específica
+                            </p>
+                          )}
+                        </div>
+                        {tiposSeleccionados.includes(tipo) && (
+                          <div className="bg-[#C40180] text-white rounded-full p-2 ml-3 shadow-lg">
+                            <Check size={20} />
+                          </div>
                         )}
                       </div>
-                      {tiposSeleccionados.includes(tipo) && (
-                        <div className="bg-[#C40180] text-white rounded-full p-1">
-                          <Check size={16} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Subtipos de constancia como desplegable directo - Solo para selección manual */}
+                {tiposSeleccionados.includes("Constancia") && tipos_solicitud?.Constancia?.subtipos && (
+                  <div className="-mt-2">
+                    {/* Lista desplegable directa del botón */}
+                    <div className="bg-white border-2 border-[#C40180] rounded-b-xl overflow-hidden shadow-lg">
+                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b border-[#C40180]">
+                        <h5 className="font-semibold text-gray-800 flex items-center">
+                          <span className="mr-2">📋</span>
+                          Seleccione los tipos de constancia que necesita:
+                        </h5>
+                      </div>
+                      
+                      <div className="max-h-64 overflow-y-auto">
+                        {tipos_solicitud.Constancia.subtipos.map((subtipo, index) => (
+                          subtipo && subtipo.codigo && (
+                            <div
+                              key={subtipo.codigo}
+                              className={`
+                                flex items-center justify-between p-4 border-b border-gray-100 cursor-pointer transition-colors duration-200 hover:bg-gray-50
+                                ${subtiposConstanciaSeleccionados.includes(subtipo.nombre)
+                                  ? "bg-purple-50 border-l-4 border-l-[#C40180]"
+                                  : "hover:bg-gray-50"
+                                }`}
+                              onClick={() => handleSeleccionSubtipoConstancia(subtipo)}
+                            >
+                              <div className="flex items-center flex-1">
+                                <div className={`
+                                  w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-colors duration-200
+                                  ${subtiposConstanciaSeleccionados.includes(subtipo.nombre)
+                                    ? "bg-[#C40180] border-[#C40180]"
+                                    : "border-gray-300"
+                                  }`}
+                                >
+                                  {subtiposConstanciaSeleccionados.includes(subtipo.nombre) && (
+                                    <Check size={14} className="text-white" />
+                                  )}
+                                </div>
+                                
+                                <div className="flex-1">
+                                  <p className="font-medium text-gray-800">
+                                    {subtipo.nombre}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    Código: {subtipo.codigo}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="text-right">
+                                <p className="font-bold text-[#C40180] text-lg">
+                                  ${subtipo.costo?.monto?.toFixed(2) || "0.00"}
+                                </p>
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                      
+                      {subtiposConstanciaSeleccionados.length > 0 && (
+                        <div className="bg-green-50 px-4 py-3 border-t border-green-200">
+                          <p className="text-sm text-green-700 font-medium">
+                            ✅ <strong>{subtiposConstanciaSeleccionados.length}</strong> tipo{subtiposConstanciaSeleccionados.length === 1 ? '' : 's'} de constancia seleccionado{subtiposConstanciaSeleccionados.length === 1 ? '' : 's'}
+                          </p>
                         </div>
                       )}
                     </div>
                   </div>
-                ))}
+                )}
               </div>
+            )}
 
-              {/* Subtipos de constancia si está seleccionada */}
-              {tiposSeleccionados.includes("Constancia") && tipos_solicitud?.Constancia?.subtipos && (
-                <div className="border border-[#C40180] rounded-md p-4 mb-4 bg-purple-50">
-                  <h3 className="text-sm font-medium text-gray-800 mb-2">
-                    Seleccione los tipos de constancia que necesita:
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {tipos_solicitud.Constancia.subtipos.map((subtipo) => (
+            {/* Lista de constancias para tipo preseleccionado - Solo mostrar si es constancia preseleccionada */}
+            {tipoSolicitudPreseleccionado === "constancia" && tipos_solicitud?.Constancia?.subtipos && (
+              <div className="mb-8">
+                <div className="flex items-center mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      Tipos de Constancia Disponibles
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Seleccione los tipos específicos de constancia que necesita
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-[12px] text-blue-700">
+                        <strong>Instrucción:</strong> Puede seleccionar múltiples tipos de constancia según sus necesidades.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lista de constancias directa */}
+                <div className="bg-white border-2 border-[#C40180] rounded-xl overflow-hidden shadow-lg">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b border-[#C40180]">
+                    <h5 className="font-semibold text-gray-800 flex items-center">
+                      <span className="mr-2">📋</span>
+                      Seleccione los tipos de constancia que necesita:
+                    </h5>
+                  </div>
+                  
+                  <div className="max-h-64 overflow-y-auto">
+                    {tipos_solicitud.Constancia.subtipos.map((subtipo, index) => (
                       subtipo && subtipo.codigo && (
                         <div
                           key={subtipo.codigo}
                           className={`
-                                            border rounded p-2 cursor-pointer
-                                            ${subtiposConstanciaSeleccionados.includes(
-                            subtipo.nombre
-                          )
-                              ? "border-[#C40180] bg-white"
-                              : "border-gray-200 hover:border-gray-300"
+                            flex items-center justify-between p-4 border-b border-gray-100 cursor-pointer transition-colors duration-200 hover:bg-gray-50
+                            ${subtiposConstanciaSeleccionados.includes(subtipo.nombre)
+                              ? "bg-purple-50 border-l-4 border-l-[#C40180]"
+                              : "hover:bg-gray-50"
                             }`}
                           onClick={() => handleSeleccionSubtipoConstancia(subtipo)}
                         >
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="text-sm">{subtipo.nombre}</p>
-                              <p className="text-xs text-gray-500">
-                                ${subtipo.costo?.monto?.toFixed(2) || "0.00"}
+                          <div className="flex items-center flex-1">
+                            <div className={`
+                              w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-colors duration-200
+                              ${subtiposConstanciaSeleccionados.includes(subtipo.nombre)
+                                ? "bg-[#C40180] border-[#C40180]"
+                                : "border-gray-300"
+                              }`}
+                            >
+                              {subtiposConstanciaSeleccionados.includes(subtipo.nombre) && (
+                                <Check size={14} className="text-white" />
+                              )}
+                            </div>
+                            
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-800">
+                                {subtipo.nombre}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Código: {subtipo.codigo}
                               </p>
                             </div>
-                            {subtiposConstanciaSeleccionados.includes(
-                              subtipo.nombre
-                            ) && <Check size={16} className="text-[#C40180]" />}
+                          </div>
+                          
+                          <div className="text-right">
+                            <p className="font-bold text-[#C40180] text-lg">
+                              ${subtipo.costo?.monto?.toFixed(2) || "0.00"}
+                            </p>
                           </div>
                         </div>
                       )
                     ))}
                   </div>
+                  
+                  {subtiposConstanciaSeleccionados.length > 0 && (
+                    <div className="bg-green-50 px-4 py-3 border-t border-green-200">
+                      <p className="text-sm text-green-700 font-medium">
+                        ✅ <strong>{subtiposConstanciaSeleccionados.length}</strong> tipo{subtiposConstanciaSeleccionados.length === 1 ? '' : 's'} de constancia seleccionado{subtiposConstanciaSeleccionados.length === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Carrito de compras */}
+            {/* Carrito de compras - Sin numeración */}
             {errors.documentos && (
-              <div className="text-red-500 text-xs mb-2">
+              <div className="text-red-500 text-xs mb-2 ml-14">
                 {errors.documentos.text}
               </div>
             )}
-            <div className="mb-6 border rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b flex justify-between items-center">
-                <h3 className="font-medium text-gray-800 flex items-center">
-                  <ShoppingCart size={18} className="mr-2 text-[#C40180]" />
-                  Servicios seleccionados
-                </h3>
+            
+            <div className="mb-8">
+              {/* Título sin numeración */}
+              <div className="flex items-center mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Resumen de Servicios Seleccionados
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Revise y confirme los servicios que ha seleccionado
+                  </p>
+                </div>
                 {itemsCarrito.length > 0 && (
-                  <span className="text-sm text-gray-600">
-                    Total:{" "}
-                    <strong className="text-[#C40180]">
-                      ${totalCarrito.toFixed(2)}
-                    </strong>
-                  </span>
+                  <div className="bg-[#C40180] text-white px-4 py-2 rounded-full shadow-lg">
+                    <span className="text-sm font-semibold">
+                      Total: ${totalCarrito.toFixed(2)}
+                    </span>
+                  </div>
                 )}
               </div>
-              {itemsCarrito.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">
-                  Aún no ha agregado servicios a su solicitud
-                </div>
-              ) : (
-                <div>
-                  {/* Lista de items */}
-                  <ul className="divide-y">
-                    {itemsCarrito.map((item) => (
-                      item && item.id && (
-                        <li key={item.id} className="p-3">
-                          <div className="flex justify-between items-center mb-2">
-                            <div className="flex-1">
-                              <span className="font-medium">{item.nombre || "Sin nombre"}</span>
-                              {/* Mostrar información de institución si existe */}
-                              {item.institucionNombre && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                  <Building size={12} className="inline mr-1" />
-                                  {item.institucionNombre}
-                                </p>
-                              )}
-                              <span
-                                className={`ml-3 ${item.exonerado
-                                  ? "line-through text-gray-400"
-                                  : "text-[#C40180]"
-                                  }`}
-                              >
-                                ${item.costo?.monto?.toFixed(2) || "0.00"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              {isAdmin && (
-                                <label className="inline-flex items-center cursor-pointer">
-                                  <span className="text-xs text-gray-600 mr-2">
-                                    Exonerar
-                                  </span>
-                                  <input
-                                    type="checkbox"
-                                    className="sr-only peer"
-                                    checked={item.exonerado}
-                                    onChange={() => toggleExoneracion(item.id)}
-                                  />
-                                  <div className="relative w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-600"></div>
-                                </label>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => eliminarDelCarrito(item.id)}
-                                className="cursor-pointer text-red-500 hover:text-red-700"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                          {/* Documentos requeridos para este item - Solo mostrar si no es constancia */}
-                          {item.tipo !== "Constancia" &&
-                            item.documentosRequeridos &&
-                            item.documentosRequeridos.length > 0 && (
-                              <div className="pl-2 border-l-2 border-gray-200 mt-1">
-                                <p className="text-xs text-gray-500 mb-1">
-                                  Documentos requeridos:
-                                </p>
-                                <ul className="space-y-2">
-                                  {item.documentosRequeridos.map((doc, index) => {
-                                    // Manejar tanto el caso donde doc es un objeto como donde es un string
-                                    const displayName = typeof doc === 'object' ? doc.displayName : doc;
-                                    const campo = typeof doc === 'object' ? doc.campo : doc;
+              
+              <div className="border rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b">
+                  <div className="flex items-center justify-between">
 
-                                    return (
-                                      <li
-                                        key={`${item.id}-${index}`}
-                                        className="flex items-center"
-                                      >
-                                        <FileText
-                                          size={14}
-                                          className="text-gray-400 mr-1"
-                                        />
-                                        <span className={`text-xs ${errors?.documentos?.list?.includes(displayName) ? "text-red-500" : ""}`}>
-                                          {displayName}
-                                        </span>
-                                        <input
-                                          type="file"
-                                          id={`documento-${item.id}-${index}`}
-                                          onChange={(e) =>
-                                            handleFileChange(e, campo)
-                                          }
-                                          className="hidden"
-                                          accept=".pdf,.jpg,.jpeg,.png"
-                                        />
-                                        <label
-                                          htmlFor={`documento-${item.id}-${index}`}
-                                          className="ml-2 text-xs text-blue-600 cursor-pointer hover:underline"
-                                        >
-                                          {documentosAdjuntos[campo] ? (
-                                            <span className="text-green-600 flex items-center">
-                                              <FileCheck size={14} className="mr-1" />
-                                              {documentosAdjuntos[campo].name.length > 15
-                                                ? documentosAdjuntos[campo].name.substring(0, 15) + "..."
-                                                : documentosAdjuntos[campo].name}
-                                            </span>
-                                          ) : (
-                                            "Adjuntar"
-                                          )}
-                                        </label>
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                              </div>
-                            )}
-                        </li>
-                      )
-                    ))}
-                  </ul>
-                  {/* Acciones del carrito */}
-
-                  <div className="bg-gray-50 p-3 border-t flex justify-between items-center">
-                    <span className="text-sm font-bold">
-                      Total a pagar: ${totalCarrito.toFixed(2)}
-                    </span>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={exonerarTodos}
-                        className="cursor-pointer text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        Exonerar todos
-                      </button>
+                    {itemsCarrito.length > 0 && (
+                      <span className="bg-[#C40180] text-white px-3 py-1 rounded-full text-sm font-medium">
+                        {itemsCarrito.length} {itemsCarrito.length === 1 ? 'servicio' : 'servicios'}
+                      </span>
                     )}
                   </div>
                 </div>
-              )}
+                {itemsCarrito.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Aún no ha agregado servicios a su solicitud
+                  </div>
+                ) : (
+                  <div>
+                    {/* Lista de items */}
+                    <ul className="divide-y">
+                      {itemsCarrito.map((item) => (
+                        item && item.id && (
+                          <li key={item.id} className="p-3">
+                            <div className="flex justify-between items-center mb-2">
+                              <div className="flex-1">
+                                <span className="font-medium">{item.nombre || "Sin nombre"}</span>
+                                {/* Mostrar información de institución si existe */}
+                                {item.institucionNombre && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    <Building size={12} className="inline mr-1" />
+                                    {item.institucionNombre}
+                                  </p>
+                                )}
+                                <span
+                                  className={`ml-3 ${item.exonerado
+                                    ? "line-through text-gray-400"
+                                    : "text-[#C40180]"
+                                    }`}
+                                >
+                                  ${item.costo?.monto?.toFixed(2) || "0.00"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                {isAdmin && (
+                                  <label className="inline-flex items-center cursor-pointer">
+                                    <span className="text-xs text-gray-600 mr-2">
+                                      Exonerar
+                                    </span>
+                                    <input
+                                      type="checkbox"
+                                      className="sr-only peer"
+                                      checked={item.exonerado}
+                                      onChange={() => toggleExoneracion(item.id)}
+                                    />
+                                    <div className="relative w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-600"></div>
+                                  </label>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => eliminarDelCarrito(item.id)}
+                                  className="cursor-pointer text-red-500 hover:text-red-700"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
+                            {/* Documentos requeridos para este item - Solo mostrar si no es constancia */}
+                            {item.tipo !== "Constancia" &&
+                              item.documentosRequeridos &&
+                              item.documentosRequeridos.length > 0 && (
+                                <div className="pl-2 border-l-2 border-gray-200 mt-1">
+                                  <p className="text-xs text-gray-500 mb-1">
+                                    Documentos requeridos:
+                                  </p>
+                                  <ul className="space-y-2">
+                                    {item.documentosRequeridos.map((doc, index) => {
+                                      // Manejar tanto el caso donde doc es un objeto como donde es un string
+                                      const displayName = typeof doc === 'object' ? doc.displayName : doc;
+                                      const campo = typeof doc === 'object' ? doc.campo : doc;
+
+                                      return (
+                                        <li
+                                          key={`${item.id}-${index}`}
+                                          className="flex items-center"
+                                        >
+                                          <FileText
+                                            size={14}
+                                            className="text-gray-400 mr-1"
+                                          />
+                                          <span className={`text-xs ${errors?.documentos?.list?.includes(displayName) ? "text-red-500" : ""}`}>
+                                            {displayName}
+                                          </span>
+                                          <input
+                                            type="file"
+                                            id={`documento-${item.id}-${index}`}
+                                            onChange={(e) =>
+                                              handleFileChange(e, campo)
+                                            }
+                                            className="hidden"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                          />
+                                          <label
+                                            htmlFor={`documento-${item.id}-${index}`}
+                                            className="ml-2 text-xs text-blue-600 cursor-pointer hover:underline"
+                                          >
+                                            {documentosAdjuntos[campo] ? (
+                                              <span className="text-green-600 flex items-center">
+                                                <FileCheck size={14} className="mr-1" />
+                                                {documentosAdjuntos[campo].name.length > 15
+                                                  ? documentosAdjuntos[campo].name.substring(0, 15) + "..."
+                                                  : documentosAdjuntos[campo].name}
+                                              </span>
+                                            ) : (
+                                              "Adjuntar"
+                                            )}
+                                          </label>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              )}
+                          </li>
+                        )
+                      ))}
+                    </ul>
+                    {/* Acciones del carrito */}
+
+                    <div className="bg-gray-50 p-3 border-t flex justify-between items-center">
+                      <span className="text-sm font-bold">
+                        Total a pagar: ${totalCarrito.toFixed(2)}
+                      </span>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={exonerarTodos}
+                          className="cursor-pointer text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          Exonerar todos
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Mensaje si todo está exonerado */}
@@ -954,21 +1140,6 @@ export default function SeleccionarSolicitudesStep({
               </div>
             )}
 
-            {/* Campo opcional de descripción */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Descripción adicional (opcional)
-              </label>
-              <textarea
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] text-sm"
-                placeholder="Ingrese detalles adicionales para su solicitud..."
-                rows={3}
-              />
-            </div>
-
             {/* Mensaje de error general */}
             {errors.general && (
               <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-md">
@@ -976,24 +1147,49 @@ export default function SeleccionarSolicitudesStep({
               </div>
             )}
           </div>
-          <div className="flex justify-end p-4 border-t bg-gray-50">
-            <button
-              type="button"
-              onClick={onClose}
-              className="cursor-pointer px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 mr-3"
-            >
-              Cancelar
-            </button>
+          
+          {/* Botones de acción mejorados */}
+          <div className="flex flex-col sm:flex-row-reverse sm:justify-between gap-3 p-6 border-t bg-gradient-to-r from-gray-50 to-gray-100">
             <button
               type="submit"
               disabled={isSubmitting || bloqueadoPorUsuario}
-              className={`cursor-pointer px-6 py-2 bg-[#C40180] text-white rounded-md ${isSubmitting || bloqueadoPorUsuario
-                ? "opacity-70 cursor-not-allowed"
-                : "hover:bg-[#590248]"
-                }`}
+              className={`cursor-pointer px-8 py-3 rounded-lg font-semibold text-white shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                isSubmitting || bloqueadoPorUsuario
+                  ? "bg-gray-400 cursor-not-allowed opacity-70"
+                  : "bg-gradient-to-r from-[#D7008A] to-[#41023B] hover:shadow-xl hover:scale-105"
+              }`}
             >
-              {isSubmitting ? "Procesando..." : "Continuar"}
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Procesando solicitud...</span>
+                </>
+              ) : (
+                <>
+                  <FileCheck size={20} />
+                  <span>Crear Solicitud</span>
+                </>
+              )}
             </button>
+            
+            <button
+              type="button"
+              onClick={onClose}
+              className="cursor-pointer px-6 py-3 text-gray-700 border-2 border-gray-300 rounded-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300 font-medium flex items-center justify-center gap-2"
+            >
+              <X size={18} />
+              <span>Cancelar</span>
+            </button>
+            
+            {bloqueadoPorUsuario && (
+              <div className="absolute bottom-2 left-6 right-6">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-sm text-amber-700 text-center font-medium">
+                    ⚠️ Complete todos los pasos anteriores para habilitar la creación de la solicitud
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </form>
