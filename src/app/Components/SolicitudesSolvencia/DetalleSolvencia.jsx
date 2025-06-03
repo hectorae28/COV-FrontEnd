@@ -22,6 +22,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 // Componentes importados
 import { fetchSolicitudes, pagoSolvencia, patchDataSolicitud, postDataSolicitud } from "@/api/endpoints/solicitud";
 import PagosColg from "@/app/Components/PagosModal";
+import VerificationSwitch from "@/app/Components/Solicitudes/ListaColegiados/VerificationSwitch";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import ConfirmacionModal from "./ConfirmacionModal";
 import ExoneracionModal from "./ExoneracionModal";
@@ -77,7 +78,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       const metodos = await fetchSolicitudes("metodo-de-pago");
       setMetodoDePago(metodos.data);
     } catch (error) {
-      console.log(`Ha ocurrido un error: ${error}`)
+      // Error al obtener métodos de pago
     }
   }
 
@@ -124,7 +125,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         minimumFractionDigits: 2
       }).format(valor);
     } catch (err) {
-      console.error('Error al formatear moneda:', err);
       return '$0.00';
     }
   }, []);
@@ -138,7 +138,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         day: '2-digit'
       });
     } catch (err) {
-      console.error('Error al formatear fecha:', err);
       return "Fecha inválida";
     }
   }, []);
@@ -154,24 +153,30 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
     { trimestre: 4, fecha: getEndOfTrimester(4) },
   ];
 
-  // Procesamiento de pagos similar a PagoSolv
+  // Procesamiento de pagos optimizado para la estructura de datos correcta
   const historialPagos = useMemo(() => {
-    if (!solvencia?.pagos_solicitud_solvencia || !Array.isArray(solvencia.pagos_solicitud_solvencia)) {
+    // Obtener pagos de la estructura correcta: solicitudes_solvencia.lista[0].pagos
+    const pagosArray = solvencia?.pagos || [];
+    
+    if (!Array.isArray(pagosArray) || pagosArray.length === 0) {
       return [];
     }
 
     try {
-      return solvencia.pagos_solicitud_solvencia.map(pago => {
+      return pagosArray.map(pago => {
         const montoUSD = pago.moneda === 'bs'
           ? parseFloat(pago.monto) / parseFloat(pago.tasa_bcv_del_dia || 1)
           : parseFloat(pago.monto || 0);
 
-        const fechaDisponible = pago.fecha_pago || pago.created_at;
+        // Verificar disponibilidad de campos de fecha
+        const fechaDisponible = pago.fecha_pago || pago.created_at || pago.fecha_creacion;
 
         return {
           ...pago,
           montoUSD,
-          fechaFormateada: fechaDisponible ? formatearFecha(fechaDisponible) : "Fecha no disponible",
+          fechaFormateada: fechaDisponible
+            ? formatearFecha(fechaDisponible)
+            : "Fecha no disponible",
           metodoPagoNombre: obtenerNombreMetodoPago(pago.metodo_de_pago),
           estadoInfo: ESTADOS_PAGO[pago.status] || {
             color: 'bg-gray-100 text-gray-800 border-gray-200',
@@ -181,26 +186,50 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         };
       });
     } catch (err) {
-      console.error('Error al procesar pagos:', err);
       return [];
     }
-  }, [solvencia?.pagos_solicitud_solvencia, formatearFecha, obtenerNombreMetodoPago]);
+  }, [solvencia?.pagos, formatearFecha, obtenerNombreMetodoPago]);
 
-  // Cálculo de resumen de pagos
+  // Cálculo de resumen de pagos mejorado
   const datosResumen = useMemo(() => {
     if (!solvencia) return { total: 0, pagado: 0, restante: 0, porcentajePagado: 0 };
 
-    const costoTotal = parseFloat(solvencia.costoRegularSolicitud || 0);
+    // Obtener el costo total desde las propiedades mapeadas del store
+    let costoTotal = 0;
+    
+    // Priorizar costo especial si existe y no es null
+    if (solvencia.costoEspecialSolicitud !== null && solvencia.costoEspecialSolicitud !== undefined) {
+      costoTotal = parseFloat(solvencia.costoEspecialSolicitud || 0);
+    } else {
+      // Usar costo regular como fallback
+      costoTotal = parseFloat(solvencia.costoRegularSolicitud || 0);
+    }
+    
+    // Calcular monto pagado SOLO de pagos aprobados, con conversión correcta a USD
     const montoPagado = historialPagos
-      .filter(pago => pago.status === 'aprobado')
+      .filter(pago => {
+        return pago.status === 'aprobado';
+      })
+      .reduce((sum, pago) => {
+        const montoUSD = pago.montoUSD;
+        return sum + montoUSD;
+      }, 0);
+    
+    // También calcular pagos en revisión para mostrar información adicional
+    const montoPendiente = historialPagos
+      .filter(pago => pago.status === 'revisando' || pago.status === 'revision')
       .reduce((sum, pago) => sum + pago.montoUSD, 0);
+    
     const montoRestante = Math.max(0, costoTotal - montoPagado);
+    const pagoCompleto = montoRestante <= 0 && costoTotal > 0;
 
     return {
       total: costoTotal,
       pagado: montoPagado,
       restante: montoRestante,
-      porcentajePagado: costoTotal > 0 ? (montoPagado / costoTotal) * 100 : 0
+      porcentajePagado: costoTotal > 0 ? (montoPagado / costoTotal) * 100 : 0,
+      pendiente: montoPendiente,
+      pagoCompleto
     };
   }, [solvencia, historialPagos]);
 
@@ -216,125 +245,85 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
     }
   }, [solvenciaId, solvencias]);
 
-  // Manejo de actualización de datos
+  // Manejo de actualización de datos mejorado
   const handleRefreshData = useCallback(async () => {
     setIsRefreshing(true);
     try {
       // Refrescar datos del store
       await fetchSolicitudesDeSolvencia();
       
-      // Esperar un momento para que se actualice el store
+      // Esperar un momento para que se actualice el store y luego buscar la solvencia actualizada
       setTimeout(() => {
-        // Buscar la solvencia actualizada en el store actualizado
         const solicitudesActualizadas = useSolicitudesStore.getState().solicitudesDeSolvencia;
         const solvenciaActualizada = solicitudesActualizadas.find(s => s.idSolicitudSolvencia === solvenciaId);
+        
         if (solvenciaActualizada) {
           setSolvencia(solvenciaActualizada);
+          mostrarAlerta("exito", "Datos actualizados correctamente");
         }
+        
         setIsRefreshing(false);
-      }, 500);
+      }, 1000);
     } catch (error) {
-      console.error('Error al refrescar datos:', error);
+      mostrarAlerta("alerta", "Error al actualizar los datos");
       setIsRefreshing(false);
     }
   }, [fetchSolicitudesDeSolvencia, solvenciaId]);
 
-  // Manejo de pagos (con mapeo correcto de datos de PagosColg)
-  const handlePagoSolvencia = useCallback(async (detallesPagoSolvencia) => {
+  // Función para mostrar alertas
+  const mostrarAlerta = useCallback((tipo, mensaje) => {
+    setAlertaExito({ tipo, mensaje });
+    // Auto-ocultar la alerta después de 5 segundos
+    setTimeout(() => {
+      setAlertaExito(null);
+    }, 5000);
+  }, []);
+
+  // Función para manejar cambios de estado en pagos (aprobar/rechazar)
+  const handleCambioEstadoPago = useCallback(async (pagoActualizado, index) => {
     try {
-      console.log('Datos recibidos de PagosColg:', detallesPagoSolvencia);
-      console.log('Datos de solvencia:', { solvenciaId, colegiadoId: solvencia?.idColegiado });
-      
-      // Validar datos requeridos
-      if (!solvenciaId) {
-        throw new Error('ID de solicitud de solvencia no disponible');
+      // Mapear el estado del VerificationSwitch al estado del backend
+      let nuevoEstado;
+      if (pagoActualizado.status === 'approved') {
+        nuevoEstado = 'aprobado';
+      } else if (pagoActualizado.status === 'rechazado') {
+        nuevoEstado = 'rechazado';
+      } else {
+        nuevoEstado = 'revisando';
       }
       
-      if (!solvencia?.idColegiado) {
-        throw new Error('ID de colegiado no disponible');
-      }
-
-      // Mapear correctamente los datos del componente PagosColg
-      // El componente puede enviar diferentes estructuras (totalAmount vs monto, etc.)
-      const monto = detallesPagoSolvencia.totalAmount || detallesPagoSolvencia.monto;
-      const metodoPago = detallesPagoSolvencia.metodo_de_pago?.id || detallesPagoSolvencia.metodo_de_pago;
-      const referencia = detallesPagoSolvencia.referenceNumber || detallesPagoSolvencia.num_referencia || '';
-      const fechaPago = detallesPagoSolvencia.paymentDate || detallesPagoSolvencia.fecha_pago;
-
-      // Validar que los datos críticos no sean null/undefined
-      if (!monto || monto === null || monto === undefined) {
-        throw new Error('Monto no proporcionado o es inválido');
-      }
-
-      if (!metodoPago || metodoPago === null || metodoPago === undefined) {
-        throw new Error('Método de pago no proporcionado o es inválido');
-      }
-
-      // Preparar datos en formato correcto para el backend
-      const datosPago = {
-        monto: parseFloat(monto),
-        moneda: detallesPagoSolvencia.moneda || 'usd',
-        metodo_de_pago: parseInt(metodoPago),
-        num_referencia: referencia,
-        tasa_bcv_del_dia: parseFloat(detallesPagoSolvencia.tasa_bcv_del_dia) || 1,
-        // Campos para el contexto administrativo
-        user_id: solvencia.idColegiado,
-        solicitud_solvencia_id: parseInt(solvenciaId)
+      // Preparar datos para el endpoint de actualización de pago
+      const datosActualizacion = {
+        pago_id: pagoActualizado.id,
+        nuevo_status: nuevoEstado,
+        motivo_rechazo: pagoActualizado.rejectionReason || pagoActualizado.motivo_rechazo || ''
       };
-
-      // Agregar fecha de pago si existe
-      if (fechaPago) {
-        datosPago.fecha_pago = fechaPago;
-      }
-
-      console.log('Datos mapeados y validados:', datosPago);
-
-      // Validación final antes de enviar
-      if (isNaN(datosPago.monto) || datosPago.monto <= 0) {
-        throw new Error(`Monto inválido: ${datosPago.monto}`);
-      }
-
-      if (isNaN(datosPago.metodo_de_pago)) {
-        throw new Error(`Método de pago inválido: ${datosPago.metodo_de_pago}`);
-      }
-
-      console.log('Enviando al backend:', datosPago);
-      const pagoResult = await pagoSolvencia(datosPago);
       
-      console.log('Resultado del pago:', pagoResult);
+      // Llamar al endpoint para actualizar el estado del pago
+      const resultado = await actualizarEstadoPago(datosActualizacion);
       
-      setShowPagoModal(false);
-      mostrarAlerta("exito", "Pago procesado exitosamente en el servidor");
+      // Mostrar mensaje de éxito
+      const accion = nuevoEstado === 'aprobado' ? 'aprobado' : 'rechazado';
+      mostrarAlerta("exito", `Pago ${accion} correctamente. Actualizando datos...`);
       
-      // Actualizar datos del store después del pago exitoso
+      // Actualizar los datos después de un breve delay
       setTimeout(async () => {
         await handleRefreshData();
       }, 1000);
-
-      return [undefined, pagoResult];
-    } catch (error) {
-      console.error('Error completo al procesar pago:', error);
-      console.error('Response del error:', error.response?.data);
-      console.error('Status del error:', error.response?.status);
       
-      let mensajeError = 'Error desconocido';
+    } catch (error) {
+      let mensajeError = 'Error al actualizar el estado del pago';
       if (error.response?.data?.detail) {
         mensajeError = error.response.data.detail;
       } else if (error.response?.data?.message) {
         mensajeError = error.response.data.message;
-      } else if (error.response?.data?.error) {
-        mensajeError = error.response.data.error;
-      } else if (error.response?.data) {
-        // Si hay datos del error pero no detail/message, mostrar todo
-        mensajeError = JSON.stringify(error.response.data);
       } else if (error.message) {
         mensajeError = error.message;
       }
       
-      mostrarAlerta("alerta", `Error al procesar el pago: ${mensajeError}`);
-      return [error, undefined];
+      mostrarAlerta("alerta", `Error: ${mensajeError}`);
     }
-  }, [solvenciaId, solvencia?.idColegiado, handleRefreshData]);
+  }, [handleRefreshData, mostrarAlerta]);
 
   // Función para actualizar el costo asignado
   const handleAsignarCosto = () => {
@@ -354,7 +343,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       mostrarAlerta("exito", "Se ha asignado el costo correctamente");
       onVolver();
     } catch (error) {
-      console.error("Error al asignar costo:", error);
       mostrarAlerta("alerta", "Ocurrió un error al procesar la solicitud");
     }
   };
@@ -375,7 +363,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       mostrarAlerta("exito", "La solvencia ha sido exonerada de pago");
       onVolver();
     } catch (error) {
-      console.error("Error al exonerar pago:", error);
       mostrarAlerta("alerta", "Ocurrió un error al procesar la exoneración");
     }
   };
@@ -386,7 +373,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
       const solvenciaActualizada = {
         solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
         colegiado_id: solvencia.idColegiado,
-        costo: solvencia.costoRegularSolicitud,
+        costo: datosResumen.total,
         fecha_exp: formatDate(fechaVencimiento)
       };
 
@@ -424,21 +411,135 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
     }
   };
 
-  // Función para mostrar alertas temporales
-  const mostrarAlerta = (tipo, mensaje) => {
-    setAlertaExito({
-      tipo: tipo,
-      mensaje: mensaje
-    });
-
-    setTimeout(() => {
-      setAlertaExito(null);
-    }, 5000);
-  };
-
   const handleSeleccionarFecha = (e) => {
     setFechaVencimiento(new Date(e.target.value));
   }
+
+  // Auto-actualización de datos cuando se detectan cambios en el store
+  useEffect(() => {
+    if (solicitudesDeSolvencia.length > 0 && solvenciaId) {
+      const solvenciaActualizada = solicitudesDeSolvencia.find(s => s.idSolicitudSolvencia === solvenciaId);
+      if (solvenciaActualizada && JSON.stringify(solvenciaActualizada) !== JSON.stringify(solvencia)) {
+        setSolvencia(solvenciaActualizada);
+      }
+    }
+  }, [solicitudesDeSolvencia, solvenciaId, solvencia]);
+
+  // Manejo de pagos mejorado con mejor validación y manejo de errores
+  const handlePagoSolvencia = useCallback(async (detallesPagoSolvencia) => {
+    try {
+      // Validar datos requeridos
+      if (!solvenciaId) {
+        throw new Error('ID de solicitud de solvencia no disponible');
+      }
+      
+      if (!solvencia?.idColegiado) {
+        throw new Error('ID de colegiado no disponible');
+      }
+
+      // Validar que la solvencia esté en estado que permita pagos
+      if (!['revisando', 'revision', 'costo_especial'].includes(solvencia.statusSolicitud)) {
+        throw new Error(`No se pueden procesar pagos para solvencias en estado: ${solvencia.statusSolicitud}`);
+      }
+
+      // Mapear correctamente los datos del componente PagosColg
+      const monto = detallesPagoSolvencia.totalAmount || detallesPagoSolvencia.monto;
+      const metodoPago = detallesPagoSolvencia.metodo_de_pago?.id || detallesPagoSolvencia.metodo_de_pago;
+      const referencia = detallesPagoSolvencia.referenceNumber || detallesPagoSolvencia.num_referencia || '';
+      const fechaPago = detallesPagoSolvencia.paymentDate || detallesPagoSolvencia.fecha_pago;
+
+      // Validar que los datos críticos no sean null/undefined
+      if (!monto || monto === null || monto === undefined) {
+        throw new Error('Monto no proporcionado o es inválido');
+      }
+
+      if (!metodoPago || metodoPago === null || metodoPago === undefined) {
+        throw new Error('Método de pago no proporcionado o es inválido');
+      }
+
+      // Determinar la moneda basada en el método de pago
+      let moneda = 'usd'; // Por defecto USD
+      let montoFinal = parseFloat(monto);
+      let montoParaValidacion = montoFinal;
+
+      if (detallesPagoSolvencia.metodo_de_pago?.datos_adicionales?.slug === 'bdv') {
+        moneda = 'bs'; // Bolívares para Banco de Venezuela
+        // Para validación, convertir Bs a USD
+        const tasaBcv = parseFloat(detallesPagoSolvencia.tasa_bcv_del_dia || 1);
+        montoParaValidacion = montoFinal / tasaBcv;
+      }
+
+      // Validación del monto antes de enviar
+      if (isNaN(montoFinal) || montoFinal <= 0) {
+        throw new Error(`Monto inválido: ${montoFinal}`);
+      }
+
+      if (isNaN(parseInt(metodoPago))) {
+        throw new Error(`Método de pago inválido: ${metodoPago}`);
+      }
+
+      // Validar que el monto no exceda lo pendiente (solo si no es asignación de costo)
+      if (solvencia.statusSolicitud !== 'costo_especial' && montoParaValidacion > datosResumen.restante) {
+        throw new Error(`El monto (${formatearMoneda(montoParaValidacion)}) no puede ser mayor al restante (${formatearMoneda(datosResumen.restante)})`);
+      }
+
+      // Preparar datos para el endpoint pagoSolvencia (SIN el campo 'tipo' que causa error)
+      const detallesPagoParaBackend = {
+        paymentDate: fechaPago || '',
+        referenceNumber: referencia,
+        paymentFile: detallesPagoSolvencia.paymentFile || null,
+        totalAmount: montoFinal.toString(),
+        metodo_de_pago: detallesPagoSolvencia.metodo_de_pago,
+        tasa_bcv_del_dia: parseFloat(detallesPagoSolvencia.tasa_bcv_del_dia || 1),
+        // Agregar datos específicos para admin (SIN incluir 'tipo')
+        user_id: solvencia.idColegiado,
+        solicitud_solvencia_id: parseInt(solvenciaId)
+      };
+      
+      const pagoResult = await pagoSolvencia(detallesPagoParaBackend);
+      
+      // Cerrar modal inmediatamente
+      setShowPagoModal(false);
+      
+      // Mostrar mensaje de éxito con el monto correcto
+      const montoMensaje = moneda === 'bs' 
+        ? `${montoFinal.toLocaleString('es-VE')} Bs (${formatearMoneda(montoParaValidacion)})`
+        : formatearMoneda(montoFinal);
+      
+      mostrarAlerta("exito", `Pago de ${montoMensaje} procesado exitosamente. Actualizando datos...`);
+      
+      // Actualizar datos después de un breve tiempo para permitir que el backend procese
+      setTimeout(async () => {
+        await handleRefreshData();
+      }, 1500);
+
+      return [undefined, pagoResult];
+    } catch (error) {
+      let mensajeError = 'Error desconocido al procesar el pago';
+      if (error.response?.data?.detail) {
+        mensajeError = error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        mensajeError = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        mensajeError = error.response.data.error;
+      } else if (error.response?.data) {
+        // Si hay datos del error pero no detail/message, mostrar información útil
+        if (typeof error.response.data === 'object') {
+          const errorKeys = Object.keys(error.response.data);
+          if (errorKeys.length > 0) {
+            mensajeError = `Error en campos: ${errorKeys.join(', ')}`;
+          }
+        } else {
+          mensajeError = String(error.response.data);
+        }
+      } else if (error.message) {
+        mensajeError = error.message;
+      }
+      
+      mostrarAlerta("alerta", `Error al procesar el pago: ${mensajeError}`);
+      return [error, undefined];
+    }
+  }, [solvenciaId, solvencia?.idColegiado, solvencia?.statusSolicitud, datosResumen.restante, datosResumen.total, handleRefreshData, formatearMoneda]);
 
   // Renderizado principal
   if (isLoading) {
@@ -465,7 +566,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   }
 
   const hayPagos = historialPagos.length > 0;
-  const pagoCompleto = datosResumen.restante <= 0 && datosResumen.total > 0;
+  const pagoCompleto = datosResumen.pagoCompleto;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 mt-28">
@@ -641,10 +742,20 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                   <div>
                     <p className="text-white text-sm">Pagado</p>
                     <p className="text-xl font-bold text-green-500">{formatearMoneda(datosResumen.pagado)}</p>
+                    {datosResumen.pendiente > 0 && (
+                      <p className="text-xs text-yellow-300">
+                        +{formatearMoneda(datosResumen.pendiente)} pendiente
+                      </p>
+                    )}
                   </div>
                   <div>
                     <p className="text-white text-sm">Restante</p>
-                    <p className="text-xl font-bold text-red-500">{formatearMoneda(datosResumen.restante)}</p>
+                    <p className={`text-xl font-bold ${datosResumen.pagoCompleto ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatearMoneda(datosResumen.restante)}
+                    </p>
+                    {datosResumen.pagoCompleto && (
+                      <p className="text-xs text-green-300">¡Pago completo!</p>
+                    )}
                   </div>
                 </div>
 
@@ -721,8 +832,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                 )}
 
                 {/* Acciones administrativas para revisión */}
-                {solvencia.statusSolicitud === "revisando" && solvencia.costoRegularSolicitud >= 0 && (
-                  <div className="space-y-6">
+                {(solvencia.statusSolicitud === "revisando" || solvencia.statusSolicitud === "revision") && datosResumen.total > 0 && (
+                  <div className="space-y-6 mt-6">
                     {/* Selector de fecha de vencimiento */}
                     <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
                       <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
@@ -750,13 +861,13 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <button
                         onClick={() => setMostrarConfirmacion(true)}
-                        disabled={!pagoCompleto}
+                        disabled={!datosResumen.pagoCompleto}
                         className={`inline-flex items-center justify-center px-4 py-3 rounded-lg transition-colors font-medium text-base ${
-                          pagoCompleto
+                          datosResumen.pagoCompleto
                             ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white'
                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         }`}
-                        title={!pagoCompleto ? "Debe completarse el pago para aprobar" : ""}
+                        title={!datosResumen.pagoCompleto ? "Debe completarse el pago para aprobar" : ""}
                       >
                         <Check className="mr-2" size={20} />
                         Aprobar
@@ -785,7 +896,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
           </div>
         </div>
 
-        {/* Historial de pagos */}
+        {/* Historial de pagos mejorado */}
         {hayPagos && (
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-6">
@@ -806,15 +917,6 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                     Total de pagos: {historialPagos.length}
                   </span>
                 </div>
-                <button
-                  onClick={handleRefreshData}
-                  disabled={isRefreshing}
-                  className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-[#D7008A] transition-colors disabled:opacity-50"
-                  title="Actualizar historial"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  <span>Actualizar</span>
-                </button>
               </div>
             </div>
 
@@ -827,14 +929,15 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                     <th className="text-center py-4 px-4 font-semibold text-gray-700">Referencia</th>
                     <th className="text-center py-4 px-4 font-semibold text-gray-700">Monto</th>
                     <th className="text-center py-4 px-4 font-semibold text-gray-700">Estado</th>
+                    <th className="text-center py-4 px-4 font-semibold text-gray-700">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {historialPagos.map((pago) => {
+                  {historialPagos.map((pago, index) => {
                     const IconoEstado = pago.estadoInfo.icon;
 
                     return (
-                      <tr key={pago.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <tr key={pago.id || index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                         <td className="py-4 px-4 text-sm text-gray-900 text-center">
                           <div className="flex items-center justify-center">
                             <Calendar className="w-4 h-4 text-gray-400 mr-2" />
@@ -873,6 +976,26 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                             {pago.estadoInfo.texto}
                           </span>
                         </td>
+                        <td className="py-4 px-4 text-center">
+                          <div className="flex items-center justify-center">
+                            <VerificationSwitch
+                              item={{
+                                ...pago,
+                                status: pago.status === 'aprobado' ? 'approved' : 
+                                       pago.status === 'rechazado' ? 'rechazado' : 'pending'
+                              }}
+                              onChange={handleCambioEstadoPago}
+                              index={index}
+                              type="comprobante"
+                              labels={{
+                                aprobado: "Aprobado",
+                                pendiente: "En Revisión", 
+                                rechazado: "Rechazado"
+                              }}
+                              readOnly={pago.status === 'aprobado'}
+                            />
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
@@ -880,36 +1003,39 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
               </table>
             </div>
 
-            {/* Resumen del historial */}
-            <div className="mt-6 bg-gray-50 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-600">Total de Pagos</p>
-                  <p className="text-lg font-bold text-blue-600">{historialPagos.length}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-600">Monto Total Pagado</p>
-                  <p className="text-lg font-bold text-green-600">{formatearMoneda(datosResumen.pagado)}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-600">Pagos Aprobados</p>
-                  <p className="text-lg font-bold text-emerald-600">
-                    {historialPagos.filter(p => p.status === 'aprobado').length}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-600">Estado de Pago</p>
-                  <p className="text-sm font-semibold text-purple-600">
-                    {pagoCompleto ? 'Completo' : 'Pendiente'}
-                  </p>
-                </div>
-              </div>
+            
+          </div>
+        )}
+
+        {/* Mensaje cuando no hay pagos */}
+        {!hayPagos && solvencia.statusSolicitud !== 'costo_especial' && (
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <History className="h-8 w-8 text-gray-400" />
             </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              No hay pagos registrados
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Los pagos realizados para esta solvencia aparecerán aquí
+            </p>
+            <button
+              onClick={() => setShowPagoModal(true)}
+              disabled={datosResumen.restante <= 0}
+              className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                datosResumen.restante <= 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white hover:opacity-90'
+              }`}
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Realizar primer pago
+            </button>
           </div>
         )}
       </div>
 
-      {/* Modal de Pago */}
+      {/* Modal de Pago Mejorado */}
       {showPagoModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -919,22 +1045,60 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                   Procesar Pago de Solvencia
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Total: {formatearMoneda(datosResumen.total)}
-                  {datosResumen.pagado > 0 && (
-                    <span className="ml-2 text-orange-600">
-                      (Restante: {formatearMoneda(datosResumen.restante)})
-                    </span>
-                  )}
+                  <span className="font-medium">Colegiado:</span> {solvencia.nombreColegiado}
                 </p>
+                <div className="flex items-center gap-4 mt-2">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Total:</span> {formatearMoneda(datosResumen.total)}
+                  </p>
+                  {datosResumen.pagado > 0 && (
+                    <p className="text-sm text-orange-600">
+                      <span className="font-medium">Restante:</span> {formatearMoneda(datosResumen.restante)}
+                    </p>
+                  )}
+                </div>
+                
+                {/* Mostrar progreso si hay pagos previos */}
+                {datosResumen.pagado > 0 && (
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <span>Progreso: {datosResumen.porcentajePagado.toFixed(1)}%</span>
+                      <span>Pagado: {formatearMoneda(datosResumen.pagado)}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300"
+                        style={{ width: `${Math.min(datosResumen.porcentajePagado, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => setShowPagoModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
                 title="Cerrar modal"
               >
                 <X size={24} />
               </button>
             </div>
+
+            {/* Mostrar información de pagos previos si existen */}
+            {historialPagos.length > 0 && (
+              <div className="p-4 bg-blue-50 border-b border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <History className="w-4 h-4 text-blue-600 mr-2" />
+                    <span className="text-sm font-medium text-blue-800">
+                      Pagos anteriores: {historialPagos.length}
+                    </span>
+                  </div>
+                  <div className="text-sm text-blue-700">
+                    <span className="font-medium">Último pago:</span> {historialPagos[0]?.fechaFormateada}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="p-0">
               <PagosColg

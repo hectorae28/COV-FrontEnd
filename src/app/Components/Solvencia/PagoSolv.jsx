@@ -180,7 +180,7 @@ export default function SolvenciaPago({ props, solvenciaData, onRefreshData }) {
   // Determinar si el tipo puede ser cambiado (solo si no hay tipo definido en el backend)
   const puedecambiarTipo = useMemo(() => {
     // Si ya hay un tipo definido en el backend, no se puede cambiar
-    return !solvenciaData?.tipo || historialPagos.length == 0 || solvenciaData.status !== 'costo_especial';
+    return !solvenciaData?.tipo || historialPagos.length == 0 || solvenciaData?.status !== 'costo_especial';
   }, [solvenciaData?.tipo]);
 
   // Actualizar el tipo seleccionado cuando cambien los datos del backend
@@ -360,7 +360,7 @@ export default function SolvenciaPago({ props, solvenciaData, onRefreshData }) {
               <div className="space-y-3 flex-grow">
                 {/* Opción Trimestral */}
                 <div
-                  className={`relative border-2 rounded-lg p-3 transition-all duration-300 ${!puedecambiarTipo && (tipoSolvenciaSeleccionada !== 'trimestral' && hayPagos) || solvenciaData.status == 'costo_especial'
+                  className={`relative border-2 rounded-lg p-3 transition-all duration-300 ${!puedecambiarTipo && (tipoSolvenciaSeleccionada !== 'trimestral' && hayPagos) || solvenciaData?.status == 'costo_especial'
                     ? 'border-gray-300 bg-gray-100 opacity-60 cursor-not-allowed'
                     : (tipoSolvenciaSeleccionada !== 'trimestral' && hayPagos)
                       ? 'border-blue-500 bg-blue-50 shadow-md cursor-pointer'
@@ -401,7 +401,7 @@ export default function SolvenciaPago({ props, solvenciaData, onRefreshData }) {
                 {/* Opción Anual */}
                 {mostrarOpcionAnual && (
                   <div
-                    className={`relative border-2 rounded-lg p-3 transition-all duration-300 ${!puedecambiarTipo && (tipoSolvenciaSeleccionada !== 'anual' && hayPagos) || solvenciaData.status == 'costo_especial'
+                    className={`relative border-2 rounded-lg p-3 transition-all duration-300 ${!puedecambiarTipo && (tipoSolvenciaSeleccionada !== 'anual' && hayPagos) || solvenciaData?.status == 'costo_especial'
                       ? 'border-gray-300 bg-gray-100 opacity-60 cursor-not-allowed'
                       : (tipoSolvenciaSeleccionada !== 'anual' && hayPagos)
                         ? 'border-green-500 bg-green-50 shadow-md cursor-pointer'
@@ -656,35 +656,6 @@ export default function SolvenciaPago({ props, solvenciaData, onRefreshData }) {
                 })}
               </tbody>
             </table>
-          </div>
-
-          {/* Resumen del historial */}
-          <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">Total de Pagos</p>
-                <p className="text-lg font-bold text-blue-600">{historialPagos.length}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">Monto Total Pagado</p>
-                <p className="text-lg font-bold text-green-600">{formatearMoneda(datosResumen.pagado)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">Pagos Aprobados</p>
-                <p className="text-lg font-bold text-emerald-600">
-                  {historialPagos.filter(p => p.status === 'aprobado').length}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">Estado General</p>
-                <p className="text-sm font-semibold text-purple-600">
-                  {solvenciaData?.status === 'revision' ? 'En Revisión' :
-                    solvenciaData?.status === 'aprobado' ? 'Aprobado' :
-                      solvenciaData?.status === 'completado' ? 'Completado' :
-                        solvenciaData?.status || 'Procesando'}
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       )}
