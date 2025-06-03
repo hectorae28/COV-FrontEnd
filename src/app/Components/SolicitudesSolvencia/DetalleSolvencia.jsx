@@ -19,7 +19,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 // Componentes importados
-import { fetchSolicitudes, pagoSolvencia, patchDataSolicitud, postDataSolicitud } from "@/api/endpoints/solicitud";
+import { fetchSolicitudes, pagoSolvencia, patchDataSolicitud, postDataSolicitud, actualizarEstadoPago } from "@/api/endpoints/solicitud";
 import PagosColg from "@/app/Components/PagosModal";
 import VerificationSwitch from "@/app/Components/Solicitudes/ListaColegiados/VerificationSwitch";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
@@ -53,15 +53,6 @@ const ESTADOS_PAGO = {
   }
 };
 
-// Función para actualizar estado de pago
-const actualizarEstadoPago = async (datosActualizacion) => {
-  try {
-    const response = await patchDataSolicitud('actualizar_estado_pago', datosActualizacion);
-    return response;
-  } catch (error) {
-    throw error;
-  }
-};
 
 export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, actualizarSolvencia }) {
   // Estados principales

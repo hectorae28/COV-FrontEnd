@@ -180,7 +180,7 @@ export default function SolvenciaPago({ props, solvenciaData, onRefreshData }) {
   // Determinar si el tipo puede ser cambiado (solo si no hay tipo definido en el backend)
   const puedecambiarTipo = useMemo(() => {
     // Si ya hay un tipo definido en el backend, no se puede cambiar
-    return !solvenciaData?.tipo || historialPagos.length == 0 || solvenciaData?.status !== 'costo_especial';
+    return !solvenciaData?.tipo && historialPagos.length == 0 && solvenciaData?.status !== 'costo_especial';
   }, [solvenciaData?.tipo]);
 
   // Actualizar el tipo seleccionado cuando cambien los datos del backend
@@ -298,7 +298,6 @@ export default function SolvenciaPago({ props, solvenciaData, onRefreshData }) {
   // Validaciones
   const hayPagos = historialPagos.length > 0;
   const mostrarOpcionAnual = !infoTrimestre.esUltimoTrimestre;
-
   return (
     <div className="space-y-8 pb-8" id="solvencia-pagos">
       {/* Mensaje de éxito */}
@@ -360,7 +359,7 @@ export default function SolvenciaPago({ props, solvenciaData, onRefreshData }) {
               <div className="space-y-3 flex-grow">
                 {/* Opción Trimestral */}
                 <div
-                  className={`relative border-2 rounded-lg p-3 transition-all duration-300 ${!puedecambiarTipo && (tipoSolvenciaSeleccionada !== 'trimestral' && hayPagos) || solvenciaData?.status == 'costo_especial'
+                  className={`relative border-2 rounded-lg p-3 transition-all duration-300 ${!puedecambiarTipo && ((tipoSolvenciaSeleccionada !== 'trimestral' && hayPagos) || solvenciaData?.status == 'costo_especial')
                     ? 'border-gray-300 bg-gray-100 opacity-60 cursor-not-allowed'
                     : (tipoSolvenciaSeleccionada !== 'trimestral' && hayPagos)
                       ? 'border-blue-500 bg-blue-50 shadow-md cursor-pointer'
@@ -401,7 +400,7 @@ export default function SolvenciaPago({ props, solvenciaData, onRefreshData }) {
                 {/* Opción Anual */}
                 {mostrarOpcionAnual && (
                   <div
-                    className={`relative border-2 rounded-lg p-3 transition-all duration-300 ${!puedecambiarTipo && (tipoSolvenciaSeleccionada !== 'anual' && hayPagos) || solvenciaData?.status == 'costo_especial'
+                    className={`relative border-2 rounded-lg p-3 transition-all duration-300 ${!puedecambiarTipo && ((tipoSolvenciaSeleccionada !== 'anual' && hayPagos) || solvenciaData?.status == 'costo_especial')
                       ? 'border-gray-300 bg-gray-100 opacity-60 cursor-not-allowed'
                       : (tipoSolvenciaSeleccionada !== 'anual' && hayPagos)
                         ? 'border-green-500 bg-green-50 shadow-md cursor-pointer'

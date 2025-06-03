@@ -8,7 +8,7 @@ import {
     Shield
 } from "lucide-react"
 
-const SolicitudHeader = ({ solicitud, totales,isAdmin=false }) => {
+const SolicitudHeader = ({ solicitud, totales, isAdmin = false }) => {
     const {
         totalExonerado,
         totalPagado,
@@ -17,7 +17,9 @@ const SolicitudHeader = ({ solicitud, totales,isAdmin=false }) => {
         todoExonerado,
         todoPagado
     } = totales
-    console.log({solicitud})
+    console.log({ solicitud })
+    console.log((todoExonerado || todoPagado) || solicitud.isAllDocumentosValidados);
+    console.log(todoExonerado, todoPagado, solicitud.isAllDocumentosValidados);
     return (
         <div className="select-none cursor-default bg-white rounded-lg shadow-md p-4 mb-5">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -67,7 +69,7 @@ const SolicitudHeader = ({ solicitud, totales,isAdmin=false }) => {
                                 </div>
 
                                 {/* Información del creador - AÑADIDO */}
-                                {solicitud.creador && isAdmin&& (
+                                {solicitud.creador && isAdmin && (
                                     <div className="flex items-center col-span-2 mt-1">
                                         {solicitud.creador.esAdmin ? (
                                             <Shield className="text-purple-500 h-4 w-4 mr-1.5" />
@@ -144,6 +146,29 @@ const SolicitudHeader = ({ solicitud, totales,isAdmin=false }) => {
                         )}
                     </div>
                 </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2 md:justify-end">
+                {solicitud.estado === 'Pendiente' && (
+                    <>
+                        <button
+                            onClick={() => { }}
+                            disabled={(!todoExonerado || !todoPagado) && solicitud.isAllDocumentosValidados}
+                            className={`${(!todoExonerado || !todoPagado) && solicitud.isAllDocumentosValidados ? 'bg-gray-400' : 'bg-green-600'} text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-green-700 text-sm transition-colors ${!todoExonerado || !todoPagado || !solicitud.isAllDocumentosValidados ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <CheckCircle size={16} />
+                            <span>Aprobar</span>
+                        </button>
+
+                        <button
+                            onClick={() => { }}
+                            className="bg-red-600 text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 hover:bg-red-700 text-sm transition-colors"
+                        >
+                            <XCircle size={16} />
+                            <span>Rechazar</span>
+                        </button>
+                    </>
+                )}
             </div>
 
             {/* Información adicional basada en el status */}
