@@ -46,7 +46,7 @@ export default function ListaSolvencias() {
   // Determinar si mostrar por defecto aprobadas cuando no hay en revisión
   useEffect(() => {
     if (!isLoading) {
-      const existenRevision = solicitudesDeSolvencia.some(s => s.statusSolicitud === "revisando");
+      const existenRevision = solicitudesDeSolvencia.some(s => s.statusSolicitud === "revision");
       if (tabActual === "revision" && !existenRevision) {
         setTabActual("aprobadas");
       }
@@ -59,7 +59,7 @@ const conteoSolvencias = useMemo(() => ({
   todas: solicitudesDeSolvencia.filter(s => s.statusSolicitud !== "aprobado"
                                         && s.statusSolicitud !== "rechazado").length,
   // En "revision" solo contar las en estado de Revisión
-  revision: solicitudesDeSolvencia.filter(s => s.statusSolicitud === "revisando").length,
+  revision: solicitudesDeSolvencia.filter(s => s.statusSolicitud === "revision").length,
   // En "aprobadas" solo contar las aprobadas
   aprobadas: solicitudesDeSolvencia.filter(s => s.statusSolicitud === "aprobado").length,
   // En "rechazadas" solo contar las rechazadas
@@ -121,7 +121,7 @@ const conteoSolvencias = useMemo(() => ({
           matchesTab = solvencia.statusSolicitud === 'costo_especial';
         } else if (tabActual === "revision") {
           // En "revisión" mostrar solo las que estén en revisión
-          matchesTab = solvencia.statusSolicitud === "revisando";
+          matchesTab = solvencia.statusSolicitud === "revision";
 
         } else if (tabActual === "aprobadas") {
           // En "aprobadas" mostrar solo las que estén aprobadas
@@ -436,7 +436,7 @@ const conteoSolvencias = useMemo(() => ({
                         <div className="flex flex-col items-center">
                           <span className={`inline-flex items-center justify-center gap-1 px-2.5 py-0.5
                             rounded-full text-xs font-medium ${
-                            solvencia.statusSolicitud === 'revisando'
+                            solvencia.statusSolicitud === 'revision'
                               ? 'bg-yellow-100 text-yellow-800'
                               : solvencia.statusSolicitud === 'aprobado'
                                 ? 'bg-green-100 text-green-800'
@@ -444,7 +444,7 @@ const conteoSolvencias = useMemo(() => ({
                                   ? 'bg-red-100 text-red-800'
                                   : 'bg-indigo-100 text-indigo-800'
                             }`}>
-                            {solvencia.statusSolicitud === 'revisando' && (<><Clock size={12} /> Pendiente</>)}
+                            {solvencia.statusSolicitud === 'revision' && (<><Clock size={12} /> Pendiente</>)}
                             {solvencia.statusSolicitud === 'aprobado' && (<><CheckCircle size={12} />Aprobado</>)}
                             {solvencia.statusSolicitud === 'rechazado' && (<><XCircle size={12} />Rechazado</>)}
                             {solvencia.statusSolicitud === "costo_especial" && (<><CreditCard size={12} />Costo Especial</>)}
