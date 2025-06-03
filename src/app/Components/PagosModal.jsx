@@ -4,6 +4,7 @@ import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Check, Copy, CreditCard, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
+import PaymentLinkSection from "./MetodoPago/pagoLink.jsx";
 
 export default function PagosColg({ props }) {
   const { costo, allowMultiplePayments, handlePago, handlePaymentComplete } =
@@ -199,29 +200,29 @@ export default function PagosColg({ props }) {
   };
 
   // Validar y actualizar el monto de pago en USD
-  const handleMontoChange = (e) => {
-    const value = e.target.value;
-    if (!value) {
-      setPaymentAmount("0.00");
-      setMontoEnBs("");
-      return;
-    }
+  // const handleMontoChange = (e) => {
+  //   const value = e.target.value;
+  //   if (!value) {
+  //     setPaymentAmount("0.00");
+  //     setMontoEnBs("");
+  //     return;
+  //   }
 
-    // Solo permitir números y un punto decimal
-    if (!/^\d*\.?\d*$/.test(value)) return;
+  //   // Solo permitir números y un punto decimal
+  //   if (!/^\d*\.?\d*$/.test(value)) return;
 
-    const numericValue = parseFloat(value);
+  //   const numericValue = parseFloat(value);
 
-    if (numericValue > costo) {
-      alert(`El monto no puede ser mayor a USD$ ${costo}`);
-      return;
-    }
+  //   if (numericValue > costo) {
+  //     alert(`El monto no puede ser mayor a USD$ ${costo}`);
+  //     return;
+  //   }
 
-    // Actualizar valor sin formatear para que sea más fácil de editar
-    setPaymentAmount(value);
-    // Calcular el equivalente en Bs
-    setMontoEnBs((numericValue * tasaBCV).toFixed(2));
-  };
+  //   // Actualizar valor sin formatear para que sea más fácil de editar
+  //   setPaymentAmount(value);
+  //   // Calcular el equivalente en Bs
+  //   setMontoEnBs((numericValue * tasaBCV).toFixed(2));
+  // };
 
   const getTasa = async () => {
     try {
@@ -288,20 +289,20 @@ export default function PagosColg({ props }) {
     }
   };
 
-  const handlePagarLuegoChange = () => {
-    setPagarLuego(!pagarLuego);
-  };
+  // const handlePagarLuegoChange = () => {
+  //   setPagarLuego(!pagarLuego);
+  // };
 
-  const handlePayLater = () => {
-    handlePago({
-      paymentDate: "",
-      referenceNumber: "",
-      paymentFile: null,
-      totalAmount: costo,
-      metodo_de_pago: null,
-      tasa_bcv_del_dia: tasaBCV,
-    });
-  };
+  // const handlePayLater = () => {
+  //   handlePago({
+  //     paymentDate: "",
+  //     referenceNumber: "",
+  //     paymentFile: null,
+  //     totalAmount: costo,
+  //     metodo_de_pago: null,
+  //     tasa_bcv_del_dia: tasaBCV,
+  //   });
+  // };
 
   return (
     <div id="pagos-modal" className="w-full">
@@ -777,6 +778,18 @@ export default function PagosColg({ props }) {
                     </div>
                   </div>
                 </div>
+              ) : paymentMethod.nombre === "pago-link" ? (
+                <>
+                  <PaymentLinkSection
+                    paymentInfo={paymentAmount}
+                    onPaymentLinkSubmit={(email) => {
+                      console.log("Payment link sent to:", email)
+                    }}
+                    onContinue={(email) => {
+                      console.log("Payment link sent to:", email)
+                    }}
+                  />
+                </>
               ) : (
                 <div className="space-y-6">
                   {/* PayPal information */}
@@ -863,7 +876,7 @@ export default function PagosColg({ props }) {
           )}
 
           {/* Send button only shows if a payment method is selected */}
-          {paymentMethod && paymentMethod.nombre !== "paypal" && (
+          {paymentMethod && paymentMethod.nombre == "bdv" && (
             <div className="pt-6 mt-6 border-t">
               <motion.button
                 type="button"
