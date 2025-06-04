@@ -5,11 +5,13 @@ import {
     AlertCircle,
     Briefcase,
     CheckCircle,
+    Clock,
     FileText,
     Pencil,
     RefreshCcw,
     Upload,
-    X
+    X,
+    XCircle
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import VerificationSwitch from "../VerificationSwitch";
@@ -23,7 +25,8 @@ export function DocumentSection({
   filter = doc => !doc.id?.includes('comprobante_pago'),
   isColegiado = false,
   pendienteData = null,
-  onDocumentsStatusChange
+  onDocumentsStatusChange,
+  isAdmin = false
 }) {
   // Estados para el modal de edición y subida
   const [showModal, setShowModal] = useState(false);
@@ -560,7 +563,8 @@ export function DocumentSection({
           <h2 className="text-lg font-semibold text-gray-900">Documentos</h2>
         </div>
 
-        {!readonly && (
+        {/* Botón Editar - Solo para administradores */}
+        {!readonly && isAdmin && (
           <button
             onClick={handleOpenModal}
             className="cursor-pointer bg-gradient-to-r from-[#C40180] to-[#590248] text-white px-3 py-1.5 rounded-md flex items-center text-sm font-medium hover:opacity-90 transition-colors"
@@ -619,6 +623,7 @@ export function DocumentSection({
                 }
               }}
               isColegiado={isColegiado}
+              isAdmin={isAdmin}
             />
           ))
         ) : (
@@ -748,7 +753,7 @@ export function DocumentSection({
 }
 
 // Componente de tarjeta individual corregido
-function DocumentCard({ documento, onView, onReplace, onValidationChange, isColegiado = false }) {
+function DocumentCard({ documento, onView, onReplace, onValidationChange, isColegiado = false, isAdmin = false }) {
   const tieneArchivo = documento.url !== null;
   const isExonerado = documento.archivo && documento.archivo.toLowerCase().includes("exonerado");
   const isReadOnly = documento.status === 'approved' && documento.isReadOnly;
@@ -785,6 +790,52 @@ function DocumentCard({ documento, onView, onReplace, onValidationChange, isCole
       return <CheckCircle className="text-green-500" size={20} />;
     }
     return <FileText className={tieneArchivo ? "text-[#C40180]" : "text-red-500"} size={20} />;
+  };
+
+  // Función para renderizar el estado del documento (solo visual)
+  const renderDocumentStatus = () => {
+    if (!tieneArchivo || isUploading || isExonerado) return null;
+
+    const getStatusInfo = () => {
+      switch (documento.status) {
+        case 'approved':
+          return {
+            color: 'text-green-700 bg-green-50 border-green-200',
+            icon: <CheckCircle size={16} className="text-green-600" />,
+            label: 'Aprobado'
+          };
+        case 'rechazado':
+          return {
+            color: 'text-red-700 bg-red-50 border-red-200',
+            icon: <XCircle size={16} className="text-red-600" />,
+            label: 'Rechazado'
+          };
+        default:
+          return {
+            color: 'text-gray-700 bg-gray-50 border-gray-200',
+            icon: <Clock size={16} className="text-gray-600" />,
+            label: 'Pendiente de revisión'
+          };
+      }
+    };
+
+    const statusInfo = getStatusInfo();
+
+    return (
+      <div className="mt-2">
+        <div className={`flex items-center text-xs font-medium p-2 rounded-md border ${statusInfo.color}`}>
+          {statusInfo.icon}
+          <span className="ml-1">{statusInfo.label}</span>
+        </div>
+        
+        {/* Mostrar motivo de rechazo si existe */}
+        {documento.status === 'rechazado' && documento.rejectionReason && (
+          <div className="mt-2 text-xs text-red-700 bg-red-50 p-2 rounded-md border border-red-200">
+            <strong>Motivo de rechazo:</strong> {documento.rejectionReason}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -826,8 +877,8 @@ function DocumentCard({ documento, onView, onReplace, onValidationChange, isCole
               </div>
             )}
 
-            {/* VerificationSwitch solo para validación */}
-            {tieneArchivo && !isUploading && (
+            {/* VerificationSwitch solo para administradores */}
+            {tieneArchivo && !isUploading && isAdmin && (
               <div className="document-verification-switch">
                 <VerificationSwitch
                   item={documento}
@@ -837,10 +888,13 @@ function DocumentCard({ documento, onView, onReplace, onValidationChange, isCole
                 />
               </div>
             )}
+
+            {/* Estado del documento solo para usuarios no admin */}
+            {tieneArchivo && !isUploading && !isAdmin && renderDocumentStatus()}
           </div>
 
           <div className="flex items-center space-x-2 action-button text-[10px] text-gray-400">
-            {(!isReadOnly && !isExonerado && documento.status !== 'approved' && !isUploading) && (
+            {(!isReadOnly && !isExonerado && documento.status !== 'approved' && !isUploading && isAdmin) && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();

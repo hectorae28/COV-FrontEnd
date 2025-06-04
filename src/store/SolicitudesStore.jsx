@@ -128,6 +128,7 @@ export const formatSolicitudSolvencia = (solicitud) => {
           fechaAprobacion: solicitud.solicitudes_solvencia.lista[0].fecha_aprobacion,
           fechaExoneracion: solicitud.solicitudes_solvencia.lista[0].fecha_exoneracion,
           motivoExoneracion: solicitud.solicitudes_solvencia.lista[0].motivo_exoneracion,
+          tipo: solicitud.solicitudes_solvencia.lista[0].tipo,
           pagos: solicitud.solicitudes_solvencia.lista[0].pagos || [],
           detalles: {
             costo_regular: solicitud.solicitudes_solvencia.lista[0].detalles.costo_regular,

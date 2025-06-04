@@ -95,7 +95,7 @@ const menuItems = [
       title: "Solicitudes",
       icon: <DescriptionRounded className="h-5 w-5" />,
       routes: [
-        { path: "/PanelControl/Solicitudes", title: "Solicitudes", icon: <NoteAdd className="h-5 w-5" /> },
+        { path: "/PanelControl/Solicitudes", title: "Nuevas Solicitudes", icon: <NoteAdd className="h-5 w-5" /> },
         { path: "/PanelControl/Solvencias", title: "Solvencias", icon: <PriceChange className="h-5 w-5" /> },
       ],
     }

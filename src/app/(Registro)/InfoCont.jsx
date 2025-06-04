@@ -64,10 +64,14 @@ export default function InfoContacto({
     }
 
     if (isEditMode) {
+      // En modo edición, verificar si el correo cambió respecto al original
+      const emailChanged = value !== (localFormData.originalEmail || formData.originalEmail);
       setLocalFormData(prev => ({
         ...prev,
         [name]: value,
-        emailIsValid: validateEmail(value)
+        emailIsValid: validateEmail(value),
+        emailVerified: !emailChanged, // Solo verificado si no cambió
+        emailChanged: emailChanged
       }));
     } else {
       onInputChange({
@@ -167,8 +171,14 @@ export default function InfoContacto({
   // Función para mostrar el estado de verificación del correo
   const renderEmailVerificationStatus = () => {
     if (isProfileEdit) return null
+    
+    // En modo edición, usar los datos locales
+    const currentEmailVerified = isEditMode ? localFormData?.emailVerified : emailIsVerified;
+    const currentEmailChanged = isEditMode ? localFormData?.emailChanged : emailChanged;
+    const currentEmail = isEditMode ? localFormData?.email : formData.email;
+    
     // Si el correo ha sido verificado y no ha cambiado
-    if (emailIsVerified && !emailChanged) {
+    if (currentEmailVerified && !currentEmailChanged) {
       return (
         <div className="mt-2 flex items-center text-green-600">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,7 +189,7 @@ export default function InfoContacto({
       )
     }
     // Si el correo fue verificado pero ha cambiado
-    if (emailChanged) {
+    if (currentEmailChanged) {
       return (
         <div className="mt-2 flex items-center text-orange-500">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,7 +219,7 @@ export default function InfoContacto({
         </svg>
         <button
           type="button"
-          onClick={() => requestEmailVerification && requestEmailVerification(formData.email)}
+          onClick={() => requestEmailVerification && requestEmailVerification(currentEmail)}
           className="text-xs text-[#D7008A] hover:underline"
         >
           {isAdmin ? "El Colegiado debe verificar el correo al iniciar sesión por primer vez" : "El correo debe ser verificado para continuar"}
@@ -220,6 +230,15 @@ export default function InfoContacto({
   }
 
   const handleSaveClick = () => {
+    // En modo edición, verificar si el correo cambió y no está verificado
+    if (isEditMode && localFormData?.emailChanged && !localFormData?.emailVerified) {
+      // Si el correo cambió, primero debe verificarse
+      if (requestEmailVerification) {
+        requestEmailVerification(localFormData.email);
+        return; // No guardar aún, esperar verificación
+      }
+    }
+    
     // Simplemente guardamos sin validación estricta en modo edición
     if (onSave) {
       onSave(localFormData);
@@ -264,11 +283,11 @@ export default function InfoContacto({
               <input
                 type="email"
                 name="email"
-                value={formData.email || ""}
+                value={isEditMode ? (localFormData?.email || "") : (formData.email || "")}
                 onChange={handleChange}
                 className={`w-full pl-10 pr-4 py-3 border ${isFieldEmpty("email") || emailError
                   ? "border-red-500 bg-red-50"
-                  : emailIsVerified && !emailChanged
+                  : (isEditMode ? localFormData?.emailVerified : emailIsVerified) && !(isEditMode ? localFormData?.emailChanged : emailChanged)
                     ? "border-green-300"
                     : "border-gray-200"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
@@ -305,11 +324,11 @@ export default function InfoContacto({
                 <div className="mr-2 flex items-center justify-center">
                   <CountryFlag
                     countryCode={
-                      (sortedPhoneCodes.find((c) => c.codigo === formData.countryCode) || {}).codigo_pais || ""
+                      (sortedPhoneCodes.find((c) => c.codigo === (isEditMode ? (localFormData?.countryCode || formData.countryCode) : formData.countryCode)) || {}).codigo_pais || ""
                     }
                   />
                 </div>
-                <span className="mx-1">{formData.countryCode || "+58"}</span>
+                <span className="mx-1">{isEditMode ? (localFormData?.countryCode || formData.countryCode) : (formData.countryCode || "+58")}</span>
                 <ChevronDown size={16} className="ml-1" />
               </button>
               {isCountryDropdownOpen && (
@@ -360,12 +379,12 @@ export default function InfoContacto({
             <input
               type="tel"
               name="phoneNumber"
-              value={formData.phoneNumber || ""}
+              value={isEditMode ? (localFormData?.phoneNumber || "") : (formData.phoneNumber || "")}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, "")
                 handleChange({ target: { name: "phoneNumber", value } })
               }}
-              maxLength={sortedPhoneCodes.find((c) => c.codigo === formData.countryCode)?.longitud || 10}
+              maxLength={sortedPhoneCodes.find((c) => c.codigo === (isEditMode ? (localFormData?.countryCode || formData.countryCode) : formData.countryCode))?.longitud || 10}
               className={`w-full px-4 py-3 border ${isFieldEmpty("phoneNumber") ? "border-red-500 bg-red-50" : "border-gray-200"
                 } rounded-r-xl focus:outline-none focus:ring-2 focus:ring-[#D7008A]`}
               placeholder="Ingrese su número de teléfono"
@@ -381,7 +400,7 @@ export default function InfoContacto({
             <input
               type="tel"
               name="homePhone"
-              value={formData.homePhone || ""}
+              value={isEditMode ? (localFormData?.homePhone || "") : (formData.homePhone || "")}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, "")
                 handleChange({ target: { name: "homePhone", value } })
@@ -413,7 +432,10 @@ export default function InfoContacto({
             className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
               rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
           >
-            Guardar cambios
+            {localFormData?.emailChanged && !localFormData?.emailVerified 
+              ? "Continuar" 
+              : "Guardar cambios"
+            }
           </button>
         </div>
       )}

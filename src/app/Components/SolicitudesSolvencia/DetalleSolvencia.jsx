@@ -19,7 +19,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 // Componentes importados
-import { fetchSolicitudes, pagoSolvencia, patchDataSolicitud, postDataSolicitud, actualizarEstadoPago } from "@/api/endpoints/solicitud";
+import { actualizarEstadoPago, fetchSolicitudes, pagoSolvencia, patchDataSolicitud, postDataSolicitud } from "@/api/endpoints/solicitud";
 import PagosColg from "@/app/Components/PagosModal";
 import VerificationSwitch from "@/app/Components/Solicitudes/ListaColegiados/VerificationSwitch";
 import { useSolicitudesStore } from "@/store/SolicitudesStore";
@@ -354,7 +354,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
         motivo_exoneracion: motivo,
         colegiado_id: solvencia.idColegiado,
-        fecha_exp: fechaVencimiento
+        fecha_exp: formatDate(fechaVencimiento)
       };
 
       postDataSolicitud('exonerar_solicitud_solvencia', solvenciaActualizada);
@@ -609,7 +609,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#590248] mb-2">
+              <h1 className="text-2xl font-bold text-[#590248] mb-4">
                 Solicitud de Solvencia
               </h1>
               <div className="space-y-2">
@@ -633,192 +633,267 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                 </div>
               </div>
             </div>
+            
+            {/* Mostrar información de pago cuando está aprobada - del lado derecho */}
+            {solvencia.statusSolicitud === 'aprobado' && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 min-w-[300px]">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-3">
+                    <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
+                    <span className="text-green-800 font-bold text-lg">Solvencia Aprobada</span>
+                  </div>
+                  <div className="mb-4">
+                    <p className="text-sm text-green-700 mb-1">Monto Pagado</p>
+                    <p className="text-2xl font-bold text-green-800">{formatearMoneda(datosResumen.pagado)}</p>
+                  </div>
+                  {solvencia.fechaExpSolvencia && (
+                    <div className="pt-3 border-t border-green-200">
+                      <p className="text-sm text-green-700 flex items-center justify-center">
+                        <Calendar size={14} className="mr-1" />
+                        Vence: {formatearFecha(solvencia.fechaExpSolvencia)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Grid principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Gestión de pago - misma altura que resumen de pagos */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-lg p-6 h-full flex flex-col">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                Gestión de Pago
-              </h3>
+        {/* Grid principal - Solo mostrar si NO está aprobada */}
+        {solvencia.statusSolicitud !== 'aprobado' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Gestión de pago - misma altura que resumen de pagos */}
+            <div className="space-y-6">
+              <div className="bg-white rounded-xl shadow-lg p-6 h-full flex flex-col">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                  Gestión de Pago
+                </h3>
 
-              <div className="flex-grow flex flex-col justify-between">
-                {/* Descripción de funcionalidades */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-gray-800 mb-3">Opciones de Pago Disponibles:</h4>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Link className="w-4 h-4 mr-2 text-blue-500" />
-                      <span>Enviar link de pago al colegiado</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CreditCard className="w-4 h-4 mr-2 text-green-500" />
-                      <span>Procesar pago directo con tarjeta</span>
-                    </div>
-                    <div className="flex items-center">
-                      <DollarSign className="w-4 h-4 mr-2 text-purple-500" />
-                      <span>Registrar transferencia bancaria</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="w-4 h-4 mr-2 text-orange-500" />
-                      <span>Otros métodos de pago disponibles</span>
+                <div className="flex-grow flex flex-col justify-between">
+                  {/* Descripción de funcionalidades */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3">Opciones de Pago Disponibles:</h4>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <Link className="w-4 h-4 mr-2 text-blue-500" />
+                        <span>Enviar link de pago al colegiado</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CreditCard className="w-4 h-4 mr-2 text-green-500" />
+                        <span>Procesar pago directo con tarjeta</span>
+                      </div>
+                      <div className="flex items-center">
+                        <DollarSign className="w-4 h-4 mr-2 text-purple-500" />
+                        <span>Registrar transferencia bancaria</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="w-4 h-4 mr-2 text-orange-500" />
+                        <span>Otros métodos de pago disponibles</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Botón principal */}
-                <div className="mt-auto">
-                  <button
-                    onClick={() => setShowPagoModal(true)}
-                    disabled={datosResumen.restante <= 0}
-                    className={`w-full py-4 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-3 text-lg ${datosResumen.restante <= 0
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-gradient-to-t from-[#41023B] to-[#D7008A] hover:opacity-90 text-white shadow-lg'
-                      }`}
-                  >
-                    <CreditCard size={24} />
-                    <span>
+                  {/* Botón principal */}
+                  <div className="mt-auto">
+                    <button
+                      onClick={() => setShowPagoModal(true)}
+                      disabled={datosResumen.restante <= 0}
+                      className={`w-full py-4 px-6 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-3 text-lg ${datosResumen.restante <= 0
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-gradient-to-t from-[#41023B] to-[#D7008A] hover:opacity-90 text-white shadow-lg'
+                        }`}
+                    >
+                      <CreditCard size={24} />
+                      <span>
+                        {datosResumen.restante <= 0
+                          ? 'Pago Completado'
+                          : 'Realizar Pago'
+                        }
+                      </span>
+                      {datosResumen.restante > 0 && <ArrowRight size={24} />}
+                    </button>
+
+                    <p className="text-xs text-gray-500 text-center mt-3">
                       {datosResumen.restante <= 0
-                        ? 'Pago Completado'
-                        : 'Realizar Pago'
+                        ? 'El pago ha sido completado exitosamente'
+                        : 'Acceda a todas las opciones de pago disponibles'
                       }
-                    </span>
-                    {datosResumen.restante > 0 && <ArrowRight size={24} />}
-                  </button>
-
-                  <p className="text-xs text-gray-500 text-center mt-3">
-                    {datosResumen.restante <= 0
-                      ? 'El pago ha sido completado exitosamente'
-                      : 'Acceda a todas las opciones de pago disponibles'
-                    }
-                  </p>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Resumen de pagos y acciones administrativas */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Resumen de pagos */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col">
-              <div className="bg-gradient-to-b from-[#D7008A] to-[#41023B] p-6 text-white">
-                <h2 className="text-xl font-semibold mb-2 flex items-center">
-                  Resumen de Pagos
-                  {isRefreshing && (
-                    <RefreshCw className="ml-3 w-5 h-5 animate-spin" />
-                  )}
-                </h2>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-white text-sm">Total</p>
-                    <p className="text-xl font-bold">{formatearMoneda(datosResumen.total)}</p>
-                  </div>
-                  <div>
-                    <p className="text-white text-sm">Pagado</p>
-                    <p className="text-xl font-bold text-green-500">{formatearMoneda(datosResumen.pagado)}</p>
-                    {datosResumen.pendiente > 0 && (
-                      <p className="text-xs text-yellow-300">
-                        +{formatearMoneda(datosResumen.pendiente)} pendiente
+            {/* Resumen de pagos y acciones administrativas */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Resumen de pagos */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden h-full flex flex-col">
+                <div className="bg-gradient-to-b from-[#D7008A] to-[#41023B] p-6 text-white">
+                  <h2 className="text-xl font-semibold mb-2 flex items-center">
+                    Resumen de Pagos
+                    {isRefreshing && (
+                      <RefreshCw className="ml-3 w-5 h-5 animate-spin" />
+                    )}
+                  </h2>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-white text-sm">Total</p>
+                      <p className="text-xl font-bold">{formatearMoneda(datosResumen.total)}</p>
+                    </div>
+                    <div>
+                      <p className="text-white text-sm">Pagado</p>
+                      <p className="text-xl font-bold text-green-500">{formatearMoneda(datosResumen.pagado)}</p>
+                      {datosResumen.pendiente > 0 && (
+                        <p className="text-xs text-yellow-300">
+                          +{formatearMoneda(datosResumen.pendiente)} pendiente
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-white text-sm">Restante</p>
+                      <p className={`text-xl font-bold ${datosResumen.pagoCompleto ? 'text-green-400' : 'text-red-400'}`}>
+                        {formatearMoneda(datosResumen.restante)}
                       </p>
-                    )}
+                      {datosResumen.pagoCompleto && (
+                        <p className="text-xs text-green-300">¡Pago completo!</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-white text-sm">Restante</p>
-                    <p className={`text-xl font-bold ${datosResumen.pagoCompleto ? 'text-green-400' : 'text-red-400'}`}>
-                      {formatearMoneda(datosResumen.restante)}
-                    </p>
-                    {datosResumen.pagoCompleto && (
-                      <p className="text-xs text-green-300">¡Pago completo!</p>
-                    )}
-                  </div>
+
+                  {/* Barra de progreso */}
+                  {datosResumen.pagado > 0 && (
+                    <div className="mt-4">
+                      <div className="flex justify-between text-sm text-white/80 mb-2">
+                        <span>Progreso de pago</span>
+                        <span>{datosResumen.porcentajePagado.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-white/20 rounded-full h-2">
+                        <div
+                          className="h-2 rounded-full bg-white transition-all duration-500"
+                          style={{ width: `${Math.min(datosResumen.porcentajePagado, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Barra de progreso */}
-                {datosResumen.pagado > 0 && (
-                  <div className="mt-4">
-                    <div className="flex justify-between text-sm text-white/80 mb-2">
-                      <span>Progreso de pago</span>
-                      <span>{datosResumen.porcentajePagado.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-white/20 rounded-full h-2">
-                      <div
-                        className="h-2 rounded-full bg-white transition-all duration-500"
-                        style={{ width: `${Math.min(datosResumen.porcentajePagado, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-              </div>
+                <div className="p-6">
+                  {/* Asignación de costo si es necesario */}
+                  {solvencia.statusSolicitud === 'costo_especial' && !datosResumen.tieneCostoAsignado && (
+                    <div className="space-y-6">
+                      <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-200">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">
+                          Asignación de Costo
+                        </h3>
+                        <div className="mb-6">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Monto a cobrar ($)
+                          </label>
+                          <div className="flex">
+                            <span className="inline-flex items-center px-4 py-2.5 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-lg">
+                              $
+                            </span>
+                            <input
+                              type="text"
+                              value={costoNuevo}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^0-9.]/g, '');
+                                setCostoNuevo(value);
+                              }}
+                              className="flex-1 rounded-r-md px-4 py-2.5 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </div>
 
-              <div className="p-6">
-                {/* Asignación de costo si es necesario */}
-                {solvencia.statusSolicitud === 'costo_especial' && !datosResumen.tieneCostoAsignado && (
-                  <div className="space-y-6">
-                    <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-200">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">
-                        Asignación de Costo
-                      </h3>
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Monto a cobrar ($)
-                        </label>
-                        <div className="flex">
-                          <span className="inline-flex items-center px-4 py-2.5 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-lg">
-                            $
-                          </span>
-                          <input
-                            type="text"
-                            value={costoNuevo}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/[^0-9.]/g, '');
-                              setCostoNuevo(value);
-                            }}
-                            className="flex-1 rounded-r-md px-4 py-2.5 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                            placeholder="0.00"
-                          />
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button
+                            onClick={handleAsignarCosto}
+                            disabled={!costoNuevo || parseFloat(costoNuevo) <= 0}
+                            className={`flex-1 inline-flex items-center justify-center px-4 py-2.5 ${!costoNuevo || parseFloat(costoNuevo) <= 0
+                                ? 'bg-gray-300 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-[#D7008A] to-[#41023B] hover:opacity-90'
+                              } text-white rounded-lg transition-colors text-base font-medium`}
+                          >
+                            <DollarSign className="mr-2" size={20} />
+                            Asignar Costo
+                          </button>
+
+                          <button
+                            onClick={() => setMostrarExoneracion(true)}
+                            className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors text-base font-medium"
+                          >
+                            <Ban className="mr-2" size={20} />
+                            Exonerar
+                          </button>
                         </div>
                       </div>
+                    </div>
+                  )}
 
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <button
-                          onClick={handleAsignarCosto}
-                          disabled={!costoNuevo || parseFloat(costoNuevo) <= 0}
-                          className={`flex-1 inline-flex items-center justify-center px-4 py-2.5 ${!costoNuevo || parseFloat(costoNuevo) <= 0
-                              ? 'bg-gray-300 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-[#D7008A] to-[#41023B] hover:opacity-90'
-                            } text-white rounded-lg transition-colors text-base font-medium`}
-                        >
-                          <DollarSign className="mr-2" size={20} />
-                          Asignar Costo
-                        </button>
+                  {/* Acciones administrativas para costo especial con costo asignado */}
+                  {solvencia.statusSolicitud === 'costo_especial' && datosResumen.tieneCostoAsignado && (
+                    <div className="space-y-6">
+                      <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+                        <h3 className="text-lg font-medium text-green-900 mb-4 flex items-center">
+                          <CheckCircle className="mr-2 text-green-600" size={20} />
+                          Costo Asignado: {formatearMoneda(datosResumen.total)}
+                        </h3>
+                        <p className="text-green-700 text-sm mb-4">
+                          El costo ha sido asignado correctamente. El colegiado puede proceder con el pago.
+                        </p>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <button
+                            onClick={() => setMostrarExoneracion(true)}
+                            className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors font-medium text-base"
+                          >
+                            <Ban className="mr-2" size={20} />
+                            Exonerar
+                          </button>
 
-                        <button
-                          onClick={() => setMostrarExoneracion(true)}
-                          className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors text-base font-medium"
-                        >
-                          <Ban className="mr-2" size={20} />
-                          Exonerar
-                        </button>
+                          <button
+                            onClick={() => setMostrarRechazo(true)}
+                            className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-colors font-medium text-base"
+                          >
+                            <X className="mr-2" size={20} />
+                            Rechazar
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Acciones administrativas para costo especial con costo asignado */}
-                {solvencia.statusSolicitud === 'costo_especial' && datosResumen.tieneCostoAsignado && (
-                  <div className="space-y-6">
-                    <div className="bg-green-50 p-6 rounded-xl border border-green-200">
-                      <h3 className="text-lg font-medium text-green-900 mb-4 flex items-center">
-                        <CheckCircle className="mr-2 text-green-600" size={20} />
-                        Costo Asignado: {formatearMoneda(datosResumen.total)}
-                      </h3>
-                      <p className="text-green-700 text-sm mb-4">
-                        El costo ha sido asignado correctamente. El colegiado puede proceder con el pago.
-                      </p>
-                      
+                  {/* Acciones administrativas para revisión */}
+                  {(solvencia.statusSolicitud === "revisando" || solvencia.statusSolicitud === "revision") && datosResumen.total > 0 && (
+                    <div className="space-y-6 mt-6">
+                      {/* Selector de fecha de vencimiento */}
+                      <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                          <Calendar className="mr-2 text-orange-600" size={20} />
+                          Fecha de vencimiento
+                        </h3>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#C40180] focus:border-[#C40180]"
+                          onChange={handleSeleccionarFecha}
+                        >
+                          <option value="" disabled>Seleccione una fecha</option>
+                          {fechasDeVencimiento.map(({ trimestre, fecha }) => {
+                            return (
+                            <option
+                              key={trimestre}
+                              value={fecha}
+                              disabled={fechaActual > fecha || (solvencia.tipo=='anual' && trimestre!==4)}
+                            >
+                              {formatDate(fecha)}
+                            </option>
+                          )}
+                          )}
+                        </select>
+                      </div>
+
+                      {/* Botones de acción */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button
                           onClick={() => setMostrarExoneracion(true)}
@@ -837,59 +912,12 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                         </button>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Acciones administrativas para revisión */}
-                {(solvencia.statusSolicitud === "revisando" || solvencia.statusSolicitud === "revision") && datosResumen.total > 0 && (
-                  <div className="space-y-6 mt-6">
-                    {/* Selector de fecha de vencimiento */}
-                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                        <Calendar className="mr-2 text-orange-600" size={20} />
-                        Fecha de vencimiento
-                      </h3>
-                      <select
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#C40180] focus:border-[#C40180]"
-                        onChange={handleSeleccionarFecha}
-                      >
-                        <option value="" disabled>Seleccione una fecha</option>
-                        {fechasDeVencimiento.map(({ trimestre, fecha }) => (
-                          <option
-                            key={trimestre}
-                            value={fecha}
-                            disabled={fechaActual > fecha || (solvencia.fechaExpSolicitud && new Date(solvencia.fechaExpSolicitud) > fecha)}
-                          >
-                            {formatDate(fecha)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Botones de acción */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <button
-                        onClick={() => setMostrarExoneracion(true)}
-                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-colors font-medium text-base"
-                      >
-                        <Ban className="mr-2" size={20} />
-                        Exonerar
-                      </button>
-
-                      <button
-                        onClick={() => setMostrarRechazo(true)}
-                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-colors font-medium text-base"
-                      >
-                        <X className="mr-2" size={20} />
-                        Rechazar
-                      </button>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Historial de pagos mejorado */}
         {hayPagos && (

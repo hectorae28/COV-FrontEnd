@@ -1,5 +1,6 @@
 "use client";
 
+import useColegiadoUserStore from "@/store/colegiadoUserStore";
 import {
     Description,
     EventNote,
@@ -12,7 +13,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import useColegiadoUserStore from "@/store/colegiadoUserStore";
 
 export default function AppBar({ solvencyInfo }) {
     const [selectedItem, setSelectedItem] = useState("Inicio");
@@ -101,21 +101,31 @@ export default function AppBar({ solvencyInfo }) {
                 />
                 <Divider />
 
-                {/* Ítem de Solvencia (solo visible en md, sm y móviles) */}
-                <div className="my-4 w-5/6 mx-auto px-4 py-3 bg-white/5 rounded-lg md:block md:hidden lg:hidden">
-                    <div className="flex items-center">
-                        <div className="flex flex-col">
-                            <span className="text-md text-gray-300 mb-2">Estado:</span>
-                            <span className="text-[16px] font-semibold text-white">
-                                <span
-                                    className={colegiadoUser?.solvencia_status ? "text-green-400" : "text-red-400"}
-                                >
-                                    {colegiadoUser?.solvencia_status ? "Solvente" : "No Solvente"}
-                                </span>{" "}
-                                hasta: {colegiadoUser?.solvente}
-                            </span>
+                {/* Ítem de Solvencia mejorado (solo visible en md, sm y móviles) */}
+                <div className="my-4 w-5/6 mx-auto md:block md:hidden lg:hidden">
+                    {colegiadoUser?.solvencia_status ? (
+                        <div className="flex items-center bg-green-900/20 border border-green-400/30 rounded-lg px-4 py-3 backdrop-blur-sm">
+                            <div className="flex items-center justify-center w-8 h-8 bg-green-400/20 rounded-full mr-3">
+                                <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs font-medium text-green-300 uppercase tracking-wide">Estado</span>
+                                <span className="text-sm font-bold text-green-200">
+                                    Solvente hasta: {colegiadoUser?.solvente}
+                                </span>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="flex items-center bg-red-900/20 border border-red-400/30 rounded-lg px-4 py-3 backdrop-blur-sm">
+                            <div className="flex items-center justify-center w-8 h-8 bg-red-400/20 rounded-full mr-3">
+                                <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs font-medium text-red-300 uppercase tracking-wide">Estado</span>
+                                <span className="text-sm font-bold text-red-200">No Solvente</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </nav>
         </div>
