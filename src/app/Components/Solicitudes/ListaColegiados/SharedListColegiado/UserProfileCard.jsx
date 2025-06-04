@@ -17,7 +17,8 @@ export default function UserProfileCard({
   onMostrarExoneracion,
   onMostrarReporteIrregularidad,
   documentsApproved = false,
-  paymentApproved = false
+  paymentApproved = false,
+  isAdmin = false // Agregar prop para controlar vista de admin
 }) {
   if (!data) {
     return (
@@ -137,7 +138,7 @@ export default function UserProfileCard({
         </div>
 
         <div className="md:w-4/5">
-          {/* Header: nombre + estado */}
+          {/* Header: nombre + estado (solo para admins) */}
           <div className="flex flex-col md:flex-row md:justify-between mb-4">
             <div className="md:ml-2">
               <h1 className="text-2xl font-bold text-gray-800 mb-1">{nombreCompleto}</h1>
@@ -152,47 +153,50 @@ export default function UserProfileCard({
               )}
             </div>
 
-            <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
-              {variant === "registered" && (
-                <>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${data.solvencia_status ? 'bg-green-100 text-green-800 font-bold' : 'bg-red-100 text-red-800'
-                    }`}>
-                    {data.solvencia_status ? 'Solvente' : 'No Solvente'}
-                  </span>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${data.carnetVigente ? 'bg-purple-100 text-purple-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                    {data.carnetVigente ? 'Carnet vigente' : 'Carnet vencido'}
-                  </span>
-                </>
-              )}
+            {/* Estados - Solo para administradores */}
+            {isAdmin && (
+              <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
+                {variant === "registered" && (
+                  <>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${data.solvencia_status ? 'bg-green-100 text-green-800 font-bold' : 'bg-red-100 text-red-800'
+                      }`}>
+                      {data.solvencia_status ? 'Solvente' : 'No Solvente'}
+                    </span>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${data.carnetVigente ? 'bg-purple-100 text-purple-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                      {data.carnetVigente ? 'Carnet vigente' : 'Carnet vencido'}
+                    </span>
+                  </>
+                )}
 
-              {variant === "pending" && (
-                <>
-                  {isRechazada ? (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
-                      <AlertTriangle size={12} className="mr-1" /> Rechazada
-                    </span>
-                  ) : isDenegada ? (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                      <UserX size={12} className="mr-1" /> Anulada
-                    </span>
-                  ) : isRevisando ? (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                      <Clock size={12} className="mr-1" /> Pendiente por aprobación
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                      <Clock size={12} className="mr-1" /> En proceso
-                    </span>
-                  )}
-                  {pagosPendientes && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                      <XCircle size={12} className="mr-1" /> Pagos pendientes
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
+                {variant === "pending" && (
+                  <>
+                    {isRechazada ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                        <AlertTriangle size={12} className="mr-1" /> Rechazada
+                      </span>
+                    ) : isDenegada ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                        <UserX size={12} className="mr-1" /> Anulada
+                      </span>
+                    ) : isRevisando ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                        <Clock size={12} className="mr-1" /> Pendiente por aprobación
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                        <Clock size={12} className="mr-1" /> Pendiente por aprobación
+                      </span>
+                    )}
+                    {pagosPendientes && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                        <XCircle size={12} className="mr-1" /> Pagos pendientes
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Datos de contacto y fecha */}
@@ -269,41 +273,43 @@ export default function UserProfileCard({
                   <p className="text-sm text-gray-700 truncate">
                     {isRechazada ? "Rechazada" :
                       isDenegada ? "Anulada" :
-                        pagosPendientes ? "Pendiente de pago" : "En revisión"}
+                        pagosPendientes ? "Pendiente de pago" : "Pendiente por aprobación"}
                   </p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Información del creador */}
-          <div className="mt-4">
-            {variant === "pending" && data.user_admin_create_username && (
-              <div className="bg-gray-50 p-2 rounded-md">
-                <SessionInfo
-                  creador={{
-                    username: data.user_admin_create_username,
-                    fecha: data.created_at
-                  }}
-                  variant="compact"
-                />
-              </div>
-            )}
-            {variant === "registered" && data.recaudos?.user_admin_create_username && (
-              <div className="bg-gray-50 p-2 rounded-md">
-                <SessionInfo
-                  creador={{
-                    username: data.recaudos.user_admin_create_username,
-                    fecha: data.recaudos.created_at
-                  }}
-                  variant="compact"
-                />
-              </div>
-            )}
-          </div>
+          {/* Información del creador - Solo para administradores */}
+          {isAdmin && (
+            <div className="mt-4">
+              {variant === "pending" && data.user_admin_create_username && (
+                <div className="bg-gray-50 p-2 rounded-md">
+                  <SessionInfo
+                    creador={{
+                      username: data.user_admin_create_username,
+                      fecha: data.created_at
+                    }}
+                    variant="compact"
+                  />
+                </div>
+              )}
+              {variant === "registered" && data.recaudos?.user_admin_create_username && (
+                <div className="bg-gray-50 p-2 rounded-md">
+                  <SessionInfo
+                    creador={{
+                      username: data.recaudos.user_admin_create_username,
+                      fecha: data.recaudos.created_at
+                    }}
+                    variant="compact"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Botones de acción para administradores */}
-          {variant === "pending" && !isDenegada && (
+          {/* Botones de acción para administradores - Solo para administradores */}
+          {isAdmin && variant === "pending" && !isDenegada && (
             <div className="mt-6 flex flex-wrap gap-3">
               {/* Botón de Aprobar */}
               {(() => {
@@ -376,8 +382,8 @@ export default function UserProfileCard({
             </div>
           )}
 
-          {/* Botones de acción para colegiados registrados */}
-          {variant === "registered" && (
+          {/* Botones de acción para colegiados registrados - Solo para administradores */}
+          {isAdmin && variant === "registered" && (
             <div className="mt-6 flex flex-wrap gap-3">
               {/* Botón de Nueva Solicitud */}
               <button
@@ -410,8 +416,8 @@ export default function UserProfileCard({
             </div>
           )}
 
-          {/* Mensaje de estado rechazado/denegado */}
-          {variant === "pending" && (isRechazada || isDenegada) && (
+          {/* Mensaje de estado rechazado/denegado - Solo para administradores */}
+          {isAdmin && variant === "pending" && (isRechazada || isDenegada) && (
             <div className={`mt-4 p-3 rounded-md border-l-4 ${isRechazada ? "bg-yellow-50 border-yellow-500" : "bg-red-50 border-red-500"
               }`}>
               <div className="flex items-center">

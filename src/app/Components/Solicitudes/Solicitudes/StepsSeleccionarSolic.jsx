@@ -432,7 +432,7 @@ export default function SeleccionarSolicitudesStep({
     }
   }
 
-  // Función para manejar la confirmación de instituciones
+  // Función para confirmar instituciones
   const handleConfirmarInstituciones = (resultado) => {
     if (!tipoConstanciaParaInstituciones) return;
 
@@ -505,6 +505,27 @@ export default function SeleccionarSolicitudesStep({
     // Cerrar modal
     setMostrarModalInstituciones(false);
     setTipoConstanciaParaInstituciones(null);
+  };
+
+  // NUEVA FUNCIÓN: Actualizar una institución específica
+  const handleUpdateInstitution = async (institucionId, updates) => {
+    try {
+      // Actualizar la institución en el estado local
+      setInstitucionesColegiado(prev => 
+        prev.map(inst => 
+          inst.id === institucionId 
+            ? { ...inst, ...updates }
+            : inst
+        )
+      );
+
+      // Aquí podrías agregar una llamada a la API para persistir los cambios
+      // Por ejemplo: await updateInstitucionColegiado(colegiadoId, institucionId, updates);
+      
+      console.log(`Institución ${institucionId} actualizada:`, updates);
+    } catch (error) {
+      console.error("Error actualizando institución:", error);
+    }
   };
 
   // Manejar cambios en los campos del formulario
@@ -1257,6 +1278,8 @@ export default function SeleccionarSolicitudesStep({
           costoBase={tipoConstanciaParaInstituciones?.costo?.monto || 0}
           onConfirm={handleConfirmarInstituciones}
           institucionesYaSeleccionadas={tipoConstanciaParaInstituciones?.institucionesYaSeleccionadas || []}
+          isAdmin={isAdmin}
+          onUpdateInstitution={handleUpdateInstitution}
         />
       )}
     </>

@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { Mail, MapPin, Pencil, Phone } from "lucide-react";
 import { useState } from "react";
 
-import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
+import EmailVerification from "@/app/(Registro)/EmailVerification";
 import InfoContacto from "@/app/(Registro)/InfoCont";
+import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
 
 export default function ContactInfoSection({
   pendiente,
@@ -20,10 +21,23 @@ export default function ContactInfoSection({
   // Estados para el modal
   const [showModal, setShowModal] = useState(false);
   const [localFormData, setLocalFormData] = useState(null);
+  
+  // Estados para verificación de correo
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [emailToVerify, setEmailToVerify] = useState("");
+  const [isResendingCode, setIsResendingCode] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false); // Nuevo estado para mostrar confirmación
 
   // Función para formatear el número de teléfono al mostrarse
   const formatPhoneNumber = (phoneNumber, countryCode) => {
     if (!phoneNumber) return "No especificado";
+    
+    // Si phoneNumber viene con código incluido (ej: "+584123456789")
+    if (phoneNumber.startsWith("+")) {
+      return phoneNumber;
+    }
+    
+    // Si phoneNumber es solo el número
     return `${countryCode || "+58"} ${phoneNumber}`;
   };
 
@@ -62,8 +76,9 @@ export default function ContactInfoSection({
       municipio: datosContacto?.city || "", // Añadir para compatibilidad
       municipio_name: datosContacto?.city_name || "", // Añadir para compatibilidad
       address: datosContacto?.address || "",
-      emailVerified: datosContacto?.emailVerified || false,
-      emailIsValid: true // Para validación interna
+      emailVerified: true, // En modo edición, el correo siempre está verificado inicialmente
+      emailIsValid: true, // Para validación interna
+      originalEmail: datosContacto?.email || "" // Guardar el correo original para comparar
     };
   };
 
@@ -80,16 +95,45 @@ export default function ContactInfoSection({
     setCambiosPendientes(true);
   };
 
-  // Función ficticia para la verificación de correo
-  const requestEmailVerification = (email) => {
-    console.log("Solicitud de verificación para:", email);
-    // Aquí iría la lógica real de verificación
-    // Por ahora solo actualizamos el estado local
-    if (localFormData) {
-      setLocalFormData(prev => ({
-        ...prev,
-        emailVerified: true
-      }));
+  // Función para manejar la solicitud de verificación de correo
+  const handleRequestEmailVerification = (email) => {
+    setEmailToVerify(email);
+    setShowEmailVerification(true);
+  };
+
+  // Función para manejar el éxito de la verificación
+  const handleEmailVerificationSuccess = () => {
+    setLocalFormData(prev => ({
+      ...prev,
+      emailVerified: true,
+      emailChanged: false
+    }));
+    setShowEmailVerification(false);
+    setEmailVerified(true); // Activar estado de confirmación
+  };
+
+  // Función para confirmar y guardar después de la verificación
+  const handleConfirmSave = () => {
+    setEmailVerified(false);
+    handleSaveChanges();
+  };
+
+  // Función para volver de la verificación de correo
+  const handleBackFromEmailVerification = () => {
+    setShowEmailVerification(false);
+  };
+
+  // Función para reenviar código de verificación
+  const handleResendVerificationCode = async () => {
+    setIsResendingCode(true);
+    try {
+      await postDataUsuario("send-verification-email", {
+        email: emailToVerify
+      });
+    } catch (error) {
+      console.error("Error al reenviar código:", error);
+    } finally {
+      setIsResendingCode(false);
     }
   };
 
@@ -117,6 +161,8 @@ export default function ContactInfoSection({
   const handleCloseModal = () => {
     setShowModal(false);
     setLocalFormData(null);
+    setShowEmailVerification(false);
+    setEmailVerified(false);
     setCambiosPendientes(false);
   };
 
@@ -223,7 +269,7 @@ export default function ContactInfoSection({
         title="Editar Información de Contacto"
         maxWidth="max-w-3xl"
       >
-        {localFormData && (
+        {localFormData && !showEmailVerification && !emailVerified && (
           <InfoContacto
             formData={localFormData}
             onInputChange={handleLocalInputChange}
@@ -231,9 +277,57 @@ export default function ContactInfoSection({
             isProfileEdit={false}
             isEditMode={true}
             onSave={handleSaveChanges}
-            requestEmailVerification={requestEmailVerification}
+            requestEmailVerification={handleRequestEmailVerification}
             isAdmin={false}
           />
+        )}
+        
+        {showEmailVerification && (
+          <EmailVerification
+            email={emailToVerify}
+            onVerificationSuccess={handleEmailVerificationSuccess}
+            onGoBack={handleBackFromEmailVerification}
+            isResending={isResendingCode}
+            onResendCode={handleResendVerificationCode}
+          />
+        )}
+
+        {emailVerified && !showEmailVerification && (
+          <div className="space-y-6 py-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Correo Verificado</h3>
+              <p className="text-gray-600">
+                Su correo electrónico ha sido verificado exitosamente.
+                Ahora puede confirmar los cambios para guardar la información.
+              </p>
+            </div>
+            
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailVerified(false);
+                  setShowEmailVerification(false);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSave}
+                className="cursor-pointer flex items-center px-5 py-2.5 bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white
+                  rounded-xl text-base font-medium shadow-md hover:shadow-lg hover:opacity-90 transition-colors"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
         )}
       </Modal>
     </motion.div>

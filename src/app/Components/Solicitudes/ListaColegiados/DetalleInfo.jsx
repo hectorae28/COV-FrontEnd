@@ -137,46 +137,85 @@ export default function DetalleInfo({
   }, [entityData?.pago_exonerado]);
 
   // Función unificada para actualizar datos
-  const updateData = async (id, datosActualizados) => {
+  const updateData = async (id, datosActualizados, docs = false) => {
     try {
-      const dataToSend = JSON.parse(JSON.stringify(datosActualizados));
+      console.log("📤 UpdateData - Enviando:", {
+        id,
+        type: docs ? "multipart/form-data" : "application/json",
+        hasFiles: docs,
+        dataKeys: docs ? "FormData object" : Object.keys(datosActualizados)
+      });
 
-      // Actualizar estados locales según el tipo de datos
-      if (dataToSend.persona) {
-        setDatosPersonales((prev) => ({ ...prev, ...dataToSend.persona }));
-      }
+      // Si son datos con archivos, no intentar copiar
+      const dataToSend = docs ? datosActualizados : JSON.parse(JSON.stringify(datosActualizados));
 
-      if (dataToSend.contacto || dataToSend.email || dataToSend.phoneNumber || dataToSend.address) {
-        const contactData = dataToSend.contacto || dataToSend;
-        setDatosContacto((prev) => ({ ...prev, ...contactData }));
-      }
+      // Actualizar estados locales según el tipo de datos (solo si no son archivos)
+      if (!docs) {
+        if (dataToSend.persona) {
+          setDatosPersonales((prev) => ({ ...prev, ...dataToSend.persona }));
+        }
 
-      if (dataToSend.academicos || dataToSend.instituto_bachillerato || dataToSend.universidad) {
-        const acadData = dataToSend.academicos || dataToSend;
-        setDatosAcademicos((prev) => ({ ...prev, ...acadData }));
-      }
+        if (dataToSend.contacto || dataToSend.email || dataToSend.phoneNumber || dataToSend.address) {
+          const contactData = dataToSend.contacto || dataToSend;
+          setDatosContacto((prev) => ({ ...prev, ...contactData }));
+        }
 
-      if (dataToSend.instituciones) {
-        setInstituciones(dataToSend.instituciones);
+        if (dataToSend.academicos || dataToSend.instituto_bachillerato || dataToSend.universidad) {
+          const acadData = dataToSend.academicos || dataToSend;
+          setDatosAcademicos((prev) => ({ ...prev, ...acadData }));
+        }
+
+        if (dataToSend.instituciones) {
+          console.log("📝 Actualizando instituciones en estado local:", dataToSend.instituciones);
+          setInstituciones(dataToSend.instituciones);
+        }
       }
 
       // Marcar cambios pendientes
       setCambiosPendientes(true);
 
+      let response;
       // Llamar a la función apropiada según el tipo
       if (tipo === "pendiente") {
         if (!recaudos) {
-          await updateColegiadoPendiente(id, dataToSend);
+          response = await updateColegiadoPendiente(id, dataToSend, docs);
         } else {
-          await updateColegiadoPendienteWithToken(id, dataToSend);
+          response = await updateColegiadoPendienteWithToken(id, dataToSend, docs);
         }
       } else {
-        await updateColegiado(id, dataToSend);
+        response = await updateColegiado(id, dataToSend, docs);
       }
 
+      // Log del response para verificar si se guardó correctamente
+      console.log("✅ UpdateData Response:", {
+        success: true,
+        responseData: response?.data || response,
+        // Buscar instituciones en diferentes ubicaciones (corregido)
+        instituciones_root: (response?.data || response)?.instituciones || "No encontradas en raíz",
+        instituciones_recaudos: (response?.data || response)?.recaudos?.instituciones || "No encontradas en recaudos",
+        // Mostrar todas las claves del response para debug (corregido)
+        responseKeys: (response?.data || response) ? Object.keys(response?.data || response) : "Sin data",
+        recaudosKeys: (response?.data || response)?.recaudos ? Object.keys((response?.data || response).recaudos) : "Sin recaudos",
+        // Conteo de instituciones en cada ubicación (corregido)
+        cantidadInstituciones_root: Array.isArray((response?.data || response)?.instituciones) 
+          ? (response?.data || response).instituciones.length 
+          : "No es array o no existe en raíz",
+        cantidadInstituciones_recaudos: Array.isArray((response?.data || response)?.recaudos?.instituciones) 
+          ? (response?.data || response).recaudos.instituciones.length 
+          : "No es array o no existe en recaudos",
+        // Log completo del response para análisis (corregido)
+        fullResponse: response?.data || response
+      });
+
       setCambiosPendientes(false);
+      return response;
     } catch (error) {
+      console.error("❌ Error en updateData:", {
+        error: error.message || error,
+        details: error.response?.data || "Sin detalles adicionales"
+      });
       setCambiosPendientes(true);
+      throw error;
     }
   };
 
@@ -299,10 +338,42 @@ export default function DetalleInfo({
   // Inicializar datos para pendientes
   const initializePendienteData = (data) => {
     setDatosPersonales(JSON.parse(JSON.stringify(data.persona || {})));
+    
+    // Debug: Log para ver cómo llegan los datos de teléfono
+    console.log("📱 Datos de teléfono (pendiente):", {
+      telefono_movil: data.persona?.telefono_movil,
+      telefono_habitacion: data.persona?.telefono_de_habitacion
+    });
+    
+    // Función para separar teléfono correctamente
+    const parsePhoneNumber = (telefono) => {
+      if (!telefono) return { countryCode: "+58", phoneNumber: "" };
+      
+      const telefonoStr = String(telefono);
+      
+      // Si ya viene separado por espacio (ej: "+58 4123456789")
+      if (telefonoStr.includes(" ")) {
+        const [code, number] = telefonoStr.split(" ");
+        return { countryCode: code || "+58", phoneNumber: number || "" };
+      }
+      
+      // Si viene sin separar (ej: "+584123456789" o "584123456789")
+      if (telefonoStr.startsWith("+58")) {
+        return { countryCode: "+58", phoneNumber: telefonoStr.substring(3) };
+      } else if (telefonoStr.startsWith("58")) {
+        return { countryCode: "+58", phoneNumber: telefonoStr.substring(2) };
+      }
+      
+      // Si es solo el número (sin código)
+      return { countryCode: "+58", phoneNumber: telefonoStr };
+    };
+    
+    const parsedPhone = parsePhoneNumber(data.persona?.telefono_movil);
+    
     setDatosContacto({
       email: data.persona?.correo || "",
-      phoneNumber: data.persona?.telefono_movil?.split(" ")[1] || "",
-      countryCode: data.persona?.telefono_movil?.split(" ")[0] || "+58",
+      phoneNumber: parsedPhone.phoneNumber,
+      countryCode: parsedPhone.countryCode,
       homePhone: data.persona?.telefono_de_habitacion || "",
       address: data.persona?.direccion?.referencia || "",
       city: data.persona?.direccion?.municipio || "",
@@ -335,16 +406,48 @@ export default function DetalleInfo({
     setDatosPersonales(JSON.parse(JSON.stringify(data.recaudos?.persona || {})));
 
     const persona = data.recaudos?.persona || {};
+    
+    // Debug: Log para ver cómo llegan los datos de teléfono
+    console.log("📱 Datos de teléfono (colegiado):", {
+      telefono_movil: persona.telefono_movil,
+      telefono_habitacion: persona.telefono_de_habitacion
+    });
+    
+    // Función para separar teléfono correctamente
+    const parsePhoneNumber = (telefono) => {
+      if (!telefono) return { countryCode: "+58", phoneNumber: "" };
+      
+      const telefonoStr = String(telefono);
+      
+      // Si ya viene separado por espacio (ej: "+58 4123456789")
+      if (telefonoStr.includes(" ")) {
+        const [code, number] = telefonoStr.split(" ");
+        return { countryCode: code || "+58", phoneNumber: number || "" };
+      }
+      
+      // Si viene sin separar (ej: "+584123456789" o "584123456789")
+      if (telefonoStr.startsWith("+58")) {
+        return { countryCode: "+58", phoneNumber: telefonoStr.substring(3) };
+      } else if (telefonoStr.startsWith("58")) {
+        return { countryCode: "+58", phoneNumber: telefonoStr.substring(2) };
+      }
+      
+      // Si es solo el número (sin código)
+      return { countryCode: "+58", phoneNumber: telefonoStr };
+    };
+    
+    const parsedPhone = parsePhoneNumber(persona.telefono_movil);
+    
     setDatosContacto({
       email: persona.correo || "",
-      phoneNumber: persona.telefono_movil?.split(" ")[1] || "",
-      countryCode: persona.telefono_movil?.split(" ")[0] || "+58",
+      phoneNumber: parsedPhone.phoneNumber,
+      countryCode: parsedPhone.countryCode,
       homePhone: persona.telefono_de_habitacion || "",
       address: persona.direccion?.referencia || "",
-      city: data.persona?.direccion?.municipio || "",
-      city_name: data.persona?.direccion?.municipio_nombre || "",
-      state: data.persona?.direccion?.estado || "",
-      state_name: data.persona?.direccion?.estado_nombre || "",
+      city: persona.direccion?.municipio || "",
+      city_name: persona.direccion?.municipio_nombre || "",
+      state: persona.direccion?.estado || "",
+      state_name: persona.direccion?.estado_nombre || "",
     });
 
     setDatosAcademicos({
@@ -904,6 +1007,7 @@ export default function DetalleInfo({
         onMostrarReporteIrregularidad={handleReportarIrregularidad}
         documentsApproved={documentsApproved}
         paymentApproved={paymentApproved}
+        isAdmin={isAdmin && !isColegiado}
       />
 
       {/* Estado de solvencia para colegiados */}
@@ -976,7 +1080,7 @@ export default function DetalleInfo({
             readonly={entityData?.status === "anulado"}
             isColegiado={isColegiado}
             pendienteData={entityData}
-            isAdmin={isAdmin}
+            isAdmin={isAdmin && !isColegiado}
             onDocumentsStatusChange={handleDocumentsStatusChange}
           />
 
@@ -1156,7 +1260,7 @@ export default function DetalleInfo({
                 isColegiado={isColegiado}
                 pendienteData={tipo === "pendiente" ? entityData : entityData?.recaudos}
                 onDocumentsStatusChange={handleDocumentsStatusChange}
-                isAdmin={isAdmin}
+                isAdmin={isAdmin && !isColegiado}
               />
             )}
 

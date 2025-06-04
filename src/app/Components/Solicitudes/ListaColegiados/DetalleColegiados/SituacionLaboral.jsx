@@ -31,6 +31,27 @@ export default function SituacionLaboral({
   // ✅ DETERMINAR FUENTE DE DATOS: Compatibilidad dual (solo para instituciones)
   const sourceData = pendienteData || entityData || pendiente;
   
+  // Función para mapear códigos a IDs numéricos que espera el backend
+  const getTipoInstitucionId = (code) => {
+    const tipoInstitucionMap = {
+      "ISPU": 1,
+      "ISPV": 2,
+      "ASP": 3,
+      "CAA": 4,
+      "CC": 5,
+      "CDP": 6,
+      "EO": 7,
+      "FAP": 8,
+      "FMD": 9,
+      "HD": 10,
+      "LDC": 11,
+      "OT": 12,
+      "PMSB": 13,
+      "UI": 14
+    };
+    return tipoInstitucionMap[code] || 6; // Default a CDP (6) si no se encuentra
+  };
+
   // Obtener nombre del tipo de institución
   const getInstitucionTypeName = (code) => {
     const institucionesList = [
@@ -134,13 +155,40 @@ export default function SituacionLaboral({
     
     // Si no está laborando, limpiar instituciones
     if (dataToUpdate.workStatus === "noLabora") {
+      console.log("📤 Enviando datos laborales - NO LABORA:", { instituciones: [] });
+      
       // ✅ ACTUALIZAR ESTADO LOCAL según tipo
       if (setInstituciones) {
         setInstituciones([]);
       }
       updateData(pendienteId, { instituciones: [] });
     } else {
-      const updatedInstituciones = dataToUpdate.laboralRegistros.map(reg => ({
+      // 🔄 NUEVO FORMATO: Enviar en el mismo formato que el registro
+      const institucionesForBackend = dataToUpdate.laboralRegistros.map((registro) => ({
+        nombre: registro.institutionName,
+        cargo: registro.cargo,
+        direccion: {
+          estado: Number(registro.selectedEstado),
+          municipio: Number(registro.selectedMunicipio),
+          referencia: registro.institutionAddress
+        },
+        telefono: registro.institutionPhone,
+        tipo_institucion: getTipoInstitucionId(registro.institutionType),
+        // Campos adicionales para mantener compatibilidad con vista
+        //id: registro?.id,
+        verificado: registro.verification_status,
+        motivo_rechazo: registro.rejection_reason || '',
+        constancia_trabajo: registro.constancia_trabajo || null,
+        estado_laboral: registro.estado_laboral || "actual"
+      }));
+
+      console.log("📤 Enviando datos laborales - FORMATO BACKEND:", {
+        instituciones: institucionesForBackend,
+        cantidadInstituciones: institucionesForBackend.length
+      });
+
+      // Para mostrar en la vista, mantener el formato original
+      const institucionesForView = dataToUpdate.laboralRegistros.map(reg => ({
         id: reg?.id,
         tipo_institucion: reg.institutionType,
         nombre: reg.institutionName,
@@ -162,11 +210,46 @@ export default function SituacionLaboral({
         estado_laboral: reg.estado_laboral || "actual"
       }));
 
-      // ✅ ACTUALIZAR ESTADO LOCAL según tipo
+      // ✅ ACTUALIZAR ESTADO LOCAL según tipo (mantener formato para vista)
       if (setInstituciones) {
-        setInstituciones(updatedInstituciones);
+        setInstituciones(institucionesForView);
       }
-      updateData(pendienteId, { instituciones: updatedInstituciones });
+
+      // 🚀 ENVIAR AL BACKEND en formato correcto
+      const dataToSend = { instituciones: institucionesForBackend };
+      
+      // Agregar constancias de trabajo como archivos separados si existen
+      const hasFiles = dataToUpdate.laboralRegistros.some(reg => 
+        reg.constancia_trabajo && typeof reg.constancia_trabajo !== 'string'
+      );
+
+      if (hasFiles) {
+        const formData = new FormData();
+        
+        // Agregar instituciones como JSON
+        formData.append('instituciones', JSON.stringify(institucionesForBackend));
+        
+        // Agregar constancias de trabajo
+        dataToUpdate.laboralRegistros.forEach((registro, index) => {
+          if (registro.constancia_trabajo && typeof registro.constancia_trabajo !== 'string') {
+            formData.append(`constancia_trabajo_${index}`, registro.constancia_trabajo);
+            console.log(`📎 Agregando constancia_trabajo_${index}:`, registro.constancia_trabajo.name);
+          }
+        });
+
+        console.log("📤 Enviando con archivos (FormData)");
+        updateData(pendienteId, formData, true); // true indica que contiene archivos
+      } else {
+        console.log("📤 Enviando solo JSON (sin archivos nuevos)");
+        updateData(pendienteId, dataToSend);
+      }
+
+      // Log para verificar estructura enviada
+      console.log("✅ Datos preparados para backend:", {
+        totalInstituciones: institucionesForBackend.length,
+        formatoEstructura: institucionesForBackend[0] || "Sin instituciones",
+        tieneArchivos: hasFiles
+      });
     }
 
     setLocalFormData(null);
