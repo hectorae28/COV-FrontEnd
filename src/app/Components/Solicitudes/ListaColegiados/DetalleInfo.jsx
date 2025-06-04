@@ -378,7 +378,7 @@ export default function DetalleInfo({
           const [tasa, costo, Mpagos] = await Promise.all([
             fetchDataSolicitudes("tasa-bcv"),
             fetchDataSolicitudes("costo", `?search=Inscripcion+${entityData.tipo_profesion?.titulo}&es_vigente=true`),
-            fetchDataSolicitudes("metodo-de-pago")
+            fetchDataSolicitudes("metodo-de-pago",`?es_visible_colegiado=true`)
           ]);
 
           setTasaBcv(tasa.data.rate);
@@ -724,7 +724,8 @@ export default function DetalleInfo({
         { key: 'file_mpps', nombre: 'Registro MPPS' },
         { key: 'fondo_negro_credencial', nombre: 'Credencial fondo negro' },
         { key: 'notas_curso', nombre: 'Notas del curso' },
-        { key: 'fondo_negro_titulo_bachiller', nombre: 'Título bachiller fondo negro' }
+        { key: 'fondo_negro_titulo_bachiller', nombre: 'Título bachiller fondo negro' },
+        { key: 'file_foto_carnet_recaudos', nombre: 'Foto carnet recaudos' }
       ];
 
       documentosAVerificar.forEach(doc => {

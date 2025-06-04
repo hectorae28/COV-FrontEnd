@@ -606,6 +606,8 @@ export default function RegistrationForm({
         Form.append("file_fondo_negro", formData.titulo || null)
         Form.append("file_mpps", formData.mpps || null)
 
+        Form.append("file_foto_carnet_recaudos", formData.foto_colegiado || null)
+
         // Solo agregar foto si no es colegiado viejo (que no tiene paso de foto)
         if (tipoRegistro !== "viejo") {
           Form.append("file_foto_colegiado", formData.foto_colegiado || null)
