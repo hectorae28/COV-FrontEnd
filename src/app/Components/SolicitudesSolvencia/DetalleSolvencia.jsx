@@ -354,7 +354,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
         motivo_exoneracion: motivo,
         colegiado_id: solvencia.idColegiado,
-        fecha_exp: fechaVencimiento
+        fecha_exp: formatDate(fechaVencimiento)
       };
 
       postDataSolicitud('exonerar_solicitud_solvencia', solvenciaActualizada);
