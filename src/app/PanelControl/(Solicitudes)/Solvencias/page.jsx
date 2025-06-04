@@ -47,8 +47,13 @@ export default function ListaSolvencias() {
   useEffect(() => {
     if (!isLoading) {
       const existenRevision = solicitudesDeSolvencia.some(s => s.statusSolicitud === "revision");
+      const existenEspecial = solicitudesDeSolvencia.some(s => s.statusSolicitud === "costo_especial");
       if (tabActual === "revision" && !existenRevision) {
-        setTabActual("aprobadas");
+        if(!existenEspecial){
+          setTabActual("costo_especial");
+        }else{
+          setTabActual("todas");
+        }
       }
     }
   },[solicitudesDeSolvencia]);
@@ -446,6 +451,7 @@ const conteoSolvencias = useMemo(() => ({
                             }`}>
                             {solvencia.statusSolicitud === 'revision' && (<><Clock size={12} /> Pendiente</>)}
                             {solvencia.statusSolicitud === 'aprobado' && (<><CheckCircle size={12} />Aprobado</>)}
+                            {solvencia.statusSolicitud === 'exonerado' && (<><CheckCircle size={12} />Exonerado</>)}
                             {solvencia.statusSolicitud === 'rechazado' && (<><XCircle size={12} />Rechazado</>)}
                             {solvencia.statusSolicitud === "costo_especial" && (<><CreditCard size={12} />Costo Especial</>)}
                           </span>

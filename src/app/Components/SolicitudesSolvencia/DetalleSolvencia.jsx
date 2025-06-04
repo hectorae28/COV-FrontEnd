@@ -354,7 +354,7 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
         solicitud_solvencia_id: solvencia.idSolicitudSolvencia,
         motivo_exoneracion: motivo,
         colegiado_id: solvencia.idColegiado,
-        fecha_exp: fechaVencimiento
+        fecha_exp: formatDate(fechaVencimiento)
       };
 
       postDataSolicitud('exonerar_solicitud_solvencia', solvenciaActualizada);
@@ -854,15 +854,17 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                         onChange={handleSeleccionarFecha}
                       >
                         <option value="" disabled>Seleccione una fecha</option>
-                        {fechasDeVencimiento.map(({ trimestre, fecha }) => (
+                        {fechasDeVencimiento.map(({ trimestre, fecha }) => {
+                          return (
                           <option
                             key={trimestre}
                             value={fecha}
-                            disabled={fechaActual > fecha || (solvencia.fechaExpSolicitud && new Date(solvencia.fechaExpSolicitud) > fecha)}
+                            disabled={fechaActual > fecha || (solvencia.tipo=='anual' && trimestre!==4)}
                           >
                             {formatDate(fecha)}
                           </option>
-                        ))}
+                        )}
+                        )}
                       </select>
                     </div>
 
