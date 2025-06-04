@@ -177,6 +177,20 @@ export const useSolicitudesStore = create((set, get) => ({
 
       const tiposActualizados = { ...TIPOS_SOLICITUD };
 
+      // Asegurar que cada tipo tenga la estructura mínima requerida
+      Object.keys(tiposActualizados).forEach(tipoKey => {
+        const tipo = tiposActualizados[tipoKey];
+        if (!tipo.costo) {
+          tipo.costo = { id: 0, monto: 0 };
+        }
+        if (!tipo.codigo) {
+          tipo.codigo = tipoKey.toUpperCase();
+        }
+        if (!tipo.nombre) {
+          tipo.nombre = tipoKey;
+        }
+      });
+
       const costoCarnet = costos.find(c => c.tipo_costo_nombre === "Carnet");
       if (costoCarnet) {
         tiposActualizados.Carnet.costo = { id: costoCarnet.id, monto: parseFloat(costoCarnet.monto_usd) };
@@ -187,17 +201,28 @@ export const useSolicitudesStore = create((set, get) => ({
         tiposActualizados.Especializacion.costo = { id: costoEspecializacion.id, monto: parseFloat(costoEspecializacion.monto_usd) };
       }
 
-      tiposActualizados.Constancia.subtipos = tiposActualizados.Constancia.subtipos.map(subtipo => {
-        const costo = costos.find(c => {
-          const backendCodigo = c.tipo_costo_nombre.replace('constancia_', '');
-          return backendCodigo === subtipo.codigo;
-        });
+      // Asegurar que los subtipos de constancia tengan estructura válida
+      if (tiposActualizados.Constancia && tiposActualizados.Constancia.subtipos) {
+        tiposActualizados.Constancia.subtipos = tiposActualizados.Constancia.subtipos.map(subtipo => {
+          // Asegurar estructura mínima
+          const subtipoConDefaults = {
+            codigo: subtipo.codigo || "constancia",
+            nombre: subtipo.nombre || "Constancia",
+            costo: { id: 0, monto: 0 },
+            ...subtipo
+          };
 
-        return {
-          ...subtipo,
-          costo: costo ? { id: costo?.id, monto: parseFloat(costo.monto_usd) } : { id: 0, monto: 0 }
-        };
-      });
+          const costo = costos.find(c => {
+            const backendCodigo = c.tipo_costo_nombre.replace('constancia_', '');
+            return backendCodigo === subtipo.codigo;
+          });
+
+          return {
+            ...subtipoConDefaults,
+            costo: costo ? { id: costo?.id, monto: parseFloat(costo.monto_usd) } : { id: 0, monto: 0 }
+          };
+        });
+      }
 
       set({
         tipos_solicitud: tiposActualizados,
@@ -206,11 +231,41 @@ export const useSolicitudesStore = create((set, get) => ({
 
       return tiposActualizados;
     } catch (error) {
+      console.error("Error cargando tipos de solicitud desde API:", error);
+      
+      // En caso de error, asegurar que tenemos al menos la estructura básica
+      const tiposConDefaults = { ...TIPOS_SOLICITUD };
+      Object.keys(tiposConDefaults).forEach(tipoKey => {
+        const tipo = tiposConDefaults[tipoKey];
+        if (!tipo.costo) {
+          tipo.costo = { id: 0, monto: 0 };
+        }
+        if (!tipo.codigo) {
+          tipo.codigo = tipoKey.toUpperCase();
+        }
+        if (!tipo.nombre) {
+          tipo.nombre = tipoKey;
+        }
+      });
+
+      // Asegurar subtipos de constancia
+      if (tiposConDefaults.Constancia && tiposConDefaults.Constancia.subtipos) {
+        tiposConDefaults.Constancia.subtipos = tiposConDefaults.Constancia.subtipos.map(subtipo => ({
+          codigo: subtipo.codigo || "constancia",
+          nombre: subtipo.nombre || "Constancia",
+          costo: { id: 0, monto: 0 },
+          ...subtipo
+        }));
+      }
+
       set({
+        tipos_solicitud: tiposConDefaults,
         loading: false,
         error: error.message || "Error al cargar los tipos de solicitud"
       });
-      throw error;
+      
+      // No re-lanzar el error para permitir que la app continúe funcionando
+      return tiposConDefaults;
     }
   },
 
