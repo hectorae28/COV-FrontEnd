@@ -36,18 +36,7 @@ export default function SituacionLaboral({
     const tipoInstitucionMap = {
       "ISPU": 1,
       "ISPV": 2,
-      "ASP": 3,
-      "CAA": 4,
-      "CC": 5,
-      "CDP": 6,
-      "EO": 7,
-      "FAP": 8,
-      "FMD": 9,
-      "HD": 10,
-      "LDC": 11,
-      "OT": 12,
-      "PMSB": 13,
-      "UI": 14
+      
     };
     return tipoInstitucionMap[code] || 6; // Default a CDP (6) si no se encuentra
   };
@@ -55,18 +44,8 @@ export default function SituacionLaboral({
   // Obtener nombre del tipo de institución
   const getInstitucionTypeName = (code) => {
     const institucionesList = [
-      { code: "ASP", name: "Agencias de Salud Pública" },
-      { code: "CAA", name: "Centros de Atención Ambulatoria" },
-      { code: "CC", name: "Clínicas" },
-      { code: "CDP", name: "Consultorios" },
-      { code: "EO", name: "Escuelas y Facultades de Odontología" },
-      { code: "FAP", name: "Fuerzas Armadas y Servicios Penitenciarios" },
-      { code: "FMD", name: "Fabricación de Materiales y Equipos Dentales" },
-      { code: "HD", name: "Hospitales" },
-      { code: "LDC", name: "Laboratorio" },
-      { code: "OT", name: "Otros" },
-      { code: "PMSB", name: "Programas Móviles de Salud Bucal" },
-      { code: "UI", name: "Universidades e Institutos de Investigación" },
+      { code: "ISPU", name: "Instituto de Salud Pública" },
+      { code: "ISPV", name: "Instituto de Salud Pública Veterinaria" },
     ];
     const institucion = institucionesList.find(inst => inst.code === code);
     return institucion ? institucion.name : code;
@@ -173,7 +152,7 @@ export default function SituacionLaboral({
           referencia: registro.institutionAddress
         },
         telefono: registro.institutionPhone,
-        tipo_institucion: getTipoInstitucionId(registro.institutionType),
+        tipo_institucion: registro.institutionType,
         // Campos adicionales para mantener compatibilidad con vista
         //id: registro?.id,
         verificado: registro.verification_status,

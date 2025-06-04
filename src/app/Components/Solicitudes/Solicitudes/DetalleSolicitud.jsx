@@ -27,6 +27,7 @@ import { useSolicitudesStore } from "@/store/SolicitudesStore";
 import transformBackendData from "@/utils/formatDataSolicitudes";
 import api from "@/api/api";
 import { generateConstanciaPDF, downloadPDF, openPDF } from "@/utils/PDF/constanciasPDFService";
+import SolicitudPago from "@/app/Components/Solicitudes/Solicitudes/SolicitudPago";
 
 export default function DetalleSolicitud({ props }) {
   const { id, isAdmin } = props;
@@ -114,17 +115,25 @@ export default function DetalleSolicitud({ props }) {
     ));
 
     const totalPagado = fijarDecimales(pagosSolicitud.reduce((sum, pago) => {
-      if (pago.moneda === 'bs') {
-        return sum + (Number(pago.monto) / Number(pago.tasa_bcv_del_dia));
+      if(pago.status !== 'rechazado'){
+        if (pago.moneda === 'bs') {
+          return sum + (Number(pago.monto) / Number(pago.tasa_bcv_del_dia));
+        }
+        return sum + Number(pago.monto);
       }
-      return sum + Number(pago.monto);
+      return sum;
     }, 0));
 
     const totalPendiente = fijarDecimales(totalOriginal - totalExonerado - totalPagado);
 
     const todoExonerado = totalOriginal === totalExonerado || solicitudData?.estado === "Exonerada";
     const todoPagado = totalPendiente <= 0.01 && !todoExonerado;
-
+    const totalEnRevision = fijarDecimales(pagosSolicitud.reduce((sum, pago) => {
+      if(pago.status === 'en_revision'){
+        return sum + Number(pago.monto);
+      }
+      return sum;
+    }, 0));
     return {
       totalOriginal,
       totalExonerado,
@@ -132,6 +141,7 @@ export default function DetalleSolicitud({ props }) {
       totalPagado,
       todoExonerado,
       todoPagado,
+      totalEnRevision,
     };
   };
 
@@ -552,8 +562,26 @@ export default function DetalleSolicitud({ props }) {
         onDocumentStatusChange={handleDocumentStatusChange}
         isAdmin={isAdmin}
       />
+      {pagosSolicitud && pagosSolicitud.length > 0 && (
 
-      {/* Documentos generados por el sistema - Visible cuando hay constancias o carnets aprobados */}
+        <SolicitudPago
+        solicitudData={{
+          id: 10,
+          costo: "300.00",
+          tipo_solicitud: { nombre: "Certificación Académica" },
+          fecha_solicitud: "2024-01-15",
+          status: "en_proceso",
+          pagos: pagosSolicitud,
+            // ... más pagos
+        }}
+        onRefreshData={loadSolicitudById}
+        />
+        
+      )}
+      {/* Servicios solicitados */}
+      <div className="flex flex-col md:flex-row gap-4 ">
+      <div className="md:w-1/2">
+        
       {solicitud.itemsSolicitud && solicitud.itemsSolicitud.some(item => 
         (item.tipo === 'Constancia' || item.tipo === 'Carnet') && item.estado === 'Aprobada'
       ) && (
@@ -607,9 +635,7 @@ export default function DetalleSolicitud({ props }) {
           )}
         </div>
       )}
-
-      {/* Servicios solicitados */}
-      <div className="flex flex-col md:flex-row gap-4 ">
+      </div>
         <div className="md:w-1/2">
 
           <ServiciosSection
@@ -622,16 +648,8 @@ export default function DetalleSolicitud({ props }) {
         </div>
 
         {/* Historial de pagos */}
-        {pagosSolicitud && pagosSolicitud.length > 0 && (
-          <div className="md:w-1/2">
-
-          <HistorialPagosSection
-            comprobantes={pagosSolicitud}
-              onVerDocumento={handleVerDocumento}
-            />
-          </div>
-        )}
       </div>
+       
 
       {/* Observaciones - solo en estado pendiente */}
       {solicitud.estado === "Pendiente" && (
@@ -720,6 +738,8 @@ export default function DetalleSolicitud({ props }) {
           </div>
         </div>
       )}
+
+      
     </div>
   );
 }

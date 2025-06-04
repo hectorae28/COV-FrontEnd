@@ -166,7 +166,7 @@ export default function DataTable({
                         ))
                     ) : (
                         // Pendientes, rechazados o anulados
-                        colegiadosPendientes.map((pendiente, index) => (
+                        colegiadosPendientes.map((pendiente, index) => {console.log({pendiente});return(
                             <tr
                                 key={index}
                                 className="hover:bg-gray-50 cursor-pointer"
@@ -226,7 +226,7 @@ export default function DataTable({
                                     </div>
                                 </td>
                             </tr>
-                        ))
+                        )})
                     )}
                 </tbody>
             </table>

@@ -164,7 +164,7 @@ export default function ProfileDropdown() {
           {/* Opciones del menú - diferentes según la sección */}
           {!isAdminPanel && (
             <>
-              <a href="/Perfil" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <a href="/Colegiado/Perfil" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                 <Person className="cursor-pointer mr-2 text-[#41023B]" fontSize="small" />
                 Mi Perfil
               </a>
