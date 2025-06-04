@@ -98,7 +98,10 @@ export default function SeleccionarSolicitudesStep({
   // Efecto para manejar el tipo de solicitud preseleccionado
   useEffect(() => {
     // Verificar que tipos_solicitud existe y no está vacío
-    if (!tipos_solicitud || Object.keys(tipos_solicitud).length === 0) return;
+    if (!tipos_solicitud || Object.keys(tipos_solicitud).length === 0) {
+      console.log("tipos_solicitud no está disponible aún");
+      return;
+    }
 
     if (tipoSolicitudPreseleccionado) {
       // Convertir a formato correcto (primera letra mayúscula, resto minúsculas)
@@ -129,16 +132,29 @@ export default function SeleccionarSolicitudesStep({
           const tipoInfo = tipos_solicitud[tipoFormateado];
           console.log("Agregando al carrito tipo preseleccionado:", tipoFormateado, tipoInfo);
           
-          // Verificamos que tipoInfo y sus propiedades existan antes de usarlas
-          if (tipoInfo && tipoInfo.codigo && tipoInfo.nombre && tipoInfo.costo) {
+          // Verificación más robusta de tipoInfo
+          if (!tipoInfo || typeof tipoInfo !== 'object') {
+            console.error("TipoInfo no es un objeto válido:", tipoInfo);
+            return;
+          }
+
+          // Verificar propiedades requeridas con valores por defecto
+          const codigo = tipoInfo.codigo || `${tipoFormateado.toUpperCase()}`;
+          const nombre = tipoInfo.nombre || tipoFormateado;
+          const costo = tipoInfo.costo || { monto: 0 };
+          
+          // Verificar que el costo tenga la estructura correcta
+          const costoValido = typeof costo === 'object' && costo !== null ? costo : { monto: 0 };
+          
+          if (codigo && nombre) {
             const nuevoItem = {
-              id: `${tipoInfo.codigo}-${Date.now()}`,
+              id: `${codigo}-${Date.now()}`,
               tipo: tipoFormateado,
               subtipo: null,
-              nombre: tipoInfo.nombre,
-              costo: tipoInfo.costo,
+              nombre: nombre,
+              costo: costoValido,
               exonerado: false,
-              codigo: tipoInfo.codigo,
+              codigo: codigo,
               documentosRequeridos: tipoInfo.documentosRequeridos ?
                 tipoInfo.documentosRequeridos.map(doc => doc.displayName || doc) : []
             };
@@ -146,7 +162,12 @@ export default function SeleccionarSolicitudesStep({
             setItemsCarrito([nuevoItem]);
             actualizarTotal([nuevoItem]);
           } else {
-            console.error("TipoInfo incompleto:", tipoInfo);
+            console.error("TipoInfo incompleto - faltan propiedades esenciales:", {
+              tipoInfo,
+              codigo,
+              nombre,
+              costo: costoValido
+            });
           }
         }
       } else {
@@ -194,11 +215,25 @@ export default function SeleccionarSolicitudesStep({
     }
 
     const nuevoTotal = items.reduce((sum, item) => {
-      // Verificar que item.costo y item.costo.monto existen
-      if (!item || !item.costo || typeof item.costo.monto === 'undefined') {
+      // Verificar que item existe y tiene la estructura mínima
+      if (!item || typeof item !== 'object') {
+        console.warn("Item inválido en carrito:", item);
         return sum;
       }
-      return sum + (item.exonerado ? 0 : item.costo.monto);
+
+      // Verificar que item.costo existe y tiene monto
+      if (!item.costo || typeof item.costo !== 'object') {
+        console.warn("Item sin costo válido:", item);
+        return sum;
+      }
+
+      const monto = item.costo.monto;
+      if (typeof monto !== 'number' || isNaN(monto)) {
+        console.warn("Monto inválido en item:", item);
+        return sum;
+      }
+
+      return sum + (item.exonerado ? 0 : monto);
     }, 0);
 
     setTotalCarrito(nuevoTotal);
@@ -271,7 +306,10 @@ export default function SeleccionarSolicitudesStep({
   // Manejar selección de tipos
   const handleSeleccionTipo = (tipo) => {
     // Verificar que tipos_solicitud existe y contiene el tipo
-    if (!tipos_solicitud || !tipos_solicitud[tipo]) return;
+    if (!tipos_solicitud || !tipos_solicitud[tipo]) {
+      console.error("tipos_solicitud no disponible o tipo no encontrado:", tipo);
+      return;
+    }
 
     // Ignorar si es Solvencia
     if (tipo === "Solvencia") {
@@ -307,17 +345,29 @@ export default function SeleccionarSolicitudesStep({
         setTiposSeleccionados([...tiposSeleccionados, tipo])
         // Y agregamos automáticamente al carrito
         const tipoInfo = tipos_solicitud[tipo]
-        // Verificar que tipoInfo y sus propiedades existen
-        if (!tipoInfo) return;
+        
+        // Verificación más robusta de tipoInfo
+        if (!tipoInfo || typeof tipoInfo !== 'object') {
+          console.error("TipoInfo no es un objeto válido en handleSeleccionTipo:", tipoInfo);
+          return;
+        }
+
+        // Verificar propiedades requeridas con valores por defecto
+        const codigo = tipoInfo.codigo || tipo.toUpperCase();
+        const nombre = tipoInfo.nombre || tipo;
+        const costo = tipoInfo.costo || { monto: 0 };
+        
+        // Verificar que el costo tenga la estructura correcta
+        const costoValido = typeof costo === 'object' && costo !== null ? costo : { monto: 0 };
 
         const nuevoItem = {
-          id: `${tipoInfo.codigo}`,
+          id: `${codigo}`,
           tipo: tipo,
           subtipo: null,
-          nombre: tipoInfo.nombre || "",
-          costo: tipoInfo.costo || { monto: 0 },
+          nombre: nombre,
+          costo: costoValido,
           exonerado: false,
-          codigo: tipoInfo.codigo || "",
+          codigo: codigo,
           documentosRequeridos: tipoInfo.documentosRequeridos ? [...tipoInfo.documentosRequeridos] : [],
         }
         // Actualizar carrito
