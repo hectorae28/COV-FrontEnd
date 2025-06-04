@@ -143,7 +143,8 @@ export default function DetalleInfo({
         id,
         type: docs ? "multipart/form-data" : "application/json",
         hasFiles: docs,
-        dataKeys: docs ? "FormData object" : Object.keys(datosActualizados)
+        dataKeys: docs ? "FormData object" : Object.keys(datosActualizados),
+        data: datosActualizados
       });
 
       // Si son datos con archivos, no intentar copiar
@@ -183,7 +184,7 @@ export default function DetalleInfo({
           response = await updateColegiadoPendienteWithToken(id, dataToSend, docs);
         }
       } else {
-        response = await updateColegiado(id, dataToSend, docs);
+        response = await updateColegiado(entityData?.recaudos?.id, dataToSend, docs);
       }
 
       // Log del response para verificar si se guardó correctamente
