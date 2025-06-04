@@ -90,6 +90,7 @@ const useSolvenciaData = (solvenciaData) => {
 
     try {
       return pagos.map(pago => {
+        console.log({pago})
         const montoUSD = pago.moneda === 'bs'
           ? parseFloat(pago.monto) / parseFloat(pago.tasa_bcv_del_dia || 1)
           : parseFloat(pago.monto || 0);
@@ -104,7 +105,7 @@ const useSolvenciaData = (solvenciaData) => {
           fechaFormateada: fechaDisponible
             ? formatearFecha(fechaDisponible)
             : "Fecha no disponible",
-          metodoPagoNombre: obtenerNombreMetodoPago(pago.metodo_de_pago),
+          metodoPagoNombre: pago.metodo_de_pago_nombre,
           estadoInfo: ESTADOS_PAGO[pago.status] || {
             color: 'bg-gray-100 text-gray-800 border-gray-200',
             icon: FileText,

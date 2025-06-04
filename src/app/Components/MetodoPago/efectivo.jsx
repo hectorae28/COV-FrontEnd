@@ -12,11 +12,8 @@ export default function CashPaymentSection({
   onCashPaymentSubmit,
   onContinue,
 }) {
-  const [amount, setAmount] = useState(paymentAmount)
+  const [amount, setAmount] = useState(paymentAmount || "")
   const [currencyMode, setCurrencyMode] = useState("USD")
-  const [receivedBy, setReceivedBy] = useState("")
-  const [notes, setNotes] = useState("")
-  const [receiptNumber, setReceiptNumber] = useState("")
   const [paymentRegistered, setPaymentRegistered] = useState(false)
 
   // Calcular el monto en la otra moneda
@@ -78,9 +75,9 @@ export default function CashPaymentSection({
     const paymentData = {
       amountUSD,
       amountBs,
-      receivedBy,
-      notes,
-      receiptNumber,
+      receivedBy: "",
+      notes: "",
+      receiptNumber: "",
       currencyMode,
     }
     onContinue(paymentData)
@@ -112,15 +109,9 @@ export default function CashPaymentSection({
             amount={amount}
             currencyMode={currencyMode}
             convertedAmount={getConvertedAmount()}
-            receivedBy={receivedBy}
-            notes={notes}
-            receiptNumber={receiptNumber}
             tasaBCV={tasaBCV}
             onAmountChange={handleAmountChange}
             onCurrencyToggle={handleCurrencyToggle}
-            setReceivedBy={setReceivedBy}
-            setNotes={setNotes}
-            setReceiptNumber={setReceiptNumber}
             onRegisterPayment={handleRegisterPayment}
             isFormValid={isFormValid}
           />
@@ -128,9 +119,9 @@ export default function CashPaymentSection({
           <PaymentRegisteredConfirmation
             amountUSD={currencyMode === "USD" ? amount : getConvertedAmount()}
             amountBs={currencyMode === "BS" ? amount : getConvertedAmount()}
-            receivedBy={receivedBy}
-            receiptNumber={receiptNumber}
-            notes={notes}
+            receivedBy=""
+            receiptNumber=""
+            notes=""
             currencyMode={currencyMode}
             onEdit={() => setPaymentRegistered(false)}
             onContinue={handleContinue}
@@ -145,15 +136,9 @@ function CashPaymentForm({
   amount,
   currencyMode,
   convertedAmount,
-  receivedBy,
-  notes,
-  receiptNumber,
   tasaBCV,
   onAmountChange,
   onCurrencyToggle,
-  setReceivedBy,
-  setNotes,
-  setReceiptNumber,
   onRegisterPayment,
   isFormValid,
 }) {

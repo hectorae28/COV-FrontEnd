@@ -9,7 +9,8 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados, p
     totalExonerado, 
     totalPendiente, 
     totalPagado, 
-    todoExonerado 
+    todoExonerado,
+    totalEnRevision
   } = totales
   const { getSolicitudById } = useSolicitudesStore()
   const handleEliminarServicio = async (item) => {
@@ -84,12 +85,12 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados, p
           
           {totalPendiente > 0 && (
             <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-gray-600">Pendiente:</span>
-              <span className="font-medium text-orange-600">${totalPendiente.toFixed(2)}</span>
+              <span className="text-sm text-gray-600">En revisión:</span>
+              <span className="font-medium text-orange-600">${totalEnRevision.toFixed(2)}</span>
             </div>
           )}
           <div className="flex justify-between items-center font-bold mt-2 pt-2 border-t border-gray-200">
-            <span>Total a pagar:</span>
+            <span>Total Pendiente:</span>
             <span className="text-[#C40180]">${totalPendiente.toFixed(2)}</span>
           </div>
           

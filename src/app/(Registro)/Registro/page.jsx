@@ -260,7 +260,7 @@ export default function RegistrationForm({
           `?search=Inscripcion+${formData.tipo_profesion}&es_vigente=true`,
         )
         setCostoInscripcion(Number(costo.data[0].monto_usd))
-        const Mpagos = await fetchDataSolicitudes("metodo-de-pago")
+        const Mpagos = await fetchDataSolicitudes("metodo-de-pago", `?es_visible_colegiado=${!isAdmin}`)
         setMetodoPago(Mpagos.data)
       } catch (error) {
         setError("Ocurrió un error al cargar los datos, verifique su conexión a internet")
@@ -669,19 +669,21 @@ export default function RegistrationForm({
     totalAmount = null,
     metodo_de_pago = null,
   }) => {
+    console.log({ metodo_de_pago })
     const PaymentForm = new FormData()
     if (!pagarLuego && !exonerarPagos) {
       PaymentForm.append(
         "pago",
         JSON.stringify({
-          fecha_pago: paymentDate,
+          fecha_pago: paymentDate || new Date().toISOString().split('T')[0],
           metodo_de_pago: metodo_de_pago.id,
           num_referencia: referenceNumber,
           monto: totalAmount,
+          moneda: metodo_de_pago.moneda,
         }),
       )
       PaymentForm.append("comprobante", paymentFile)
-      setIsSubmitting(true)
+      //setIsSubmitting(true)
     }
     try {
       let res
@@ -1065,6 +1067,8 @@ export default function RegistrationForm({
                               costo: costoInscripcion,
                               allowMultiplePayments: false,
                               handlePago: handlePago,
+                              isAdmin: isAdmin,
+                              paymentInfo:{montoPago: costoInscripcion}
                             }}
                             />
                           </>
