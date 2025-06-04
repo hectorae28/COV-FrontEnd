@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Check, Copy, CreditCard, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import PaymentLinkSection from "./MetodoPago/pagoLink.jsx";
+import CashPaymentSection from "./MetodoPago/efectivo.jsx";
 
 export default function PagosColg({ props }) {
   const { costo, allowMultiplePayments, handlePago, paymentInfo=null, isAdmin } =
@@ -252,7 +253,8 @@ export default function PagosColg({ props }) {
     setPaymentMethod({
       nombre: metodo.datos_adicionales.slug,
       metodoId: metodo.id,
-      id: metodo.id // Agregar el id para comparaciones
+      id: metodo.id, // Agregar el id para comparaciones
+      moneda:metodo.moneda
     });
     setShowMethodSelection(false);
   };
@@ -304,7 +306,6 @@ export default function PagosColg({ props }) {
   //     tasa_bcv_del_dia: tasaBCV,
   //   });
   // };
-
   return (
     <div id="pagos-modal" className="w-full">
       {!pagarLuego && (
@@ -798,6 +799,13 @@ export default function PagosColg({ props }) {
                     }}
                   />
                 </>
+              ) : paymentMethod.nombre === "efectivo" && paymentInfo ? (
+                <CashPaymentSection
+                  paymentAmount={paymentInfo.montoPago}
+                  tasaBCV={tasaBCV}
+                  onCashPaymentSubmit={(paymentData) => handlePago({...paymentData, metodo_de_pago: {id:paymentMethod.id, moneda:paymentData.moneda}, referenceNumber: null, comprobante: null})}
+                  onContinue={(paymentData) => handlePago({...paymentData, metodo_de_pago: {id:paymentMethod.id, moneda:paymentData.moneda} , referenceNumber: null, comprobante: null})}
+                />
               ) : (
                 <div className="space-y-6">
                   {/* PayPal information */}
