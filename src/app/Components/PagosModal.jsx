@@ -4,8 +4,8 @@ import PaypalPaymentComponent from "@/utils/PaypalPaymentComponent.jsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Check, Copy, CreditCard, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
-import PaymentLinkSection from "./MetodoPago/pagoLink.jsx";
 import CashPaymentSection from "./MetodoPago/efectivo.jsx";
+import PaymentLinkSection from "./MetodoPago/pagoLink.jsx";
 
 export default function PagosColg({ props }) {
   const { costo, allowMultiplePayments, handlePago, paymentInfo=null, isAdmin } =
@@ -34,6 +34,10 @@ export default function PagosColg({ props }) {
   const [montoEnBs, setMontoEnBs] = useState("0.00");
   const [showMethodSelection, setShowMethodSelection] = useState(false);
   const [pagarLuego, setPagarLuego] = useState(false);
+  
+  // Estados para manejar errores
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showError, setShowError] = useState(false);
 
   // Estados para copiar
   const [copiedAccount, setCopiedAccount] = useState(false);
@@ -262,25 +266,76 @@ export default function PagosColg({ props }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setShowError(false);
+    setErrorMessage("");
 
-    // Construir fecha completa si todos los campos están llenos
-    let fullDate = "";
-    if (paymentDate.year && paymentDate.month && paymentDate.day) {
-      fullDate = `${paymentDate.year}-${paymentDate.month}-${paymentDate.day}`;
+    try {
+      // Construir fecha completa si todos los campos están llenos
+      let fullDate = "";
+      if (paymentDate.year && paymentDate.month && paymentDate.day) {
+        fullDate = `${paymentDate.year}-${paymentDate.month}-${paymentDate.day}`;
+      }
+
+      const paymentData = {
+        paymentDate: fullDate,
+        referenceNumber,
+        paymentFile,
+        totalAmount: metodoDePago.find(m => m.id === paymentMethod.id)?.datos_adicionales?.slug === "bdv" ? montoEnBs : paypalAmount,
+        metodo_de_pago: metodoDePago.find(
+          (m) => m.id === paymentMethod.id
+        ),
+        tasa_bcv_del_dia: tasaBCV,
+      };
+
+      const result = await handlePago(paymentData);
+      
+      // Si handlePago devuelve un array [error, result], verificar si hay error
+      if (Array.isArray(result) && result[0]) {
+        throw result[0];
+      }
+      
+    } catch (error) {
+      console.error("Error en handleSubmit:", error);
+      
+      let mensajeError = "Ha ocurrido un error al procesar el pago";
+      
+      // Manejar el formato específico del backend: {"error": str(e), "message": "mensaje"}
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Si viene en el formato esperado con "message"
+        if (errorData.message) {
+          mensajeError = errorData.message;
+        }
+        // Si viene solo con "error"
+        else if (errorData.error) {
+          mensajeError = errorData.error;
+        }
+        // Si viene con "detail" (otro formato común)
+        else if (errorData.detail) {
+          mensajeError = errorData.detail;
+        }
+        // Si es un string directamente
+        else if (typeof errorData === 'string') {
+          mensajeError = errorData;
+        }
+      }
+      // Si el error tiene un mensaje directo
+      else if (error.message) {
+        mensajeError = error.message;
+      }
+      
+      setErrorMessage(mensajeError);
+      setShowError(true);
+      
+      // Auto-ocultar el error después de 8 segundos
+      setTimeout(() => {
+        setShowError(false);
+        setErrorMessage("");
+      }, 8000);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    handlePago({
-      paymentDate: fullDate,
-      referenceNumber,
-      paymentFile,
-      totalAmount: metodoDePago.find(m => m.id === paymentMethod.id)?.datos_adicionales?.slug === "bdv" ? montoEnBs : paypalAmount,
-      metodo_de_pago: metodoDePago.find(
-        (m) => m.id === paymentMethod.id
-      ),
-      tasa_bcv_del_dia: tasaBCV,
-    });
-
-    setIsSubmitting(false);
   };
 
   const handleFileChange = (e) => {
@@ -329,6 +384,34 @@ export default function PagosColg({ props }) {
               </p>
             </div>
           </div>
+
+          {/* Mensaje de error */}
+          {showError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-5 h-5 text-red-500 mr-2">
+                  <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-red-800">Error en el pago</h3>
+                  <p className="text-sm text-red-700 mt-1">{errorMessage}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowError(false);
+                    setErrorMessage("");
+                  }}
+                  className="text-red-400 hover:text-red-600 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Monto a pagar destacado */}
           <div className="text-center mb-8">
