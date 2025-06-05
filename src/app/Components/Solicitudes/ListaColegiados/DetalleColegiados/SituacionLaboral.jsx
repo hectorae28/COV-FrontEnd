@@ -143,7 +143,7 @@ export default function SituacionLaboral({
       updateData(pendienteId, { instituciones: [] });
     } else {
       // 🔄 NUEVO FORMATO: Enviar en el mismo formato que el registro
-      const institucionesForBackend = dataToUpdate.laboralRegistros.map((registro) => ({
+      const institucionesForBackend = dataToUpdate.laboralRegistros.map((registro, index) => ({
         nombre: registro.institutionName,
         cargo: registro.cargo,
         direccion: {
@@ -157,7 +157,10 @@ export default function SituacionLaboral({
         //id: registro?.id,
         verificado: registro.verification_status,
         motivo_rechazo: registro.rejection_reason || '',
-        constancia_trabajo: registro.constancia_trabajo || null,
+        // Si es un archivo nuevo, enviar nombre de campo, si es URL string mantenerla, si es null mantener null
+        constancia_trabajo: registro.constancia_trabajo && typeof registro.constancia_trabajo !== 'string' 
+          ? `constancia_trabajo_${index}` 
+          : registro.constancia_trabajo || null,
         estado_laboral: registro.estado_laboral || "actual"
       }));
 
@@ -208,7 +211,7 @@ export default function SituacionLaboral({
         // Agregar instituciones como JSON
         formData.append('instituciones', JSON.stringify(institucionesForBackend));
         
-        // Agregar constancias de trabajo
+        // Agregar constancias de trabajo con nombres únicos que coincidan con la referencia en el JSON
         dataToUpdate.laboralRegistros.forEach((registro, index) => {
           if (registro.constancia_trabajo && typeof registro.constancia_trabajo !== 'string') {
             formData.append(`constancia_trabajo_${index}`, registro.constancia_trabajo);
@@ -216,7 +219,7 @@ export default function SituacionLaboral({
           }
         });
 
-        console.log("📤 Enviando con archivos (FormData)");
+        console.log("📤 Enviando con archivos (FormData)", formData);
         updateData(pendienteId, formData, true); // true indica que contiene archivos
       } else {
         console.log("📤 Enviando solo JSON (sin archivos nuevos)");

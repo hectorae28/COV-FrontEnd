@@ -118,6 +118,7 @@ export default function DetalleInfo({
     updateColegiadoPendienteWithToken,
     getDocumentos,
     approveRegistration,
+    marcarTituloEntregado,
   } = useDataListaColegiados();
 
   // HANDLERS para recibir estados de componentes especializados
@@ -139,14 +140,6 @@ export default function DetalleInfo({
   // Función unificada para actualizar datos
   const updateData = async (id, datosActualizados, docs = false) => {
     try {
-      console.log("📤 UpdateData - Enviando:", {
-        id,
-        type: docs ? "multipart/form-data" : "application/json",
-        hasFiles: docs,
-        dataKeys: docs ? "FormData object" : Object.keys(datosActualizados),
-        data: datosActualizados
-      });
-
       // Si son datos con archivos, no intentar copiar
       const dataToSend = docs ? datosActualizados : JSON.parse(JSON.stringify(datosActualizados));
 
@@ -186,27 +179,6 @@ export default function DetalleInfo({
       } else {
         response = await updateColegiado(entityData?.recaudos?.id, dataToSend, docs);
       }
-
-      // Log del response para verificar si se guardó correctamente
-      console.log("✅ UpdateData Response:", {
-        success: true,
-        responseData: response?.data || response,
-        // Buscar instituciones en diferentes ubicaciones (corregido)
-        instituciones_root: (response?.data || response)?.instituciones || "No encontradas en raíz",
-        instituciones_recaudos: (response?.data || response)?.recaudos?.instituciones || "No encontradas en recaudos",
-        // Mostrar todas las claves del response para debug (corregido)
-        responseKeys: (response?.data || response) ? Object.keys(response?.data || response) : "Sin data",
-        recaudosKeys: (response?.data || response)?.recaudos ? Object.keys((response?.data || response).recaudos) : "Sin recaudos",
-        // Conteo de instituciones en cada ubicación (corregido)
-        cantidadInstituciones_root: Array.isArray((response?.data || response)?.instituciones) 
-          ? (response?.data || response).instituciones.length 
-          : "No es array o no existe en raíz",
-        cantidadInstituciones_recaudos: Array.isArray((response?.data || response)?.recaudos?.instituciones) 
-          ? (response?.data || response).recaudos.instituciones.length 
-          : "No es array o no existe en recaudos",
-        // Log completo del response para análisis (corregido)
-        fullResponse: response?.data || response
-      });
 
       setCambiosPendientes(false);
       return response;
@@ -771,6 +743,7 @@ export default function DetalleInfo({
 
   const handleConfirmTitleDelivery = async () => {
     try {
+      marcarTituloEntregado(entityId);
       // Implementar lógica para confirmar entrega de título
       setShowTitleConfirmationModal(false);
     } catch (error) {

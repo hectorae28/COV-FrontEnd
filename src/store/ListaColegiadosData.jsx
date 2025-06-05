@@ -199,12 +199,6 @@ const useDataListaColegiados = create((set, get) => ({
 
   // Funciones para actualizar entidades
   updateColegiado: async (id, updatedData, docs = false) => {
-    console.log("🏪 Store updateColegiado - Entrada:", {
-      id,
-      hasFiles: docs,
-      dataType: docs ? "FormData" : "JSON",
-      dataContent: docs ? "FormData object" : updatedData
-    });
 
     set((state) => ({
       colegiados: state.colegiados.map((colegiado) =>
@@ -219,37 +213,10 @@ const useDataListaColegiados = create((set, get) => ({
       docs
     );
 
-    console.log("🏪 Store updateColegiado - Response:", {
-      status: res?.status,
-      responseData: res?.data,
-      // Buscar instituciones en diferentes ubicaciones
-      instituciones_root: res?.data?.instituciones || "No encontradas en raíz",
-      instituciones_recaudos: res?.data?.recaudos?.instituciones || "No encontradas en recaudos", 
-      // Mostrar claves disponibles
-      responseKeys: res?.data ? Object.keys(res.data) : "Sin data",
-      recaudosKeys: res?.data?.recaudos ? Object.keys(res.data.recaudos) : "Sin recaudos",
-      // Conteo de instituciones
-      cantidadInstituciones_root: Array.isArray(res?.data?.instituciones) 
-        ? res.data.instituciones.length 
-        : "No es array o no existe en raíz",
-      cantidadInstituciones_recaudos: Array.isArray(res?.data?.recaudos?.instituciones) 
-        ? res.data.recaudos.instituciones.length 
-        : "No es array o no existe en recaudos",
-      // Response completo para análisis
-      fullResponse: res?.data
-    });
-
     return res.data;
   },
 
   updateColegiadoPendiente: async (id, updatedData, docs) => {
-    console.log("🏪 Store updateColegiadoPendiente - Entrada:", {
-      id,
-      hasFiles: docs,
-      dataType: docs ? "FormData" : "JSON",
-      dataContent: docs ? "FormData object" : updatedData
-    });
-
     set((state) => ({
       colegiadosPendientes: state.colegiadosPendientes.map((pendiente) =>
         pendiente.id === id ? { ...pendiente, ...updatedData } : pendiente
@@ -262,37 +229,10 @@ const useDataListaColegiados = create((set, get) => ({
       docs
     );
 
-    console.log("🏪 Store updateColegiadoPendiente - Response:", {
-      status: res?.status,
-      responseData: res?.data,
-      // Buscar instituciones en diferentes ubicaciones (corregido para usar res)
-      instituciones_root: res?.data?.instituciones || "No encontradas en raíz",
-      instituciones_recaudos: res?.data?.recaudos?.instituciones || "No encontradas en recaudos", 
-      // Mostrar claves disponibles (corregido)
-      responseKeys: res?.data ? Object.keys(res.data) : "Sin data",
-      recaudosKeys: res?.data?.recaudos ? Object.keys(res.data.recaudos) : "Sin recaudos",
-      // Conteo de instituciones (corregido)
-      cantidadInstituciones_root: Array.isArray(res?.data?.instituciones) 
-        ? res.data.instituciones.length 
-        : "No es array o no existe en raíz",
-      cantidadInstituciones_recaudos: Array.isArray(res?.data?.recaudos?.instituciones) 
-        ? res.data.recaudos.instituciones.length 
-        : "No es array o no existe en recaudos",
-      // Response completo para análisis (corregido)
-      fullResponse: res?.data
-    });
-
     return res.data;
   },
 
   updateColegiadoPendienteWithToken: async (id, updatedData, docs) => {
-    console.log("🏪 Store updateColegiadoPendienteWithToken - Entrada:", {
-      id,
-      hasFiles: docs,
-      dataType: docs ? "FormData" : "JSON",
-      dataContent: docs ? "FormData object" : updatedData
-    });
-
     if (docs) {
       const formData = new FormData();
       formData.append("token", id);
@@ -302,27 +242,6 @@ const useDataListaColegiados = create((set, get) => ({
         formData.append(item[0], item[1]);
       }
       const res = await patchDataUsuario("recaudos-token", formData, true);
-      
-      console.log("🏪 Store updateColegiadoPendienteWithToken (con archivos) - Response:", {
-        status: res?.status,
-        responseData: res?.data,
-        // Buscar instituciones en diferentes ubicaciones (corregido)
-        instituciones_root: res?.data?.instituciones || "No encontradas en raíz",
-        instituciones_recaudos: res?.data?.recaudos?.instituciones || "No encontradas en recaudos",
-        // Mostrar claves disponibles (corregido)
-        responseKeys: res?.data ? Object.keys(res.data) : "Sin data",
-        recaudosKeys: res?.data?.recaudos ? Object.keys(res.data.recaudos) : "Sin recaudos",
-        // Conteo de instituciones (corregido)
-        cantidadInstituciones_root: Array.isArray(res?.data?.instituciones) 
-          ? res.data.instituciones.length 
-          : "No es array o no existe en raíz",
-        cantidadInstituciones_recaudos: Array.isArray(res?.data?.recaudos?.instituciones) 
-          ? res.data.recaudos.instituciones.length 
-          : "No es array o no existe en recaudos",
-        // Response completo para análisis (corregido)
-        fullResponse: res?.data
-      });
-      
       return res.data;
     }
     
@@ -331,26 +250,6 @@ const useDataListaColegiados = create((set, get) => ({
       { token: id, data: updatedData },
       docs && docs
     );
-    
-    console.log("🏪 Store updateColegiadoPendienteWithToken (sin archivos) - Response:", {
-      status: res?.status,
-      responseData: res?.data,
-      // Buscar instituciones en diferentes ubicaciones (corregido)
-      instituciones_root: res?.data?.instituciones || "No encontradas en raíz",
-      instituciones_recaudos: res?.data?.recaudos?.instituciones || "No encontradas en recaudos",
-      // Mostrar claves disponibles (corregido)
-      responseKeys: res?.data ? Object.keys(res.data) : "Sin data", 
-      recaudosKeys: res?.data?.recaudos ? Object.keys(res.data.recaudos) : "Sin recaudos",
-      // Conteo de instituciones (corregido)
-      cantidadInstituciones_root: Array.isArray(res?.data?.instituciones) 
-        ? res.data.instituciones.length 
-        : "No es array o no existe en raíz",
-      cantidadInstituciones_recaudos: Array.isArray(res?.data?.recaudos?.instituciones) 
-        ? res.data.recaudos.instituciones.length 
-        : "No es array o no existe en recaudos",
-      // Response completo para análisis (corregido)
-      fullResponse: res?.data
-    });
 
     return res.data;
   },
