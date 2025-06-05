@@ -379,6 +379,8 @@ export default function ListaColegiadosPage() {
     anulados: recaudosAnuladosPagination,
     registrados: colegiadosPagination
   };
+  console.log({colegiadosPendientes})
+
 
   const pendientesFilter = useMemo(() => {
     return TypoPendiente[tabActivo] || [];

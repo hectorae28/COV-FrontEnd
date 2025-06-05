@@ -214,7 +214,7 @@ const useDataListaColegiados = create((set, get) => ({
 
     // Enviar datos al backend - usando endpoint para colegiados registrados
     const res = await patchDataUsuario(
-      `recaudos/${id}`, // Cambiar a endpoint de recaudos-token que maneja instituciones
+      `register/${id}`, // Cambiar a endpoint de recaudos-token que maneja instituciones
       updatedData, // Formato con token y data
       docs
     );

@@ -58,6 +58,7 @@ export function DocumentSection({
       "file_rif",
       "file_fondo_negro",
       "file_mpps",
+      "file_foto_carnet_recaudos"
     ];
 
     const documentosAdicionales = [
@@ -172,6 +173,11 @@ export function DocumentSection({
         nombre: "Título bachiller fondo negro",
         descripcion: "Título de bachiller con fondo negro",
         requerido: (tipo) => tipo !== "odontologo"
+      },
+      file_foto_carnet_recaudos: {
+        nombre: "Foto tipo carnet",
+        descripcion: "Foto del carnet de Colegiado",
+        requerido: true
       }
     };
 
@@ -188,8 +194,8 @@ export function DocumentSection({
 
     const tipoProfesion = data.tipo_profesion || 'odontologo';
     const documentosParaMostrar = tipoProfesion === 'odontologo'
-      ? ['file_ci', 'file_rif', 'file_fondo_negro', 'file_mpps']
-      : ['file_ci', 'file_rif', 'file_fondo_negro', 'file_mpps', 'fondo_negro_credencial', 'notas_curso', 'fondo_negro_titulo_bachiller'];
+      ? ['file_ci', 'file_rif', 'file_fondo_negro', 'file_mpps', 'file_foto_carnet_recaudos']
+      : ['file_ci', 'file_rif', 'file_fondo_negro', 'file_mpps', 'file_foto_carnet_recaudos', 'fondo_negro_credencial', 'notas_curso', 'fondo_negro_titulo_bachiller'];
 
     const todosLosDocumentos = [
       {
@@ -268,6 +274,17 @@ export function DocumentSection({
         status: getFieldValue('fondo_negro_titulo_bachiller_validate') === null ? 'pending' : getFieldValue('fondo_negro_titulo_bachiller_validate') ? 'approved' : 'rechazado',
         isReadOnly: data.fondo_negro_titulo_bachiller_status === 'approved' && data.status === 'rechazado',
         rejectionReason: getFieldValue('fondo_negro_titulo_bachiller_motivo_rechazo', '')
+      },
+      {
+        id: "file_foto_carnet_recaudos",
+        nombre: documentosMetadata.file_foto_carnet_recaudos.nombre,
+        descripcion: documentosMetadata.file_foto_carnet_recaudos.descripcion,
+        archivo: obtenerNombreArchivo(getFieldValue('file_foto_carnet_recaudos_url')),
+        requerido: documentosMetadata.file_foto_carnet_recaudos.requerido,
+        url: getFieldValue('file_foto_carnet_recaudos_url'),
+        status: getFieldValue('file_foto_carnet_recaudos_validate') === null ? 'pending' : getFieldValue('file_foto_carnet_recaudos_validate') ? 'approved' : 'rechazado',
+        isReadOnly: data.file_foto_carnet_recaudos_status === 'approved' && data.status === 'rechazado',
+        rejectionReason: getFieldValue('file_foto_carnet_recaudos_motivo_rechazo', '')
       }
     ];
 
