@@ -1,7 +1,6 @@
 "use client"
 
 import api from "@/api/api"
-import { postDataSolicitud } from "@/api/endpoints/solicitud"
 import { motion } from "framer-motion"
 import { Check } from "lucide-react"
 import { useState } from "react"
@@ -17,14 +16,14 @@ export default function PaymentLinkSection({
 
   const handleSendPaymentLink = async () => {
     if (paymentLinkEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paymentLinkEmail)) {
-        onPaymentLinkSubmit(paymentLinkEmail)
-        const response = await api.post("solicitudes/pagos-token/",{
-            "generic_id": paymentInfo.id,
-            "type_id": paymentInfo.type_id,
-            "email": paymentLinkEmail
-        });
-        setLinkGenerated(`${process.env.NEXT_PUBLIC_REDIRECT}Pago/${response.data.token}`)
-        setPaymentLinkSent(true)
+      onPaymentLinkSubmit(paymentLinkEmail)
+      const response = await api.post("solicitudes/pagos-token/", {
+        "generic_id": paymentInfo.id,
+        "type_id": paymentInfo.type_id,
+        "email": paymentLinkEmail
+      });
+      setLinkGenerated(`${process.env.NEXT_PUBLIC_REDIRECT}Pago/${response.data.token}`)
+      setPaymentLinkSent(true)
     }
   }
 
@@ -86,7 +85,7 @@ function EmailInputForm({
 }) {
   const [showValidation, setShowValidation] = useState(false)
   const [hasTyped, setHasTyped] = useState(false)
-  
+
   const isValidEmail = paymentLinkEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paymentLinkEmail)
   const shouldShowError = hasTyped && paymentLinkEmail && !isValidEmail
   const isEmpty = hasTyped && !paymentLinkEmail
@@ -94,7 +93,7 @@ function EmailInputForm({
   const handleEmailChange = (e) => {
     const value = e.target.value
     setPaymentLinkEmail(value)
-    
+
     if (!hasTyped && value) {
       setHasTyped(true)
     }
@@ -114,16 +113,15 @@ function EmailInputForm({
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg 
-              className={`h-5 w-5 transition-colors ${
-                shouldShowError || isEmpty 
-                  ? 'text-red-400' 
-                  : isValidEmail && hasTyped 
-                    ? 'text-green-400' 
+            <svg
+              className={`h-5 w-5 transition-colors ${shouldShowError || isEmpty
+                  ? 'text-red-400'
+                  : isValidEmail && hasTyped
+                    ? 'text-green-400'
                     : 'text-gray-400'
-              }`} 
-              fill="none" 
-              stroke="currentColor" 
+                }`}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path
@@ -134,7 +132,7 @@ function EmailInputForm({
               />
             </svg>
           </div>
-          
+
           {/* Icono de validación */}
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             {hasTyped && paymentLinkEmail && (
@@ -157,13 +155,12 @@ function EmailInputForm({
             value={paymentLinkEmail}
             onChange={handleEmailChange}
             onBlur={handleEmailBlur}
-            className={`block w-full pl-10 pr-10 py-3 border rounded-lg text-sm transition-colors focus:ring-2 focus:ring-offset-2 ${
-              shouldShowError || isEmpty
+            className={`block w-full pl-10 pr-10 py-3 border rounded-lg text-sm transition-colors focus:ring-2 focus:ring-offset-2 ${shouldShowError || isEmpty
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                 : isValidEmail && hasTyped
                   ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
                   : 'border-gray-300 focus:border-[#D7008A] focus:ring-[#D7008A]'
-            }`}
+              }`}
             placeholder="ejemplo@correo.com"
             required
           />
@@ -173,7 +170,7 @@ function EmailInputForm({
         {hasTyped && (
           <div className="mt-2 min-h-[20px]">
             {isEmpty && (
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-sm text-red-600 flex items-center"
@@ -184,9 +181,9 @@ function EmailInputForm({
                 El correo electrónico es obligatorio
               </motion.p>
             )}
-            
+
             {shouldShowError && (
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-sm text-red-600 flex items-center"
@@ -197,9 +194,9 @@ function EmailInputForm({
                 Por favor ingresa un correo electrónico válido
               </motion.p>
             )}
-            
+
             {isValidEmail && hasTyped && (
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-sm text-green-600 flex items-center"
@@ -219,11 +216,10 @@ function EmailInputForm({
       <motion.button
         type="button"
         onClick={onSendPaymentLink}
-        className={`w-full flex items-center justify-center px-6 py-3 rounded-xl text-base font-medium shadow-md transition-all duration-300 ${
-          isValidEmail
+        className={`w-full flex items-center justify-center px-6 py-3 rounded-xl text-base font-medium shadow-md transition-all duration-300 ${isValidEmail
             ? 'bg-gradient-to-r from-[#D7008A] to-[#41023B] text-white hover:shadow-lg hover:opacity-90'
             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-        }`}
+          }`}
         whileHover={isValidEmail ? { scale: 1.02 } : {}}
         whileTap={isValidEmail ? { scale: 0.98 } : {}}
         disabled={!isValidEmail}
@@ -313,7 +309,7 @@ function NextStepsAlert() {
   return (
     <div className="bg-green-50 p-4 rounded-lg border border-green-200">
       <div className="flex items-start justify-center">
-      <svg
+        <svg
           className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0"
           fill="none"
           stroke="currentColor"

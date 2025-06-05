@@ -385,6 +385,7 @@ export default function ListaSolvencias() {
         onVolver={volverALista}
         solvencias={solicitudesDeSolvencia}
         actualizarSolvencia={actualizarSolvencia}
+        isAdmin={true}
       />
     )
   }

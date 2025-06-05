@@ -1,9 +1,7 @@
 "use client"
 
-import React from "react"
-
 import { motion } from "framer-motion"
-import { Check, DollarSign } from "lucide-react"
+import { Check, DollarSign, FileText, Upload, X } from "lucide-react"
 import { useState } from "react"
 
 export default function CashPaymentSection({
@@ -15,6 +13,7 @@ export default function CashPaymentSection({
   const [amount, setAmount] = useState(paymentAmount || "")
   const [currencyMode, setCurrencyMode] = useState("USD")
   const [paymentRegistered, setPaymentRegistered] = useState(false)
+  const [receipt, setReceipt] = useState(null)
 
   // Calcular el monto en la otra moneda
   const getConvertedAmount = () => {
@@ -52,6 +51,30 @@ export default function CashPaymentSection({
     setCurrencyMode(newMode)
   }
 
+  const handleReceiptUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+      if (!allowedTypes.includes(file.type)) {
+        alert('Solo se permiten archivos JPG, PNG o PDF')
+        return
+      }
+
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('El archivo no puede ser mayor a 5MB')
+        return
+      }
+
+      setReceipt(file)
+    }
+  }
+
+  const handleRemoveReceipt = () => {
+    setReceipt(null)
+  }
+
   const handleRegisterPayment = () => {
     const amountUSD = currencyMode === "USD" ? amount : getConvertedAmount()
     const amountBs = currencyMode === "BS" ? amount : getConvertedAmount()
@@ -62,6 +85,7 @@ export default function CashPaymentSection({
       totalAmount: Number(currencyMode === "USD" ? amountUSD : amountBs),
       moneda: currencyMode === "USD" ? "usd" : "bs",
       tasa_bcv_del_dia: tasaBCV,
+      comprobante: receipt, // Agregar el comprobante
     }
 
     setPaymentRegistered(true)
@@ -79,11 +103,12 @@ export default function CashPaymentSection({
       notes: "",
       receiptNumber: "",
       currencyMode,
+      comprobante: receipt,
     }
     onContinue(paymentData)
   }
 
-  const isFormValid = amount
+  const isFormValid = amount && receipt
 
   return (
     <div className="space-y-6">
@@ -110,8 +135,11 @@ export default function CashPaymentSection({
             currencyMode={currencyMode}
             convertedAmount={getConvertedAmount()}
             tasaBCV={tasaBCV}
+            receipt={receipt}
             onAmountChange={handleAmountChange}
             onCurrencyToggle={handleCurrencyToggle}
+            onReceiptUpload={handleReceiptUpload}
+            onRemoveReceipt={handleRemoveReceipt}
             onRegisterPayment={handleRegisterPayment}
             isFormValid={isFormValid}
           />
@@ -123,6 +151,7 @@ export default function CashPaymentSection({
             receiptNumber=""
             notes=""
             currencyMode={currencyMode}
+            receipt={receipt}
             onEdit={() => setPaymentRegistered(false)}
             onContinue={handleContinue}
           />
@@ -137,8 +166,11 @@ function CashPaymentForm({
   currencyMode,
   convertedAmount,
   tasaBCV,
+  receipt,
   onAmountChange,
   onCurrencyToggle,
+  onReceiptUpload,
+  onRemoveReceipt,
   onRegisterPayment,
   isFormValid,
 }) {
@@ -165,14 +197,12 @@ function CashPaymentForm({
           <button
             type="button"
             onClick={onCurrencyToggle}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-offset-2 ${
-              currencyMode === "BS" ? "bg-[#D7008A]" : "bg-gray-200"
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#D7008A] focus:ring-offset-2 ${currencyMode === "BS" ? "bg-[#D7008A]" : "bg-gray-200"
+              }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                currencyMode === "BS" ? "translate-x-6" : "translate-x-1"
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${currencyMode === "BS" ? "translate-x-6" : "translate-x-1"
+                }`}
             />
           </button>
           <span className={`text-sm font-medium ml-3 ${currencyMode === "BS" ? "text-[#D7008A]" : "text-gray-500"}`}>
@@ -207,6 +237,59 @@ function CashPaymentForm({
               <span className="text-sm font-semibold text-[#D7008A]">
                 {currencyMode === "USD" ? `${convertedAmount} Bs` : `$${convertedAmount}`}
               </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Receipt Upload Section */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Comprobante <span className="text-red-500">*</span>
+        </label>
+
+        {!receipt ? (
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#D7008A] transition-colors">
+            <input
+              type="file"
+              accept="image/*,.pdf"
+              onChange={onReceiptUpload}
+              className="hidden"
+              id="receipt-upload"
+            />
+            <label htmlFor="receipt-upload" className="cursor-pointer">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-1">
+                Haz clic para subir un comprobante
+              </p>
+              <p className="text-xs text-gray-500">
+                JPG, PNG o PDF (máx. 5MB)
+              </p>
+            </label>
+          </div>
+        ) : (
+          <div className="border border-gray-300 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-[#D7008A]/10 rounded-lg flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-[#D7008A]" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 truncate max-w-48">
+                    {receipt.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {(receipt.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onRemoveReceipt}
+                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}
@@ -279,6 +362,7 @@ function PaymentRegisteredConfirmation({
   receiptNumber,
   notes,
   currencyMode,
+  receipt,
   onEdit,
   onContinue,
 }) {
@@ -293,6 +377,7 @@ function PaymentRegisteredConfirmation({
         receiptNumber={receiptNumber}
         notes={notes}
         currencyMode={currencyMode}
+        receipt={receipt}
       />
 
       <NextStepsAlert />
@@ -317,6 +402,7 @@ function PaymentSummaryDisplay({
   receiptNumber,
   notes,
   currencyMode,
+  receipt,
 }) {
   return (
     <div className="space-y-3">
@@ -345,6 +431,19 @@ function PaymentSummaryDisplay({
           <div className="flex justify-between">
             <span className="font-medium">Recibido por:</span>
             <span>{receivedBy}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">Comprobante:</span>
+            <span className="text-sm">
+              {receipt ? (
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-4 h-4 text-[#D7008A]" />
+                  <span className="text-[#D7008A] font-medium">Adjuntado</span>
+                </div>
+              ) : (
+                <span className="text-gray-500">No adjuntado</span>
+              )}
+            </span>
           </div>
           {notes && (
             <div className="mt-3 pt-3 border-t border-gray-200">

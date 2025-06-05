@@ -6,21 +6,23 @@ import { ArrowLeft, Check, Copy, CreditCard, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import CashPaymentSection from "./MetodoPago/efectivo.jsx";
 import PaymentLinkSection from "./MetodoPago/pagoLink.jsx";
+import PagoMovilSection from "./MetodoPago/pagoMovil.jsx";
+import PuntoVentaSection from "./MetodoPago/puntoVenta.jsx";
 
 export default function PagosColg({ props }) {
-  const { costo, allowMultiplePayments, handlePago, paymentInfo=null, isAdmin, tipo="" } =
+  const { costo, allowMultiplePayments, handlePago, paymentInfo = null, isAdmin, tipo = "" } =
     props;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [referenceNumber, setReferenceNumber] = useState("");
-  
+
   // Obtener fecha actual para valores por defecto
   const today = new Date();
   const todayDay = today.getDate().toString().padStart(2, '0');
   const todayMonth = (today.getMonth() + 1).toString().padStart(2, '0');
   const todayYear = today.getFullYear().toString();
-  
+
   const [paymentDate, setPaymentDate] = useState({
     day: todayDay,
     month: todayMonth,
@@ -34,7 +36,7 @@ export default function PagosColg({ props }) {
   const [montoEnBs, setMontoEnBs] = useState("0.00");
   const [showMethodSelection, setShowMethodSelection] = useState(false);
   const [pagarLuego, setPagarLuego] = useState(false);
-  
+
   // Estados para manejar errores
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
@@ -42,6 +44,8 @@ export default function PagosColg({ props }) {
   // Estados para copiar
   const [copiedAccount, setCopiedAccount] = useState(false);
   const [copiedRif, setCopiedRif] = useState(false);
+  const [copiedPhone, setCopiedPhone] = useState(false);
+  const [copiedCedula, setCopiedCedula] = useState(false);
 
   // Datos de los meses
   const months = [
@@ -70,16 +74,16 @@ export default function PagosColg({ props }) {
   const getValidMonths = (selectedYear) => {
     const currentYear_check = new Date().getFullYear();
     const currentMonth_check = new Date().getMonth() + 1;
-    
+
     if (!selectedYear) return months;
-    
+
     const yearNum = parseInt(selectedYear);
-    
+
     // Si es el año actual, solo mostrar meses hasta el mes actual
     if (yearNum === currentYear_check) {
       return months.filter(month => parseInt(month.value) <= currentMonth_check);
     }
-    
+
     // Si es un año anterior, mostrar todos los meses
     return months;
   };
@@ -87,15 +91,15 @@ export default function PagosColg({ props }) {
   // Generar días según el mes y año (no futuros)
   const getDaysInMonth = (year, month) => {
     if (!year || !month) return [];
-    
+
     const currentDate = new Date();
     const currentYear_check = currentDate.getFullYear();
     const currentMonth_check = currentDate.getMonth() + 1;
     const currentDay_check = currentDate.getDate();
-    
+
     const yearNum = parseInt(year);
     const monthNum = parseInt(month);
-    
+
     const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
     const days = Array.from({ length: daysInMonth }, (_, i) => {
       const day = i + 1;
@@ -104,12 +108,12 @@ export default function PagosColg({ props }) {
         label: day.toString()
       };
     });
-    
+
     // Si es el año y mes actual, solo mostrar días hasta el día actual
     if (yearNum === currentYear_check && monthNum === currentMonth_check) {
       return days.filter(day => parseInt(day.value) <= currentDay_check);
     }
-    
+
     return days;
   };
 
@@ -133,8 +137,11 @@ export default function PagosColg({ props }) {
       if (type === 'account') {
         // Para número de cuenta: extraer solo números de "0102-0127-63-0000007511"
         numbersToCopy = text.replace(/\D/g, ''); // Quita todo lo que no sea dígito
-      } else if (type === 'rif') {
-        // Para RIF: extraer solo números de "J-00041277-4"
+      } else if (type === 'rif' || type === 'cedula') {
+        // Para RIF/Cédula: extraer solo números de "J-00041277-4"
+        numbersToCopy = text.replace(/\D/g, ''); // Quita todo lo que no sea dígito
+      } else if (type === 'phone') {
+        // Para teléfono: extraer solo números de "0414-1234567"
         numbersToCopy = text.replace(/\D/g, ''); // Quita todo lo que no sea dígito
       }
 
@@ -146,6 +153,12 @@ export default function PagosColg({ props }) {
       } else if (type === 'rif') {
         setCopiedRif(true);
         setTimeout(() => setCopiedRif(false), 2000);
+      } else if (type === 'phone') {
+        setCopiedPhone(true);
+        setTimeout(() => setCopiedPhone(false), 2000);
+      } else if (type === 'cedula') {
+        setCopiedCedula(true);
+        setTimeout(() => setCopiedCedula(false), 2000);
       }
     } catch (err) {
       console.error('Error al copiar:', err);
@@ -204,31 +217,6 @@ export default function PagosColg({ props }) {
     setPaymentAmount(usdAmount);
   };
 
-  // Validar y actualizar el monto de pago en USD
-  // const handleMontoChange = (e) => {
-  //   const value = e.target.value;
-  //   if (!value) {
-  //     setPaymentAmount("0.00");
-  //     setMontoEnBs("");
-  //     return;
-  //   }
-
-  //   // Solo permitir números y un punto decimal
-  //   if (!/^\d*\.?\d*$/.test(value)) return;
-
-  //   const numericValue = parseFloat(value);
-
-  //   if (numericValue > costo) {
-  //     alert(`El monto no puede ser mayor a USD$ ${costo}`);
-  //     return;
-  //   }
-
-  //   // Actualizar valor sin formatear para que sea más fácil de editar
-  //   setPaymentAmount(value);
-  //   // Calcular el equivalente en Bs
-  //   setMontoEnBs((numericValue * tasaBCV).toFixed(2));
-  // };
-
   const getTasa = async () => {
     try {
       const tasa = await fetchDataSolicitudes("tasa-bcv");
@@ -240,7 +228,7 @@ export default function PagosColg({ props }) {
 
   const getMetodosDePago = async () => {
     try {
-      const metodos = await fetchDataSolicitudes("metodo-de-pago",`?es_visible_colegiado=${!isAdmin}`);
+      const metodos = await fetchDataSolicitudes("metodo-de-pago", `?es_visible_colegiado=${!isAdmin}`);
       setMetodoDePago(metodos.data);
     } catch (error) {
       console.log(`Ha ocurrido un error: ${error}`)
@@ -258,8 +246,8 @@ export default function PagosColg({ props }) {
       nombre: metodo.datos_adicionales.slug,
       metodoId: metodo.id,
       id: metodo.id, // Agregar el id para comparaciones
-      moneda:metodo.moneda,
-      datos_adicionales:metodo.datos_adicionales
+      moneda: metodo.moneda,
+      datos_adicionales: metodo.datos_adicionales
     });
     setShowMethodSelection(false);
   };
@@ -289,21 +277,21 @@ export default function PagosColg({ props }) {
       };
 
       const result = await handlePago(paymentData);
-      
+
       // Si handlePago devuelve un array [error, result], verificar si hay error
       if (Array.isArray(result) && result[0]) {
         throw result[0];
       }
-      
+
     } catch (error) {
       console.error("Error en handleSubmit:", error);
-      
+
       let mensajeError = "Ha ocurrido un error al procesar el pago";
-      
+
       // Manejar el formato específico del backend: {"error": str(e), "message": "mensaje"}
       if (error.response?.data) {
         const errorData = error.response.data;
-        
+
         // Si viene en el formato esperado con "message"
         if (errorData.message) {
           mensajeError = errorData.message;
@@ -325,10 +313,10 @@ export default function PagosColg({ props }) {
       else if (error.message) {
         mensajeError = error.message;
       }
-      
+
       setErrorMessage(mensajeError);
       setShowError(true);
-      
+
       // Auto-ocultar el error después de 8 segundos
       setTimeout(() => {
         setShowError(false);
@@ -348,20 +336,6 @@ export default function PagosColg({ props }) {
     }
   };
 
-  // const handlePagarLuegoChange = () => {
-  //   setPagarLuego(!pagarLuego);
-  // };
-
-  // const handlePayLater = () => {
-  //   handlePago({
-  //     paymentDate: "",
-  //     referenceNumber: "",
-  //     paymentFile: null,
-  //     totalAmount: costo,
-  //     metodo_de_pago: null,
-  //     tasa_bcv_del_dia: tasaBCV,
-  //   });
-  // };
   return (
     <div id="pagos-modal" className="w-full">
       {!pagarLuego && (
@@ -582,10 +556,10 @@ export default function PagosColg({ props }) {
             // Vista original de botones para 4 métodos o menos
             <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
               {metodoDePago.map((metodo, index) => {
-                if(metodo.datos_adicionales.slug === "pago-link"&&paymentInfo==null){
+                if (metodo.datos_adicionales.slug === "pago-link" && paymentInfo == null) {
                   return null;
                 }
-                return(
+                return (
                   <button
                     key={index}
                     className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
@@ -610,14 +584,15 @@ export default function PagosColg({ props }) {
                     />
                     <span className="font-medium">{metodo.nombre}</span>
                   </button>
-                )})}
+                )
+              })}
             </div>
           )}
 
           {/* Conditional content based on payment method */}
           {paymentMethod && (
             <div className="mt-6 border-t pt-6">
-              {paymentMethod.nombre === "bdv" ? (
+              {paymentMethod.nombre === "transferencia" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Banco de Venezuela information */}
                   <div className="space-y-4">
@@ -663,18 +638,7 @@ export default function PagosColg({ props }) {
                         </div>
 
                         <p className="text-sm mt-2">
-                          A nombre del Colegio de Odontólogos de Venezuela
-                        </p>
-
-                        {/* CORRECCIÓN: Correo del Banco Venezuela */}
-                        <p className="text-sm mt-2">
-                          Correo:{" "}
-
-                          <a href="mailto:secretariafinanzas@elcov.org"
-                            className="text-[#590248] hover:underline"
-                          >
-                            secretariafinanzas@elcov.org
-                          </a>
+                          A nombre del:<strong> Colegio de Odontólogos de Venezuela</strong>
                         </p>
                       </div>
 
@@ -875,22 +839,300 @@ export default function PagosColg({ props }) {
                     </div>
                   </div>
                 </div>
+              ) : paymentMethod.nombre === "pago-movil" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Información del Pago Móvil */}
+                  <div className="space-y-4">
+                    <div className="space-y-4 text-gray-700">
+                      <h3 className="text-lg font-bold text-center text-[#590248] mb-2">
+                        Datos para Pago Móvil
+                      </h3>
+
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        {/* Rif */}
+                        <div className="flex items-center justify-between mt-2">
+                          <div>
+                            <p className="text-sm font-medium">RIF:</p>
+                            <p className="text-sm font-mono">J-00041277-4</p>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard("J-00041277-4", "cedula")}
+                            className="ml-2 p-2 bg-[#D7008A] text-white rounded-lg hover:bg-[#b8006b] transition-colors"
+                            title="Copiar cédula"
+                          >
+                            {copiedCedula ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                        </div>
+
+                        {/* Número de teléfono con botón de copiar */}
+                        <div className="flex items-center justify-between mt-2">
+                          <div>
+                            <p className="text-sm font-medium">Número de teléfono:</p>
+                            <p className="text-sm font-mono">0414-1234567</p>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard("0414-1234567", "phone")}
+                            className="ml-2 p-2 bg-[#D7008A] text-white rounded-lg hover:bg-[#b8006b] transition-colors"
+                            title="Copiar número de teléfono"
+                          >
+                            {copiedPhone ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                        </div>
+
+                        {/* Banco */}
+                        <div className="mt-2">
+                          <p className="text-sm font-medium">Banco:</p>
+                          <p className="text-sm">Banco de Venezuela</p>
+                        </div>
+
+                        <p className="text-sm mt-2">
+                          A nombre del:<strong> Colegio de Odontólogos de Venezuela</strong>
+                        </p>
+                      </div>
+
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <p className="font-semibold text-green-700">INFORMACIÓN:</p>
+                        <p className="text-sm text-green-700">
+                          Realizar el pago móvil al número indicado y registrar los datos
+                          del pago en el formulario siguiente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Formulario de registro del pago */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-center text-[#41023B] mb-4">
+                      Registrar Pago Móvil
+                    </h3>
+
+                    {allowMultiplePayments && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Monto en USD <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              <DollarSign className="h-5 w-5 text-gray-400" />
+                            </span>
+                            <input
+                              type="text"
+                              value={paymentAmount}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (!/^\d*\.?\d*$/.test(value) && value !== "") return;
+                                const numericValue = parseFloat(value);
+                                if (numericValue > costo) {
+                                  alert(`El monto no puede ser mayor a USD$ ${costo}`);
+                                  return;
+                                }
+                                setPaymentAmount(value);
+                                setMontoEnBs((numericValue * tasaBCV).toFixed(2));
+                              }}
+                              className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] text-sm"
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Equivalente: {montoEnBs} Bs
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Número de referencia <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={referenceNumber}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (/^\d{0,14}$/.test(value)) {
+                            setReferenceNumber(value);
+                          }
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A]"
+                        placeholder="Número de referencia del pago móvil"
+                        required
+                      />
+                    </div>
+
+                    {/* Fecha con 3 campos separados */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Fecha de pago <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {/* Selector de año */}
+                        <div className="relative">
+                          <select
+                            value={paymentDate.year}
+                            onChange={(e) => handleDateChange('year', e.target.value)}
+                            className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] appearance-none text-gray-700"
+                            required
+                          >
+                            <option value="">Año</option>
+                            {years.map(year => (
+                              <option key={`year-${year.value}`} value={year.value}>
+                                {year.label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+
+                        {/* Selector de mes */}
+                        <div className="relative">
+                          <select
+                            value={paymentDate.month}
+                            onChange={(e) => handleDateChange('month', e.target.value)}
+                            className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] appearance-none text-gray-700"
+                            required
+                          >
+                            <option value="">Mes</option>
+                            {getValidMonths(paymentDate.year).map(month => (
+                              <option key={`month-${month.value}`} value={month.value}>
+                                {month.label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+
+                        {/* Selector de día */}
+                        <div className="relative">
+                          <select
+                            value={paymentDate.day}
+                            onChange={(e) => handleDateChange('day', e.target.value)}
+                            className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-[#D7008A] focus:border-[#D7008A] appearance-none text-gray-700"
+                            required
+                          >
+                            <option value="">Día</option>
+                            {getDaysInMonth(paymentDate.year, paymentDate.month).map(day => (
+                              <option key={`day-${day.value}`} value={day.value}>
+                                {day.label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Comprobante de pago <span className="text-red-500">*</span>
+                      </label>
+                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                        <div className="space-y-1 text-center">
+                          {previewUrl ? (
+                            <div className="flex flex-col items-center">
+                              <img
+                                src={previewUrl}
+                                alt="Vista previa"
+                                className="max-h-40 max-w-full mb-3 rounded-lg"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPaymentFile(null);
+                                  setPreviewUrl("");
+                                }}
+                                className="text-sm text-red-600 hover:text-red-800"
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <svg
+                                className="mx-auto h-12 w-12 text-gray-400"
+                                stroke="currentColor"
+                                fill="none"
+                                viewBox="0 0 48 48"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                  strokeWidth={2}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              <div className="flex text-sm text-gray-600">
+                                <label
+                                  htmlFor="file-upload-pm"
+                                  className="relative cursor-pointer bg-white rounded-md font-medium text-[#D7008A] hover:text-[#41023B] focus-within:outline-none"
+                                >
+                                  <span>Subir archivo</span>
+                                  <input
+                                    id="file-upload-pm"
+                                    name="file-upload-pm"
+                                    type="file"
+                                    className="sr-only"
+                                    accept="image/*,.pdf"
+                                    onChange={handleFileChange}
+                                  />
+                                </label>
+                                <p className="pl-1">o arrastre y suelte</p>
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                PNG, JPG, PDF hasta 10MB
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : paymentMethod.nombre === "pago-link" && paymentInfo ? (
-                  <PaymentLinkSection
-                    paymentInfo={paymentInfo}
-                    onPaymentLinkSubmit={(email) => {
-                      console.log("Payment link sent to:", email)
-                    }}
-                    onContinue={(email) => {
-                      console.log("Payment link sent to:", email)
-                    }}
-                  />
-              ) : paymentMethod.nombre === "efectivo" ? (
+                <PaymentLinkSection
+                  paymentInfo={paymentInfo}
+                  onPaymentLinkSubmit={(email) => {
+                    console.log("Payment link sent to:", email)
+                  }}
+                  onContinue={(email) => {
+                    console.log("Payment link sent to:", email)
+                  }}
+                />
+              ) : paymentMethod.nombre === "efectivo" && paymentInfo ? (
                 <CashPaymentSection
                   paymentAmount={paymentAmount}
                   tasaBCV={tasaBCV}
-                  onCashPaymentSubmit={(paymentData) => handlePago({...paymentData, metodo_de_pago: {id:paymentMethod.id, moneda:paymentData.moneda}, referenceNumber: null, comprobante: null})}
-                  onContinue={(paymentData) => handlePago({...paymentData, metodo_de_pago: {id:paymentMethod.id, moneda:paymentData.moneda} , referenceNumber: null, comprobante: null})}
+                  onCashPaymentSubmit={(paymentData) => handlePago({ ...paymentData, metodo_de_pago: { id: paymentMethod.id, moneda: paymentData.moneda }, referenceNumber: null, comprobante: null })}
+                  onContinue={(paymentData) => handlePago({ ...paymentData, metodo_de_pago: { id: paymentMethod.id, moneda: paymentData.moneda }, referenceNumber: null, comprobante: null })}
+                />
+              ) : paymentMethod.nombre === "punto-venta" && paymentInfo ? (
+                <PuntoVentaSection
+                  paymentAmount={paymentAmount}
+                  tasaBCV={tasaBCV}
+                  onCashPaymentSubmit={(paymentData) => handlePago({ ...paymentData, metodo_de_pago: { id: paymentMethod.id, moneda: paymentData.moneda }, referenceNumber: null, comprobante: null })}
+                  onContinue={(paymentData) => handlePago({ ...paymentData, metodo_de_pago: { id: paymentMethod.id, moneda: paymentData.moneda }, referenceNumber: null, comprobante: null })}
+                />
+              ) : paymentMethod.nombre === "pago-movil" && paymentInfo ? (
+                <PagoMovilSection
+                  paymentAmount={paymentAmount}
+                  tasaBCV={tasaBCV}
+                  onCashPaymentSubmit={(paymentData) => handlePago({ ...paymentData, metodo_de_pago: { id: paymentMethod.id, moneda: paymentData.moneda }, referenceNumber: null, comprobante: null })}
+                  onContinue={(paymentData) => handlePago({ ...paymentData, metodo_de_pago: { id: paymentMethod.id, moneda: paymentData.moneda }, referenceNumber: null, comprobante: null })}
                 />
               ) : (
                 <div className="space-y-6">
@@ -979,7 +1221,7 @@ export default function PagosColg({ props }) {
           )}
 
           {/* Send button only shows if a payment method is selected */}
-          {paymentMethod && paymentMethod.nombre == "bdv" && (
+          {paymentMethod && (paymentMethod.nombre == "transferencia" || paymentMethod.nombre == "bdv" || paymentMethod.nombre == "pago-movil") && (
             <div className="pt-6 mt-6 border-t">
               <motion.button
                 type="button"
@@ -1014,7 +1256,11 @@ export default function PagosColg({ props }) {
                     Procesando pago...
                   </>
                 ) : (
-                  "Registrar Pago"
+                  `Registrar ${paymentMethod.nombre === "pago-movil" ? "Pago Móvil" :
+                    paymentMethod.nombre === "transferencia" ? "Transferencia" :
+                      paymentMethod.nombre === "bdv" ? "Transferencia" :
+                        "Pago"
+                  }`
                 )}
               </motion.button>
             </div>
