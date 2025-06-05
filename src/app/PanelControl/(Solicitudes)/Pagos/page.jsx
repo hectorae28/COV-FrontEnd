@@ -9,7 +9,7 @@ import {
   Search
 } from "lucide-react"
 import { useEffect, useState } from "react"
-import DetallePago from "../../../Components/Solicitudes/Pagos/DetallePago"
+import DetallePago from "@/Components/Solicitudes/Pagos/DetallePago"
 
 export default function ListaPagos() {
   // Estados para manejar los datos

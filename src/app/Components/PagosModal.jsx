@@ -258,7 +258,8 @@ export default function PagosColg({ props }) {
       nombre: metodo.datos_adicionales.slug,
       metodoId: metodo.id,
       id: metodo.id, // Agregar el id para comparaciones
-      moneda:metodo.moneda
+      moneda:metodo.moneda,
+      datos_adicionales:metodo.datos_adicionales
     });
     setShowMethodSelection(false);
   };
@@ -580,7 +581,11 @@ export default function PagosColg({ props }) {
           ) : (
             // Vista original de botones para 4 métodos o menos
             <div className="flex flex-col sm:flex-row gap-4 mb-8 justify-center">
-              {metodoDePago.map((metodo, index) => (
+              {metodoDePago.map((metodo, index) => {
+                if(metodo.datos_adicionales.slug === "pago-link"&&paymentInfo==null){
+                  return null;
+                }
+                return(
                   <button
                     key={index}
                     className={`cursor-pointer flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border transition-all duration-300 max-w-xs ${metodo.datos_adicionales.slug === "bdv"
@@ -605,14 +610,14 @@ export default function PagosColg({ props }) {
                     />
                     <span className="font-medium">{metodo.nombre}</span>
                   </button>
-                ))}
+                )})}
             </div>
           )}
 
           {/* Conditional content based on payment method */}
           {paymentMethod && (
             <div className="mt-6 border-t pt-6">
-              {metodoDePago.find(m => m.id === paymentMethod.id)?.datos_adicionales?.slug === "bdv" ? (
+              {paymentMethod.nombre === "bdv" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Banco de Venezuela information */}
                   <div className="space-y-4">
@@ -871,7 +876,6 @@ export default function PagosColg({ props }) {
                   </div>
                 </div>
               ) : paymentMethod.nombre === "pago-link" && paymentInfo ? (
-                <>
                   <PaymentLinkSection
                     paymentInfo={paymentInfo}
                     onPaymentLinkSubmit={(email) => {
@@ -881,10 +885,9 @@ export default function PagosColg({ props }) {
                       console.log("Payment link sent to:", email)
                     }}
                   />
-                </>
-              ) : paymentMethod.nombre === "efectivo" && paymentInfo ? (
+              ) : paymentMethod.nombre === "efectivo" ? (
                 <CashPaymentSection
-                  paymentAmount={paymentInfo.montoPago}
+                  paymentAmount={paymentAmount}
                   tasaBCV={tasaBCV}
                   onCashPaymentSubmit={(paymentData) => handlePago({...paymentData, metodo_de_pago: {id:paymentMethod.id, moneda:paymentData.moneda}, referenceNumber: null, comprobante: null})}
                   onContinue={(paymentData) => handlePago({...paymentData, metodo_de_pago: {id:paymentMethod.id, moneda:paymentData.moneda} , referenceNumber: null, comprobante: null})}
