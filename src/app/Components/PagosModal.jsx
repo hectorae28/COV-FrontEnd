@@ -8,7 +8,7 @@ import CashPaymentSection from "./MetodoPago/efectivo.jsx";
 import PaymentLinkSection from "./MetodoPago/pagoLink.jsx";
 
 export default function PagosColg({ props }) {
-  const { costo, allowMultiplePayments, handlePago, paymentInfo=null, isAdmin } =
+  const { costo, allowMultiplePayments, handlePago, paymentInfo=null, isAdmin, tipo="" } =
     props;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -964,6 +964,7 @@ export default function PagosColg({ props }) {
                             metodoDePagoId={paymentMethod.metodoId}
                             handlePago={(detallesPago) => handlePago(detallesPago)}
                             tasaBCV={tasaBCV}
+                            tipo={tipo}
                           />
                         </div>
                       </div>

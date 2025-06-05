@@ -50,9 +50,9 @@ export default function ListaSolvencias() {
       const existenEspecial = solicitudesDeSolvencia.some(s => s.statusSolicitud === "costo_especial");
       if (tabActual === "revision" && !existenRevision) {
         if(!existenEspecial){
-          setTabActual("costo_especial");
-        }else{
           setTabActual("todas");
+        }else{
+          setTabActual("costo_especial");
         }
       }
     }

@@ -39,7 +39,7 @@ const Checkout = ({ amount, pagoDetalles, handlePago }) => {
                     order_id: data.orderID
                 })
             })
-            const detallesDePago = {...pagoDetalles, num_referencia: data.orderID, metodo_de_pago: pagoDetalles.metodo_de_pago_id}
+            const detallesDePago = {...pagoDetalles, referenceNumber: data.orderID, metodo_de_pago: {id: pagoDetalles.metodo_de_pago_id, moneda: "usd"}}
             const pagoResult = await handlePago(detallesDePago);
             return pagoResult;
         } catch(error) {

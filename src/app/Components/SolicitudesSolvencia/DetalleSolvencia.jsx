@@ -1127,7 +1127,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                 props={{
                   costo: datosResumen.restante.toFixed(2),
                   allowMultiplePayments: true,
-                  handlePago: handlePagoSolvencia
+                  handlePago: handlePagoSolvencia,
+                  tipo: solvencia.tipo
                 }}
               />
             </div>
