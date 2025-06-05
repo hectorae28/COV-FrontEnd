@@ -317,6 +317,7 @@ export default function DetalleInfo({
       telefono_movil: data.persona?.telefono_movil,
       telefono_habitacion: data.persona?.telefono_de_habitacion
     });
+    console.log({data});
     
     // Función para separar teléfono correctamente
     const parsePhoneNumber = (telefono) => {
@@ -370,12 +371,12 @@ export default function DetalleInfo({
       fecha_emision_titulo: data.fecha_egreso_universidad || "",
     });
 
-    setInstituciones(data.instituciones ? JSON.parse(JSON.stringify(data.instituciones)) : []);
+    setInstituciones(data.recaudos.instituciones ? JSON.parse(JSON.stringify(data.recaudos.instituciones)) : []);
     setPagosPendientes(data.pago === null && !data.pago_exonerado);
   };
-
   // Inicializar datos para colegiados
   const initializeColegiadoData = (data) => {
+    console.log("data", data.recaudos.instituciones);
     setDatosPersonales(JSON.parse(JSON.stringify(data.recaudos?.persona || {})));
 
     const persona = data.recaudos?.persona || {};
@@ -438,7 +439,8 @@ export default function DetalleInfo({
       fecha_emision_titulo: data.fecha_egreso_universidad || "",
     });
 
-    setInstituciones(JSON.parse(JSON.stringify(data.instituciones || [])));
+    setInstituciones(JSON.parse(JSON.stringify(data.recaudos.instituciones || [])));
+    console.log("institucionesaa", data.recaudos.instituciones);
 
     // CARGAR DATOS DE COMPROBANTE PARA COLEGIADOS
     if (data.recaudos) {
