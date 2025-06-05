@@ -17,6 +17,7 @@ import Link from "next/link";
 import PagosColg from "@/Components/PagosModal"
 import ConfirmacionModal from "@/Components/Solicitudes/Solicitudes/ConfirmacionModal";
 import DocumentosSection from "@/Components/Solicitudes/Solicitudes/DocumentsManagerComponent";
+import ExoneracionManager from "@/Components/Solicitudes/ExoneracionManager";
 
 import { DocumentViewer } from "@/Components/Solicitudes/ListaColegiados/SharedListColegiado/DocumentModule";
 import SolicitudHeader from "@/Components/Solicitudes/Solicitudes/HeaderSolic";
@@ -42,7 +43,8 @@ export default function DetalleSolicitud({ props }) {
     (state) => state.addPagosSolicitud
   );
   const error = useSolicitudesStore(state => state.error);
-  const updateDocumentoSolicitud = useSolicitudesStore(state => state.updateDocumentoSolicitud)
+  const updateDocumentoSolicitud = useSolicitudesStore(state => state.updateDocumentoSolicitud);
+  const exonerarItems = useSolicitudesStore(state => state.exonerarItems);
 
 
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +56,7 @@ export default function DetalleSolicitud({ props }) {
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [mostrarRechazo, setMostrarRechazo] = useState(false);
   const [mostrarModalPagos, setMostrarModalPagos] = useState(false);
+  const [mostrarExoneracion, setMostrarExoneracion] = useState(false);
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null);
   const [documentosSistema, setDocumentosSistema] = useState([]);
   const [loadingDocumentos, setLoadingDocumentos] = useState(false);
@@ -69,7 +72,7 @@ export default function DetalleSolicitud({ props }) {
     
     // Verificar si todas las solicitudes hijas están aprobadas
     if (solicitud && solicitud.itemsSolicitud && 
-      solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada')) {
+      solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada' || item.estado === 'Exonerado')) {
         cargarDocumentosSistema();
       }
     };
@@ -82,7 +85,7 @@ export default function DetalleSolicitud({ props }) {
     if (solicitud && solicitud.itemsSolicitud) {
       // Verificar si hay al menos una constancia o carnet aprobado
       const hayDocumentosAprobados = solicitud.itemsSolicitud.some(item => 
-        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && item.estado === 'Aprobada'
+        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && (item.estado === 'Aprobada' || item.estado === 'Exonerado')
       );
       
       if (hayDocumentosAprobados) {
@@ -126,7 +129,7 @@ export default function DetalleSolicitud({ props }) {
 
     const totalPendiente = fijarDecimales(totalOriginal - totalExonerado - totalPagado);
 
-    const todoExonerado = totalOriginal === totalExonerado || solicitudData?.estado === "Exonerada";
+    const todoExonerado = totalOriginal === totalExonerado || solicitudData?.estado === "Exonerado";
     const todoPagado = totalPendiente <= 0.01 && !todoExonerado;
     const totalEnRevision = fijarDecimales(pagosSolicitud.reduce((sum, pago) => {
       if(pago.status === 'en_revision'){
@@ -144,6 +147,7 @@ export default function DetalleSolicitud({ props }) {
       totalEnRevision,
     };
   };
+  console.log({solicitud})
 
   const totales = calcularTotales(solicitud);
 
@@ -185,17 +189,12 @@ export default function DetalleSolicitud({ props }) {
     Object.keys(solicitud.detallesSolicitud).forEach(item => {
       solicitudActualizada.push({
         "tipo_solicitud": item,
-        "accion": "revisar"
+        "accion": "aprobar"
       })
     })
 
-    console.log({solicitudActualizada,estadoValidacionDocumentos})
-    const response = await api.post(`/solicitudes/solicitud/${solicitud.id}/cambiar-status/`, {solicitudes:solicitudActualizada})
-    console.log({response})
+    await api.post(`/solicitudes/solicitud/${solicitud.id}/cambiar-status/`, {solicitudes:solicitudActualizada})
     try {
-      // Simular llamada a API
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
       const solicitudActualizada = {
         ...solicitud,
         estado: "Aprobada",
@@ -306,12 +305,12 @@ export default function DetalleSolicitud({ props }) {
       
       // Filtrar constancias aprobadas
       const constancias = solicitud.itemsSolicitud.filter(
-        item => item.tipo === 'Constancia' && item.estado === 'Aprobada'
+        item => item.tipo === 'Constancia' && (item.estado === 'Aprobada' || item.estado === 'Exonerado')
       );
 
       // Filtrar carnets aprobados
       const carnets = solicitud.itemsSolicitud.filter(
-        item => item.tipo === 'Carnet' && item.estado === 'Aprobada'
+        item => item.tipo === 'Carnet' && (item.estado === 'Aprobada' || item.estado === 'Exonerado')
       );
 
       const documentosGenerados = [
@@ -468,6 +467,33 @@ export default function DetalleSolicitud({ props }) {
       });
     }
   };
+
+  // Funciones para manejo de exoneración
+  const handleMostrarExoneracion = () => {
+    setMostrarExoneracion(true);
+  };
+
+  const handleExonerarItems = async (itemsExonerados) => {
+    try {
+      const resultado = await exonerarItems(solicitud.id, itemsExonerados);
+      
+      setAlertaExito({
+        tipo: "exito",
+        mensaje: `Items exonerados correctamente. ${resultado.Exonerados?.length || 0} items procesados.`
+      });
+      
+      // Recargar la solicitud para obtener el estado actualizado
+      await loadSolicitudById();
+      
+    } catch (error) {
+      console.error("Error al exonerar items:", error);
+      setAlertaExito({
+        tipo: "alerta", 
+        mensaje: error.message || "Error al exonerar items"
+      });
+      throw error; // Re-lanzar para que el componente ExoneracionManager maneje el error
+    }
+  };
   
   // Renderizar estado de carga
   if (isLoading) {
@@ -500,7 +526,7 @@ export default function DetalleSolicitud({ props }) {
   }
 
   return (
-    <div className="w-full px-4 md:px-10 py-6 md:py-28">
+    <div className="w-full px-4 md:px-10 py-12 md:py-28">
       {/* Botón de regreso */}
       <div className="mb-4">
         <Link
@@ -583,7 +609,7 @@ export default function DetalleSolicitud({ props }) {
       <div className="md:w-1/2">
         
       {solicitud.itemsSolicitud && solicitud.itemsSolicitud.some(item => 
-        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && item.estado === 'Aprobada'
+        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && (item.estado === 'Aprobada' || item.estado === 'Exonerado')
       ) && (
         <div className="bg-white rounded-lg shadow-md p-4 mb-5">
           <h2 className="text-base font-medium text-gray-900 mb-3 flex items-center">
@@ -676,6 +702,17 @@ export default function DetalleSolicitud({ props }) {
           </button>
         )}
 
+        {/* Botón de exoneración - solo para administradores */}
+        {isAdmin && (
+          <button 
+            onClick={handleMostrarExoneracion}
+            className="bg-yellow-600 text-white px-3 py-2 rounded-md flex items-center gap-2 hover:bg-yellow-700 transition-colors text-sm"
+          >
+            <AlertCircle size={16} />
+            <span>Exonerar Items</span>
+          </button>
+        )}
+
         <button className="cursor-pointer bg-gradient-to-t from-[#D7008A] to-[#41023B] text-white px-3 py-2 rounded-md flex items-center gap-2 hover:bg-purple-700 transition-colors text-sm">
           <MessageSquare size={16} />
           <span>Enviar mensaje al colegiado</span>
@@ -699,6 +736,14 @@ export default function DetalleSolicitud({ props }) {
           onConfirm={handleRechazarSolicitud}
         />
       )}
+
+      {/* Modal de exoneración */}
+      <ExoneracionManager
+        solicitud={solicitud}
+        onExonerarItems={handleExonerarItems}
+        onClose={() => setMostrarExoneracion(false)}
+        isVisible={mostrarExoneracion}
+      />
 
       {/* Modal para ver documento */}
       {documentoSeleccionado && (

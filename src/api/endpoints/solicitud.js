@@ -51,8 +51,10 @@ export const fetchSolicitudes = async (url, params = "") => {
 
 export const patchDataSolicitud = async (url, body) => {
     try {
+        // Evitar barras dobles - solo agregar barra si no termina en una acción específica
+        const finalUrl = url.endsWith('/') ? `solicitudes/${url}` : `solicitudes/${url}/`;
 
-        const data = await api.patch(`solicitudes/${url}/`, body, {
+        const data = await api.patch(finalUrl, body, {
             headers: {
               'Content-Type': 'multipart/form-data',
             }
@@ -63,9 +65,29 @@ export const patchDataSolicitud = async (url, body) => {
         throw error;
     }
 }
+export const postDataSolicitudJSON = async (url, body) => {
+    try {
+        // Evitar barras dobles - solo agregar barra si no termina en una acción específica
+        const finalUrl = url.endsWith('/') ? `solicitudes/${url}` : `solicitudes/${url}/`;
+        
+        const data = await api.post(finalUrl, body, {
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+        return data;
+    } catch (error) {
+        console.error("Error en postDataSolicitudJSON:", error);
+        throw error;
+    }
+}
+
 export const postDataSolicitud = async (url, body) => {
     try {
-        const data = await api.post(`solicitudes/${url}/`, body, {
+        // Evitar barras dobles - solo agregar barra si no termina en una acción específica
+        const finalUrl = url.endsWith('/') ? `solicitudes/${url}` : `solicitudes/${url}/`;
+        
+        const data = await api.post(finalUrl, body, {
             headers: {
               'Content-Type': 'multipart/form-data',
             }
