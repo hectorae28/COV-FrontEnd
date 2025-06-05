@@ -692,7 +692,8 @@ export default function SolvenciaPago({ props, solvenciaData, onRefreshData }) {
                 props={{
                   costo: datosResumen.restante.toFixed(2),
                   allowMultiplePayments: true,
-                  handlePago: handlePagoSolvencia
+                  handlePago: handlePagoSolvencia,
+                  tipo: tipoSolvenciaSeleccionada
                 }}
               />
             </div>

@@ -10,7 +10,8 @@ function PaypalPaymentComponent({
   allowMultiplePayments, // Add this prop
   metodoDePagoId,
   handlePago,
-  tasaBCV
+  tasaBCV,
+  tipo = ""
 }) {
   const [montoPago, setMontoPago] = useState("0.00");
   const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser);
@@ -33,9 +34,10 @@ function PaypalPaymentComponent({
     setPagoDetalles({
       user_id: colegiadoUser?.id,
       metodo_de_pago_id: metodoDePagoId,
-      tasa_bcv: tasaBCV,
-      monto: parseFloat(montoPago),
-      costo: parseFloat(totalPendiente.toFixed(2))
+      tasa_bcv_del_dia: tasaBCV,
+      totalAmount: parseFloat(montoPago),
+      costo: parseFloat(totalPendiente.toFixed(2)),
+      tipo: tipo
     });
   }, [totalPendiente, montoPago])
 
