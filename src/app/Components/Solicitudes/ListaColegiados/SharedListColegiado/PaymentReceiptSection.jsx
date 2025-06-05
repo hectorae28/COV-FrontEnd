@@ -746,7 +746,7 @@ export default function PaymentReceiptSection({
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                                 <div className="text-sm font-medium text-gray-900">
-                                                                    ${pago.monto.toFixed(2)}
+                                                                    ${parseFloat(pago.monto || 0).toFixed(2)}
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-center">
