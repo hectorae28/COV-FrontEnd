@@ -145,7 +145,7 @@ export default function DetallePago({ pagoId, onVolver, pagos, actualizarPago })
   }
 
   return (
-    <div className="w-full px-4 md:px-10 py-10 md:py-12">
+    <div className="w-full px-4 md:px-10 py-10 md:py-12 mt-18">
       {/* Botón de regreso */}
       <div className="mb-6">
         <button 

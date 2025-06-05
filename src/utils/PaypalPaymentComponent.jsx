@@ -1,13 +1,13 @@
 "use client"
-import PayPalProvider from "./paypalProvider"
-import { useState, useEffect } from "react"
-import { DollarSign } from "lucide-react"
 import useColegiadoUserStore from "@/store/colegiadoUserStore";
+import { DollarSign } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import PayPalProvider from "./paypalProvider";
 
-function PaypalPaymentComponent({ 
-  totalPendiente, 
+function PaypalPaymentComponent({
+  totalPendiente,
   onPaymentInfoChange,
-  allowMultiplePayments, // Add this prop
+  allowMultiplePayments,
   metodoDePagoId,
   handlePago,
   tasaBCV,
@@ -15,63 +15,73 @@ function PaypalPaymentComponent({
 }) {
   const [montoPago, setMontoPago] = useState("0.00");
   const colegiadoUser = useColegiadoUserStore((store) => store.colegiadoUser);
-  const [pagoDetalles, setPagoDetalles] = useState(null);
 
-  // Existing useEffect remains unchanged
+  // Memoizar pagoDetalles para evitar recreaciones innecesarias
+  const pagoDetalles = useMemo(() => ({
+    user_id: colegiadoUser?.id,
+    metodo_de_pago_id: metodoDePagoId,
+    tasa_bcv_del_dia: tasaBCV,
+    totalAmount: parseFloat(montoPago),
+    costo: parseFloat(totalPendiente?.toFixed(2) || "0.00"),
+    tipo: tipo,
+    monto: parseFloat(montoPago)
+  }), [colegiadoUser?.id, metodoDePagoId, tasaBCV, montoPago, totalPendiente, tipo]);
+
+  // Efecto para inicializar el monto basado en totalPendiente
   useEffect(() => {
-    if (totalPendiente) {
-      setMontoPago(totalPendiente.toFixed(2))
-    } else {
-      setMontoPago("0.00")
+    if (totalPendiente > 0) {
+      const newAmount = totalPendiente.toFixed(2);
+      setMontoPago(newAmount);
     }
+  }, [totalPendiente]);
 
+  // Efecto separado para notificar cambios al componente padre
+  useEffect(() => {
     if (!allowMultiplePayments) {
-      onPaymentInfoChange({
-        montoPago,
-      })
+      onPaymentInfoChange?.({ montoPago: parseFloat(montoPago) });
     }
+  }, [montoPago, allowMultiplePayments, onPaymentInfoChange]);
 
-    setPagoDetalles({
-      user_id: colegiadoUser?.id,
-      metodo_de_pago_id: metodoDePagoId,
-      tasa_bcv_del_dia: tasaBCV,
-      totalAmount: parseFloat(montoPago),
-      costo: parseFloat(totalPendiente.toFixed(2)),
-      tipo: tipo
-    });
-  }, [totalPendiente, montoPago])
+  const handleMontoChange = useCallback((e) => {
+    const value = e.target.value;
 
-  const handleMontoChange = (e) => {
-    const value = e.target.value
+    // Permitir campo vacío temporalmente
     if (!value) {
-      setMontoPago("0.00")
-      return
+      setMontoPago("0.00");
+      return;
     }
 
-    if (!/^\d*\.?\d*$/.test(value)) return
+    // Validar formato numérico con regex más estricta
+    if (!/^\d*\.?\d{0,2}$/.test(value)) return;
 
-    const numericValue = parseFloat(value)
+    const numericValue = parseFloat(value);
 
+    // Validar que no exceda el total pendiente
     if (numericValue > totalPendiente) {
-      alert(`El monto no puede ser mayor a USD$ ${totalPendiente.toFixed(2)}`)
-      return
+      alert(`El monto no puede ser mayor a USD$ ${totalPendiente.toFixed(2)}`);
+      return;
     }
 
-    setMontoPago(value)
-    onPaymentInfoChange({
-      montoPago,
-    })
-    setPagoDetalles({...pagoDetalles, monto: montoPago})
-  }
+    // Actualizar estado con el nuevo valor
+    setMontoPago(value);
 
-  const calculatePaypalFee = (amount) => {
-    if (!amount || isNaN(parseFloat(amount))) return "0.00"
-    const numAmount = parseFloat(amount)
-    const total = (numAmount + 0.3) / (1 - 0.054)
-    return total.toFixed(2)
-  }
+    // Notificar cambio inmediatamente con el nuevo valor
+    if (allowMultiplePayments) {
+      onPaymentInfoChange?.({ montoPago: numericValue });
+    }
+  }, [totalPendiente, allowMultiplePayments, onPaymentInfoChange]);
 
-  const paypalAmount = calculatePaypalFee(montoPago)
+  const calculatePaypalFee = useCallback((amount) => {
+    if (!amount || isNaN(parseFloat(amount))) return "0.00";
+    const numAmount = parseFloat(amount);
+    // Fórmula: (monto + fee_fijo) / (1 - percentage_fee)
+    const total = (numAmount + 0.3) / (1 - 0.054);
+    return total.toFixed(2);
+  }, []);
+
+  const paypalAmount = useMemo(() =>
+    calculatePaypalFee(montoPago), [montoPago, calculatePaypalFee]
+  );
 
   return (
     <div className="space-y-4">
@@ -79,7 +89,6 @@ function PaypalPaymentComponent({
         <img src="/assets/icons/Paypal.png" alt="PayPal" className="h-10" />
       </div>
 
-      {/* Conditionally render amount input */}
       {allowMultiplePayments && (
         <div className="p-4 rounded-lg border border-blue-200 mb-4">
           <label className="block text-sm font-medium mb-2">
@@ -95,8 +104,13 @@ function PaypalPaymentComponent({
               onChange={handleMontoChange}
               className="pl-10 w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
               placeholder="0.00"
+              inputMode="decimal"
+              pattern="[0-9]*\.?[0-9]*"
             />
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Máximo: USD$ {totalPendiente?.toFixed(2) || "0.00"}
+          </p>
         </div>
       )}
 
@@ -120,16 +134,16 @@ function PaypalPaymentComponent({
           </div>
 
           <div className="mt-3 flex justify-center">
-            <PayPalProvider 
+            <PayPalProvider
               amount={paypalAmount}
               pagoDetalles={pagoDetalles}
-              handlePago={(pagoDetalles) => handlePago(pagoDetalles)}
+              handlePago={handlePago}
             />
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default PaypalPaymentComponent
+export default PaypalPaymentComponent;
