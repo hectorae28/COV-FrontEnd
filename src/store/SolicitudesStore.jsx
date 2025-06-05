@@ -82,7 +82,7 @@ export const convertJsonToFormData = (solicitudJson, opcionales = {}) => {
         costo_solicitud_carnet = item.costo?.id || item.costo || 0;
       } else if (item.tipo === "Especializacion") {
         costo_solicitud_especializacion = item.costo?.id || item.costo || 0;
-        especializacion = 1;
+        especializacion = item.especializacionId || item.id || 0;
       } else if (item.tipo === "Constancia") {
         constancias.push({ code: item.codigo, institucion: item?.institucionId });
       }
@@ -186,8 +186,13 @@ export const useSolicitudesStore = create((set, get) => ({
   fetchTiposSolicitud: async () => {
     set({ loading: true });
     try {
-      const response = await fetchSolicitudes('costo', "?es_vigente=true");
-      const costos = response.data;
+      // Fetch costos
+      const responseCostos = await fetchSolicitudes('costo', "?es_vigente=true");
+      const costos = responseCostos.data;
+
+      // Fetch especializaciones
+      const responseEspecializaciones = await fetchSolicitudes('especializacion');
+      const especializaciones = responseEspecializaciones.data;
 
       const tiposActualizados = { ...TIPOS_SOLICITUD };
 
@@ -213,6 +218,19 @@ export const useSolicitudesStore = create((set, get) => ({
       const costoEspecializacion = costos.find(c => c.tipo_costo_nombre === "Especialidad");
       if (costoEspecializacion) {
         tiposActualizados.Especializacion.costo = { id: costoEspecializacion.id, monto: parseFloat(costoEspecializacion.monto_usd) };
+      }
+
+      // Agregar especializaciones disponibles
+      if (especializaciones) {
+        tiposActualizados.Especializacion.especializaciones = Object.entries(especializaciones).map(([key, esp]) => ({
+          id: esp.id,
+          codigo: key,
+          nombre: esp.title,
+          descripcion: esp.description,
+          color: esp.color,
+          imagen: esp.image,
+          icono: esp.icon
+        }));
       }
 
       // Asegurar que los subtipos de constancia tengan estructura válida
