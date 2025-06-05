@@ -1128,7 +1128,8 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
                   costo: datosResumen.restante.toFixed(2),
                   allowMultiplePayments: true,
                   handlePago: handlePagoSolvencia,
-                  tipo: solvencia.tipo
+                  isAdmin: true,
+                  tipo: solvencia.tipo,
                 }}
               />
             </div>
