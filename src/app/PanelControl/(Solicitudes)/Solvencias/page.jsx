@@ -5,19 +5,71 @@ import DetalleSolvencia from "@/app/Components/SolicitudesSolvencia/DetalleSolve
 import { useSolicitudesStore } from "@/store/SolicitudesStore"
 import { motion } from "framer-motion"
 import {
-  Calendar,
-  Check,
-  CheckCircle,
-  ChevronDown,
-  Clock,
-  CreditCard,
-  Filter,
-  Search,
-  Shield,
-  X,
-  XCircle
+    Calendar,
+    Check,
+    CheckCircle,
+    ChevronDown,
+    Clock,
+    CreditCard,
+    Filter,
+    Search,
+    Shield,
+    X,
+    XCircle
 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+
+// Definir todos los estados posibles con sus características FUERA del componente
+const estadosDisponibles = [
+  { 
+    key: "pendiente", 
+    label: "Pendiente", 
+    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    icon: Clock 
+  },
+  { 
+    key: "aprobacion_pendiente", 
+    label: "Aprobación Pendiente", 
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    icon: Clock 
+  },
+  { 
+    key: "solicitado", 
+    label: "Solicitado", 
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+    icon: CreditCard 
+  },
+  { 
+    key: "asignado", 
+    label: "Asignado", 
+    color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    icon: CreditCard 
+  },
+  { 
+    key: "pago_pendiente", 
+    label: "Pago Pendiente", 
+    color: "bg-orange-100 text-orange-800 border-orange-200",
+    icon: Clock 
+  },
+  { 
+    key: "aprobado", 
+    label: "Aprobado", 
+    color: "bg-green-100 text-green-800 border-green-200",
+    icon: CheckCircle 
+  },
+  { 
+    key: "exonerado", 
+    label: "Exonerado", 
+    color: "bg-green-100 text-green-800 border-green-200",
+    icon: CheckCircle 
+  },
+  { 
+    key: "rechazado", 
+    label: "Rechazado", 
+    color: "bg-red-100 text-red-800 border-red-200",
+    icon: XCircle 
+  }
+];
 
 export default function ListaSolvencias() {
   // Estados para manejar los datos
@@ -44,58 +96,6 @@ export default function ListaSolvencias() {
   const [ordenFecha, setOrdenFecha] = useState("desc");
   const fetchSolicitudesDeSolvencia = useSolicitudesStore((state) => state.fetchSolicitudesDeSolvencia);
   const solicitudesDeSolvencia = useSolicitudesStore((state) => state.solicitudesDeSolvencia);
-
-  // Definir todos los estados posibles con sus características
-  const estadosDisponibles = [
-    { 
-      key: "pendiente", 
-      label: "Pendiente", 
-      color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      icon: Clock 
-    },
-    { 
-      key: "aprobacion_pendiente", 
-      label: "Aprobación Pendiente", 
-      color: "bg-blue-100 text-blue-800 border-blue-200",
-      icon: Clock 
-    },
-    { 
-      key: "solicitado", 
-      label: "Solicitado", 
-      color: "bg-purple-100 text-purple-800 border-purple-200",
-      icon: CreditCard 
-    },
-    { 
-      key: "asignado", 
-      label: "Asignado", 
-      color: "bg-indigo-100 text-indigo-800 border-indigo-200",
-      icon: CreditCard 
-    },
-    { 
-      key: "pago_pendiente", 
-      label: "Pago Pendiente", 
-      color: "bg-orange-100 text-orange-800 border-orange-200",
-      icon: Clock 
-    },
-    { 
-      key: "aprobado", 
-      label: "Aprobado", 
-      color: "bg-green-100 text-green-800 border-green-200",
-      icon: CheckCircle 
-    },
-    { 
-      key: "exonerado", 
-      label: "Exonerado", 
-      color: "bg-green-100 text-green-800 border-green-200",
-      icon: CheckCircle 
-    },
-    { 
-      key: "rechazado", 
-      label: "Rechazado", 
-      color: "bg-red-100 text-red-800 border-red-200",
-      icon: XCircle 
-    }
-  ];
 
   // Cargar datos iniciales
   useEffect(() =>  {
@@ -234,7 +234,7 @@ export default function ListaSolvencias() {
       default:
         return estadosDisponibles;
     }
-  }, [tabActual, estadosDisponibles]);
+  }, [tabActual]);
 
   // Limpiar filtros de estado que no corresponden al tab actual
   useEffect(() => {
@@ -329,7 +329,7 @@ export default function ListaSolvencias() {
 
         return ordenFecha === "desc" ? fechaB - fechaA : fechaA - fechaB;
       });
-}, [solicitudesDeSolvencia, searchTerm, tabActual, filtroEstado, filtroCreador, fechaInicio, ordenFecha, filtrosEstado, obtenerClaveEstado]);
+}, [solicitudesDeSolvencia, searchTerm, tabActual, fechaInicio, ordenFecha, filtrosEstado, obtenerClaveEstado]);
 
   // Función para ver detalle de una solvencia
   const verDetalleSolvencia = (id) => {

@@ -1,20 +1,20 @@
 "use client";
 import {
-  AlertCircle,
-  ArrowRight,
-  Ban,
-  Calendar,
-  CheckCircle,
-  ChevronLeft,
-  Clock,
-  CreditCard,
-  DollarSign,
-  History,
-  Link,
-  RefreshCw,
-  Shield,
-  User,
-  X
+    AlertCircle,
+    ArrowRight,
+    Ban,
+    Calendar,
+    CheckCircle,
+    ChevronLeft,
+    Clock,
+    CreditCard,
+    DollarSign,
+    History,
+    Link,
+    RefreshCw,
+    Shield,
+    User,
+    X
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -399,11 +399,11 @@ export default function DetalleSolvencia({ solvenciaId, onVolver, solvencias, ac
   useEffect(() => {
     if (solicitudesDeSolvencia.length > 0 && solvenciaId) {
       const solvenciaActualizada = solicitudesDeSolvencia.find(s => s.idSolicitudSolvencia === solvenciaId);
-      if (solvenciaActualizada && JSON.stringify(solvenciaActualizada) !== JSON.stringify(solvencia)) {
+      if (solvenciaActualizada) {
         setSolvencia(solvenciaActualizada);
       }
     }
-  }, [solicitudesDeSolvencia, solvenciaId, solvencia]);
+  }, [solicitudesDeSolvencia, solvenciaId]);
 
   // Manejo de pagos mejorado con mejor validación y manejo de errores
   const handlePagoSolvencia = useCallback(async (detallesPagoSolvencia) => {
