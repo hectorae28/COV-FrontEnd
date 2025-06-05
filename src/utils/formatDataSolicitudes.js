@@ -80,7 +80,7 @@ function transformItem(item, type) {
       : type,
     costo: parseFloat(item.monto.toFixed(2)),
     institucion: item.institucion,
-    exonerado: false,
+    exonerado: item.status === "exonerado",
     codigo: type === "Especialización" ? "ESPEC" : type === "Carnet" ? "CARNET" : "CONST",
     documentosRequeridos: type === "Especialización"
       ? Object.keys(item.archivos || {})
@@ -98,17 +98,40 @@ function mapEstado(detalles) {
   ].filter(item => item);
 
   const estados = allItems.map(item => item.status);
-  return estados.includes("aprobado") ? "Aprobada"
-    : estados.includes("rechazado") ? "Rechazada"
-      : "Pendiente";
+  
+  // Verificar si todos los items están aprobados o exonerados
+  const todosCompletados = estados.every(estado => estado === "aprobado" || estado === "exonerado");
+  if (todosCompletados) {
+    return "Aprobada";
+  }
+
+  // Si hay algún rechazo, la solicitud está rechazada
+  if (estados.includes("rechazado")) {
+    return "Rechazada";
+  }
+
+  // Si todos están exonerados
+  const todosExonerados = estados.every(estado => estado === "exonerado");
+  if (todosExonerados) {
+    return "Exonerada";
+  }
+
+  // En cualquier otro caso está pendiente
+  return "Pendiente";
 }
 
 function calcularTotal(detalles) {
-  return [
-    detalles.carnet?.monto || 0,
-    ...(detalles.constancias ? detalles.constancias.map(c => c.monto) : []),
-    detalles.especializacion?.monto || 0
-  ].reduce((sum, monto) => sum + monto, 0);
+  const items = [
+    detalles.carnet,
+    ...(detalles.constancias || []),
+    detalles.especializacion
+  ].filter(item => item);
+
+  return items.reduce((sum, item) => {
+    // Si el item está exonerado, no contar su monto
+    const isExonerado = Boolean(item.exonerado || item.exonerada || false);
+    return sum + (isExonerado ? 0 : (item.monto || 0));
+  }, 0);
 }
 
 function getDocumentosRequeridos(detalles) {
@@ -195,10 +218,14 @@ function getConstanciaNombre(id) {
 function mapStatusToEstado(status) {
   // Mapear el status del backend al estado del frontend
   switch (status) {
+    case "revisando":
+      return "En revisión";
     case "aprobado":
-      return "Aprobada";
+      return "Aprobado";
     case "rechazado":
-      return "Rechazada";
+      return "Rechazado";
+    case "exonerado":
+      return "Exonerado";
     default:
       return "Pendiente";
   }

@@ -4,6 +4,7 @@ import InfoLaboralWithDireccionForm from "@/app/(Registro)/InfoLabWithDireccionF
 import { motion } from "framer-motion";
 import { Briefcase, Eye, FileText, MapPin, Pencil, Phone } from "lucide-react";
 import { useState } from "react";
+import api from "@/api/api";
 
 import Modal from "@/Components/Solicitudes/ListaColegiados/Modal";
 import VerificationSwitch from "@/Components/Solicitudes/ListaColegiados/VerificationSwitch";
@@ -21,6 +22,7 @@ export default function SituacionLaboral({
   pendienteData = null,
   entityData = null
 }) {
+
   // Estados para el modal
   const [showModal, setShowModal] = useState(false);
   const [localFormData, setLocalFormData] = useState(null);
@@ -67,7 +69,7 @@ export default function SituacionLaboral({
   // Función para abrir documentos en nueva pestaña
   const openDocument = (documentUrl) => {
     if (documentUrl) {
-      window.open(documentUrl, '_blank');
+      window.open(`${process.env.NEXT_PUBLIC_BACK_HOST}${documentUrl}`, '_blank');
     }
   };
 
@@ -87,7 +89,6 @@ export default function SituacionLaboral({
   const getInitialFormData = () => {
     const workStatus = instituciones?.length > 0 ? "labora" : "noLabora";
 
-    // Si hay instituciones, adaptarlas al formato de laboralRegistros
     const laboralRegistros = instituciones?.length > 0
       ? instituciones.map((inst, index) => ({
         id: index + 1,
@@ -103,7 +104,8 @@ export default function SituacionLaboral({
         NameMunicipio: inst.direccion.municipio_nombre || "",
         verification_status: inst.verification_status || undefined,
         rejection_reason: inst.rejection_reason || '',
-        constancia_trabajo: inst.constancia_trabajo || null,
+        constancia_trabajo_url: inst.constancia_trabajo_url || null,
+        constancia_trabajo: null,
         estado_laboral: inst.estado_laboral || "actual"
       }))
       : [];
@@ -111,7 +113,6 @@ export default function SituacionLaboral({
     return {
       workStatus,
       laboralRegistros,
-      // Añadir campos individuales por compatibilidad (usando la primera institución si existe)
       ...(laboralRegistros.length > 0 ? laboralRegistros[0] : {})
     };
   };
@@ -132,17 +133,14 @@ export default function SituacionLaboral({
   const handleSaveChanges = (updatedData = null) => {
     const dataToUpdate = updatedData || localFormData;
     
-    // Si no está laborando, limpiar instituciones
     if (dataToUpdate.workStatus === "noLabora") {
       console.log("📤 Enviando datos laborales - NO LABORA:", { instituciones: [] });
       
-      // ✅ ACTUALIZAR ESTADO LOCAL según tipo
       if (setInstituciones) {
         setInstituciones([]);
       }
       updateData(pendienteId, { instituciones: [] });
     } else {
-      // 🔄 NUEVO FORMATO: Enviar en el mismo formato que el registro
       const institucionesForBackend = dataToUpdate.laboralRegistros.map((registro, index) => ({
         nombre: registro.institutionName,
         cargo: registro.cargo,
@@ -153,14 +151,11 @@ export default function SituacionLaboral({
         },
         telefono: registro.institutionPhone,
         tipo_institucion: registro.institutionType,
-        // Campos adicionales para mantener compatibilidad con vista
-        //id: registro?.id,
         verificado: registro.verification_status,
         motivo_rechazo: registro.rejection_reason || '',
-        // Si es un archivo nuevo, enviar nombre de campo, si es URL string mantenerla, si es null mantener null
-        constancia_trabajo: registro.constancia_trabajo && typeof registro.constancia_trabajo !== 'string' 
+        constancia_trabajo: registro.constancia_trabajo && typeof registro.constancia_trabajo === 'object'
           ? `constancia_trabajo_${index}` 
-          : registro.constancia_trabajo || null,
+          : registro.constancia_trabajo_url || null,
         estado_laboral: registro.estado_laboral || "actual"
       }));
 
@@ -169,7 +164,6 @@ export default function SituacionLaboral({
         cantidadInstituciones: institucionesForBackend.length
       });
 
-      // Para mostrar en la vista, mantener el formato original
       const institucionesForView = dataToUpdate.laboralRegistros.map(reg => ({
         id: reg?.id,
         tipo_institucion: reg.institutionType,
@@ -188,45 +182,39 @@ export default function SituacionLaboral({
         selectedMunicipio: reg.selectedMunicipio,
         verificado: reg.verification_status || undefined,
         motivo_rechazo: reg.rejection_reason || '',
-        constancia_trabajo: reg.constancia_trabajo || null,
+        constancia_trabajo_url: reg.constancia_trabajo_url || null,
         estado_laboral: reg.estado_laboral || "actual"
       }));
 
-      // ✅ ACTUALIZAR ESTADO LOCAL según tipo (mantener formato para vista)
       if (setInstituciones) {
         setInstituciones(institucionesForView);
       }
 
-      // 🚀 ENVIAR AL BACKEND en formato correcto
       const dataToSend = { instituciones: institucionesForBackend };
       
-      // Agregar constancias de trabajo como archivos separados si existen
       const hasFiles = dataToUpdate.laboralRegistros.some(reg => 
-        reg.constancia_trabajo && typeof reg.constancia_trabajo !== 'string'
+        reg.constancia_trabajo && typeof reg.constancia_trabajo === 'object'
       );
 
       if (hasFiles) {
         const formData = new FormData();
         
-        // Agregar instituciones como JSON
         formData.append('instituciones', JSON.stringify(institucionesForBackend));
         
-        // Agregar constancias de trabajo con nombres únicos que coincidan con la referencia en el JSON
         dataToUpdate.laboralRegistros.forEach((registro, index) => {
-          if (registro.constancia_trabajo && typeof registro.constancia_trabajo !== 'string') {
+          if (registro.constancia_trabajo && typeof registro.constancia_trabajo === 'object') {
             formData.append(`constancia_trabajo_${index}`, registro.constancia_trabajo);
             console.log(`📎 Agregando constancia_trabajo_${index}:`, registro.constancia_trabajo.name);
           }
         });
 
         console.log("📤 Enviando con archivos (FormData)", formData);
-        updateData(pendienteId, formData, true); // true indica que contiene archivos
+        updateData(pendienteId, formData, true);
       } else {
         console.log("📤 Enviando solo JSON (sin archivos nuevos)");
         updateData(pendienteId, dataToSend);
       }
 
-      // Log para verificar estructura enviada
       console.log("✅ Datos preparados para backend:", {
         totalInstituciones: institucionesForBackend.length,
         formatoEstructura: institucionesForBackend[0] || "Sin instituciones",
@@ -248,34 +236,48 @@ export default function SituacionLaboral({
   // Manejar cambio de estado de verificación de instituciones
   const handleInstitutionStatusChange = (updatedInstitution, index) => {
     const institucionesToUpdate = vistaActiva === "actuales" ? institucionesActuales : institucionesAnteriores;
-    const allInstituciones = [...instituciones];
-    
-    // Encontrar el índice real en el array completo
-    const realIndex = allInstituciones.findIndex(inst => 
-      inst.id === institucionesToUpdate[index].id || 
-      (inst.nombre === institucionesToUpdate[index].nombre && 
-       inst.cargo === institucionesToUpdate[index].cargo)
-    );
+    const institucionToUpdate = institucionesToUpdate[index];
+    const institucionId = institucionToUpdate.id;
 
-    if (realIndex !== -1) {
-      allInstituciones[realIndex] = {
-        ...allInstituciones[realIndex],
-        verificado: updatedInstitution.verificado,
-        motivo_rechazo: updatedInstitution.motivo_rechazo || ''
-      };
-
-      // ✅ ACTUALIZAR ESTADO LOCAL según tipo
-      if (setInstituciones) {
-        setInstituciones(allInstituciones);
-      }
-      
-      // Actualizar en backend
-      const updateData_verification = {
-        instituciones: allInstituciones,
-      };
-
-      updateData(pendienteId, updateData_verification);
+    if (!institucionId) {
+      console.error("No se encontró ID de la institución");
+      return;
     }
+
+    const updateInstitucionVerification = async () => {
+      try {
+        const body = {
+          institucion_id: institucionId,
+          verificado: updatedInstitution.verificado,
+          motivo_rechazo: updatedInstitution.motivo_rechazo || ''
+        };
+
+        const response = await api.patch(`usuario/register/${pendienteId}/verify-institucion/`, body);
+
+        if (response.status === 200) {
+          const allInstituciones = [...instituciones];
+          const realIndex = allInstituciones.findIndex(inst => 
+            inst.id === institucionId
+          );
+
+          if (realIndex !== -1) {
+            allInstituciones[realIndex] = {
+              ...allInstituciones[realIndex], 
+              verificado: updatedInstitution.verificado,
+              motivo_rechazo: updatedInstitution.motivo_rechazo || ''
+            };
+
+            if (setInstituciones) {
+              setInstituciones(allInstituciones);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error de red al actualizar verificación:", error);
+      }
+    };
+
+    updateInstitucionVerification();
   };
 
   return (
@@ -442,14 +444,14 @@ export default function SituacionLaboral({
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                   Constancia de Trabajo
                 </p>
-                {institucion.constancia_trabajo ? (
+                {institucion.constancia_trabajo_url ? (
                   <div className="flex items-center gap-2">
                     <FileText size={16} className="text-[#C40180]" />
                     <span className="font-medium text-gray-800 flex-1">
                       Constancia subida
                     </span>
                     <button
-                      onClick={() => openDocument(institucion.constancia_trabajo)}
+                      onClick={() => openDocument(institucion.constancia_trabajo_url )}
                       className="px-3 py-1 bg-[#C40180] text-white rounded-md hover:bg-[#A0016B] transition-colors flex items-center gap-1 text-sm"
                       title="Ver constancia de trabajo"
                     >

@@ -49,7 +49,7 @@ const ServiciosSection = ({ solicitud, totales, onIniciarPago, pagosAprobados, p
                   ${item.costo.toFixed(2)}
                 </span>
                 {
-                  pagosSolicitud.length==0 && (
+                  pagosSolicitud.length==0 && !item.exonerado && (
                     <button
                       type="button"
                       onClick={() => handleEliminarServicio(item)} 

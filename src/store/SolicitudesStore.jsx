@@ -1,6 +1,19 @@
 // src/app/Models/PanelControl/Solicitudes/SolicitudesData.jsx
 
-import { fetchSolicitudes, patchDataSolicitud, postDataSolicitud } from "@/api/endpoints/solicitud";
+import {
+  fetchSolicitudes,
+  postDataSolicitud,
+  postDataSolicitudJSON,
+  patchDataSolicitud,
+  getCostos,
+  pagoSolvencia,
+  pagoSolvenciaEspecial,
+  solicitarSolvencia,
+  solicitarPagosSolvencia,
+  obtenerDatosSolvenciaCompletos,
+  obtenerHistorialPagosSolvencia,
+  actualizarEstadoPago,
+} from "@/api/endpoints/solicitud";
 import transformBackendData from "@/utils/formatDataSolicitudes";
 import { create } from "zustand";
 
@@ -331,6 +344,34 @@ export const useSolicitudesStore = create((set, get) => ({
     try {
       const formData = convertJsonToFormData(solicitudJson, opcionales);
       const response = await postDataSolicitud('solicitud', formData);
+      
+      // Verificar si hay items exonerados y usar el nuevo endpoint de exoneración
+      const itemsExonerados = solicitudJson.itemsSolicitud?.filter(item => item.exonerado) || [];
+      
+      if (itemsExonerados.length > 0) {
+        const itemsParaExonerar = itemsExonerados.map(item => {
+          let tipo = "";
+          if (item.tipo === "Carnet") {
+            tipo = "carnet";
+          } else if (item.tipo === "Especializacion") {
+            tipo = "especializacion"; 
+          } else if (item.tipo === "Constancia") {
+            tipo = "constancia";
+          }
+          
+          return {
+            tipo: tipo,
+            motivo: "Exoneración aplicada durante la creación de solicitud"
+          };
+        });
+        
+        if (itemsParaExonerar.length > 0) {
+          await postDataSolicitudJSON(`solicitud/${response.data.id}/exonerar-items/`, {
+            items_exonerados: itemsParaExonerar
+          });
+        }
+      }
+      
       const solicitud = await get().getSolicitudById(response.data.id);
 
       set(state => ({
@@ -486,6 +527,37 @@ export const useSolicitudesStore = create((set, get) => ({
     return get().solicitudesDeSolvencia.find(sol => sol.idSolicitudSolvencia === id);
   },
 
-  
+  // Nueva función específica para exonerar items
+  exonerarItems: async (solicitudId, itemsExonerados) => {
+    set({ loading: true });
+    try {
+      const response = await postDataSolicitudJSON(`solicitud/${solicitudId}/exonerar-items/`, {
+        items_exonerados: itemsExonerados
+      });
+      
+      // Refrescar la solicitud para obtener el estado actualizado
+      await get().getSolicitudById(solicitudId);
+      
+      set({ loading: false });
+      return response.data;
+    } catch (error) {
+      set({
+        loading: false,
+        error: error.message || "Error al exonerar items"
+      });
+      throw error;
+    }
+  },
+
+  // Función para obtener información de exoneración
+  getItemsExonerados: async (solicitudId) => {
+    try {
+      const solicitud = await get().getSolicitudById(solicitudId);
+      return solicitud?.items_exonerados || {};
+    } catch (error) {
+      console.error("Error al obtener items exonerados:", error);
+      return {};
+    }
+  },
 }));
 
