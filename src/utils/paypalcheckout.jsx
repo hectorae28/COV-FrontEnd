@@ -29,16 +29,6 @@ const Checkout = ({ amount, pagoDetalles, handlePago }) => {
 
     const onApproveOrder = async (data, actions) => {
         try {
-            const capturedOrder = await fetch(process.env.NEXT_PUBLIC_BACK_HOST + "/api/v1/solicitudes/capture-order/", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    order_id: data.orderID
-                })
-            })
             const detallesDePago = {...pagoDetalles, referenceNumber: data.orderID, metodo_de_pago: {id: pagoDetalles.metodo_de_pago_id, moneda: "usd"}}
             const pagoResult = await handlePago(detallesDePago);
             return pagoResult;
