@@ -40,7 +40,7 @@ function PaypalPaymentComponent({
     if (!allowMultiplePayments) {
       onPaymentInfoChange?.({ montoPago: parseFloat(montoPago) });
     }
-  }, [montoPago, allowMultiplePayments, onPaymentInfoChange]);
+  }, [montoPago, allowMultiplePayments]);
 
   const handleMontoChange = useCallback((e) => {
     const value = e.target.value;
@@ -69,7 +69,7 @@ function PaypalPaymentComponent({
     if (allowMultiplePayments) {
       onPaymentInfoChange?.({ montoPago: numericValue });
     }
-  }, [totalPendiente, allowMultiplePayments, onPaymentInfoChange]);
+  }, [totalPendiente, allowMultiplePayments]);
 
   const calculatePaypalFee = useCallback((amount) => {
     if (!amount || isNaN(parseFloat(amount))) return "0.00";
