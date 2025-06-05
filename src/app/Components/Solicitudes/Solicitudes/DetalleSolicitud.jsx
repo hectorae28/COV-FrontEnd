@@ -66,13 +66,9 @@ export default function DetalleSolicitud({ props }) {
   const [observaciones, setObservaciones] = useState("");
 
   const loadSolicitudById = async () => {
-    const solicitud = await getSolicitudById(id);
+    const sol = await getSolicitudById(id);
     setIsLoading(false);
-    console.log({solicitud,err:error})
-    
-    // Verificar si todas las solicitudes hijas están aprobadas
-    if (solicitud && solicitud.itemsSolicitud && 
-      solicitud.itemsSolicitud.every(item => item.estado === 'Aprobada' || item.estado === 'Exonerado')) {
+    if (sol && sol.itemsSolicitud && sol.itemsSolicitud.every(item => item.estado === 'Aprobado' || item.estado === 'Exonerado')) {
         cargarDocumentosSistema();
       }
     };
@@ -85,7 +81,7 @@ export default function DetalleSolicitud({ props }) {
     if (solicitud && solicitud.itemsSolicitud) {
       // Verificar si hay al menos una constancia o carnet aprobado
       const hayDocumentosAprobados = solicitud.itemsSolicitud.some(item => 
-        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && (item.estado === 'Aprobada' || item.estado === 'Exonerado')
+        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && (item.estado === 'Aprobado' || item.estado === 'Exonerado')
       );
       
       if (hayDocumentosAprobados) {
@@ -147,7 +143,6 @@ export default function DetalleSolicitud({ props }) {
       totalEnRevision,
     };
   };
-  console.log({solicitud})
 
   const totales = calcularTotales(solicitud);
 
@@ -197,7 +192,7 @@ export default function DetalleSolicitud({ props }) {
     try {
       const solicitudActualizada = {
         ...solicitud,
-        estado: "Aprobada",
+        estado: "Aprobado",
         fechaAprobacion: new Date().toLocaleDateString(),
         aprobadoPor: "Admin",
         observaciones: observaciones,
@@ -303,14 +298,14 @@ export default function DetalleSolicitud({ props }) {
     setLoadingDocumentos(true);
     try {
       
-      // Filtrar constancias aprobadas
+      // Filtrar constancias Aprobados
       const constancias = solicitud.itemsSolicitud.filter(
-        item => item.tipo === 'Constancia' && (item.estado === 'Aprobada' || item.estado === 'Exonerado')
+        item => item.tipo === 'Constancia' && (item.estado === 'Aprobado' || item.estado === 'Exonerado')
       );
 
       // Filtrar carnets aprobados
       const carnets = solicitud.itemsSolicitud.filter(
-        item => item.tipo === 'Carnet' && (item.estado === 'Aprobada' || item.estado === 'Exonerado')
+        item => item.tipo === 'Carnet' && (item.estado === 'Aprobado' || item.estado === 'Exonerado')
       );
 
       const documentosGenerados = [
@@ -333,6 +328,7 @@ export default function DetalleSolicitud({ props }) {
       ];
 
       setDocumentosSistema(documentosGenerados);
+      console.log({documentosGenerados})
     } catch (error) {
       console.error("Error al cargar documentos del sistema:", error);
       mostrarAlerta("alerta", "Error al cargar los documentos del sistema");
@@ -609,7 +605,7 @@ export default function DetalleSolicitud({ props }) {
       <div className="md:w-1/2">
         
       {solicitud.itemsSolicitud && solicitud.itemsSolicitud.some(item => 
-        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && (item.estado === 'Aprobada' || item.estado === 'Exonerado')
+        (item.tipo === 'Constancia' || item.tipo === 'Carnet') && (item.estado === 'Aprobado' || item.estado === 'Exonerado')
       ) && (
         <div className="bg-white rounded-lg shadow-md p-4 mb-5">
           <h2 className="text-base font-medium text-gray-900 mb-3 flex items-center">
@@ -695,7 +691,7 @@ export default function DetalleSolicitud({ props }) {
 
       {/* Botones adicionales */}
       <div className="flex flex-wrap gap-3">
-        {solicitud.estado === "Aprobada" && solicitud.comprobantePago && (
+        {solicitud.estado === "Aprobado" && solicitud.comprobantePago && (
           <button className="bg-blue-600 text-white px-3 py-2 rounded-md flex items-center gap-2 hover:bg-blue-700 transition-colors text-sm">
             <Download size={16} />
             <span>Descargar comprobante</span>

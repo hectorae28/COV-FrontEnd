@@ -147,7 +147,7 @@ const SolicitudHeader = ({ solicitud, totales, isAdmin = false, onAprobar, onRec
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2 md:justify-end">
-                {solicitud.estado === 'Pendiente' && (
+                {solicitud.estado === 'Pendiente' && isAdmin && (
                     <>
                         <button
                             onClick={onAprobar}

@@ -1,6 +1,7 @@
 import { TIPOS_SOLICITUD } from '@/store/SolicitudesStore';
 
 export default function transformBackendData(backendData) {
+  console.log({backendData})
   const detallesSolicitud = backendData?.detalles_solicitud || {};
   const frontendData = {
     id: backendData.id, // Generar un ID similar al frontend
@@ -39,7 +40,6 @@ export default function transformBackendData(backendData) {
       "Especialización"
     ));
   }
-
   return frontendData;
 }
 function isAllDocumentosValidados(detalles) {

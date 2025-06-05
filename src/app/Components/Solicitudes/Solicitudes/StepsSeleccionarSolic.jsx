@@ -5,6 +5,7 @@ import { useSolicitudesStore } from "@/store/SolicitudesStore"
 import { Building, Check, FileCheck, FileText, Search, Trash2, User, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import SeleccionarInstitucionesModal from "./SelectInstitutionsModal"
+import SelectorEspecializaciones from "../SelectorEspecializaciones"
 
 export default function SeleccionarSolicitudesStep({
   onFinalizarSolicitud,
@@ -19,7 +20,6 @@ export default function SeleccionarSolicitudesStep({
   const colegiados = useDataListaColegiados((state) => state.colegiados)
   const fetchColegiados = useDataListaColegiados((state) => state.fetchColegiados)
   const getColegiado = useDataListaColegiados((state) => state.getColegiado)
-  console.log({colegiadoPreseleccionado})
   const [formData, setFormData] = useState({
     colegiadoId: colegiadoPreseleccionado ? colegiadoPreseleccionado.colegiado_id : "",
     urgente: false,
@@ -34,6 +34,8 @@ export default function SeleccionarSolicitudesStep({
   // Estados para gestionar las funcionalidades
   const [tiposSeleccionados, setTiposSeleccionados] = useState([])
   const [subtiposConstanciaSeleccionados, setSubtiposConstanciaSeleccionados] = useState([])
+  const [especializacionSeleccionada, setEspecializacionSeleccionada] = useState(null)
+  const [mostrarSelectorEspecializaciones, setMostrarSelectorEspecializaciones] = useState(false)
   const [itemsCarrito, setItemsCarrito] = useState([])
   const [totalCarrito, setTotalCarrito] = useState(0)
 
@@ -126,8 +128,8 @@ export default function SeleccionarSolicitudesStep({
         // Pre-seleccionar el tipo en la lista de tipos
         setTiposSeleccionados([tipoFormateado]);
 
-        // Si es una constancia, no hacemos nada más (el usuario debe seleccionar el subtipo)
-        if (tipoFormateado !== "Constancia") {
+        // Si es una constancia o especialización, el usuario debe hacer selección específica
+        if (tipoFormateado !== "Constancia" && tipoFormateado !== "Especializacion") {
           // Para los demás tipos, pre-agregar al carrito
           const tipoInfo = tipos_solicitud[tipoFormateado];
           console.log("Agregando al carrito tipo preseleccionado:", tipoFormateado, tipoInfo);
@@ -305,6 +307,7 @@ export default function SeleccionarSolicitudesStep({
 
   // Manejar selección de tipos
   const handleSeleccionTipo = (tipo) => {
+    console.log({tipo})
     // Verificar que tipos_solicitud existe y contiene el tipo
     if (!tipos_solicitud || !tipos_solicitud[tipo]) {
       console.error("tipos_solicitud no disponible o tipo no encontrado:", tipo);
@@ -330,6 +333,21 @@ export default function SeleccionarSolicitudesStep({
       } else {
         // Si no está, la agregamos
         setTiposSeleccionados([...tiposSeleccionados, tipo])
+      }
+    } else if (tipo === "Especializacion") {
+      // Para Especialización, manejar con selector específico
+      if (tiposSeleccionados.includes(tipo)) {
+        // Si está seleccionado, lo quitamos
+        setTiposSeleccionados(tiposSeleccionados.filter((t) => t !== tipo))
+        setEspecializacionSeleccionada(null)
+        // También eliminar del carrito
+        const nuevosItems = itemsCarrito.filter((item) => item.tipo !== tipo)
+        setItemsCarrito(nuevosItems)
+        actualizarTotal(nuevosItems)
+      } else {
+        // Si no está seleccionado, lo agregamos y mostramos el selector
+        setTiposSeleccionados([...tiposSeleccionados, tipo])
+        setMostrarSelectorEspecializaciones(true)
       }
     } else {
       // Para otros tipos, toggle normal y agregar/quitar automáticamente del carrito
@@ -430,6 +448,50 @@ export default function SeleccionarSolicitudesStep({
       setItemsCarrito(nuevosItems)
       actualizarTotal(nuevosItems)
     }
+  }
+
+  // Función para manejar selección de especialización
+  const handleSeleccionEspecializacion = (especializaciones) => {
+    if (!especializaciones || especializaciones.length === 0) {
+      // Si no se selecciona nada, quitar del carrito y tipos seleccionados
+      setEspecializacionSeleccionada(null)
+      setTiposSeleccionados(prev => prev.filter(tipo => tipo !== "Especializacion"))
+      const nuevosItems = itemsCarrito.filter(item => item.tipo !== "Especializacion")
+      setItemsCarrito(nuevosItems)
+      actualizarTotal(nuevosItems)
+      setMostrarSelectorEspecializaciones(false)
+      return
+    }
+
+    // Tomar solo la primera especialización (selección única)
+    const especializacion = especializaciones[0]
+    setEspecializacionSeleccionada(especializacion)
+
+    // Crear item para el carrito
+    const tipoInfo = tipos_solicitud["Especializacion"]
+    const nuevoItem = {
+      id: `ESPECIALIZACION-${especializacion.id}`,
+      tipo: "Especializacion",
+      subtipo: especializacion.nombre,
+      nombre: `Especialización: ${especializacion.nombre}`,
+      costo: tipoInfo.costo || { monto: 0 },
+      exonerado: false,
+      codigo: "ESPECIALIZACION",
+      documentosRequeridos: tipoInfo.documentosRequeridos ? [...tipoInfo.documentosRequeridos] : [],
+      especializacionId: especializacion.id,
+      especializacionNombre: especializacion.nombre,
+      especializacionDescripcion: especializacion.descripcion
+    }
+
+    // Reemplazar cualquier especialización existente en el carrito
+    const nuevosItems = [
+      ...itemsCarrito.filter(item => item.tipo !== "Especializacion"),
+      nuevoItem
+    ]
+    
+    setItemsCarrito(nuevosItems)
+    actualizarTotal(nuevosItems)
+    setMostrarSelectorEspecializaciones(false)
   }
 
   // Función para confirmar instituciones
@@ -859,15 +921,16 @@ export default function SeleccionarSolicitudesStep({
                           </div>
                         )}
                       </div>
+                      
                     </div>
                   ))}
                 </div>
-
+                  <div className="flex flex-col gap-4">
                 {/* Subtipos de constancia como desplegable directo - Solo para selección manual */}
                 {tiposSeleccionados.includes("Constancia") && tipos_solicitud?.Constancia?.subtipos && (
                   <div className="-mt-2">
                     {/* Lista desplegable directa del botón */}
-                    <div className="bg-white border-2 border-[#C40180] rounded-b-xl overflow-hidden shadow-lg">
+                    <div className="bg-white border-2 border-[#C40180] rounded-xl overflow-hidden shadow-lg">
                       <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b border-[#C40180]">
                         <h5 className="font-semibold text-gray-800 flex items-center">
                           <span className="mr-2">📋</span>
@@ -931,6 +994,122 @@ export default function SeleccionarSolicitudesStep({
                     </div>
                   </div>
                 )}
+                {tiposSeleccionados.includes("Especializacion") && (
+                  <div className="-mt-2">
+                    <div className="bg-white border-2 border-[#C40180] rounded-xl overflow-hidden shadow-lg">
+                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b border-[#C40180]">
+                        <h5 className="font-semibold text-gray-800 flex items-center">
+                          <span className="mr-2">🎓</span>
+                          Especialización Seleccionada:
+                        </h5>
+                      </div>
+                      
+                      <div className="p-4">
+                        {especializacionSeleccionada ? (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                <Check size={20} className="text-green-600 mr-3" />
+                                <div>
+                                  <p className="font-medium text-gray-800">
+                                    {especializacionSeleccionada.title}
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setMostrarSelectorEspecializaciones(true)}
+                                className="text-[#C40180] text-sm hover:underline font-medium"
+                              >
+                                Cambiar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <button
+                              type="button"
+                              onClick={() => setMostrarSelectorEspecializaciones(true)}
+                              className="bg-[#C40180] text-white px-6 py-3 rounded-lg hover:bg-[#A0016A] transition-colors"
+                            >
+                              Seleccionar Especialización
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                </div>
+              </div>
+            )}
+
+            {/* Selector de especializaciones para tipo preseleccionado */}
+            {tipoSolicitudPreseleccionado === "especializacion" && (
+              <div className="mb-8">
+                <div className="flex items-center mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      Seleccionar Especialización
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Seleccione la especialización para la cual desea solicitar la certificación
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-[12px] text-blue-700">
+                        <strong>Instrucción:</strong> Solo puede seleccionar una especialización por solicitud.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white border-2 border-[#C40180] rounded-xl overflow-hidden shadow-lg">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b border-[#C40180]">
+                    <h5 className="font-semibold text-gray-800 flex items-center">
+                      <span className="mr-2">🎓</span>
+                      Seleccione la especialización que necesita:
+                    </h5>
+                  </div>
+                  
+                  <div className="p-4">
+                    {especializacionSeleccionada ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <Check size={20} className="text-green-600 mr-3" />
+                            <div>
+                              <p className="font-medium text-gray-800">
+                                {especializacionSeleccionada.title}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setMostrarSelectorEspecializaciones(true)}
+                            className="text-[#C40180] text-sm hover:underline font-medium"
+                          >
+                            Cambiar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <button
+                          type="button"
+                          onClick={() => setMostrarSelectorEspecializaciones(true)}
+                          className="bg-[#C40180] text-white px-6 py-3 rounded-lg hover:bg-[#A0016A] transition-colors"
+                        >
+                          Seleccionar Especialización
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1280,6 +1459,19 @@ export default function SeleccionarSolicitudesStep({
           institucionesYaSeleccionadas={tipoConstanciaParaInstituciones?.institucionesYaSeleccionadas || []}
           isAdmin={isAdmin}
           onUpdateInstitution={handleUpdateInstitution}
+        />
+      )}
+
+      {/* Modal de selección de especializaciones */}
+      {mostrarSelectorEspecializaciones && (
+        <SelectorEspecializaciones
+          isOpen={mostrarSelectorEspecializaciones}
+          onClose={() => setMostrarSelectorEspecializaciones(false)}
+          onConfirm={handleSeleccionEspecializacion}
+          maxSelecciones={1}
+          especializacionesSeleccionadas={especializacionSeleccionada ? [especializacionSeleccionada] : []}
+          titulo="Seleccionar Especialización"
+          descripcion="Seleccione la especialización para la cual desea solicitar la certificación."
         />
       )}
     </>
