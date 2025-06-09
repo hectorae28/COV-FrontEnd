@@ -45,6 +45,34 @@ export const fetchNoticias = async (params) => {
         throw error;
     }
 }
+
+export const createNoticia = async (formData) => {
+    try {
+        const data = await api.post('landing-cms/noticias/', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        })
+        return data;
+    } catch (error) {
+        console.error('Error creating noticia:', error);
+        throw error;
+    }
+}
+
+export const updateNoticia = async (id, formData) => {
+    try {
+        const data = await api.patch(`landing-cms/noticias/${id}/`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        })
+        return data;
+    } catch (error) {
+        console.error('Error updating noticia:', error);
+        throw error;
+    }
+}
 export const fetchCardsHome = async () => {
     try {
         const data = api.get('landing-cms/cards-home/')

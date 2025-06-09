@@ -1,9 +1,10 @@
 "use client";
-import newsItems from "@/app/Models/PanelControl/PaginaWeb/Inicio/NoticiasData";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Calendar, ChevronRight, Clock, Filter, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { fetchNoticias } from "@/api/endpoints/landingPage";
+import { convertToAppFormat } from "@/Components/PaginaWeb/Noticias/noticia-converter";
 
 // Componente para cada tarjeta de noticia
 const NewsCard = ({ news, index, onReadMore }) => {
@@ -42,6 +43,18 @@ const NewsCard = ({ news, index, onReadMore }) => {
         <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
           {news.contenido || news.description}
         </p>
+        {news.tags && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {(Array.isArray(news.tags) ? news.tags : [news.tags]).map((tag, idx) => (
+              <span
+                key={idx}
+                className="px-2 py-0.5 bg-[#C40180]/10 text-[#C40180] text-xs rounded-full"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100">
           <div className="flex items-center text-xs text-gray-500">
             <Clock className="w-3 h-3 mr-1" />
@@ -118,9 +131,21 @@ const FeaturedNewsCard = ({ news, onReadMore }) => {
               {news.titulo || news.title}
             </h2>
 
-            <p className="text-gray-600 mb-6 line-clamp-4">
-              {news.contenido || news.description}
-            </p>
+           <p className="text-gray-600 mb-6 line-clamp-4">
+             {news.contenido || news.description}
+           </p>
+            {news.tags && (
+              <div className="flex flex-wrap gap-1 mb-4">
+                {(Array.isArray(news.tags) ? news.tags : [news.tags]).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-0.5 bg-[#C40180]/10 text-[#C40180] text-xs rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <motion.button
@@ -148,15 +173,32 @@ const Noticias = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todas");
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Categorías modificadas
-  const categories = ["Todas", "Actualización", "Podcast", "Revista", "Conferencias"];
+  const [categories, setCategories] = useState(["Todas"]);
 
   useEffect(() => {
-    // En un proyecto real, aquí se haría la llamada a la API
-    // por ahora usamos los datos de NoticiasData.jsx
-    setAllNews(newsItems);
-    setFilteredNews(newsItems);
+    const loadData = async () => {
+      try {
+        const response = await fetchNoticias("");
+        const articles = response.data.map((item) => convertToAppFormat(item));
+        setAllNews(articles);
+        setFilteredNews(articles);
+        // Obtener etiquetas únicas para filtros
+        const tagSet = new Set();
+        articles.forEach((article) => {
+          if (Array.isArray(article.tags)) {
+            article.tags.forEach((t) => tagSet.add(t));
+          } else if (article.tags) {
+            tagSet.add(article.tags);
+          } else if (article.category) {
+            tagSet.add(article.category);
+          }
+        });
+        setCategories(["Todas", ...Array.from(tagSet)]);
+      } catch (error) {
+        console.error("Error fetching noticias:", error);
+      }
+    };
+    loadData();
   }, []);
 
   // Función para navegar a la página de detalle de la noticia
@@ -167,17 +209,21 @@ const Noticias = () => {
   // Función para filtrar noticias
   const handleFilter = (category) => {
     setActiveCategory(category);
-    setCurrentPage(1); // Resetear a la primera página al cambiar filtros
+    setCurrentPage(1);
 
     if (category === "Todas") {
       setFilteredNews(allNews);
     } else {
-      // Aquí se implementaría la lógica real de filtrado por categoría
-      // Este es solo un ejemplo simulado basado en el título
-      const filtered = allNews.filter(news =>
-        (news.category || "").toLowerCase() === category.toLowerCase()
-      );
-      setFilteredNews(filtered.length > 0 ? filtered : []);
+      const filtered = allNews.filter((news) => {
+        if (Array.isArray(news.tags)) {
+          return news.tags.some(
+            (tag) => tag.toLowerCase() === category.toLowerCase()
+          );
+        }
+        const tag = news.tags || news.category || "";
+        return tag.toLowerCase() === category.toLowerCase();
+      });
+      setFilteredNews(filtered);
     }
   };
 
@@ -192,10 +238,13 @@ const Noticias = () => {
       return;
     }
 
-    const searched = allNews.filter(news =>
-      (news.title || news.titulo).toLowerCase().includes(value.toLowerCase()) ||
-      (news.description || news.contenido).toLowerCase().includes(value.toLowerCase())
-    );
+    const searched = allNews.filter(news => {
+      const matchesText = (news.title || news.titulo).toLowerCase().includes(value.toLowerCase()) ||
+        (news.description || news.contenido).toLowerCase().includes(value.toLowerCase());
+      const tags = Array.isArray(news.tags) ? news.tags.join(" ") : (news.tags || news.category || "");
+      const matchesTag = tags.toLowerCase().includes(value.toLowerCase());
+      return matchesText || matchesTag;
+    });
 
     setFilteredNews(searched);
   };
