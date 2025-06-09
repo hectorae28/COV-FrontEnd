@@ -1,5 +1,4 @@
 "use client";
-import newsItems from "@/app/Models/PanelControl/PaginaWeb/Inicio/NoticiasData";
 import { motion } from "framer-motion";
 import {
     ArrowLeft,
@@ -15,6 +14,8 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { fetchNoticias } from "@/api/endpoints/landingPage";
+import { convertToAppFormat } from "@/Components/PaginaWeb/Noticias/noticia-converter";
 
 const NoticiaDetalle = () => {
     const router = useRouter();
@@ -47,35 +48,36 @@ const NoticiaDetalle = () => {
     };
 
     useEffect(() => {
-        if (id) {
-            const newsId = parseInt(id);
-            const allNews = [...newsItems];
-            const newsIndex = allNews.findIndex((item) => item.id === newsId);
+        const loadData = async () => {
+            try {
+                const response = await fetchNoticias("");
+                const articles = response.data.map((item) => convertToAppFormat(item));
+                const newsId = parseInt(id);
+                const newsIndex = articles.findIndex((item) => item.id === newsId);
 
-            if (newsIndex !== -1) {
-                const currentNews = allNews[newsIndex];
-                setNews(currentNews);
+                if (newsIndex !== -1) {
+                    const currentNews = articles[newsIndex];
+                    setNews(currentNews);
+                    const related = articles
+                        .filter((item) => item.id !== newsId)
+                        .slice(0, 4);
+                    setRelatedNews(related);
+                    if (newsIndex > 0) setPrevNews(articles[newsIndex - 1]);
+                    if (newsIndex < articles.length - 1) setNextNews(articles[newsIndex + 1]);
+                }
+
                 setViews(Math.floor(Math.random() * 1000) + 100);
                 setLikes(Math.floor(Math.random() * 50) + 5);
-
-                // Cambiado: Mostrar siempre las primeras 4 noticias relacionadas, sin filtrar por categoría
-                const related = allNews
-                    .filter((item) => item.id !== newsId)
-                    .slice(0, 4);
-
-                setRelatedNews(related);
-
-                if (newsIndex > 0) {
-                    setPrevNews(allNews[newsIndex - 1]);
-                }
-
-                if (newsIndex < allNews.length - 1) {
-                    setNextNews(allNews[newsIndex + 1]);
-                }
+            } catch (error) {
+                console.error("Error fetching noticia:", error);
+            } finally {
+                setLoading(false);
             }
-        }
+        };
 
-        setLoading(false);
+        if (id) {
+            loadData();
+        }
     }, [id]);
 
     const handleNoticias = (news) => {
@@ -279,22 +281,21 @@ const NoticiaDetalle = () => {
                             className="mb-4"
                         >
                             <div className="flex flex-wrap gap-2 justify-end">
-                                {/* Maneja múltiples categorías si es un array */}
-                                {Array.isArray(news.category) ? (
-                                    news.category.map((category, index) => (
+                                {/* Maneja múltiples etiquetas */}
+                                {Array.isArray(news.tags) ? (
+                                    news.tags.map((tag, index) => (
                                         <div
                                             key={index}
                                             className="flex items-center bg-[#C40180] px-4 py-2 rounded-full shadow-md"
                                         >
                                             <Tag className="w-4 h-4 mr-2 text-white" />
-                                            <span className="text-sm font-medium text-white">{category}</span>
+                                            <span className="text-sm font-medium text-white">{tag}</span>
                                         </div>
                                     ))
                                 ) : (
-                                    // Para una única categoría
                                     <div className="flex items-center bg-[#C40180] px-4 py-2 rounded-full shadow-md">
                                         <Tag className="w-4 h-4 mr-2 text-white" />
-                                        <span className="text-sm font-medium text-white">{news.category}</span>
+                                        <span className="text-sm font-medium text-white">{news.tags || news.category}</span>
                                     </div>
                                 )}
                             </div>

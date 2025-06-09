@@ -1,12 +1,11 @@
 "use client"
 import ArticleFullPreview from "@/app/Components/PaginaWeb/Noticias/article-full-preview"
-import newsItems from "@/app/Models/PanelControl/PaginaWeb/Inicio/NoticiasData"
 import ArticleEditor from "@/Components/PaginaWeb/Noticias/article-editor"
 import ArticlesList from "@/Components/PaginaWeb/Noticias/articles-list"
 import { convertToAppFormat } from "@/Components/PaginaWeb/Noticias/noticia-converter"
+import { fetchNoticias, createNoticia, updateNoticia } from "@/api/endpoints/landingPage"
 import { motion } from "framer-motion"
 import { PlusCircle, Search } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 const NewsDashboard = () => {
@@ -18,7 +17,6 @@ const NewsDashboard = () => {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [tagFilter, setCategoryFilter] = useState("")
-  const router = useRouter()
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -28,20 +26,19 @@ const NewsDashboard = () => {
     })
   }
 
-  // Cargar noticias al iniciar y convertirlas al formato de la aplicación
+  // Cargar noticias desde el backend al iniciar
   useEffect(() => {
-    const convertedArticles = newsItems.map((article) => {
-      const convertedArticle = convertToAppFormat(article);
-      if (!convertedArticle.tags && convertedArticle.category) {
-        convertedArticle.tags = [convertedArticle.category];
-      } else if (!convertedArticle.tags) {
-        convertedArticle.tags = [];
+    const loadData = async () => {
+      try {
+        const response = await fetchNoticias("");
+        const converted = response.data.map((item) => convertToAppFormat(item));
+        setArticles(converted);
+        setFilteredArticles(converted);
+      } catch (error) {
+        console.error("Error fetching noticias:", error);
       }
-      return convertedArticle;
-    });
-
-    setArticles(convertedArticles)
-    setFilteredArticles(convertedArticles)
+    };
+    loadData();
   }, [])
 
   useEffect(() => {
@@ -121,59 +118,60 @@ const NewsDashboard = () => {
   }
 
   // Función para guardar cambios en un artículo
-  const handleSaveArticle = (updatedArticle) => {
-    // Determinar el tipo y la URL correcta para la portada
+  const handleSaveArticle = async (updatedArticle) => {
     const isVideo = updatedArticle.portada_tipo === "video" || updatedArticle.videoUrl
-    const isLocalImage = !isVideo && updatedArticle.portada_source === "local"
+    const isLocalImage = !isVideo && updatedArticle.portada_source === "local" && updatedArticle.selectedFile
     const isUrlImage = !isVideo && updatedArticle.portada_source === "url"
 
-    let portadaUrl = "";
+    let portadaUrl = ""
     if (isVideo) {
-      portadaUrl = updatedArticle.videoUrl || "";
+      portadaUrl = updatedArticle.videoUrl || ""
     } else {
-      portadaUrl = updatedArticle.imageUrl || updatedArticle.imagen_portada_url || "";
+      portadaUrl = updatedArticle.imageUrl || updatedArticle.imagen_portada_url || ""
     }
 
-    // Crear el objeto NoticiaData con el formato requerido
-    const noticiaData = {
-      imagen_portada: isLocalImage ? updatedArticle.selectedFile : null,
-      titulo: updatedArticle.title || updatedArticle.titulo,
-      destacado: updatedArticle.destacado || true,
-      contenido: JSON.stringify(updatedArticle.contentElements || []),
-      description: updatedArticle.description,
-      portada_tipo: isVideo ? "video" : "image",
-      portada_source: isUrlImage ? "url" : "local",
-      imagen_portada_url: !isVideo ? portadaUrl : null,
-      videoUrl: isVideo ? portadaUrl : null,
-      tags: updatedArticle.tags || [],
+    const formData = new FormData()
+    if (isLocalImage) {
+      formData.append("imagen_portada", updatedArticle.selectedFile)
+    }
+    formData.append("titulo", updatedArticle.title || updatedArticle.titulo)
+    formData.append("destacado", updatedArticle.destacado ?? true)
+    formData.append("contenido", JSON.stringify(updatedArticle.contentElements || []))
+    formData.append("description", updatedArticle.description || "")
+    formData.append("portada_tipo", isVideo ? "video" : "image")
+    formData.append("portada_source", isUrlImage ? "url" : "local")
+    if (!isVideo && isUrlImage) {
+      formData.append("imagen_portada_url", portadaUrl)
+    }
+    if (isVideo) {
+      formData.append("videoUrl", portadaUrl)
+    }
+    if (updatedArticle.tags && updatedArticle.tags.length > 0) {
+      formData.append("tags", JSON.stringify(updatedArticle.tags))
     }
 
-    // Para logging
-    console.log("NoticiaData guardada:", noticiaData)
-    console.log("Portada URL:", portadaUrl)
-    console.log("Tipo:", isVideo ? "video" : "image")
-    console.log("Fuente:", isUrlImage ? "url" : "local")
-    console.log("Etiquetas:", updatedArticle.tags || [])
+    try {
+      let response
+      const exists = articles.some((a) => a.id === updatedArticle.id)
+      if (exists) {
+        response = await updateNoticia(updatedArticle.id, formData)
+      } else {
+        response = await createNoticia(formData)
+      }
+      const saved = convertToAppFormat(response.data)
+      let updatedArticles
+      if (exists) {
+        updatedArticles = articles.map((article) =>
+          article.id === saved.id ? saved : article
+        )
+      } else {
+        updatedArticles = [...articles, saved]
+      }
+      setArticles(updatedArticles)
+    } catch (error) {
+      console.error("Error saving noticia:", error)
+    }
 
-    // Convertir al formato de la aplicación para la visualización
-    const formattedArticle = convertToAppFormat({
-      ...noticiaData,
-      id: updatedArticle.id,
-      date: updatedArticle.date,
-      time: updatedArticle.time,
-      tags: updatedArticle.tags || [],
-      category: updatedArticle.category,
-      imageUrl: !isVideo ? portadaUrl : null,
-      imagen_portada_url: !isVideo ? portadaUrl : null,
-      videoUrl: isVideo ? portadaUrl : null,
-    })
-
-    // Actualizar la lista de artículos
-    const updatedArticles = articles.map((article) =>
-      (article.id === formattedArticle.id ? formattedArticle : article)
-    )
-
-    setArticles(updatedArticles)
     setEditMode(false)
     setSelectedArticle(null)
   }
